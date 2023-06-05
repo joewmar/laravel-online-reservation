@@ -1,0 +1,22 @@
+/* Scroll Change color */
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--p)) hsl(var(--b2));
+  }
+  
+  /* Chrome, Edge, and Safari */
+  *::-webkit-scrollbar {
+    width: 15px;
+  }
+  
+  *::-webkit-scrollbar-track {
+    background: hsl(var(--b2));
+    
+  }
+  
+  *::-webkit-scrollbar-thumb {
+    background-color:hsl(var(--p)) ;
+    border: 3px solid hsl(var(--b2));
+  }
+  
