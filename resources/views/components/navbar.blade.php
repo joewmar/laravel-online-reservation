@@ -12,10 +12,12 @@
                   <li><a href="{{$item}}">{{$key}}</a></li>
                 @endif
             @endforeach
-          <li><hr></li>
-          <li>
-            <a class="btn bg-primary flex md:hidden text-white" href="/reservation/step1">Book Now</a>
-          </li>
+            @auth
+              <li><a href="/profile">Profile</a></li>
+              <li><a href="/reservation">My Reservation</a></li>  
+              <li><a href="/reservation/step1">Book Now</a></li> 
+            @endauth
+            
         </ul>
       </div>
       <a class="text-white btn btn-ghost normal-case text-xl toggleColour">LOGO</a>
@@ -29,11 +31,45 @@
                 <li><a href="{{$item}}">{{$key}}</a></li>
             @endif
         @endforeach
+        @auth
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/reservation">My Reservation</a></li>  
+          <li><a href="/reservation/step1">Book Now</a></li>  
+        @endauth
       </ul>
     </div>
     <div class="navbar-end">
-      <a class="btn bg-primary hidden md:flex text-white" href="/reservation/step1">Book Now</a>
+    @auth
+      <div class="dropdown dropdown-end">
+        <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+          <div class="w-10 rounded-full">
+            <img src="/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+          </div>
+        </label>
+        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+          <li>
+            <a class="justify-between">
+              Profile
+              <span class="badge">New</span>
+            </a>
+          </li>
+          <li><a>Settings</a></li>
+          <li>
+            <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+              Logout
+            </a>
+          </li>
+          
+          <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+            @csrf
+          </form>
+        </ul>
+      </div>
+    @else
+        <a class="btn bg-primary text-white" href="/reservation/step1">Book Now</a>
+    @endauth
     </div>
+
   </div>
   
   

@@ -20,32 +20,43 @@
             </div>
           </div>
           <div class="divider">OR</div>
-          <form action="" method="post">
+          <form action="{{ route('check') }}" method="post" autocomplete="off">
+            @csrf
             <div class="form-control mb-5">
               <label class="label">
                 <span class="label-text">Email</span>
               </label>
-              <input type="text" placeholder="email" class="input input-bordered input-primary" />
+              <input type="text" name="email" class="input input-bordered input-primary" />
+              <label class="label">
+                @error('email')
+                  <span class="label-text-alt text-error">{{$message}}</span>
+                @enderror
+              </label>
             </div>
             <div class="form-control">
               <label class="label">
                 <span class="label-text">Password</span>
               </label>
-              <input type="text" placeholder="password" class="input input-bordered input-primary" />
+              <input type="password" name="password" class="input input-bordered input-primary" />
               <label class="label">
+                @error('password')
+                  <span class="label-text-alt text-error">{{$message}}</span>
+                @enderror
+              </label>
+              {{-- <label class="label">
                 <label href="#" class="label-text-alt">
                   <input type="checkbox" checked="checked" class="checkbox checkbox-primary mr-2" />
                   Remember me
                 </label>
                 <a href="#" class="label-text-alt link link-hover link-primary">Forgot password?</a>
-              </label>
+              </label> --}}
             </div>
             <div class="form-control mt-6">
               <button type="submit" class="btn btn-primary">Sign in</button>
             </div>
             <p class="mt-4 text-sm text-neutral">
               Don't have an account?
-              <label for="register" class="link link-hover link-primary">Create a Account</label>
+              <a href="/register" for="register" class="link link-hover link-primary">Create a Account</a>
             </p>
           </form>
         </div>
@@ -53,6 +64,6 @@
     </div>
   </div>
 </x-landing-layout>
-<x-register-modal id="register" />
+{{-- <x-register-modal id="register" /> --}}
 
 

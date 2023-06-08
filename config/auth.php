@@ -17,6 +17,10 @@ return [
         'guard' => 'web',
         'passwords' => 'users',
     ],
+    'system' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\System::class,
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -39,6 +43,10 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+        ],
+        'system' => [
+            'driver' => 'session',
+            'provider' => 'systems',
         ],
     ],
 
@@ -69,6 +77,10 @@ return [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
+        'systems' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\System::class,
+        ],
     ],
 
     /*
@@ -96,6 +108,10 @@ return [
             'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
+        ],
+        'system' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\System::class,
         ],
     ],
 

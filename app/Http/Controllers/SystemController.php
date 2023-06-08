@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\System;
+use Illuminate\Support\Facades\Auth;
+
+class SystemController extends Controller
+{
+    // Check if Valid System Credentials
+    public function check(Request $request){
+        // Validate Inputs
+        $formFields = $request->validate([
+            'username' => ['required'],
+            'password' => ['required', 'min:5'],
+        ]);
+
+        // guard('your_guard_created') Attempt to log the user in (If user credentials are correct)
+        if(auth()->guard('system')->attempt($formFields)){
+            $request->session()->regenerate(); //Regenerate Session ID
+            return redirect()->route('system.home');
+        }
+        else{
+            return back()->withErrors(['username' => 'Invalid Credentials'])->onlyInput('username');
+        }
+    }
+    public function logout(){
+        Auth::guard('system')->logout();
+        return redirect('/');
+    }
+}

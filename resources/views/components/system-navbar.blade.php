@@ -37,9 +37,11 @@
           </li>
           <li><a href="/setting">Settings</a></li>
           <li>
-            <form action="/system/logout" method="POST">
+            <a href="{{ route('system.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+              Logout
+            </a>
+            <form action="{{ route('system.logout') }}" method="POST" id="logout-form">
               @csrf
-              <button type="submit">Logout</button>
             </form>
           </li>
         </ul>

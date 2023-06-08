@@ -26,8 +26,6 @@ class AppServiceProvider extends ServiceProvider
             "Accommodation" => "/accommodation",
             "Contact Us" => "/contact",
             "Login" => "/login",
-            "Profile" => "/profile",
-            "My Reservation" => "/reservation",
           ];
         View::share('landingNavbar', $arrNavItems);
     }

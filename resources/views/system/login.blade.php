@@ -7,24 +7,34 @@
         <div class="card flex rounded-box w-96 h-96">
           <div class="card-body">
             <h2 class="card-title">Welcome to System!</h2>
+            <form action=" {{route('system.check')}} " method="post">
+              @csrf
             <div class="form-control">
               <label class="label">
                 <span class="label-text">Username</span>
               </label>
-              <input type="text" class="input input-bordered input-primary" autofocus/>
+              <input type="text" name="username" class="input input-bordered input-primary" autofocus value="{{ old('username') }}"/>
+              <label class="label">
+                @error('username')
+                  <span class="label-text-alt text-error">{{$message}}</span>
+                @enderror
+              </label>
             </div>
             <div class="form-control">
               <label class="label">
                 <span class="label-text">Password</span>
               </label>
-              <input type="text" placeholder="password" class="input input-bordered input-primary" />
+              <input type="password" name="password" class="input input-bordered input-primary" value="{{ old('password') }}"/>
               <label class="label">
-                <a href="#" class="label-text-alt link link-hover">Forgot password?</a>
+                @error('password')
+                  <span class="label-text-alt text-error">{{$message}}</span>
+                @enderror
               </label>
             </div>
             <div class="form-control mt-6">
-              <button class="btn btn-primary">Login</button>
+              <button type="submit" class="btn btn-primary">Login</button>
             </div>
+          </form>
           </div>
         </div>
       </div>
