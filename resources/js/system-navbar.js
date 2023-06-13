@@ -11,7 +11,6 @@ menu.addEventListener("click", function () {
         sidebar.classList.add("w-full");
         sidebar.classList.add("md:w-56");
         sidebar.classList.remove("w-[5rem]");
-        sidebar.classList.add("shadow-lg");
         for (let i = 0; i < sbList.length; i++) {
             sbList[i].classList.remove("opacity-0");
         }
@@ -26,7 +25,6 @@ menu.addEventListener("click", function () {
         sidebar.classList.remove("w-full");
         sidebar.classList.remove("md:w-56");
         sidebar.classList.add("w-[5rem]");
-        sidebar.classList.add("shadow-lg");
         clicked = true;
         txt = '<svg class="swap-off fill-current" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 512 512"><path d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"/></svg>';
     }

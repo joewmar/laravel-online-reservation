@@ -46,15 +46,20 @@ class UserController extends Controller
         if(auth()->attempt($formFields)){
             $request->session()->regenerate(); //Regenerate Session ID
             // ->with('message', 'You are now logged in!')
-            return redirect()->route('home');
+            return redirect()->route('home')->with('success', 'Welcome back ' . auth()->user()->first_name);
         }
         return back()->withErrors(['email' => 'Invalid Credentials'])->onlyInput('email');
         
     }
 
     // Logout
-    public function logout(){
-        Auth::logout();
+    public function logout(Request $request){
+        Auth::guard('web')->logout();
+
+        // Recommend to invalidate the users session and regenerate the toke from @crfs
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
         return redirect('/');
     }
 

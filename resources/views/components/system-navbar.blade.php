@@ -1,4 +1,4 @@
-
+<div class="fixed top-0 left-0 w-full z-50">
   <div class="navbar bg-base-100">
     <div class="flex-1">
       <button type="button" id="menu" tabindex="0" class="btn btn-ghost btn-circle">
@@ -26,21 +26,19 @@
       <div class="dropdown dropdown-end">
         <label tabindex="0" class="btn btn-ghost btn-circle avatar">
           <div class="w-10 rounded-full">
-            <img src="/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+            <img src="{{asset('images/avatars/no-avatar.png')}}" />
           </div>
         </label>
         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
           <li>
-            <a href="/profile">
+            <a href="/system/profile">
               Profile
             </a>
           </li>
-          <li><a href="/setting">Settings</a></li>
+          <li><a href="/system/setting">Settings</a></li>
           <li>
-            <a href="{{ route('system.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-              Logout
-            </a>
-            <form action="{{ route('system.logout') }}" method="POST" id="logout-form">
+            <a href="{{ route('system.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+            <form action="{{ route('system.logout') }}" class="w-full" method="POST" id="logout-form">
               @csrf
             </form>
           </li>
@@ -48,3 +46,4 @@
       </div>
     </div>
   </div>
+</div>

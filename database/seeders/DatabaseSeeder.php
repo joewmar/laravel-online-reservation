@@ -32,6 +32,16 @@ class DatabaseSeeder extends Seeder
             'email'=> 'helloworld@email.com',
             'username'=> 'hello.123',
             'password' => Hash::make('987654321'),
+            'type' => '0',
+        ]);
+        \App\Models\System::factory()->create([
+            'first_name' => 'Joe',
+            'last_name' => 'Doe',
+            'contact' => '09987456321',
+            'email'=> 'joew@email.com',
+            'username'=> 'joewmar',
+            'password' => Hash::make('147852369'),
+            'type' => '1',
         ]);
     }
 }

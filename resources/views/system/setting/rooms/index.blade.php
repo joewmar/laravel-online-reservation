@@ -2,8 +2,9 @@
     <x-system-content title="Edit Room">
       
         <div class="mt-8">
+          </div>
             <div class="mb-3 float-right">
-              <a href="#" class="btn btn-primary text-base-100">
+              <a href="{{ route('system.setting.rooms.create') }}" class="btn btn-primary text-base-100">
                 Add Room Type
               </a>
             </div>
@@ -12,35 +13,26 @@
                 <!-- head -->
                 <thead>
                 <tr>
-                  <th>No</th>
+                  <th>Room Name</th>
                   <th>Room Type</th>
-                  <th>How many rooms</th>
-                  <th>Maximium of Guest</th>
+                  <th>Occupancy</th>
                   <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
-                <!-- row 1 -->
-                <tr>
-                  <td>1</td>
-                  <td>Charlet</td>
-                  <td>5 Rooms</td>
-                  <td>4 Guest</td>
-                  <th>
-                  <button class="link link-primary">More details</button>
-                  </th>
-                </tr>
-                <!-- row 2 -->
-                <tr>
-                    <td>1</td>
-                    <td>Big House</td>
-                    <td>3 Rooms</td>
-                    <td>5 Guest</td>
+                <!-- row  -->
+                @forelse ($accommodations as $item)
+                  <tr>
+                    <td>{{$item->room}}</td>
+                    <td>{{$item->type}}</td>
+                    <td>{{$item->occupancy}}</td>
                     <th>
-                        <button class="link link-primary">More details</button>
+                      <button href="" class="link link-primary">More details</button>
                     </th>
-                </tr>
-    
+                  </tr>
+                @empty
+                    <th colspan="4" class="text-center">No Record Found</th>
+                @endforelse 
                 </tbody>
                 
               </table>

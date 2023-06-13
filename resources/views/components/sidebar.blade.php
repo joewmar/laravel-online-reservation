@@ -37,11 +37,15 @@
             ],
         ];
 @endphp
-<div id="sidebar" class="sidebar h-full w-[5rem] overflow-hidden bg-base-100 menu">
-    <div class="flex h-screen flex-col justify-between pt-2 pb-6 w-56 p-0">
-        <div>
-        <div class="w-max px-4 py-3">
-            <img src="https://tailus.io/images/logo.svg" class="w-32" alt="">
+<div id="sidebar" class="sidebar h-full w-[5rem] overflow-hidden bg-base-100 menu z-50 ">
+    <div class="flex h-screen flex-col justify-center pt-2 pb-6 w-56 p-0">
+        <div class="w-full px-4 pt-10 flex items-center">
+            <div class="avatar">
+                <div class="w-8 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                    <img src="{{ asset('images/avatars/no-avatar.png')}}" />
+                </div>
+            </div>
+            <span class="title text-neutral text-md uppercase font-bold sidebar opacity-0 pl-5">{{auth()->guard('system')->user()->first_name}} {{auth()->guard('system')->user()->last_name}}</span> 
         </div>
         <ul class="sbList mt-6 space-y-2">
             @foreach ($arrSideBarItems as $name => $item)
@@ -62,6 +66,5 @@
                 @endif
             @endforeach
         </ul>
-        </div>
     </div>
-    </div>
+</div>

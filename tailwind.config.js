@@ -5,14 +5,25 @@ module.exports = {
     "./resources/**/*.js",
     "./resources/**/*.vue",
   ],
-  theme: {
-    extend: {},
+  daisyui: {
+    themes: [
+      {
+        mytheme: {
+          "primary": "#409122",
+          "secondary": "#e9e92f",
+          "accent": "#ecfccb",
+          "neutral": "#191a3e",
+          "base-100": "#ffffff",
+          "info": "#22d3ee",
+          "success": "#a3e635",  
+          "warning": "#facc15", 
+          "error": "#ef4444",
+        },
+      },
+    ],
   },
   plugins: [
     require("daisyui"),
     require('@tailwindcss/forms'),
   ],
-  daisyui: {
-    themes: ["lemonade", "light"],
-  },
 }

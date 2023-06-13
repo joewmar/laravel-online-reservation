@@ -31,11 +31,12 @@
                 <li><a href="{{$item}}">{{$key}}</a></li>
             @endif
         @endforeach
-        @auth
-          <li><a href="/profile">Profile</a></li>
+        @guest
+          <li><a href="{{route('login')}}">Login</a></li>
+        @else
           <li><a href="/reservation">My Reservation</a></li>  
           <li><a href="/reservation/step1">Book Now</a></li>  
-        @endauth
+        @endguest
       </ul>
     </div>
     <div class="navbar-end">
@@ -43,7 +44,7 @@
       <div class="dropdown dropdown-end">
         <label tabindex="0" class="btn btn-ghost btn-circle avatar">
           <div class="w-10 rounded-full">
-            <img src="/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+            <img src="{{asset('images/avatars/no-avatar.png')}}" />
           </div>
         </label>
         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">

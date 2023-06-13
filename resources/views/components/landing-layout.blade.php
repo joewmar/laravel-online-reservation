@@ -14,6 +14,9 @@
     <title>{{ str_replace('_', ' ', config('app.name'))}}</title>
 </head>
 <body class="bg-white">
+  @if(session()->has('success'))
+    <x-alert type="success" message="{{session('success')}}"/>
+  @endif
   {{$slot}}
 
   @include('partials.footer')
