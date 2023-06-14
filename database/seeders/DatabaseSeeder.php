@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
             'username'=> 'hello.123',
             'password' => Hash::make('987654321'),
             'type' => '0',
+            'passcode' => Hash::make('2255'),
+
         ]);
         \App\Models\System::factory()->create([
             'first_name' => 'Joe',
@@ -42,6 +44,7 @@ class DatabaseSeeder extends Seeder
             'username'=> 'joewmar',
             'password' => Hash::make('147852369'),
             'type' => '1',
+            'passcode' => Hash::make('5566'),
         ]);
     }
 }

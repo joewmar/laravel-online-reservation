@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Edit Room">
+    <x-system-content title="Rooms">
       
         <div class="mt-8">
           </div>
@@ -14,20 +14,20 @@
                 <thead>
                 <tr>
                   <th>Room Name</th>
-                  <th>Room Type</th>
-                  <th>Occupancy</th>
+                  <th>Location</th>
+                  <th>How many rooms</th>
                   <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
                 <!-- row  -->
-                @forelse ($accommodations as $item)
+                @forelse ($room_lists as $item)
                   <tr>
-                    <td>{{$item->room}}</td>
-                    <td>{{$item->type}}</td>
-                    <td>{{$item->occupancy}}</td>
+                    <td>{{$item->name}}</td>
+                    <td>{{$item->location}}</td>
+                    <td>{{$item->many_room}}</td>
                     <th>
-                      <button href="" class="link link-primary">More details</button>
+                      <a href="{{ route('system.setting.rooms.show', encrypt($item->id)) }}" class="link link-primary">More details</a>
                     </th>
                   </tr>
                 @empty

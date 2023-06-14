@@ -19,9 +19,10 @@ return new class extends Migration
             $table->string('contact');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('username')->unique();;
+            $table->string('username')->unique();
             $table->string('password');
             $table->tinyInteger('type')->default(0);
+            $table->string('passcode');
             /* Users: 0=>Admin, 1=>Manager, 2=>Staff */
             $table->rememberToken();
             $table->timestamps();

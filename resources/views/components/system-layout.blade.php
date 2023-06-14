@@ -10,6 +10,11 @@
     <title>{{ str_replace('_', ' ', config('app.name'))}}</title>
 </head>
 <body class="bg-white h-screen sidebar">
+  @if(session()->has('success'))
+    <x-alert type="success" message="{{session('success')}}"/>
+  @elseif(session()->has('error'))
+    <x-alert type="error" message="{{session('error')}}"/>
+  @endif
   <div class="flex h-full flex-row bg-gray-100 text-gray-800 relative">
     <div class="flex-grow-0">
       <x-sidebar :active="$activeSb" />

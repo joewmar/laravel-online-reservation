@@ -1,4 +1,4 @@
-function deleteChild() {
+function alertClose() {
     let e = document.getElementById("close");
     
     //e.firstElementChild can be used.
@@ -7,7 +7,4 @@ function deleteChild() {
         e.removeChild(child);
         child = e.lastElementChild;
     }
-}
-document.getElementById("btn-close").onclick = function() {
-    deleteChild();
 }

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SystemController;
+use Illuminate\Support\Facades\Hash;
 
 /*
 |--------------------------------------------------------------------------
@@ -74,11 +75,18 @@ Route::prefix('system')->name('system.')->group(function(){
         // System Settings
         Route::prefix('setting')->name('setting.')->group(function(){
             Route::view('/', 'system.setting.index',  ['activeSb' => 'Setting'])->name('home');
-            Route::view('/accounts', 'system.setting.accounts',  ['activeSb' => 'Accounts'])->name('accounts');
-            Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
+            // Route::view('/accounts', 'system.setting.accounts',  ['activeSb' => 'Accounts'])->name('accounts');
             Route::view('/rooms/create', 'system.setting.rooms.create',  ['activeSb' => 'Rooms'])->name('rooms.create');
             Route::post('/rooms/store', [RoomController::class, 'store'])->name('rooms.store');
-            Route::view('/rides', 'system.setting.rides.index',  ['activeSb' => 'Rides'])->name('rides');
+            Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
+
+            Route::get('/rooms/{id}' , [RoomController::class, 'show'])->name('rooms.show');
+            Route::delete('/rooms/{id}' , [RoomController::class, 'destroy'])->name('rooms.destroy');
+            Route::get('/rooms/{id}/edit' , [RoomController::class, 'edit'])->name('rooms.edit');
+            Route::put('/rooms/{id}/edit' , [RoomController::class, 'update'])->name('rooms.update');
+
+
+            // Route::view('/rides', 'system.setting.rides.index',  ['activeSb' => 'Rides'])->name('rides');
         });
 
         // System Profile
