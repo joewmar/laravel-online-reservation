@@ -1,6 +1,6 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Add New Room">
-      <form action=" {{ route('system.setting.rooms.store') }}" method="post" enctype="multipart/form-data">
+      <form id="add-form" action=" {{ route('system.setting.rooms.store') }}" method="post" enctype="multipart/form-data">
         @csrf
       <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
         <div class="md:w-96 flex flex-col justify-center items-start">
@@ -19,7 +19,8 @@
             <x-input type="number" id="max_occupancy" name="max_occupancy" placeholder="Max Guest" min="1"/>
             <x-input type="text" id="location" name="location" placeholder="Location"/>
             <x-input type="number" id="many_room" name="many_room" placeholder="How Many Room" min="1"/>
-            <button type="submit" class="btn btn-primary float-right">Add Room</button>
+            <label for="add_modal" class="btn btn-primary w-full">Add Room</label>
+            <x-passcode-modal title="Add Confirmation" id="add_modal" formId="add-form" />        
         </div>
       </div>
     </form>

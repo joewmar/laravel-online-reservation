@@ -22,6 +22,6 @@ class RoomList extends Model
     ];
 
     public function roomList(){
-        return $this->hasMany(RoomList::class, 'id');
+        return $this->hasMany(RoomList::class, 'room_id');
     }
 }

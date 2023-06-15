@@ -8,6 +8,9 @@
     @vite(['resources/css/app.css'])
     @vite(['resources/js/app.js'])
     <title>{{ str_replace('_', ' ', config('app.name'))}}</title>
+    <script src="//unpkg.com/alpinejs" defer></script>
+
+
 </head>
 <body class="bg-white h-screen sidebar">
   @if(session()->has('success'))

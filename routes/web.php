@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RoomSettingController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -65,7 +66,7 @@ Route::prefix('system')->name('system.')->group(function(){
     Route::middleware(['auth:system', 'prevent.back.history'])->group(function(){
         Route::view('/', 'system.dashboard.index',  ['activeSb' => 'Home'])->name('home');
         Route::view('/reservation', 'system.reservation.index',  ['activeSb' => 'Reservation'])->name('reservation');
-        Route::view('/rooms', 'system.rooms.index',  ['activeSb' => 'Rooms'])->name('rooms');
+        Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
         Route::view('/tour', 'system.tour.index',  ['activeSb' => 'Tour'])->name('tour');
         Route::view('/analytics', 'system.analytics.index',  ['activeSb' => 'Analytics'])->name('analytics');
         Route::view('/news', 'system.news.index',  ['activeSb' => 'News'])->name('news');
@@ -77,13 +78,25 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::view('/', 'system.setting.index',  ['activeSb' => 'Setting'])->name('home');
             // Route::view('/accounts', 'system.setting.accounts',  ['activeSb' => 'Accounts'])->name('accounts');
             Route::view('/rooms/create', 'system.setting.rooms.create',  ['activeSb' => 'Rooms'])->name('rooms.create');
-            Route::post('/rooms/store', [RoomController::class, 'store'])->name('rooms.store');
-            Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
+            Route::post('/rooms/store', [RoomSettingController::class, 'store'])->name('rooms.store');
+            Route::get('/rooms', [RoomSettingController::class, 'index'])->name('rooms');
 
-            Route::get('/rooms/{id}' , [RoomController::class, 'show'])->name('rooms.show');
-            Route::delete('/rooms/{id}' , [RoomController::class, 'destroy'])->name('rooms.destroy');
-            Route::get('/rooms/{id}/edit' , [RoomController::class, 'edit'])->name('rooms.edit');
-            Route::put('/rooms/{id}/edit' , [RoomController::class, 'update'])->name('rooms.update');
+
+            // Room type Setting
+            Route::view('/rooms/type/create', 'system.setting.rooms.type.create',  ['activeSb' => 'Rooms'])->name('rooms.type.create');
+            Route::post('/rooms/type/store', [RoomSettingController::class, 'storeType'])->name('rooms.type.store');
+
+            
+            Route::get('/rooms/{id}' , [RoomSettingController::class, 'show'])->name('rooms.show');
+            Route::delete('/rooms/{id}' , [RoomSettingController::class, 'destroy'])->name('rooms.destroy');
+            Route::get('/rooms/{id}/edit' , [RoomSettingController::class, 'edit'])->name('rooms.edit');
+            Route::put('/rooms/{id}/edit' , [RoomSettingController::class, 'update'])->name('rooms.update');
+
+            // Room type Setting ID's
+            Route::get('/rooms/type/{id}/edit' , [RoomSettingController::class, 'editType'])->name('rooms.type.edit');
+            Route::put('/rooms/type/{id}/edit' , [RoomSettingController::class, 'updateType'])->name('rooms.type.update');
+            Route::delete('/rooms/{id}' , [RoomSettingController::class, 'destroyType'])->name('rooms.type.destroy');
+
 
 
             // Route::view('/rides', 'system.setting.rides.index',  ['activeSb' => 'Rides'])->name('rides');

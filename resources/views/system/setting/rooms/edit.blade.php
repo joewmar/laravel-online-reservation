@@ -20,7 +20,7 @@
             <x-input type="number" id="max_occupancy" name="max_occupancy" placeholder="Max Guest" min="1" value="{{$room_list->max_occupancy}}"/>
             <x-input type="text" id="location" name="location" placeholder="Location" value="{{$room_list->location}}"/>
             <x-input type="number" id="many_room" name="many_room" placeholder="How Many Room" min="1" value="{{$room_list->many_room}}"/>
-            <a href="#update_modal" class="btn btn-primary float-right">Update Room</a>
+            <label for="update_modal" class="btn btn-primary w-full">Update Room</label>
             <x-passcode-modal title="Edit Confirmation" id="update_modal" formId="update-form" />
         </div>
       </div>
