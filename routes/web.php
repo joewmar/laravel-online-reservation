@@ -32,7 +32,6 @@ use Illuminate\Support\Facades\Hash;
 // Route::get('/register', function () {
 //     return view('users.register', ['activeNav' => 'About Us']);
 // });
-Auth::routes();
 
 
 Route::get('/', function () {
@@ -43,6 +42,7 @@ Route::get('/about', function () {
     return view('landing.about_us', ['activeNav' => 'About Us']);
 })->name('about.us');
 
+Auth::routes();
 
 // Route::middleware(['guest:web'])->group(function(){
 Route::middleware(['guest'])->group(function(){
@@ -92,32 +92,27 @@ Route::prefix('system')->name('system.')->group(function(){
 
                 Route::view('/create', 'system.setting.rooms.create',  ['activeSb' => 'Rooms'])->name('create');
                 Route::post('/store', [RoomSettingController::class, 'store'])->name('store');
-                
                 // Room Rate Setting
                 Route::view('/rate/create', 'system.setting.rooms.rate.create',  ['activeSb' => 'Rooms'])->name('rate.create');
                 Route::post('/rate', [RoomSettingController::class, 'storeRate'])->name('rate.store');
 
-                // Room rate Setting ID's
-                Route::delete('/rate/{id}' , [RoomSettingController::class, 'destroyRate'])->name('rate.destroy');
-                Route::get('/rate/{id}/edit' , [RoomSettingController::class, 'editRate'])->name('rate.edit');
-                Route::put('/rate/{id}/edit' , [RoomSettingController::class, 'updateRate'])->name('rate.update');
-
-                
+            
                 Route::get('/{id}' , [RoomSettingController::class, 'show'])->name('show');
                 Route::delete('/{id}' , [RoomSettingController::class, 'destroy'])->name('destroy');
                 Route::get('/{id}/edit' , [RoomSettingController::class, 'edit'])->name('edit');
                 Route::put('/{id}/edit' , [RoomSettingController::class, 'update'])->name('update');
 
+                // Room rate Setting ID's
+                Route::get('/rate/{id}/edit' , [RoomSettingController::class, 'editRate'])->name('rate.edit');
+                Route::put('/rate/{id}/edit' , [RoomSettingController::class, 'updateRate'])->name('rate.update');
+                Route::delete('/{id}' , [RoomSettingController::class, 'destroyRate'])->name('rate.destroy');
             });
 
-            // Ride Setting
+
             Route::prefix('rides')->name('rides.')->group(function(){
-                Route::get('/', [RideController::class, 'index'])->name('home');
+                Route::view('/', 'system.setting.rides.index',  ['activeSb' => 'Rides'])->name('home');
                 Route::view('/create', 'system.setting.rides.create',  ['activeSb' => 'Rides'])->name('create');
                 Route::post('/create', [RideController::class, 'store'])->name('store');
-                Route::get('/{id}/edit', [RideController::class, 'edit'])->name('edit');
-                Route::put('/{id}/edit', [RideController::class, 'update'])->name('update');
-                Route::delete('/{id}/edit', [RideController::class, 'destroy'])->name('destroy');
 
             });
 
