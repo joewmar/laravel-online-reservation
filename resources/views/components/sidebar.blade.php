@@ -37,7 +37,7 @@
             ],
         ];
 @endphp
-<div id="sidebar" class="sidebar h-full w-[5rem] overflow-hidden bg-base-100 menu z-50 ">
+<div id="sidebar" class="sidebar h-full w-[5rem] hidden md:block overflow-hidden bg-base-100 menu z-50">
     <div class="flex h-screen flex-col justify-center pt-2 pb-6 w-56 p-0">
         <div class="w-full px-4 pt-10 flex items-center">
             <div class="avatar">
