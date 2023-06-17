@@ -28,7 +28,7 @@
            <form id="delete-form" method="POST" action=" {{ route('system.setting.rooms.destroy', encrypt($room_list->id)) }}" enctype="multipart/form-data">
             @csrf
             @method('DELETE')
-            <x-passcode-modal title="Delete Confirmation" id="delete_modal" formId="delete-form" />
+            <x-passcode-modal title="Do you want remove this: {{$room_list->name}} Room" id="delete_modal" formId="delete-form"  />
           </form>
         </div>
       </div>

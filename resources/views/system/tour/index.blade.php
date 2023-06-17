@@ -2,7 +2,7 @@
     <x-system-content title="Tour Management">
         <div class="mt-8">
             <div class="mb-3 float-right">
-              <a href="#" class="btn btn-primary text-base-100">
+              <a href=" {{ route('system.tour.create') }}" class="btn btn-primary text-base-100">
                 Add Tour Package
               </a>
             </div>

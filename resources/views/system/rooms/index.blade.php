@@ -10,7 +10,7 @@
               </button>
             </div>
             <x-tooltip title="Setting">
-              <a href="{{ route('system.setting.rooms') }}" class="btn btn-ghost btn-circle">
+              <a href="{{ route('system.setting.rooms.home') }}" class="btn btn-ghost btn-circle">
                 <i class="fa-solid fa-gear text-xl"></i>
               </a>
             </x-tooltip>
@@ -21,14 +21,12 @@
               <a class="block rounded-xl border border-neutral-content p-8 shadow-md transition hover:border-primary">
                 <h2 class="mt-4 text-xl font-bold text-neutral">Room No. {{$room->room_no}}</h2>
                 <h5 class="text-md font-medium text-neutral">{{$room->room->name}} Room</h5>
-                <p class="mt-1 text-sm text-neutral-600">
+                {{-- <p class="mt-1 text-sm text-neutral-600">
                   
-                </p>
+                </p> --}}
               </a>
             @empty
-              <p class="mt-1 text-sm text-neutral-600">
-                    
-              </p>
+              <h2 class="mt-4 text-xl font-bold text-neutral col-span-full w-full text-center">No Room found</h2>
             @endforelse
 
           </div>

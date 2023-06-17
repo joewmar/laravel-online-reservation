@@ -9,10 +9,8 @@
     @vite(['resources/js/app.js'])
     <title>{{ str_replace('_', ' ', config('app.name'))}}</title>
     <script src="//unpkg.com/alpinejs" defer></script>
-
-
 </head>
-<body class="bg-white h-screen sidebar">
+<body class="bg-white h-screen">
   @if(session()->has('success'))
     <x-alert type="success" message="{{session('success')}}"/>
   @elseif(session()->has('error'))
@@ -22,9 +20,11 @@
     <div class="flex-grow-0">
       <x-sidebar :active="$activeSb" />
     </div>        
+    
     <main class="main flex flex-grow flex-col transition-all duration-150 ease-in-out md:ml-0 overflow-y-auto h-full">
+      <div id="overlay" class="sidebar hidden fixed w-full h-full bg-primary bg-opacity-70 z-50"></div>
       <x-system-navbar />
-      <div class="mt-24">
+      <div class="mt-24 ">
         {{$slot}}
       </div>
     </main>
