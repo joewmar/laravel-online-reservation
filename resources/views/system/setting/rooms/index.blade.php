@@ -62,23 +62,29 @@
                         <td>{{$item->name}}</td>
                         <td>{{$item->occupancy}}</td>
                         <td>₱ {{number_format($item->price, 2)}}</td>
-                        <th>
-                            <x-tooltip title="Edit {{$item->name}}">
-                              <a href="{{ route('system.setting.rooms.rate.edit', encrypt($item->id)) }}" class="btn btn-xs btn-ghost">
+                        <td>
+                          <div class="flex items-center flex-wrap">
+                            <a href="{{ route('system.setting.rooms.rate.edit', encrypt($item->id))}}" class="btn btn-ghost btn-sm">
+                              <div class="text-primary">
                                 <i class="fa-solid fa-pencil"></i>
-                              </a>
-                            </x-tooltip>
-                            <x-tooltip title="Delete {{$item->name}}" color="error">
-                              <label for="delete_modal" class="btn btn-xs btn-ghost">                                
-                                <i class="fa-solid fa-trash"></i>
+                                Edit
+                              </div>
+                            </a>
+                            <div>
+                              <label for="delete_modal" class="btn btn-sm btn-ghost">                                
+                                <div class="text-error">
+                                  <i class="fa-solid fa-trash"></i>
+                                  Remove
+                                </div>
                               </label>
                               <form id="delete-form" method="POST" action=" {{ route('system.setting.rooms.rate.destroy', encrypt($item->id)) }}" enctype="multipart/form-data">
                                 @csrf
                                 @method('DELETE')
                                 <x-passcode-modal title="Delete Rate Confirmation" id="delete_modal" formId="delete-form" title="Do you want to remove this: {{$item->name}}"/>
                               </form>
-                            </x-tooltip>
-                        </th>
+                            </div>
+                          </div>
+                        </td>
                       </tr>
                     @empty
                         <th colspan="4" class="text-center">No Record Found</th>

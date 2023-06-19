@@ -13,7 +13,7 @@
     </label>
 </div>
 <script>
-    let img = document.getElementById('room_img');
+    let img = document.getElementById('show_img');
     let input = document.getElementById('{{$id}}');
     input.addEventListener("change", () => {
         img.src = URL.createObjectURL(input.files[0]);

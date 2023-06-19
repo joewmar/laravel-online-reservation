@@ -1,4 +1,4 @@
-@props(['title', 'color' => ''])
-<div class="lg:tooltip tooltip-{{$color}}" data-tip="{{$title}}">
-    {{$slot}}    
+@props(['title', 'color' => '', 'position' => ''])
+<div class="tooltip tooltip-{{$color}} tooltip-{{$position}}" data-tip="{{$title}}">
+    {{$slot}}
 </div>

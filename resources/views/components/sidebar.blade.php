@@ -37,7 +37,7 @@
             ],
         ];
 @endphp
-<div id="sidebar" class="sidebar h-full w-[5rem] hidden md:block overflow-hidden bg-base-100 menu z-50">
+<div id="sidebar" class="md:sidebar h-full w-[5rem] hidden md:block overflow-hidden bg-base-100 menu z-50">
     <div class="flex h-screen flex-col justify-center pt-2 pb-6 w-56 p-0">
         <div class="w-full px-4 pt-10 flex items-center">
             <div class="avatar">
@@ -67,4 +67,27 @@
             @endforeach
         </ul>
     </div>
+</div>
+<div class="btm-nav md:hidden z-[50]">
+    @foreach ($arrSideBarItems as $name => $item)
+        @if(($loop->index + 1) != 4)
+            @if ($active == $name)
+                <button class="active">
+                    <i class="h-5 w-6 group-hover:text-white {{$item['icon']}}"></i>
+                    <span class="btm-nav-label">{{$name}}</span>
+                </button>
+            @else
+                <button>
+                    <i class="h-5 w-6 group-hover:text-white {{$item['icon']}}"></i>
+                    <span class="btm-nav-label">{{$name}}</span>
+                </button>
+            @endif
+        @else
+            <button tabindex="0">
+                <i class="fa-solid fa-ellipsis h-5 w-6 group-hover:text-white"></i>
+                <span class="btm-nav-label">More</span>
+            </button>   
+            @break
+        @endif
+    @endforeach
 </div>

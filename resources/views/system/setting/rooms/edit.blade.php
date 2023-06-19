@@ -7,7 +7,7 @@
         <div class="md:w-96 flex flex-col justify-center items-start">
           <div class="avatar">
             <div class="w-full p-3 border-2 border-dashed rounded-md border-primary text-neutral">
-              <img id="room_img" src="{{$room_list->image ? asset('storage/' . $room_list->image) : asset('images/avatars/no-avatar.png')}}" alt="{{$room_list->name}}"/>
+              <img id="show_img" src="{{$room_list->image ? asset('storage/' . $room_list->image) : asset('images/avatars/no-avatar.png')}}" alt="{{$room_list->name}}"/>
             </div>
           </div>
           <x-file-input id="image" name="image" placeholder="Image"/>
@@ -20,7 +20,7 @@
             <x-input type="number" id="max_occupancy" name="max_occupancy" placeholder="Max Guest" min="1" value="{{$room_list->max_occupancy}}"/>
             <x-input type="text" id="location" name="location" placeholder="Location" value="{{$room_list->location}}"/>
             <x-input type="number" id="many_room" name="many_room" placeholder="How Many Room" min="1" value="{{$room_list->many_room}}"/>
-            <label for="update_modal" class="btn btn-primary w-full">Update Room</label>
+            <label for="update_modal" class="btn btn-primary w-full">Save</label>
             <x-passcode-modal title="Edit Confirmation" id="update_modal" formId="update-form" />
         </div>
       </div>

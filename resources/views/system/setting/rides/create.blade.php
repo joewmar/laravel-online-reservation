@@ -6,7 +6,7 @@
         <div class="md:w-96 flex flex-col justify-center items-start">
           <div class="avatar">
             <div class="w-full p-3 border-2 border-dashed rounded-md border-primary text-neutral">
-              <img id="room_img" src="{{ asset('images/avatars/no-avatar.png')}}" alt="Room Image" />
+              <img id="show_img" src="{{ asset('images/avatars/no-avatar.png')}}" alt="Vehicle Image" />
             </div>
           </div>
           <x-file-input id="image" name="image" placeholder="Image"/>

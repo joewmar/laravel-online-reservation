@@ -15,7 +15,7 @@
                   <th>Ride Vechile Model</th>
                   <th>Maximium of Passenger</th>
                   <th>How many vechicle</th>
-                  <th colspan="2">Action</th>
+                  <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -25,24 +25,29 @@
                       <td>{{$item->model}}</td>
                       <td>{{$item->max_passenger}}</td>
                       <td>{{$item->many}}</td>
-                      <th>
-                        <x-tooltip title="Edit {{$item->model}}">
+                      <td>
+                        <div class="flex items-center flex-wrap">
                           <a href="{{ route('system.setting.rides.edit', encrypt($item->id))}}" class="btn btn-ghost btn-sm">
-                            <i class="fa-solid fa-pencil"></i>
+                            <div class="text-primary">
+                              <i class="fa-solid fa-pencil"></i>
+                              Edit
+                            </div>
                           </a>
-                        </x-tooltip>
-                        <x-tooltip title="Delete {{$item->model}}">
-                          <label for="delete_modal" class="btn btn-xs btn-ghost">                                
-                            <i class="fa-solid fa-trash"></i>
-                          </label>
-                          <form id="delete-form" method="POST" action=" {{ route('system.setting.rides.destroy', encrypt($item->id)) }}" enctype="multipart/form-data">
-                            @csrf
-                            @method('DELETE')
-                            <x-passcode-modal title="Delete Rate Confirmation" id="delete_modal" formId="delete-form" title="Do you want to remove this: {{$item->model}}"/>
-                          </form>
-                      </x-tooltip>
-
-                      </th>
+                          <div>
+                            <label for="delete_modal" class="btn btn-sm btn-ghost">                                
+                              <div class="text-error">
+                                <i class="fa-solid fa-trash"></i>
+                                Remove
+                              </div>
+                            </label>
+                            <form id="delete-form" method="POST" action=" {{ route('system.setting.rides.destroy', encrypt($item->id)) }}" enctype="multipart/form-data">
+                              @csrf
+                              @method('DELETE')
+                              <x-passcode-modal title="Delete Rate Confirmation" id="delete_modal" formId="delete-form" title="Do you want to remove this: {{$item->model}}"/>
+                            </form>
+                          </div>
+                        </div>
+                      </td>
                     </tr>
                   @empty
                   <tr>

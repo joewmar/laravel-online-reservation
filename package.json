@@ -23,6 +23,7 @@
         "@tailwindcss/typography": "^0.5.9",
         "alpinejs": "^3.12.2",
         "chart.js": "^4.3.0",
+        "cleave.js": "^1.6.0",
         "fullcalendar": "^6.1.8",
         "swiper": "^9.3.2"
     }

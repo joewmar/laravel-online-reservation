@@ -8,7 +8,7 @@
           <x-input type="text" id="name" name="name" placeholder="Room Name" value="{{$room_rate->name}}"/>
           <x-input type="number" id="occupancy" name="occupancy" placeholder="Number of Guest" value="{{$room_rate->occupancy}}"/>
           <x-input type="number" id="price" name="price" placeholder="Price" value="{{$room_rate->price}}"/>
-          <label for="update_modal" class="btn btn-primary w-full">Confirm</label>
+          <label for="update_modal" class="btn btn-primary w-full">Save</label>
           <x-passcode-modal title="Edit Type Confirmation" id="update_modal" formId="update-form" />        
       </div>
     </div>

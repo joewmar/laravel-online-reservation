@@ -46,7 +46,7 @@
                 </a>
               </div>
               <div class="tooltip" data-tip="Sign in with Facebook">
-                <a class="btn btn-circle btn-outline btn-info">
+                <az class="btn btn-circle btn-outline btn-info">
                   <i class="fa-brands fa-facebook"></i>
                 </a>
               </div>

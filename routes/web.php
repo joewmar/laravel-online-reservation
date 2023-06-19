@@ -1,13 +1,14 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RideController;
 use App\Http\Controllers\RoomController;
-use App\Http\Controllers\RoomSettingController;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SystemController;
-use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\RoomSettingController;
+use App\Http\Controllers\TourSettingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,12 +70,7 @@ Route::prefix('system')->name('system.')->group(function(){
         Route::view('/reservation', 'system.reservation.index',  ['activeSb' => 'Reservation'])->name('reservation');
         Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
 
-        // Tour Module
-        Route::prefix('tour')->name('tour.')->group(function(){
-            Route::view('/', 'system.tour.index',  ['activeSb' => 'Tour'])->name('home');
-            Route::view('/create', 'system.tour.create',  ['activeSb' => 'Tour'])->name('create');
-            Route::post('/store', [RoomController::class, 'ssssss'])->name('store');
-        });
+
 
         Route::view('/analytics', 'system.analytics.index',  ['activeSb' => 'Analytics'])->name('analytics');
         Route::view('/news', 'system.news.index',  ['activeSb' => 'News'])->name('news');
@@ -119,6 +115,16 @@ Route::prefix('system')->name('system.')->group(function(){
                 Route::put('/{id}/edit', [RideController::class, 'update'])->name('update');
                 Route::delete('/{id}/edit', [RideController::class, 'destroy'])->name('destroy');
 
+            });
+
+                    // Tour Module
+            Route::prefix('tour')->name('tour.')->group(function(){
+                Route::get('/', [TourSettingController::class, 'index'])->name('home');
+                Route::view('/create', 'system.setting.tour.create',  ['activeSb' => 'Hello'])->name('create');
+                Route::post('/store', [TourSettingController::class, 'store'])->name('store');
+                Route::delete('/{id}', [TourSettingController::class, 'destroy'])->name('destroy');
+                Route::get('/{id}/edit', [TourSettingController::class, 'edit'])->name('edit');
+                Route::put('/{id}/edit', [TourSettingController::class, 'update'])->name('update');
             });
 
         });
