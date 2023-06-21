@@ -12,12 +12,12 @@
                 "link" => "/system/reservation",
             ],
             "Rooms" => [
-                "icon" => "fa-solid fa-house",
+                "icon" => "fa-solid fa-hotel",
                 "link" => "/system/rooms",
             ],
-            "Tour" => [
-                "icon" => "fa-solid fa-location-dot",
-                "link" => "/system/tour",
+            "Tour Menu" => [
+                "icon" => "fa-solid fa-route",
+                "link" => "/system/menu",
             ],
             "Analytics" => [
                 "icon" => "fa-solid fa-chart-simple",

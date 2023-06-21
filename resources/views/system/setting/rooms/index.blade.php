@@ -13,6 +13,7 @@
                   <!-- head -->
                   <thead>
                   <tr>
+                    <th>Room ID</th>
                     <th>Room Name</th>
                     <th>Location</th>
                     <th>How many rooms</th>
@@ -23,6 +24,7 @@
                   <!-- row  -->
                   @forelse ($room_lists as $item)
                     <tr class="hover">
+                      <td>{{$item->id}}</td>
                       <td>{{$item->name}}</td>
                       <td>{{$item->location}}</td>
                       <td>{{$item->many_room}}</td>
@@ -49,6 +51,7 @@
                     <!-- head -->
                     <thead>
                     <tr>
+                      <th>Room ID</th>
                       <th>Room Rate</th>
                       <th>Number of Guests</th>
                       <th>Price</th>
@@ -59,6 +62,7 @@
                     <!-- row  -->
                     @forelse ($room_rates as $item)
                       <tr class="hover">
+                        <td>{{$item->id}}</td>
                         <td>{{$item->name}}</td>
                         <td>{{$item->occupancy}}</td>
                         <td>₱ {{number_format($item->price, 2)}}</td>

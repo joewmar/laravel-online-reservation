@@ -12,6 +12,7 @@
                 <!-- head -->
                 <thead>
                 <tr>
+                  <th>Ride ID</th>
                   <th>Ride Vechile Model</th>
                   <th>Maximium of Passenger</th>
                   <th>How many vechicle</th>
@@ -22,6 +23,7 @@
                 <!-- row 1 -->
                   @forelse ($rides as $item)
                     <tr class="hover">
+                      <td>{{$item->id}}</td>
                       <td>{{$item->model}}</td>
                       <td>{{$item->max_passenger}}</td>
                       <td>{{$item->many}}</td>

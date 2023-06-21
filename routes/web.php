@@ -1,12 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RideController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SystemController;
+use App\Http\Controllers\TourMenuController;
 use App\Http\Controllers\RoomSettingController;
 use App\Http\Controllers\TourSettingController;
 
@@ -70,7 +70,16 @@ Route::prefix('system')->name('system.')->group(function(){
         Route::view('/reservation', 'system.reservation.index',  ['activeSb' => 'Reservation'])->name('reservation');
         Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
 
+        Route::prefix('menu')->name('menu.')->group(function (){
+            Route::get('/', [TourMenuController::class, 'index'])->name('home');
+            Route::get('/create', [TourMenuController::class, 'create'])->name('create');
+            Route::post('/create', [TourMenuController::class, 'store'])->name('store');
 
+            Route::get('/{id}', [TourMenuController::class, 'show'])->name('show');
+            Route::delete('/{id}', [TourMenuController::class, 'destroy'])->name('destroy');
+            Route::get('/{id}/edit', [TourMenuController::class, 'edit'])->name('edit');
+            Route::put('/{id}/update', [TourMenuController::class, 'update'])->name('update');
+        });
 
         Route::view('/analytics', 'system.analytics.index',  ['activeSb' => 'Analytics'])->name('analytics');
         Route::view('/news', 'system.news.index',  ['activeSb' => 'News'])->name('news');

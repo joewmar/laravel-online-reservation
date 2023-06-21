@@ -55,49 +55,52 @@ class RoomSettingController extends Controller
     }
     // Add New Room
     public function store(Request $request){
-        $system_user = System::find(auth()->guard('system')->id());
+        $system_user = auth()->guard('system')->user();
+        if($system_user->type === '0'){
+            $validated = $request->validate([
+                'name' => ['required', Rule::unique('room_lists', 'name')],
+                'min_occupancy' =>  ['required', 'numeric', 'min:1'],
+                'max_occupancy' =>  ['required', 'numeric', 'min:1'],
+                'location' =>  ['required'],
+                'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
+                'many_room' =>  ['required', 'numeric', 'min:1'],
+                'passcode' =>  ['required', 'numeric', 'digits:4'],
+            ]);
 
-        $validated = $request->validate([
-            'name' => ['required', Rule::unique('room_lists', 'name')],
-            'min_occupancy' =>  ['required', 'numeric', 'min:1'],
-            'max_occupancy' =>  ['required', 'numeric', 'min:1'],
-            'location' =>  ['required'],
-            'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
-            'many_room' =>  ['required', 'numeric', 'min:1'],
-            'passcode' =>  ['required', 'numeric', 'digits:4'],
-        ]);
+            if (Hash::check($validated['passcode'], $system_user->passcode)) {
 
-        if (Hash::check($validated['passcode'], $system_user->passcode)) {
+                if(!$system_user){
+                    abort(403, 'Unauthorized Action');
+                }
 
-            if(!$system_user){
-                abort(403, 'Unauthorized Action');
+                if($request->hasFile('image')){                          // storage/app/logos
+                    $validated['image'] = $request->file('image')->store('room_lists', 'public');
+                }
+        
+                // Save to database and get value
+                $room_list = RoomList::create($validated);  
+        
+                // Get Count of Room
+                $room_count = (int)$room_list->many_room; 
+                
+                // Add Room One by one
+                for($count = 0; $count < $room_count; $count++){
+                    $room = new Room();
+                    $room->room_id = $room_list->id; // Set the appropriate accommodation_id value
+                    $room->room_no = 0; 
+                    $room->save(); 
+                }
+                refreshRoomNumber();
+        
+                return redirect()->route('system.setting.rooms.home')->with('success', 'Room Created');
+            } 
+            else{
+                return back()->with('error', 'Passcode Invalid');
             }
-
-            if($request->hasFile('image')){                          // storage/app/logos
-                $validated['image'] = $request->file('image')->store('room_lists', 'public');
-            }
-    
-            // Save to database and get value
-            $room_list = RoomList::create($validated);  
-    
-            // Get Count of Room
-            $room_count = (int)$room_list->many_room; 
-            
-            // Add Room One by one
-            for($count = 0; $count < $room_count; $count++){
-                $room = new Room();
-                $room->room_id = $room_list->id; // Set the appropriate accommodation_id value
-                $room->room_no = 0; 
-                $room->save(); 
-            }
-            refreshRoomNumber();
-    
-            return redirect()->route('system.setting.rooms.home')->with('success', 'Room Created');
-        } 
-        else{
-            return back()->with('error', 'Passcode Invalid');
         }
-
+        else{
+            abort(404);
+        }
 
     }
     // Process update room

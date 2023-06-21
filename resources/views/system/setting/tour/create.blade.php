@@ -15,6 +15,7 @@
         <x-input type="text" id="name" name="name" placeholder="Name"/>
         <x-textarea id="description" name="description" placeholder="Description (Optional)"/>
         <x-input type="text" id="location" name="location" placeholder="Location"/>
+        {{-- <x-select-multiple /> --}}
         <label for="add_modal" class="btn btn-primary w-full">Add Destination</label>
         <x-passcode-modal title="Add Destination Confirmation" id="add_modal" formId="add-form" />        
       </div>
