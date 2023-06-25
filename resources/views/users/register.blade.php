@@ -28,15 +28,8 @@
           <x-input type="text" name="first_name" placeholder="First Name"/>
           {{-- Last Name --}}
           <x-input type="text" name="last_name" placeholder="Last Name"/>
-          <x-input type="text" name="last_name" placeholder="Last Name"/>
-
-          {{-- Birthday--}}
-          {{-- <div class="form-control">
-            <label class="label">
-              <span class="label-text">Your Birthday</span>
-            </label>
-            <input type="date" class="input input-bordered input-primary" value="{{old('')}}" />
-          </div> --}}
+          {{-- Birthday --}}
+          <x-datetime-picker name="birthday" id="birthday" placeholder="Birthday" class="flatpickr-bithday" />
           {{-- Nationality--}}
           <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" />
           {{-- Country--}}

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RideController;
@@ -44,6 +45,10 @@ Route::get('/about', function () {
     return view('landing.about_us', ['activeNav' => 'About Us']);
 })->name('about.us');
 
+Route::prefix('reservation')->name('reservation.')->group(function (){
+    Route::get('/date', [ReservationController::class, 'date'])->name('date');
+    Route::post('/date', [ReservationController::class, 'dateCheck'])->name('date.check');
+});
 
 // Route::middleware(['guest:web'])->group(function(){
 Route::middleware(['guest'])->group(function(){
@@ -57,6 +62,11 @@ Route::middleware(['guest'])->group(function(){
 Route::middleware(['auth', 'prevent-back-history'])->group(function(){
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::view('/profile', 'home')->name('profile');
+
+    // Reservation Information
+    Route::prefix('reservation')->name('reservation.')->group(function (){
+        Route::get('/choose', [ReservationController::class, 'choose'])->name('choose');
+    });
 });
 
 //For System Users Auth (System Panel)

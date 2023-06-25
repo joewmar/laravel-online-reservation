@@ -7,7 +7,7 @@
       <div class="card flex rounded-box w-full h-auto">
         <div class="card-body">
           <h2 class="font-bold text-3xl text-center mb-10">Let's Login!</h2>
-          <form action="{{ route('check') }}" method="post" autocomplete="off">
+          <form action="{{ route('check') }}" method="post">
             @csrf
             <x-input type="email" name="email" placeholder="Email"/>
             <div class="form-control w-full">
@@ -53,7 +53,7 @@
             </div>
             <p class="mt-4 text-sm text-neutral w-full text-center">
               Don't have an account?
-              <a href="/register" for="register" class="link link-hover link-primary">Create a Account</a>
+              <label for="register" class="link link-hover link-primary">Create a Account</label>
             </p>
           </form>
         </div>
@@ -71,6 +71,6 @@
       }
   </script>
 </x-landing-layout>
-{{-- <x-register-modal id="register" /> --}}
+<x-register-modal id="register" />
 
 

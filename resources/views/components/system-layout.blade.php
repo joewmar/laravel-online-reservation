@@ -7,8 +7,9 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     @vite(['resources/css/app.css'])
     @vite(['resources/js/app.js'])
+    @stack('styles')
     <title>{{ str_replace('_', ' ', config('app.name'))}}</title>
-    <script src="//unpkg.com/alpinejs" defer></script>
+    {{-- <script src="//unpkg.com/alpinejs" defer></script> --}}
 </head>
 <body class="bg-white h-screen">
   @if(session()->has('success'))
@@ -29,6 +30,8 @@
       </div>
     </main>
    </div>
+   
   <script src="{{Vite::asset("resources/js/system-navbar.js")}}"></script>
+  @stack('scripts')
 </body>
 </html>

@@ -19,80 +19,30 @@
         </div>
       </div>
       <div class="divider">OR</div>
-      <form action="/store" method="post">
-          {{-- First Name --}}
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">First Name</span>
-            </label>
-            <input type="text" class="input input-bordered input-primary" />
-          </div>
-          {{-- Last Name --}}
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Last Name</span>
-            </label>
-            <input type="text" class="input input-bordered input-primary" />
-          </div>
-          {{-- Birthday--}}
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Your Birthday</span>
-            </label>
-            <input type="date" class="input input-bordered input-primary" />
-          </div>
-          {{-- Nationality--}}
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Your Nationality</span>
-            </label>
-            <input type="text" class="input input-bordered input-primary" />
-          </div>
-          {{-- Country--}}
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Your Country</span>
-            </label>
-            <input type="text" class="input input-bordered input-primary" />
-          </div>
-          {{-- Phone Number  --}}
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Phone Number</span>
-            </label>
-            <input type="tel" class="input input-bordered input-primary" />
-          </div>
-          {{-- Email  --}}
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Email</span>
-            </label>
-            <input type="text" class="input input-bordered input-primary" />
-          </div>
+      <form action="{{ route('create') }}" method="post">
+        @csrf
+        {{-- First Name --}}
+        <x-input type="text" name="first_name" placeholder="First Name"/>
+        {{-- Last Name --}}
+        <x-input type="text" name="last_name" placeholder="Last Name"/>
+        {{-- Birthday --}}
+        <x-datetime-picker name="birthday" id="birthday" placeholder="Birthday" class="flatpickr-bithday" />
+        {{-- Nationality--}}
+        <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" />
+        {{-- Country--}}
+        <x-select id="country" name="country" placeholder="Country" :value="$countries" />
+        {{-- Phone Number  --}}
+        <x-input type="tel" name="contact" placeholder="Phone Number"/>
+        {{-- Email  --}}
+        <x-input type="email" name="Email" placeholder="Contact Email"/>
 
-          {{-- Password --}}
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Password</span>
-            </label>
-            <input type="password" class="input input-bordered input-primary" />
-            <label class="label">
-              <label href="#" class="label-text-alt">Error</label>
-            </label>
-          </div>
-          {{-- Password --}}
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Confirm Password</span>
-            </label>
-            <input type="password" class="input input-bordered input-primary" />
-          </div>
+        {{-- Password --}}
+        <x-input type="password" name="password" placeholder="Password"/>
+        {{-- Confrim Password --}}
+        <x-input type="password" name="password_confirmation" placeholder="Confirm Password"/>
         <div class="form-control mt-6">
-          <button type="submit" class="btn btn-primary">Sign up</button>
+            <button type="submit" class="btn btn-primary w-full">Sign up</button>
         </div>
-        <p class="mt-4 text-sm text-neutral w-full text-center">
-          <a href="{{url()->previous()}}" class="link link-hover link-primary">Back</a>
-        </p>
       </form>
   </div>
 </div>

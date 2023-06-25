@@ -1,9 +1,13 @@
 import './bootstrap';
 import '../css/app.css';
-import './analytics-chart.js';
+import './flatpickr.js';
+// import './users/custom-slider';
+import './users/menu-slider';
 
-import Alpine from 'alpinejs'
-document.Alpine = Alpine
-Alpine.start()
+// import function to register Swiper custom elements
+import { register } from 'swiper/element/bundle';
+// register Swiper custom elements
+register();
+
 
 

@@ -24,9 +24,9 @@ class TourMenuController extends Controller
                 'category' =>  ['required'],
                 'type' => [],
                 'inclusion' => [],
-                'price' =>  ['required', 'numeric', 'regex:/^\d+(\.\d{1,2})?$/'],
+                'price' =>  ['required', 'numeric', 'decimal:2'],
                 'no_day' =>  ['required', 'numeric', 'min:1'],
-                'hrs' =>  ['required', 'numeric', 'regex:/^\d+(\.\d{1})?$/'],
+                'hrs' =>  ['required', 'numeric', 'decimal:1'],
                 'pax' =>  ['required', 'numeric', 'min:1'],
                 'passcode' =>  ['required', 'numeric', 'digits:4'],
             ]);
@@ -44,6 +44,7 @@ class TourMenuController extends Controller
         else{
             abort(404);
         }
+        // dd($request->all());
 
     }
 
@@ -67,9 +68,9 @@ class TourMenuController extends Controller
                 'category' =>  ['required'],
                 'type' => [],
                 'inclusion' => [],
-                'price' =>  ['required', 'numeric', 'regex:/^\d+(\.\d{1,2})?$/'],
+                'price' =>  ['required', 'numeric', 'decimal:2'],
                 'no_day' =>  ['required', 'numeric', 'min:1'],
-                'hrs' =>  ['required', 'numeric', 'regex:/^\d+(\.\d{1})?$/'],
+                'hrs' =>  ['required', 'numeric', 'decimal:1'],
                 'pax' =>  ['required', 'numeric', 'min:1'],
                 'passcode' =>  ['required', 'numeric', 'digits:4'],
             ]);

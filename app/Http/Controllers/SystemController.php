@@ -11,15 +11,15 @@ class SystemController extends Controller
     // Check if Valid System Credentials
     public function check(Request $request){
         // Validate Inputs
-        $formFields = $request->validate([
+        $validated = $request->validate([
             'username' => ['required'],
             'password' => ['required', 'min:5'],
         ]);
 
         // guard('your_guard_created') Attempt to log the user in (If user credentials are correct)
-        if(auth()->guard('system')->attempt($formFields)){
+        if(auth('system')->attempt($validated)){
             $request->session()->regenerate(); //Regenerate Session ID
-            return redirect()->route('system.home');
+            return redirect()->intended(route('system.home'));
         }
         else{
             return back()->withErrors(['username' => 'Invalid Credentials'])->onlyInput('username');
@@ -31,6 +31,6 @@ class SystemController extends Controller
         // Recommend to invalidate the users session and regenerate the toke from @crfs
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/');
+        return redirect()->route('system.login');
     }
 }

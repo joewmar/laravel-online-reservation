@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var calendar = new Calendar(calendarEl, {
       themeSystem: 'sketchy',
       aspectRatio: 2,
-      initialView: 'dayGridMonth',
+      initialView: 'dayGridMonth',zz
       headerToolbar: {
           left: 'prev,next today',
           center: 'title',

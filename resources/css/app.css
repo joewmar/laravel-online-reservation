@@ -1,7 +1,5 @@
 @import "@fortawesome/fontawesome-free/css/all.css";
-@import url('loader.css');
 @import url('scrollcolor.css');
-@import url('custom-slider.css');
 
 @tailwind base;
 @tailwind components;

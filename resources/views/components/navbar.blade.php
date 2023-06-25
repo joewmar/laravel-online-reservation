@@ -1,4 +1,4 @@
-<div id="navbar" class="navbar pt-3 transition duration-700 ease-in-out bg-transparent fixed z-10">
+<div id="navbar" class="navbar transition duration-700 ease-in-out bg-transparent fixed z-10">
     <div class="navbar-start">
       <div class="dropdown">
         <label tabindex="0" class="btn btn-ghost lg:hidden text-white toggleColour">
@@ -12,10 +12,12 @@
                   <li><a href="{{$item}}">{{$key}}</a></li>
                 @endif
             @endforeach
+            @guest
+              <li><a href="{{route('login')}}" class="md:hidden">Login</a></li>
+            @endguest
             @auth
               <li><a href="/profile">Profile</a></li>
               <li><a href="/reservation">My Reservation</a></li>  
-              <li><a href="/reservation/step1">Book Now</a></li> 
             @endauth
             
         </ul>
@@ -31,12 +33,9 @@
                 <li><a href="{{$item}}">{{$key}}</a></li>
             @endif
         @endforeach
-        @guest
-          <li><a href="{{route('login')}}">Login</a></li>
-        @else
-          <li><a href="/reservation">My Reservation</a></li>  
-          <li><a href="/reservation/step1">Book Now</a></li>  
-        @endguest
+        @auth
+          <li><a href="">My Reservation</a></li>  
+        @endauth
       </ul>
     </div>
     <div class="navbar-end">
@@ -67,11 +66,16 @@
         </ul>
       </div>
     @else
-        <a class="btn bg-primary text-white" href="/reservation/step1">Book Now</a>
+        <div class="space-x-1">
+          <ul class="toggleColour text-white menu menu-horizontal px-1">
+            <li><a href="{{route('login')}}">Sign up</a></li>
+          </ul>
+          <a href="{{route('login')}}" class="btn btn-primary text-white">Sign in</a>
+        </div>
     @endauth
     </div>
-
   </div>
+
   
   
   

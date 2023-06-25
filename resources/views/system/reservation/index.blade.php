@@ -7,7 +7,7 @@
         </button>
         <div class="my-20 ">
             <div id='calendar' class=""></div>
-    
+
         </div>   
     
         {{-- Table  --}}
@@ -56,7 +56,8 @@
                 </table>
             </div>
         </div>    
-        
-        <script type="module" src='{{Vite::asset("resources/js/reservation-calendar.js")}}'></script>
+        @push('scripts')
+            <script type="module" src='{{Vite::asset("resources/js/reservation-calendar.js")}}'></script>
+        @endpush
     </x-system-content>
 </x-system-layout>
