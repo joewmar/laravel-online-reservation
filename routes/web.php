@@ -66,6 +66,9 @@ Route::middleware(['auth', 'prevent-back-history'])->group(function(){
     // Reservation Information
     Route::prefix('reservation')->name('reservation.')->group(function (){
         Route::get('/choose', [ReservationController::class, 'choose'])->name('choose');
+        // Route::post('/choose/check', [ReservationController::class, 'chooseCheckAll'])->name('choose.check.all');
+
+        Route::post('/choose/check/one', [ReservationController::class, 'chooseCheck1'])->name('choose.check.one');
     });
 });
 

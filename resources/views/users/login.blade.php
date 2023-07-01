@@ -1,10 +1,10 @@
 <x-landing-layout>
   <div class="flex items-center justify-center h-screen bg-base-100">
-    <div class="flex justify-center rounded-box shadow-2xl w-[80%] bg-base-100">
+    <div class="flex justify-center rounded-box shadow-2xl w-[90%] md:w-[80%] lg:w-[50%] bg-base-100">
       <div class="card hidden md:flex rounded-l-box w-full h-auto">
         <img src="{{asset('images/main-hero3.jpg')}}" class="rounded-l-box object-cover h-full w-full"/>
       </div>
-      <div class="card flex rounded-box w-full h-auto">
+      <div class="card flex rounded-box w-full h-full">
         <div class="card-body">
           <h2 class="font-bold text-3xl text-center mb-10">Let's Login!</h2>
           <form action="{{ route('check') }}" method="post">
@@ -46,7 +46,7 @@
                 </a>
               </div>
               <div class="tooltip" data-tip="Sign in with Facebook">
-                <az class="btn btn-circle btn-outline btn-info">
+                <a class="btn btn-circle btn-outline btn-info">
                   <i class="fa-brands fa-facebook"></i>
                 </a>
               </div>

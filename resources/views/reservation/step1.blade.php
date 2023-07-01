@@ -3,8 +3,15 @@
 @endpush
 <x-landing-layout>
     <x-full-content>
-        <div class="flex justify-center items-center w-full h-screen">
-            <div class="md:border border-primary flex flex-col justify-around w-full md:w-[50%] h-full md:h-[80%] md:rounded-xl md:shadow-lg md:shadow-primary p-10">
+        <div class="flex flex-col justify-center items-center w-full h-screen">
+            <div class="w-full hidden md:block absolute top-28">
+                <ul class="w-full steps  steps-vertical lg:steps-horizontal">
+                    <li class="step step-primary">Dates</li>
+                    <li class="step">Tour Menu</li>
+                    <li class="step">Details</li>
+                    <li class="step">Confirmation</li>
+                </ul>
+            </div>
                 <form action="{{ route('reservation.date.check')}}" method="post">
                     @csrf
                     <div class="w-auto text-center">
@@ -25,7 +32,6 @@
                         </button>
                     </div>
             </form>
-            </div>
         </div>
     </x-full-content>
 

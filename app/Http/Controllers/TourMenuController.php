@@ -22,8 +22,8 @@ class TourMenuController extends Controller
             $validated = $request->validate([
                 'title' => ['required'],
                 'category' =>  ['required'],
-                'type' => [],
-                'inclusion' => [],
+                'type' => ['nullable'],
+                'inclusion' => ['nullable'],
                 'price' =>  ['required', 'numeric', 'decimal:2'],
                 'no_day' =>  ['required', 'numeric', 'min:1'],
                 'hrs' =>  ['required', 'numeric', 'decimal:1'],
@@ -66,8 +66,8 @@ class TourMenuController extends Controller
             $validated = $request->validate([
                 'title' => ['required'],
                 'category' =>  ['required'],
-                'type' => [],
-                'inclusion' => [],
+                'type' => ['nullable'],
+                'inclusion' => ['nullable'],
                 'price' =>  ['required', 'numeric', 'decimal:2'],
                 'no_day' =>  ['required', 'numeric', 'min:1'],
                 'hrs' =>  ['required', 'numeric', 'decimal:1'],

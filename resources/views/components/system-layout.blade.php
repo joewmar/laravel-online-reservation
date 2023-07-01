@@ -30,8 +30,7 @@
       </div>
     </main>
    </div>
-   
+   @stack('scripts')
   <script src="{{Vite::asset("resources/js/system-navbar.js")}}"></script>
-  @stack('scripts')
 </body>
 </html>

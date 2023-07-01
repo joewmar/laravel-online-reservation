@@ -9,5 +9,9 @@ import { register } from 'swiper/element/bundle';
 // register Swiper custom elements
 register();
 
+import Alpine from 'alpinejs';
+window.Alpine = Alpine;
+Alpine.start();
+
 
 

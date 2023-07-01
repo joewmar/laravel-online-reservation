@@ -23,4 +23,10 @@ function refreshRoomNumber(){
         }
     }
 }
+function checkAllArrayValue($array){
+    $check = collect($array)->every(function ($value) {
+        return $value === null || empty($value);
+    });
+    return $check;
+}
 

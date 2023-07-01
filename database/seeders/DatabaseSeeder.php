@@ -60,54 +60,60 @@ class DatabaseSeeder extends Seeder
             'passcode' => Hash::make('5566'),
         ]);
 
-        \App\Models\TourMenu::factory()->create([
+        \App\Models\TourMenuList::factory()->create([
             'title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike',
-            'type' => 'Solo Rider',
             'category' => 'Rent ATV',
             'inclusion' => 'Duration: 1 hr. to 1.5 hrs.',
             'no_day' => '1',
             'hrs' => '1.5',
+
+        ]);
+        \App\Models\TourMenuList::factory()->create([
+            'title' => 'Tambo Lake Trail Rate',
+            'category' => 'ATV Trail Rate',
+            'inclusion' => 'Free trek meal and bottled water, 100 add-ons (conservation fees, tourism fees)',
+            'no_day' => '1',
+            'hrs' => '1.5',
+        ]);
+
+        \App\Models\TourMenuList::factory()->create([
+            'title' => 'ATV Long Trail (going to Pinatubo drop point car)',
+            'category' => 'ATV Trail Rate',
+            'inclusion' => 'Free trek meal and bottled water, 100 add-ons (conservation fees, tourism fees)',
+            'no_day' => '1',
+            'hrs' => '1.5',
+        ]);
+
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 1,
+            'type' => 'Solo Rider',
             'price' => '2500',
             'pax' => '1',
 
         ]);
         \App\Models\TourMenu::factory()->create([
-            'title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike',
+            'menu_id' => 1,
             'type' => 'Double Rider',
-            'category' => 'Rent ATV',
-            'inclusion' => 'Duration: 1 hr. to 1.5 hrs.',
-            'no_day' => '1',
-            'hrs' => '1.5',
             'price' => '3500',
             'pax' => '2',
         ]);
+
         \App\Models\TourMenu::factory()->create([
-            'title' => 'Tambo Lake Trail Rate',
+            'menu_id' => 2,
             'type' => 'Solo',
-            'category' => 'ATV Trail Rate',
-            'inclusion' => 'Free trek meal and bottled water, 100 add-ons (conservation fees, tourism fees)',
-            'no_day' => '1',
-            'hrs' => '1.5',
             'price' => '3750',
             'pax' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
-            'title' => 'Tambo Lake Trail Rate',
+            'menu_id' => 2,
             'type' => 'Angkas',
-            'category' => 'ATV Trail Rate',
-            'inclusion' => 'Free trek meal and bottled water, 100 add-ons (conservation fees, tourism fees)',
-            'no_day' => '1',
-            'hrs' => '1.5',
             'price' => '5550',
             'pax' => '2',
         ]);
+
         \App\Models\TourMenu::factory()->create([
-            'title' => 'ATV Long Trail (going to Pinatubo drop point car)',
+            'menu_id' => 3,
             'type' => 'Solo',
-            'category' => 'ATV Trail Rate',
-            'inclusion' => 'Free trek meal and bottled water, 100 add-ons (conservation fees, tourism fees)',
-            'no_day' => '1',
-            'hrs' => '1.5',
             'price' => '13200', /* '13200 + 4,000' */
             'pax' => '1',
         ]);

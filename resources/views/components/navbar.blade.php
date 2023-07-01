@@ -68,7 +68,7 @@
     @else
         <div class="space-x-1">
           <ul class="toggleColour text-white menu menu-horizontal px-1">
-            <li><a href="{{route('login')}}">Sign up</a></li>
+            <li><a href="{{route('register')}}">Sign up</a></li>
           </ul>
           <a href="{{route('login')}}" class="btn btn-primary text-white">Sign in</a>
         </div>

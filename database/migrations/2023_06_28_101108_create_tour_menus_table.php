@@ -13,12 +13,8 @@ return new class extends Migration
     {
         Schema::create('tour_menus', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->string('type')->nullable();
-            $table->string('category');
-            $table->text('inclusion')->nullable();
-            $table->integer('no_day');
-            $table->decimal('hrs', 2, 1);
+            $table->foreignId('menu_id')->constrained('tour_menu_lists')->onDelete('cascade');
+            $table->string('type');
             $table->decimal('price', 8, 2);
             $table->integer('pax');
             $table->timestamps();

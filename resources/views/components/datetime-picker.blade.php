@@ -1,9 +1,9 @@
-@props(['type' => 'text', 'placeholder' ,'name', 'id' => '', 'placeholder' => '', 'class' =>''])
+@props(['type' => 'text', 'placeholder' ,'name', 'id' => '', 'placeholder' => '', 'class' =>'', 'value' => ''])
 <div class="form-control w-full">
     <label class="label">
       <span class="label-text">{{$placeholder}}</span>
     </label>
-    <input type="{{$type}}" placeholder="Select Date" name="{{$name}}" id="{{$id}}" class="input input-primary w-full {{$class}}" value="{{old($name)}}" />
+    <input type="{{$type}}" placeholder="Select Date" name="{{$name}}" id="{{$id}}" class="input input-primary w-full {{$class}}" value="{{$value === '' ? old($name): $value}}" />
     <label class="label">
         <span class="label-text-alt">
             @error($name)

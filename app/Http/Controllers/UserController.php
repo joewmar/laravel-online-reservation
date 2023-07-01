@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Arr;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -54,11 +55,15 @@ class UserController extends Controller
         if(auth('web')->attempt($validated)){
             $request->session()->regenerate(); //Regenerate Session ID
 
-            if ($request->session()->exists('reservation')) {
+            $getParamDates = array(
+                "cin" =>  ($request->cin != '' ? decrypt($request->cin) : null),
+                "cout" =>  ($request->cout != '' ? decrypt($request->cout) : null),
+            );
+            if (checkAllArrayValue($getParamDates) === false) {
                 return redirect()->route('reservation.choose');
             }
             else{
-                return redirect()->route('home')->with('success', 'Welcome back ' . auth()->user()->first_name . ' ' . auth()->user()->last_name);
+                return redirect()->route('home')->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
             }
             
         

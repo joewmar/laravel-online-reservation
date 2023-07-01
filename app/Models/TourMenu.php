@@ -8,15 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class TourMenu extends Model
 {
     use HasFactory;
-
     protected $fillable = [
-        'title',
+        'menu_id',
         'type',
-        'category',
-        'inclusion',
         'price',
-        'no_day',
-        'hrs',
         'pax',
     ];
+    public function tourMenu(){
+        return $this->belongsTo(TourMenuList::class, 'room_id');
+    }
 }

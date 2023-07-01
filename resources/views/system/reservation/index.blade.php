@@ -56,8 +56,9 @@
                 </table>
             </div>
         </div>    
-        @push('scripts')
-            <script type="module" src='{{Vite::asset("resources/js/reservation-calendar.js")}}'></script>
-        @endpush
+
     </x-system-content>
+    @push('scripts')
+        <script type="module" src='{{Vite::asset("resources/js/reservation-calendar.js")}}'></script>
+    @endpush
 </x-system-layout>
