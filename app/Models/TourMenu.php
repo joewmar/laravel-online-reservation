@@ -15,6 +15,6 @@ class TourMenu extends Model
         'pax',
     ];
     public function tourMenu(){
-        return $this->belongsTo(TourMenuList::class, 'room_id');
+        return $this->belongsTo(TourMenuList::class, 'menu_id');
     }
 }

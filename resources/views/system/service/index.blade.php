@@ -13,21 +13,17 @@
                   <tr>
                     <th>Menu No.</th>
                     <th>Title</th>
-                    <th>Type</th>
-                    <th>Price</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                 <!-- row  -->
-                @forelse ($service_menus as $menu)
+                @forelse ($tour_lists as $list)
                   <tr class="hover">
-                    <td>{{$menu->id}}</td>
-                    <td>{{$menu->title}}</td>
-                    <td>{{$menu->type}}</td>
-                    <td>{{$menu->price}}</td>
+                    <td>{{$list->id}}</td>
+                    <td>{{$list->title}}</td>
                     <td>
-                      <a href="{{ route('system.menu.show', encrypt($menu->id))}}" class="link font-bold link-primary">More details</a>
+                      <a href="{{ route('system.menu.show', encrypt($list->id))}}" class="link font-bold link-primary">More details</a>
                     </td>
                   </tr>
                 @empty

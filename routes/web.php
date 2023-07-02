@@ -89,6 +89,8 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::get('/create', [TourMenuController::class, 'create'])->name('create');
             Route::post('/create', [TourMenuController::class, 'store'])->name('store');
 
+            Route::post('/create/replace', [TourMenuController::class, 'replace'])->name('replace');
+
             Route::get('/{id}', [TourMenuController::class, 'show'])->name('show');
             Route::delete('/{id}', [TourMenuController::class, 'destroy'])->name('destroy');
             Route::get('/{id}/edit', [TourMenuController::class, 'edit'])->name('edit');

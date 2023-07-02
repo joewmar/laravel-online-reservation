@@ -1,5 +1,6 @@
 <?php
 
+use Carbon\Carbon;
 use App\Models\Room;
 use Illuminate\Support\Facades\Storage;
 
@@ -29,4 +30,18 @@ function checkAllArrayValue($array){
     });
     return $check;
 }
+function checkDiffDates($dt1, $dt2){
+    $date1 = Carbon::parse($dt1); // Convert $date1 to Carbon object
+    $date2 = Carbon::parse($dt2); // Convert $date2 to Carbon object
 
+    return $date1->diffInDays($date2); // Calculate the number of days between the two dates
+}
+function getAllArraySpecificKey($array, $context) : Array{
+    $paxParameters = [];
+    foreach ($array as $key => $value) {
+        if (strpos($key, $context) === 0) {
+            $paxParameters[$key] = $value;
+        }
+    }
+    return $paxParameters;
+}

@@ -17,6 +17,6 @@ class TourMenuList extends Model
         'hrs',
     ];
     public function tourMenuLists(){
-        return $this->hasMany(TourMenuList::class, 'menu_id');
+        return $this->hasMany(TourMenu::class, 'menu_id');
     }
 }

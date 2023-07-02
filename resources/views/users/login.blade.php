@@ -1,6 +1,6 @@
 <x-landing-layout>
   <div class="flex items-center justify-center h-screen bg-base-100">
-    <div class="flex justify-center rounded-box shadow-2xl w-[90%] md:w-[80%] lg:w-[50%] bg-base-100">
+    <div class="flex justify-center rounded-box shadow-2xl w-[90%] lg:w-[50%] bg-base-100">
       <div class="card hidden md:flex rounded-l-box w-full h-auto">
         <img src="{{asset('images/main-hero3.jpg')}}" class="rounded-l-box object-cover h-full w-full"/>
       </div>

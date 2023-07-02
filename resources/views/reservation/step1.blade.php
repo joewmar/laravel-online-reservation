@@ -4,14 +4,6 @@
 <x-landing-layout>
     <x-full-content>
         <div class="flex flex-col justify-center items-center w-full h-screen">
-            <div class="w-full hidden md:block absolute top-28">
-                <ul class="w-full steps  steps-vertical lg:steps-horizontal">
-                    <li class="step step-primary">Dates</li>
-                    <li class="step">Tour Menu</li>
-                    <li class="step">Details</li>
-                    <li class="step">Confirmation</li>
-                </ul>
-            </div>
                 <form action="{{ route('reservation.date.check.store')}}" method="post">
                     @csrf
                     <div class="w-auto text-center">

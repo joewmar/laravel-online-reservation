@@ -118,7 +118,21 @@ class ReservationController extends Controller
         if (checkAllArrayValue([$request['cin'], $request['cout']]) === true) 
             return view('reservation.step1');
 
-        return view('reservation.step2', ['tour_lists' => TourMenuList::all(), 'tour_category' => TourMenuList::distinct()->get('category'), 'tour_menus' => TourMenu::all()]);        
+        if($request->has(['cin', 'cout'])){
+            $noOfday = checkDiffDates(decrypt(request('cin')), decrypt(request('cout')));
+        }
+
+        return view('reservation.step2', [
+            'tour_lists' => TourMenuList::all(), 
+            'tour_category' => TourMenuList::distinct()->get('category'), 
+            'tour_menus' => TourMenu::all(), 
+            "cin" =>  $request->has('cin') != null ? decrypt(request('cin')) : '',
+            "cout" => $request->has('cout') != null ? decrypt(request('cout')) : '',
+            "px" => $request->has('px') != null ? decrypt(request('px')) : '',
+            "at" =>   $request->has('at') != null ? decrypt(request('px')) : '',
+            "py" =>  $request->has('py') != null ? decrypt(request('px')) : '',
+            "user_days" => isset($noOfday) ? $noOfday : '',
+        ]);      
 
     }
     // Check Step 1 on Choose Form
