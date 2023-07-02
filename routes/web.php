@@ -48,6 +48,7 @@ Route::get('/about', function () {
 Route::prefix('reservation')->name('reservation.')->group(function (){
     Route::get('/date', [ReservationController::class, 'date'])->name('date');
     Route::post('/date', [ReservationController::class, 'dateCheck'])->name('date.check');
+    Route::post('/date/check', [ReservationController::class, 'dateStore'])->name('date.check.store');
 });
 
 // Route::middleware(['guest:web'])->group(function(){

@@ -70,18 +70,19 @@
               <x-select id="accommodation_type" name="accommodation_type" placeholder="Accommodations Type" :value="$arrAccType"  val="{{$reserveMenu === null ? '' : $reserveMenu['at']}}"/>
               {{-- Payment Method  --}}
               <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  val="{{$reserveMenu === null ? '' : $reserveMenu['py']}}"/>
-              @if(!(request()->has(['cin', 'cout'])))
-                <div class="hidden lg:flex justify-start gap-5">
+              @if(request()->has(['cin', 'cout', 'px', 'at', 'py']))
+                  <div class="hidden">
+              @else
+                  <div class="lg:flex justify-start gap-5">
+              @endif
                   <div class="mt-8 flex gap-4">
-                    <a href="{{URL::previous()}}" class="btn btn-ghost">Back</a>
-                    <button type="submit" class="btn btn-primary">Next</button>
+                    <a href="{{route('reservation.date')}}" class="btn btn-ghost">Back</a>
+                    <button type="submit" class="btn btn-primary">Continue</button>
                   </div>
                 </div>
-              @endif
           </div>
 
         </div>
-
       </div>
       <div class="divider"></div>
       @if(request()->has(['cin', 'cout', 'px', 'at', 'py']))
@@ -197,7 +198,7 @@
         </div>
         <div class="hidden lg:flex justify-start gap-5">
           <div class="mt-8 flex gap-4">
-            <a href="{{URL::previous()}}" class="btn btn-ghost">Back</a>
+            <a href="{{route('reservation.choose', Arr::query(["cin" =>  request('cin'), "cout" =>  request('cout')]) ) }}" class="btn btn-ghost">Back</a>
             <button type="submit" class="btn btn-primary">Next</button>
           </div>
         </div>

@@ -15,7 +15,7 @@
 
     <div class="modal-action">
       <label for="{{$id}}" class="btn btn-ghost">Close</label>
-      <button class="btn btn-primary" onclick="event.preventDefault(); document.getElementById('reservation-form').submit();">Proceed</button>
+      <button class="btn btn-primary" onclick="event.preventDefault(); document.getElementById('reservation-form').submit();">Let's Check</button>
     </div>
   </div>
 </div>

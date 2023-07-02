@@ -12,14 +12,14 @@
                     <li class="step">Confirmation</li>
                 </ul>
             </div>
-                <form action="{{ route('reservation.date.check')}}" method="post">
+                <form action="{{ route('reservation.date.check.store')}}" method="post">
                     @csrf
                     <div class="w-auto text-center">
                         <h2 class="font-bold text-3xl uppercase">Choose your Date</h2>
                     </div>
                     <div class="w-auto text-center flex space-x-4">
-                        <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" />
-                        <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" />
+                        <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$cin !== '' ? $cin : ''}}" />
+                        <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$cin !== '' ? $cin : ''}}" />
                     </div>
                     <div class="w-auto items-center flex justify-between">
                         <a href="{{URL::previous()}}" class="btn btn-ghost">

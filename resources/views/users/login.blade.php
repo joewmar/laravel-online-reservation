@@ -7,7 +7,7 @@
       <div class="card flex rounded-box w-full h-full">
         <div class="card-body">
           <h2 class="font-bold text-3xl text-center mb-10">Let's Login!</h2>
-          <form action="{{ route('check') }}" method="post">
+            <form action="{{ route('check') }}" method="post">
             @csrf
             <x-input type="email" name="email" placeholder="Email"/>
             <div class="form-control w-full">

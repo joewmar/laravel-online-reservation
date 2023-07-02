@@ -55,18 +55,18 @@ class UserController extends Controller
         if(auth('web')->attempt($validated)){
             $request->session()->regenerate(); //Regenerate Session ID
 
-            $getParamDates = array(
-                "cin" =>  ($request->cin != '' ? decrypt($request->cin) : null),
-                "cout" =>  ($request->cout != '' ? decrypt($request->cout) : null),
-            );
-            if (checkAllArrayValue($getParamDates) === false) {
-                return redirect()->route('reservation.choose');
+            if ($request->has([$request['cin'], $request['cout']])) {
+                $paramDates = array(
+                    "cin" =>   $request['cin'],
+                    "cout" =>  $request['cout'],
+                );
+                return redirect()->route('reservation.choose', Arr::query($paramDates));
             }
             else{
                 return redirect()->route('home')->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
             }
             
-        
+        // dd($request['cin']);
         }
         else{
             return back()->withErrors(['email' => 'Invalid Credentials'])->onlyInput('email');

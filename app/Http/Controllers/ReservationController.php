@@ -13,13 +13,22 @@ use Illuminate\Support\Facades\Validator;
 
 class ReservationController extends Controller
 {
-    // private $reservationInfo = [];
-
-    public function date (Request $request){
-        return view('reservation.step1');
+    public function date(Request $request){
+        return view('reservation.step1', ['cin' => $request['check_in'], 'cout' => $request['check_out']]);
     }
-    // Data Check
     public function dateCheck(Request $request){
+        // Check in (startDate to endDate) trim convertion
+        if(str_contains($request['check_in'], 'to')){
+            $dateSeperate = explode('to', $request['check_in']);
+            $request['check_in'] = trim($dateSeperate[0]);
+            $request['check_out'] = trim ($dateSeperate[1]);
+        }
+        // Check out convertion word to date format
+        if(str_contains($request['check_out'], ', ')){
+            $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
+            $request['check_out'] = $date->format('Y-m-d');
+        }
+
         // Check in (startDate to endDate) trim convertion
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
@@ -36,7 +45,44 @@ class ReservationController extends Controller
             'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out')],
             'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
         ], [
-            'unique' => 'Sorry, this date is not available'
+            'unique' => 'Sorry, this date is not available',
+            'after' => 'The :attribute was chose',
+
+        ]);
+        
+        if ($validator->fails()) {            
+            return redirect()->route('reservation.date')
+            ->withErrors($validator)
+            ->withInput();
+        }
+        else{
+            $validated = $validator->validated();
+            return redirect()->route('reservation.date')->with('success',"Your choose date is now available, Let s proceed if you will make reservation")->withInput();
+        }
+
+
+    }
+    // Data Check
+    public function dateStore(Request $request){
+        // Check in (startDate to endDate) trim convertion
+        if(str_contains($request['check_in'], 'to')){
+            $dateSeperate = explode('to', $request['check_in']);
+            $request['check_in'] = trim($dateSeperate[0]);
+            $request['check_out'] = trim ($dateSeperate[1]);
+        }
+        // Check out convertion word to date format
+        if(str_contains($request['check_out'], ', ')){
+            $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
+            $request['check_out'] = $date->format('Y-m-d');
+        }
+
+        $validator = Validator::make($request->all('check_in','check_out'), [
+            'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out')],
+            'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
+        ], [
+            'unique' => 'Sorry, this date is not available',
+            'after' => 'The :attribute was chose',
+
         ]);
         
         if ($validator->fails()) {
@@ -53,15 +99,16 @@ class ReservationController extends Controller
         }
         
         $paramsDates = array(
-            "cin" =>  encrypt($validated['check_in'] === '' ? null : $validated['check_in']),
-            "cout" =>  encrypt($validated['check_out'] === '' ? null : $validated['check_out']),
+            "cin" =>  $validated['check_in'] === '' ? null : encrypt($validated['check_in']),
+            "cout" =>  $validated['check_out'] === '' ? null : encrypt($validated['check_out']),
         );
+        // dd(Arr::query($paramsDates));
 
         if(Auth::check()){
             return redirect()->route('reservation.choose', Arr::query($paramsDates));
         }
         else{
-            return redirect()->route('login', Arr::query($paramsDates))->with('info', 'You need login first');
+            return redirect()->route('login', Arr::query($paramsDates))->with('info', 'You need to login first');
         }
 
     }
