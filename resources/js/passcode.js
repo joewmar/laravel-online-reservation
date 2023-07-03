@@ -32,8 +32,8 @@ const btnhidden = document.getElementById("btn-hidden");
           inputs[key].value = null;
           inputs[key].focus();
 
-          // inputs[key - 1].disabled = false;
-          // inputs[key - 1].focus();
+          inputs[key - 1].disabled = false;
+          inputs[key - 1].focus();
           btnhidden.classList.add('hidden');
           if(key == 0) inputs[key].focus();
           

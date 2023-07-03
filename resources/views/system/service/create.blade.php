@@ -1,3 +1,13 @@
+@php
+    $countPricePlan = 0;
+    if (old('type') != null || old('price') != null || old('pax') != null){
+        foreach (old('type.*') ?? [] as $item){
+          $countPricePlan += 1;
+        }
+    }
+         
+@endphp
+
 <x-system-layout :activeSb="$activeSb">
   <x-system-content title="Add Tour Menu">
     <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
@@ -13,53 +23,38 @@
         </div>
         <form id="add-form" action=" {{ route('system.menu.store') }}" method="post" enctype="multipart/form-data" autocomplete="off">
           @csrf
-          <x-input type="text" id="title" name="title" placeholder="Title"/>
+          <x-input type="text" id="title" name="title" placeholder="Title" value="{{$service_menu == '' ? '' : $service_menu->title}}" />
           <x-datalist-input id="category" name="category" placeholder="Category"/>
           <x-textarea id="inclusion" name="inclusion" placeholder="Inclusion (Item 1, Item 2)"/>
           <x-input type="number" id="no_day" name="no_day" placeholder="Number of days" min="0.0"/>
           <x-input type="number" id="hrs" name="hrs" placeholder="Number of hours" min="1" />
-          <div x-data="{pricePlans: []}" class="mb-8">
-            <div class="flex justify-between items-center">
-                <div class="text-xl font-bold">Price Plan</div>
-                <button type="button" class="btn btn-ghost btn-circle text-2xl" @click="pricePlans.push({ id: new Date().getTime()})">+</button>
-            </div>
-            <template x-for="(item, index) in pricePlans" :key="index" x-id="['type', 'price' ,'pax']">
-            <div class="border border-primary rounded-md p-4 shadow-md mb-8">
-              <div class="flex justify-between items-center">
-                  <div class="text-sm" x-text=" 'Price Plan ' + (index + 1)"></div>
-                  <button type="button" class="btn btn-ghost btn-circle" @click="pricePlans.splice(index, 1)" >X</button>
+          <x-input type="number" id="hrs" name="hrs" placeholder="Number of hours" min="1" />
+          <div class="flex justify-between items-center mb-4">
+            <div class="text-xl font-bold">Price Plan</div>
+                <div x-data="{count: 1}" x-cloak>
+                  <div class="join">
+                    <button type="button"x-on:click="count === 1 ? count = 1 : count--" class="btn join-item btn-sm btn-primary">
+                      &minus;
+                    </button>
+                    <input x-model.number="count" type="number" name="count" class="input input-primary input-sm join-item w-10" />
+                    <button type="button" x-on:click="count++" class="btn join-item btn-sm btn-primary">
+                      &plus;
+                    </button>
+                </div>
               </div>
-              <div class="overflow-x-auto">
-                <table class="table table-xs">
-                  <thead>
-                    <tr>
-                      <th>Price Title</th>
-                      <th>Pax</th>
-                      <th>Price</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <input type="text" :name="$id('type')" :id="$id('type')" class="input input-bordered input-primary input-sm w-full" />
-                      </td>
-                      <td>
-                        <input type="number" :name="$id('pax')" :id="$id('pax')" class="input input-bordered input-primary input-sm w-full" min="1.00" />
-                        
-                      </td>
-                      <td>
-                        <input type="number" :name="$id('price')" :id="$id('price')" class="input input-bordered input-primary input-sm w-full" min="" />
-                        
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            </template>
           </div>
-          <label for="add_modal" class="btn btn-primary w-full">Add Menu</label>
-          <x-passcode-modal title="Add Menu Confirmation" id="add_modal" formId="add-form" />        
+
+          {{-- <div class="border border-primary mb-8 rounded-md shadow-md p-8">
+            <h3 class="text-xl font-medium mb-4">Price Details</h3>
+            <x-input type="number" id="type" name="type" placeholder="What title of this price?" min="1" />
+            <x-input type="number" id="pax" name="pax" placeholder="Number of Guest" min="1" />
+            <x-input type="number" id="price" name="price" placeholder="Price" min="1" />
+          </div> --}}
+        
+          {{-- <button class="btn btn-primary w-full">Back</button> --}}
+          <button class="btn btn-primary w-full">Next</button>
+          {{-- <label for="add_modal" class="btn btn-primary w-full">Add Menu</label>
+          <x-passcode-modal title="Add Menu Confirmation" id="add_modal" formId="add-form" />         --}}
         </form>
       </div>
     </div>
