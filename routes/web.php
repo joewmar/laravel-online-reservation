@@ -102,6 +102,10 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::delete('/{id}', [TourMenuController::class, 'destroy'])->name('destroy');
             Route::get('/{id}/edit', [TourMenuController::class, 'edit'])->name('edit');
             Route::put('/{id}/update', [TourMenuController::class, 'update'])->name('update');
+
+            Route::get('/{id}/price/{priceid}', [TourMenuController::class, 'editPrice'])->name('edit.price');
+            Route::put('/{id}/price/{priceid}', [TourMenuController::class, 'updatePrice'])->name('update.price');
+            Route::delete('/{id}/price/{priceid}', [TourMenuController::class, 'destroyPrice'])->name('destroy.price');
         });
 
         Route::view('/analytics', 'system.analytics.index',  ['activeSb' => 'Analytics'])->name('analytics');

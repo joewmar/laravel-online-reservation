@@ -11,7 +11,7 @@
         </div>
         <x-file-input id="image" name="image" placeholder="Image"/>
       </div>
-      <div class="md:w-96">
+      <div class="w-full md:w-96">
         <x-input type="text" id="name" name="name" placeholder="Name"/>
         <x-textarea id="description" name="description" placeholder="Description (Optional)"/>
         <x-input type="text" id="location" name="location" placeholder="Location"/>

@@ -8,7 +8,7 @@
             </div>
           </div>
         </div>
-        <div class="md:w-96">
+        <div class="w-full md:w-96">
           <article class="prose">
             <h1>{{$room_list->name}}</h1>
             <p class="text-lg"><span class="font-bold">Amenities:</span> {{$room_list->amenities === null ? 'None': $room_list->amenities}}</p>

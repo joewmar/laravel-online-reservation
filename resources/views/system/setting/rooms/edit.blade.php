@@ -12,7 +12,7 @@
           </div>
           <x-file-input id="image" name="image" placeholder="Image"/>
         </div>
-        <div class="md:w-96">
+        <div class="w-full md:w-96">
             <x-input type="text" id="name" name="name" placeholder="Room Name" value="{{$room_list->name}}"/>
             <x-input type="text" id="amenities" name="amenities" placeholder="Amenities (Always Use Comma)" value="{{$room_list->amenities}}"/>
             <x-input type="text" id="description" name="description" placeholder="Description" value="{{$room_list->many_room}}" value="{{$room_list->description}}"/>

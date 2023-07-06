@@ -5,7 +5,7 @@
       @csrf
       @method('PUT')
     <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
-      <div class="md:w-96">
+      <div class="w-full md:w-96">
         <x-input type="text" id="title" name="title" placeholder="Title" value="{{$service_menu->title}}"/>
         <x-datalist-input id="category" name="category" placeholder="Category" value="{{$service_menu->category}}"/>
         {{-- <x-multiple-input type="text" id="inclusion" name="inclusion" placeholder="Inclusion" /> --}}

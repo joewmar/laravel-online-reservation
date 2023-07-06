@@ -21,7 +21,7 @@
 <x-system-layout :activeSb="$activeSb">
   <x-system-content title="Add Tour Menu">
     <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
-      <div class="md:w-96">
+      <div class="w-full md:w-96">
         <div class="{{empty($service_menus) ? 'hidden': 'flex'}}">
           <form class="{{empty($service_menus) ? 'hidden': ''}}" id="replace-form" action="{{route('system.menu.replace')}}" method="POST">
             @csrf

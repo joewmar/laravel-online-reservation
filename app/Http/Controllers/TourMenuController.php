@@ -122,7 +122,7 @@ class TourMenuController extends Controller
                 'category' =>  ['required'],
                 'inclusion' => ['nullable'],
                 'no_day' =>  ['required', 'numeric', 'min:1'],
-                'hrs' =>  ['required', 'numeric', 'decimal:1'],
+                'hrs' =>  ['required', 'numeric', 'decimal:0,2'],
                 'passcode' =>  ['required', 'numeric', 'digits:4'],
             ]);
 
@@ -144,6 +144,38 @@ class TourMenuController extends Controller
        
 
     }
+    public function editPrice(Request $request){
+        $priceid = decrypt($request->priceid);
+        $id = decrypt($request->id);
+        return view('system.service.show-price', ['activeSb' => 'Tour Menu', 'tourList_title' => TourMenuList::findOrFail($id)->title, 'tour_menu' => TourMenu::findOrFail($priceid)]);
+    }
+    public function updatePrice(Request $request){
+        $system_user = auth()->guard('system')->user();
+        if($system_user->type === 0){
+            $priceid = decrypt($request->priceid);
+            $list_id = decrypt($request->id);
+            $validated = $request->validate([
+                'type' => ['required'],
+                'pax' =>  ['required', 'numeric'],
+                'price' =>  ['required', 'numeric', 'decimal:0,2'],
+                'passcode' =>  ['required', 'numeric', 'digits:4'],
+            ]);
+
+            if (Hash::check($validated['passcode'], $system_user->passcode)) {
+
+                $tour_menu = TourMenu::findOrFail($priceid);
+                $tour_menu->update($validated);
+                return redirect()->route('system.menu.show', encrypt($list_id))->with('success', $tour_menu->type .' was Updated');
+            } 
+            else{
+                return back()->with('error', 'Passcode Invalid');
+            }
+        }
+        else{
+            abort(404);
+        }
+
+    }
     public function destroy (Request $request){
         $system_user = auth()->guard('system')->user();
         if($system_user->type === 0){
@@ -154,10 +186,12 @@ class TourMenuController extends Controller
 
             if (Hash::check($validated['passcode'], $system_user->passcode)) {
 
-                $tour = TourMenu::findOrFail($id);
-                $tour->delete($validated);
+                $tour_list = TourMenuList::findOrFail($id);
+                $tour_menu = TourMenu::where('menu_id', '=', $tour_list->id);
+                $deleted_list = $tour_list->delete();
+                if($deleted_list) $tour_menu->delete();
 
-                return redirect()->route('system.menu.home')->with('success', $tour->title .' was Delete');
+                return redirect()->route('system.menu.home')->with('success', $tour_list->title .' was Deleted');
             } 
             else{
                 return back()->with('error', 'Passcode Invalid');
@@ -169,6 +203,28 @@ class TourMenuController extends Controller
 
        
 
+    }
+    public function destroyPrice (Request $request){
+        $system_user = auth()->guard('system')->user();
+        if($system_user->type === 0){
+            $priceid = decrypt($request->priceid);
+            $list_id = decrypt($request->id);
+            $validated = $request->validate([
+                'passcode' =>  ['required', 'numeric', 'digits:4'],
+            ]);
+
+            if (Hash::check($validated['passcode'], $system_user->passcode)) {
+                $tour_menu = TourMenu::findOrFail($priceid);
+                $tour_menu->delete();
+                return redirect()->route('system.menu.show', encrypt($list_id))->with('success', $tour_menu->type .' was Deleted');
+            } 
+            else{
+                return back()->with('error', 'Passcode Invalid');
+            }
+        }
+        else{
+            abort(404);
+        }
     }
 
 }

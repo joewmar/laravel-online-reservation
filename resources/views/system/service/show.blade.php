@@ -1,7 +1,7 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="">
       <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
-        <div class="md:w-96">
+        <div class="w-full md:w-96">
           <article class="prose">
             <h1>{{$tour_list->title}}</h1>
             <p class="text-lg"><span class="font-bold">Category:</span> {{$tour_list->description === null ? 'None': $tour_list->description}}</p>
@@ -13,16 +13,23 @@
               <ul class="list-outside md:list-inside marker:text-primary">
                 @foreach ($tour_list->tourMenuLists as $tour_menu)
                     <li class="space-x-5">
-                      <strong>{{$tour_menu->type}} ({{$tour_menu->pax}} pax): </strong> P{{$tour_menu->price}}
-                      <div class="dropdown dropdown-right dropdown-hover">
+                      <strong>{{$tour_menu->type}} ({{$tour_menu->pax}} pax): </strong> P{{ number_format($tour_menu->price, 2)}}
+                      <div class="{{$loop->index === 0 && count($tour_list->tourMenuLists) == 1 ? 'hidden' : ''}} dropdown dropdown-right dropdown-hover">
                         <label tabindex="0" class="btn btn-circle btn-ghost btn-sm text-primary">
                           <i class="fa-solid fa-ellipsis text-lg"></i>                        
                         </label>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                           <li class="font-bold">More Action: {{$tour_menu->type}} ({{$tour_menu->pax}} pax)
                           </li>
-                          <li><a class="link link-primary">Edit</a></li>
-                          <li><a class="link link-error">Delete</a></li>
+                          <li><a href="{{route('system.menu.edit.price', ['id' => encrypt($tour_list->id), 'priceid' => encrypt($tour_menu->id) ])}}" class="link link-primary">Edit</a></li>
+                          <li>
+                            <label for="delete_price" class="link link-error">Delete</label>
+                            <form id="delete-price-form" method="POST" action=" {{ route('system.menu.destroy.price',['id' => encrypt($tour_list->id), 'priceid' => encrypt($tour_menu->id) ]) }}">
+                              @csrf
+                              @method('DELETE')
+                              <x-passcode-modal title="Do you want remove this: {{$tour_menu->type}}" id="delete_price" formId="delete-price-form"  />
+                            </form>
+                          </li>
                         </ul>
                       </div>
                     </li>
