@@ -24,15 +24,15 @@
                           <li><a href="{{route('system.menu.edit.price', ['id' => encrypt($tour_list->id), 'priceid' => encrypt($tour_menu->id) ])}}" class="link link-primary">Edit</a></li>
                           <li>
                             <label for="delete_price" class="link link-error">Delete</label>
-                            <form id="delete-price-form" method="POST" action=" {{ route('system.menu.destroy.price',['id' => encrypt($tour_list->id), 'priceid' => encrypt($tour_menu->id) ]) }}">
-                              @csrf
-                              @method('DELETE')
-                              <x-passcode-modal title="Do you want remove this: {{$tour_menu->type}}" id="delete_price" formId="delete-price-form"  />
-                            </form>
                           </li>
                         </ul>
                       </div>
                     </li>
+                    <form id="delete-price-form" method="POST" action=" {{ route('system.menu.destroy.price',['id' => encrypt($tour_list->id), 'priceid' => encrypt($tour_menu->id) ]) }}">
+                      @csrf
+                      @method('DELETE')
+                      <x-passcode-modal title="Do you want remove this: {{$tour_menu->type}}" id="delete_price" formId="delete-price-form"  />
+                    </form>
                 @endforeach
               </ul>
             </p>
