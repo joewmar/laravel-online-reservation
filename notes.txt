@@ -1,3 +1,4 @@
 Don't forget to fix bug of room type!
 Don't forget to fix bug of cart menu!
 Don't forget to put authentication of route (store til destroy request)!
+Don't forget to fix bug of passcode confirmation (multiple passcode)!
