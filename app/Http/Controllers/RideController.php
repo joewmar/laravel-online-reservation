@@ -13,7 +13,7 @@ class RideController extends Controller
 {
     public function index(){
         $systemType = auth()->guard('system')->user()->type;
-        if($systemType == '0'){
+        if($systemType === 0){
             return view('system.setting.rides.index', ['activeSb' => 'Ride', 'rides' =>  Ride::all()]);
         }
         else{
@@ -23,7 +23,7 @@ class RideController extends Controller
     }
     public function edit(Request $request){
         $systemUser = auth()->guard('system')->user();
-        if($systemUser->type == '0'){
+        if($systemUser->type === 0){
             $id = decrypt($request->id);
             return view('system.setting.rides.edit',  ['activeSb' => 'Ride', 'ride' =>  Ride::findOrFail($id)]);
         }
@@ -35,7 +35,7 @@ class RideController extends Controller
     // Add New Room
     public function store(Request $request){
         $systemUser = auth()->guard('system')->user();
-        if($systemUser->type == '0'){
+        if($systemUser->type === 0){
             $validated = $request->validate([
                 'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
                 'model' => ['required', Rule::unique('rides', 'model')],
@@ -65,7 +65,7 @@ class RideController extends Controller
     // Process update room
     public function update(Request $request){
         $systemUser = auth()->guard('system')->user();
-        if($systemUser->type == '0'){
+        if($systemUser->type === 0){
             $id = decrypt($request->id);
             $ride = Ride::find($id);
             $validated = $request->validate([
@@ -100,7 +100,7 @@ class RideController extends Controller
 
     public function destroy(Request $request){
         $systemUser = auth()->guard('system')->user();
-        if($systemUser->type == '0'){
+        if($systemUser->type === 0){
             $id = decrypt($request->id);
             $ride = Ride::find($id);
             $validated = $request->validate([

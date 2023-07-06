@@ -45,3 +45,15 @@ function getAllArraySpecificKey($array, $context) : Array{
     }
     return $paxParameters;
 }
+function encryptedArray($array){
+    $var = array_map(function ($encryptValue) {
+        return encrypt($encryptValue);
+    }, $array);
+    return $var;
+}
+function decryptedArray($array){
+    $var = array_map(function ($decryptValue) {
+        return decrypt($decryptValue);
+    }, $array);
+    return $var;
+}

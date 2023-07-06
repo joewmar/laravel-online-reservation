@@ -16,7 +16,7 @@ class RoomSettingController extends Controller
     // Show All Rooms View
     public function index(Request $request){
         $systemType = auth()->guard('system')->user()->type;
-        if($systemType == '0'){
+        if($systemType === 0){
             if($request->tab == '2'){
                 return view('system.setting.rooms.index', ['activeSb' => 'Rooms', 'room_rates' =>  RoomRate::all(), 'room_lists' => null]);
             }
@@ -32,7 +32,7 @@ class RoomSettingController extends Controller
     // Show Single View
     public function show(Request $request){
         $systemType = auth()->guard('system')->user()->type;
-        if($systemType == '0'){
+        if($systemType == 0){
             $id = decrypt($request->id);
             return view('system.setting.rooms.show',  ['activeSb' => 'Rooms', 'room_list' =>  RoomList::findOrFail($id)]);
         }
@@ -44,7 +44,7 @@ class RoomSettingController extends Controller
     // Show Edit Form
     public function edit(Request $request){
         $systemType = auth()->guard('system')->user()->type;
-        if($systemType == '0'){
+        if($systemType == 0){
             $id = decrypt($request->id);
             return view('system.setting.rooms.edit',  ['activeSb' => 'Rooms', 'room_list' =>  RoomList::findOrFail($id)]);
         }
@@ -55,8 +55,8 @@ class RoomSettingController extends Controller
     }
     // Add New Room
     public function store(Request $request){
-        $system_user = auth()->guard('system')->user();
-        if($system_user->type === '0'){
+        $system_user = auth('system')->user();
+        if($system_user->type == 0){
             $validated = $request->validate([
                 'name' => ['required', Rule::unique('room_lists', 'name')],
                 'min_occupancy' =>  ['required', 'numeric', 'min:1'],
@@ -69,30 +69,35 @@ class RoomSettingController extends Controller
 
             if (Hash::check($validated['passcode'], $system_user->passcode)) {
 
-                if(!$system_user){
-                    abort(403, 'Unauthorized Action');
-                }
+                if($validated){
 
-                if($request->hasFile('image')){                          // storage/app/logos
-                    $validated['image'] = $request->file('image')->store('room_lists', 'public');
+                    if($request->hasFile('image')){                          // storage/app/logos
+                        $validated['image'] = $request->file('image')->store('room_lists', 'public');
+                    }
+            
+                    // Save to database and get value
+                    $room_list = RoomList::create($validated);  
+            
+                    // Get Count of Room
+                    $room_count = (int)$room_list->many_room; 
+                    
+                    // Add Room One by one
+                    for($count = 0; $count < $room_count; $count++){
+                        $room = new Room();
+                        $room->room_id = $room_list->id; // Set the appropriate accommodation_id value
+                        $room->room_no = 0; 
+                        $saved = $room->save(); 
+                        if(!$saved){ // Check if Error Save data the Room
+                            $room_list = RoomList::findOrFail($room_list->id); 
+                            $room_list->delete(); 
+                        }
+                        else $saved;
+                    }
+                    refreshRoomNumber();
+
+                    return redirect()->route('system.setting.rooms.home')->with('success', 'Room Created');
                 }
-        
-                // Save to database and get value
-                $room_list = RoomList::create($validated);  
-        
-                // Get Count of Room
-                $room_count = (int)$room_list->many_room; 
-                
-                // Add Room One by one
-                for($count = 0; $count < $room_count; $count++){
-                    $room = new Room();
-                    $room->room_id = $room_list->id; // Set the appropriate accommodation_id value
-                    $room->room_no = 0; 
-                    $room->save(); 
-                }
-                refreshRoomNumber();
-        
-                return redirect()->route('system.setting.rooms.home')->with('success', 'Room Created');
+               
             } 
             else{
                 return back()->with('error', 'Passcode Invalid');
@@ -225,7 +230,7 @@ class RoomSettingController extends Controller
     }
     public function editRate(Request $request){
         $systemType = auth()->guard('system')->user()->type;
-        if($systemType == '0'){
+        if($systemType === 0){
             $id = decrypt($request->id);
             return view('system.setting.rooms.rate.edit',  ['activeSb' => 'Rooms', 'room_rate' =>  RoomRate::findOrFail($id)]);
         }

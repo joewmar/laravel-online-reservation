@@ -67,9 +67,14 @@ Route::middleware(['auth', 'prevent-back-history'])->group(function(){
     // Reservation Information
     Route::prefix('reservation')->name('reservation.')->group(function (){
         Route::get('/choose', [ReservationController::class, 'choose'])->name('choose');
-        // Route::post('/choose/check', [ReservationController::class, 'chooseCheckAll'])->name('choose.check.all');
+        Route::post('/choose/check', [ReservationController::class, 'chooseCheckAll'])->name('choose.check.all');
 
         Route::post('/choose/check/one', [ReservationController::class, 'chooseCheck1'])->name('choose.check.one');
+        Route::get('/detials', [ReservationController::class, 'details'])->name('details');
+        Route::post('/detials', [ReservationController::class, 'detailsStore'])->name('details.store');
+
+        Route::get('/confimation', [ReservationController::class, 'confirmation'])->name('confirmation');
+
     });
 });
 
@@ -88,7 +93,9 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::get('/', [TourMenuController::class, 'index'])->name('home');
             Route::get('/create', [TourMenuController::class, 'create'])->name('create');
             Route::post('/create', [TourMenuController::class, 'store'])->name('store');
+            Route::get('/create/price-details', [TourMenuController::class, 'priceDetails'])->name('price.details');
 
+            Route::post('/create/next', [TourMenuController::class, 'createNext'])->name('next');
             Route::post('/create/replace', [TourMenuController::class, 'replace'])->name('replace');
 
             Route::get('/{id}', [TourMenuController::class, 'show'])->name('show');

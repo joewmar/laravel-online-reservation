@@ -7,8 +7,9 @@
       <form id="reservation-form" action=" {{ route('reservation.date.check') }}" method="POST">
         @csrf
         <div class="w-auto text-center flex space-x-4">
-            <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" />
+            <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation " />
             <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" />
+            <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value=""/>
         </div>
       </form>
     </p>

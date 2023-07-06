@@ -1,9 +1,22 @@
 @push('styles')
-  <link rel="stylesheet" href="{{Vite::asset("resources/css/users/menu-slider.css")}}" />    
+
 @endpush
 @php
     $arrPayment = ['Walk-in', 'Gcash', 'Paymaya'];
-    $arrAccType = ['All', 'Day Tour', 'Overnight'];
+    $TourInfo = [];
+    $tourList = [];
+    if(request()->has(['cin', 'cout', 'px', 'py'])){
+      $TourInfo = [
+        "cin" => request('cin') ?? '',
+        "cout" => request('cout') ?? '',
+        "px" => request('px') ?? '',
+        "py" => request('py') ?? '',
+      ];
+    }
+    if(session()->has('rinfo')){
+        $tourList = explode(',', decrypt(session('rinfo')['tm']));
+    }
+
 @endphp
 
 <x-landing-layout>
@@ -13,27 +26,38 @@
         filterOpen: false, 
         alert: false,
         alertType: '',
-        priceNum: '', 
-        title: '', 
-        carts: [],
+        @if(session()->has('rinfo'))
+          carts: [
+            @foreach($tourList as $key => $item)
+              { id: '{{ $tourList[$key] ?? '' }}', 
+                title: '{{ $cmenu[$key]['title'] ?? '' }}',
+                price: '{{ number_format($cmenu[$key]['price'], 2) ?? '' }}',
+              },
+            @endforeach
+          ],
+        @else
+          carts: [],
+        @endif
         cartsCount: 0,
         message: '',
-        addToCart(id, title, price){
-          const item = { id, title, price };
-          if(!this.carts.find(cartItem => cartItem.id === id)){
+        addToCart(idValue, titleValue, priceValue){
+          const item = { id: idValue, title: titleValue, price: priceValue };
+          if(!this.carts.find(cartItem => cartItem.id == idValue)){
             this.carts.push(item);
             this.alert = true;
             this.alertType = 'success';
-            this.message = `${title} added from the cart!`;
+            this.message = `${titleValue} added from the cart!`;
           }
           else{
             this.alert = true;
             this.alertType = 'error';
-            this.message = `${title} was already added`;
+            this.message = `${titleValue} was already added`;
           }
+          console.log(this.carts);
+
         },
         removeItemCart(id, title){
-          const index = this.carts.findIndex(cartItem => cartItem.id === id);
+          const index = this.carts.findIndex(cartItem => cartItem.id == id);
           if (index !== -1) {
             this.carts.splice(index, 1);
             this.alert = true;
@@ -43,6 +67,8 @@
             this.alert = true;
             this.message = 'Item not found in the cart!';
           }
+          console.log(this.carts);
+
         },
       }"
        x-cloak>
@@ -82,25 +108,22 @@
         <i :class="filterOpen ? 'fa-solid fa-chevron-down' : 'fa-solid fa-greater-than'"></i>          
       </button>
     </div>
-
-    <form action="{{route('reservation.choose.check.one')}}" method="post">
+      <form action="{{route('reservation.choose.check.one')}}" method="post">
       @csrf
       <div class="mt-4 ">
         <div :class="filterOpen ? 'transition-all duration-1000 ease-in-out' : 'hidden' " class="space-y-4 lg:block">
-          @if(request()->has(['cin', 'cout', 'px', 'at', 'py']))
+          @if(request()->has(['cin', 'cout', 'px', 'py']))
             <div class="opacity-50" id="disabledAll">
           @else
             <div>
           @endif
-              <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation input-sm " value="{{$cin === null ? '' : $cin}}" />
-              <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2 input-sm "  value="{{$cout === null ? '' : $cout}}"/>
+              <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$cin !== ''  ? $cin : ''}}"/>
+              <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$cout !== '' ? $cout : ''}}" />
               {{-- Number of Guest --}}
               <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$px === null ? '' : $px}}"/>
-              {{-- Accommodations Type --}}
-              <x-select id="accommodation_type" name="accommodation_type" placeholder="Accommodations Type" :value="$arrAccType"  val="{{$at === null ? '' : $at}}"/>
               {{-- Payment Method  --}}
-              <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  val="{{$py === null ? '' : $py}}"/>
-              @if(request()->has(['cin', 'cout', 'px', 'at', 'py']))
+              <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$py ?? ''}}"/>
+              @if(request()->has(['cin', 'cout', 'px', 'py']))
                   <div class="hidden">
               @else
                   <div class="lg:flex justify-start gap-5">
@@ -114,8 +137,9 @@
 
         </div>
       </div>
+    </form>
       <div class="divider"></div>
-      @if(request()->has(['cin', 'cout', 'px', 'at', 'py']))
+      @if(request()->has(['cin', 'cout', 'px', 'py']))
         <div id="tourmenu" class="w-full">
           <header>
             <p class="mt-4 max-w-md font-bold text-2xl">
@@ -123,7 +147,8 @@
             </p>
           </header>
           <div class="gap-10">
-            
+            <form id="tour-form" action="{{route('reservation.choose.check.all', Arr::query($TourInfo))}}" method="post">
+              @csrf
             <div class="flex justify-between mt-6">
               <h3 class="font-bold text-xl">Category</h3>
               <div class="dropdown dropdown-end">
@@ -147,8 +172,9 @@
                           </tr>
                         </thead>
                         <tbody>
+
                           <!-- row -->
-                          <template x-for="cart in carts">
+                          <template x-for="(cart, index) in carts" :key="index">
                             <tr>
                               <td x-text="cart.title"></td>
                               <td x-text="cart.price"></td>
@@ -167,11 +193,13 @@
                                   </div>
                                 </div>
                               </td>
+                                <input x-ref="idRef + (index + 1)" type="hidden" name="tour_menu[]", :value="$el.value = cart.id">
                             </tr>
                           </template>
                           <template x-if="carts.length === 0">
                             <tr colspan="2" class="w-full"><td class="font-bold w-full text-center">No Cart Item!</td></tr>
                           </template>
+                        
                         </tbody>
                       </table>
                     </div>
@@ -180,24 +208,28 @@
                 </div>
               </div>
             </div>
+          </form>
     
             <div x-data="{category: null}" x-cloak>
               @foreach ($tour_category as $category)
                 @if($loop->index === 0)
-                  <input x-model="category" id="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-2 radio radio-primary" x-model="category" type="radio" name="category" value="{{Str::camel($category->category)}}" />
+                  <input x-model="category" id="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-2 radio radio-primary" x-model="category" type="radio" value="{{Str::camel($category->category)}}" />
                   <label x-init="category = '{{Str::camel($category->category)}}'" :aria-checked="category == '{{Str::camel($category->category)}}'" :class="category == '{{Str::camel($category->category)}}' ? 'mr-5 text-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-5">{{$category->category}}</label>  
                 @else
-                    <input x-model="category" id="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-2 radio radio-primary" x-model="category" type="radio" name="category" value="{{Str::camel($category->category)}}"/>
+                    <input x-model="category" id="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-2 radio radio-primary" x-model="category" type="radio" value="{{Str::camel($category->category)}}"/>
                     <label :aria-checked="category == '{{Str::camel($category->category)}}'" :class="category == '{{Str::camel($category->category)}}' ? 'mr-5 text-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-5">{{$category->category}}</label>  
                 @endif
     
               @endforeach
     
               @foreach ($tour_category as $category)
+                  @php $category_count = $loop->index + 1; @endphp
                   <div class="flex w-full" x-cloak>
                       <div x-data="{ price: '' }" :class="category == '{{Str::camel($category->category)}}' ? 'block' : 'hidden'">
                         {{-- Card List Tour --}}
                         @foreach ($tour_lists as $list)
+                          @php $list_count = $loop->index + 1 ?? 1; @endphp
+
                           @if ($category->category === $list->category)
                             @if($user_days <= $list->no_day)
                                 <div class="h-auto opacity-70" id="disabledAll">   
@@ -207,7 +239,7 @@
                                 <div class="card my-3 w-96 bg-base-100 shadow-xl border border-primary hover:border-primary hover:bg-primary hover:text-base-100">
                                   <label for="{{$user_days <= $list->no_day ? 'disabledAll' : Str::camel($list->title)}}" tabindex="0">
                                       <div class="card-body">
-                                        <h2 x-ref="titleRef" x-model="title" class="card-title">{{$list->title}}</h2> 
+                                        <h2 x-ref="titleRef{{$list_count}}" class="card-title">{{$list->title}} </h2> 
                                         @if($user_days <= $list->no_day)
                                           <p class="text-error">You are not allowed to select this menu if the chosen date is not exact</p>
                                           <p class="text-error">Your days: {{$user_days}} day/s</p>
@@ -218,7 +250,7 @@
                                   {{-- Modal Tour Details --}}                                  
                                   <x-modal id="{{$user_days <= $list->no_day ? 'disabledAll' : Str::camel($list->title)}}" title="{{$list->title}}" alpinevar="price">
                                     <article>
-                                      <ul role="list" class="marker:text-primary list-disc pl-5 space-y-3 text-slate-500">
+                                      <ul role="list" class="marker:text-primary list-disc pl-5 space-y-3 text-neutral">
                                         <li><strong>Number of days: </strong> {{$list->no_day <= 1 ? $list->no_day . ' day' : $list->no_day . ' days' }}</li>
                                         <li><strong>Number of hour/s: </strong> {{Str::replace('.', ' hour and ', $list->hrs) . ' minutes'}}</li>
                                         <li><strong>Price Plan</strong></li>
@@ -226,16 +258,17 @@
                                     </article>
                                     <div class="grid gap-4 grid-cols-2 my-4">
                                         @foreach ($tour_menus as $menu)
+                                            @php $menu_count = $loop->index + 1; @endphp
                                             @if($menu->menu_id === $list->id)
                                                   <div class="w-full h-full">
-                                                    <input id="{{$px == $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" name="{{$list->id}}_price" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$list->id . '_' . $menu->id}}"  x-model="price" />
-                                                    <label for="{{$px == $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
+                                                    <input id="{{!$px < $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->menu_id . '_' . $menu->id}}"  x-model="price" />
+                                                    <label for="{{!$px < $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
                                                       <div class="flex items-center justify-between">
                                                         <p class="text-neutral">{{$menu->type}} ({{$menu->pax}} pax)</p>
                                                         <i class="hidden text-primary fa-solid fa-square-check"></i>
                                                       </div>
-                                                      <p class="mt-1 text-neutral" x-ref="priceRef" x-model="priceNum">P {{number_format($menu->price, 2)}}</p>
-                                                      @if($px != $menu->pax)
+                                                      <p class="mt-1 text-neutral" x-ref="priceRef{{$list_count}}">P {{number_format($menu->price, 2)}}</p>
+                                                      @if($px < $menu->pax)
                                                         <p class="absolute text-error text-xs">Invalid guest count for this price.</p>
                                                       @endif
                                                     </label>
@@ -245,7 +278,7 @@
                                     </div>
                                     <template x-if="price">
                                       <label for="{{$user_days <= $list->no_day ? '' : Str::camel($list->title)}}"
-                                      @click=" addToCart(price, $refs.titleRef.innerText, $refs.priceRef.innerText)" 
+                                      @click=" addToCart(price, $refs.titleRef{{$list_count}}.innerText, $refs.priceRef{{$list_count}}.innerText)" 
                                       class="btn btn-primary float-right">Add to Cart</label>
                                     </template>
                                   </x-modal>
@@ -260,7 +293,7 @@
         <div class="hidden lg:flex justify-start gap-5">
           <div class="mt-8 flex gap-4">
             <a href="{{route('reservation.choose', Arr::query(["cin" =>  request('cin'), "cout" =>  request('cout')]) ) }}" class="btn btn-ghost">Back</a>
-            <button type="submit" class="btn btn-primary">Next</button>
+            <button onclick="event.preventDefault(); document.getElementById('tour-form').submit();" class="btn btn-primary">Next</button>
           </div>
         </div>
       @endif
@@ -273,11 +306,6 @@
     <script>
       // Scroll to the element with the provided ID
       document.getElementById('tourmenu').scrollIntoView();
-      document.getElementById("disabledAll").disabled = true;
-      var nodes = document.getElementById("disabledAll").getElementsByTagName('*');
-      for(var i = 0; i < nodes.length; i++){
-          nodes[i].disabled = true;
-      }
     </script>
 @endpush
 </x-landing-layout>

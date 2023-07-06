@@ -9,6 +9,12 @@ class Room extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'room_no',
+        'availability',
+        'customer_id',
+    ];
+
     public function room(){
         return $this->belongsTo(RoomList::class, 'room_id');
     }

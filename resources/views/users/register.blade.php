@@ -16,12 +16,6 @@
           </div>
         </div>
         <div class="divider">Sign up with social accounts</div>
-        @if(session()->has('success'))
-          <x-alert type="success" message="{{session('success')}}"/>
-        @endif
-        @if (session()->has('error'))
-            <x-alert type="error" message="{{session('error')}}"/>
-        @endif
         <form action="{{ route('create') }}" method="post">
           @csrf
           {{-- First Name --}}
@@ -31,9 +25,9 @@
           {{-- Birthday --}}
           <x-datetime-picker name="birthday" id="birthday" placeholder="Birthday" class="flatpickr-bithday" />
           {{-- Nationality--}}
-          <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" />
+          <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" :title="$nationality"/>
           {{-- Country--}}
-          <x-select id="country" name="country" placeholder="Country" :value="$countries" />
+          <x-select id="country" name="country" placeholder="Country" :value="$countries" :title="$countries" />
           {{-- Phone Number  --}}
           <x-input type="tel" name="contact" placeholder="Phone Number"/>
           {{-- Email  --}}

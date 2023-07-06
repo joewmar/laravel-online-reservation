@@ -12,7 +12,20 @@
               <span class="font-bold">Price</span>
               <ul class="list-outside md:list-inside marker:text-primary">
                 @foreach ($tour_list->tourMenuLists as $tour_menu)
-                    <li><strong>{{$tour_menu->type}}: </strong> P{{$tour_menu->price}}</li>
+                    <li class="space-x-5">
+                      <strong>{{$tour_menu->type}} ({{$tour_menu->pax}} pax): </strong> P{{$tour_menu->price}}
+                      <div class="dropdown dropdown-right dropdown-hover">
+                        <label tabindex="0" class="btn btn-circle btn-ghost btn-sm text-primary">
+                          <i class="fa-solid fa-ellipsis text-lg"></i>                        
+                        </label>
+                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                          <li class="font-bold">More Action: {{$tour_menu->type}} ({{$tour_menu->pax}} pax)
+                          </li>
+                          <li><a class="link link-primary">Edit</a></li>
+                          <li><a class="link link-error">Delete</a></li>
+                        </ul>
+                      </div>
+                    </li>
                 @endforeach
               </ul>
             </p>

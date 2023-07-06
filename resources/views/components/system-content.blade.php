@@ -1,5 +1,5 @@
 @props(['title'])
-<div class="h-auto items-center m-4 bg-base-100 shadow-md">
+<div {{ $attributes->merge(['class' => 'h-auto items-center m-4 bg-base-100 shadow-md'])}}>
     <div class="w-full py-16 px-8">
         @if ($title != '')
           <div class="mx-auto w-auto text-center">

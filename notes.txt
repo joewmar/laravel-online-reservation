@@ -1,0 +1,2 @@
+Don't forget to fix bug of room type!
+Don't forget to fix bug of cart menu!

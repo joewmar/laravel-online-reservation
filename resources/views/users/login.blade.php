@@ -1,31 +1,27 @@
 <x-landing-layout>
   <div class="flex items-center justify-center h-screen bg-base-100">
-    <div class="flex justify-center rounded-box shadow-2xl w-[90%] lg:w-[50%] bg-base-100">
+    <div class="flex justify-center rounded-box shadow-2xl w-[90%] md:w-[65%] lg:w-[65%] bg-base-100">
       <div class="card hidden md:flex rounded-l-box w-full h-auto">
         <img src="{{asset('images/main-hero3.jpg')}}" class="rounded-l-box object-cover h-full w-full"/>
       </div>
-      <div class="card flex rounded-box w-full h-full">
+      <div class="card flex rounded-box w-full h-full p-4">
         <div class="card-body">
           <h2 class="font-bold text-3xl text-center mb-10">Let's Login!</h2>
             <form action="{{ route('check') }}" method="post">
             @csrf
             <x-input type="email" name="email" placeholder="Email"/>
-            <div class="form-control w-full">
-              <label for="password" class="relative block overflow-hidden rounded-md border border-gray-200 px-3 pt-3 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
-                  <input type="password" id="password" name="password" placeholder="Password" class="peer h-8 w-full border-none bg-transparent p-0 placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm" value="{{old('password')}}"/>
-                  <span class="absolute start-3 top-3 -translate-y-1/2 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-3 peer-focus:text-xs">
-                      Password
-                  </span>
-                  <span class="absolute inset-y-0 end-0 grid w-10 place-content-center">
-                      <button
-                        type="button"
-                        class="rounded-full bg-transparent p-0.5 text-neutral hover:text-primary"
-                        onclick="visible()"
-                      >
-                        <span class="sr-only">Password</span>
-                        <i class="fa-solid fa-eye"></i>
-                      </button>
-                    </span>
+            <div x-data="{ show: true }" class="form-control w-full">
+              <label for="password" class="relative flex rounded-md border border-gray-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary" >
+                <input :type="show ? 'password' : 'text'" id="password" name="password" class="input input-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0" placeholder="Password" />
+                <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs" >
+                  Password
+                </span>
+                <span class="absolute inset-y-0 end-0 grid w-10 place-content-center">
+                  <button type="button" @click="show = !show" class="rounded-full bg-transparent p-0.5 text-neutral hover:text-primary" onclick="visible()" >
+                    <span class="sr-only">Password</span>
+                    <i :class="show ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'" x-cloak></i>
+                  </button>
+                </span>
               </label>
               <label class="label">
               <span class="label-text-alt">
@@ -60,17 +56,7 @@
       </div>
     </div>
   </div>
-  <script>
-      function visible() {
-          let x = document.getElementById('password');
-          if (x.type === "password") {
-              x.type = "text";
-          } else {
-              x.type = "password";
-          }
-      }
-  </script>
 </x-landing-layout>
-<x-register-modal id="register" />
+{{-- <x-register-modal id="register" /> --}}
 
 

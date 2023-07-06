@@ -28,9 +28,9 @@
         {{-- Birthday --}}
         <x-datetime-picker name="birthday" id="birthday" placeholder="Birthday" class="flatpickr-bithday" />
         {{-- Nationality--}}
-        <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" />
+        <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" :title="$nationality" />
         {{-- Country--}}
-        <x-select id="country" name="country" placeholder="Country" :value="$countries" />
+        <x-select id="country" name="country" placeholder="Country" :value="$countries" :title="$countries" />
         {{-- Phone Number  --}}
         <x-input type="tel" name="contact" placeholder="Phone Number"/>
         {{-- Email  --}}

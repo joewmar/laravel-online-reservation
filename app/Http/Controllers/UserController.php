@@ -36,13 +36,10 @@ class UserController extends Controller
         // Create User
         $user = User::create($validated);
 
-        // $user = Auth::guard('web')->login($user);
-        // if($user){
-        //     return redirect()->route('home')->with('success', 'Welcome First timer' . auth()->user()->first_name);
-        // }
-        // else{
-        //     return redirect()->route('login')->with('success', 'Login Hello');
-        // }
+        $user = Auth::guard('web')->login($user);
+        if($user){
+            return redirect()->route('home')->with('success', 'Welcome First timer' . auth()->user()->first_name);
+        }
     }
     // Verify login
     public function check(Request $request){

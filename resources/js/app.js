@@ -13,5 +13,10 @@ import Alpine from 'alpinejs';
 window.Alpine = Alpine;
 Alpine.start();
 
-
+// Scroll to the element with the provided ID
+document.getElementById("disabledAll").disabled = true;
+var nodes = document.getElementById("disabledAll").getElementsByTagName('*');
+for(var i = 0; i < nodes.length; i++){
+    nodes[i].disabled = true;
+}
 

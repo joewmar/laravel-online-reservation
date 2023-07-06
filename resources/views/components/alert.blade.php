@@ -1,5 +1,5 @@
 @props(['type', 'message' => ''])
-<div x-show="open" x-data="{open: true}" id="close" class="fixed top-0 flex justify-center z-[100] w-full">
+<div x-show="open" x-data="{open: true}" id="close" class="fixed top-0 flex justify-center z-[100] w-full" x-init="setTimeout(() => { open = false }, 10000)">
     <div class="w-96 alert alert-{{$type}} shadow-md">
         @if(Str::lower($type) == 'success')
             <i class="fa-solid fa-check text-xl"></i>        

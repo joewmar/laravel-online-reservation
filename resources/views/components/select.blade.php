@@ -1,20 +1,21 @@
-@props(['id' => '', 'name' => '', 'value', 'placeholder', 'selected' => old($name), 'title' => '', 'class' => ''])
-<div class="form-control w-full">
-    <label for="{{$id}}" class="relative block overflow-hidden rounded-md border border-gray-200 px-3 pt-3 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
-        <select name="{{$name}}" id="{{$id}}" class="peer h-8 w-full border-none bg-transparent p-0 placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm {{$class}} ">
+@props(['id' => '', 'name' => '', 'value', 'placeholder', 'selected' => old($name), 'title' => '', 'class' => '', 'disabled' => false])
+<div class="form-control w-full {{$disabled ? 'disabledAll opacity-50' : 'opacity-100'}}">
+    <label for="{{$id}}" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
+        @if($disabled)
+            <select name="{{$name}}" id="{{$id}}" {{$attributes->merge(['class' => 'w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'])}} disabled>
+        @else
+            <select name="{{$name}}" id="{{$id}}" {{$attributes->merge(['class' => 'w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'])}}>
+        @endif
             <option value="" disabled selected>Please select</option>
             @foreach ($value as $key => $item)
-                @if($selected == $item)
-                    <option value="{{old($name)}}" selected>{{$title[old($name)]}}</option>
-                @elseif(old($name) == $item)
-                    <option value="{{old($name)}}" selected>{{$title[old($name)]}}</option>
-
+                @if($selected == $item || $selected == $title[$key])
+                    <option value="{{$item}}" selected>{{$title[$key]}}</option>
                 @else
                     <option value="{{$item}}">{{$title[$key]}}</option>
                 @endif
             @endforeach
         </select>        
-          <span class="absolute start-3 top-3 -translate-y-1/2 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-3 peer-focus:text-xs">
+        <span id="{{$id}}" class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-neutral transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
             {{$placeholder}}
         </span>
     </label>
