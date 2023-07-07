@@ -43,14 +43,17 @@
                     <tbody>
                       <!-- rowS -->
                       @if(session()->has('rinfo'))
-                        @foreach ($user_menu as $key => $item)
-                            <tr>
-                              <td>{{$item['title']}}</td>
-                              <td>{{ number_format($item['price'], 2) }}</td>
-                              @php $totalPrice += (double)$item['price']  @endphp
-                            </tr>
-                        @endforeach
-
+                        <form id="reservation-form" action="{{ route('reservation.store')}}" method="POST">
+                          @foreach ($user_menu as $key => $item)
+                              <tr>
+                                <td>{{$item['title']}}</td>
+                                <td>
+                                    <input type="hidden" name="amount[]" value="{{$item['price']}}">{{ number_format($item['price'], 2) }}</td>
+                                    @csrf
+                                @php $totalPrice += (double)$item['price']  @endphp
+                              </tr>
+                          @endforeach
+                        </form>
                       @else
                         <tr colspan="2">
                           <td>No Cart</td>
@@ -74,7 +77,7 @@
         <div class="bg-white py-12 md:py-24">
           <div class="divider flex md:hidden"></div>
           <div class="mx-auto max-w-lg px-4 lg:px-8">
-            <form class="grid grid-cols-6 gap-8">
+            <div class="grid grid-cols-6 gap-8">
               <div class="col-span-2">
                 <label for="FirstName" class="block text-xs font-medium text-gray-700">
                   First Name
@@ -130,11 +133,15 @@
                 <a href="{{route('reservation.date')}}" class="btn btn-ghost w-full">
                   Change
                 </a>
-                <button class="btn btn-primary w-full">
+                <label for="reservation_confirm" class="btn btn-primary w-full">
                   Confirm
-                </button>
+                </label>
+
+                <x-modal id="reservation_confirm" title="Confirmation" type="YesNo" formID="reservation-form">
+                  <p class="">Are you sure your information?</p>
+                </x-modal>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>

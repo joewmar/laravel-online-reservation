@@ -13,14 +13,17 @@ return new class extends Migration
     {
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
-            // $table->integer('user_id');
-            // $table->integer('room_id');
-            // $table->string('menu');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->integer('room_id')->nullable();
+            $table->integer('pax');
+            $table->integer('age')->nullable();
+            $table->string('menu');
             $table->date('check_in');
             $table->date('check_out');
-            $table->string('status');
-            // $table->string('additional_menu');
-            // $table->string('total');
+            $table->tinyInteger('status')->default(0); /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
+            $table->string('additional_menu')->nullable();
+            $table->string('amount');
+            $table->decimal('total');
             $table->timestamps();
         });
     }

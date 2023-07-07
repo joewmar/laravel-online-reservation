@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Carbon\Carbon;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -16,26 +17,29 @@ class DatabaseSeeder extends Seeder
     {
         // \App\Models\User::factory(10)->create();
 
-        \App\Models\User::factory()->create([
+        User::factory()->create([
             'first_name' => 'Juan',
             'last_name' => 'Dela Cruz',
             'birthday' => '2001-02-25',
             'nationality' => 'Filipino',
             'country' => 'Philippines',
             'contact' => '09123456789',
-            'email'=> 'delacruxz@email.com',
+            'email'=> 'recelestino90@gmail.com',
             'password' => Hash::make('123456789'),
         ]);
 
         \App\Models\Reservation::factory()->create([
-            // 'user_id' => 1,
+            'user_id' => 1,
             // 'room_id' => 1,
-            // 'menu',
+            'pax' => 1,
+            'menu' => '1_1',
+            'age' => User::findOrfail(1)->age(),
             'check_in' => Carbon::now()->toDateTimeString(),
             'check_out' => Carbon::now()->addDays(3)->toDateTimeString(),
-            'status' => "Pending",
+            'status' => 0,
             // 'additional_menu',
-            // 'total',
+            'amount' => '3100.00, 10600.00',
+            'total' => 10600.00,
         ]);
 
         \App\Models\System::factory()->create([

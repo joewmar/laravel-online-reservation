@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TourMenu;
-use App\Models\TourMenuList;
-use App\Models\User;
-use Illuminate\Support\Arr;
+use App\Mail\ReservationMail;
 use Carbon\Carbon;
+use App\Models\User;
+use App\Models\TourMenu;
+use App\Models\Reservation;
+use Illuminate\Support\Arr;
+use App\Models\TourMenuList;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class ReservationController extends Controller
@@ -283,5 +286,36 @@ class ReservationController extends Controller
             'user_menu' => $user_menu,
             'uinfo' => $uinfo,
         ]);
+    }
+    public function storeReservation(Request $request){
+        $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
+        $validated = $request->validate([
+            'amount.*' => ['required', 'numeric', 'decimal:0,2'],
+        ]);
+        $total = 0;
+        foreach( $validated['amount'] as $amount){
+            $total += (double)$amount;
+
+        }
+        if($validated){
+            Reservation::create([
+                'user_id' => auth('web')->user()->id,
+                'pax' => $uinfo['px'] ?? '',
+                'age' => $uinfo['px'] ?? '',
+                'menu' => $uinfo['tm'] ?? '',
+                'check_in' => $uinfo['cin'] ?? '',
+                'check_out' => $uinfo['cout'] ?? '',
+                'check_out' => $uinfo['cout'] ?? '',
+                'amount' => implode(', ', $validated['amount']) ?? '',
+                'total' => $total ?? '',
+            ]);
+            $details = [
+                'title' => 'Reservation Complete',
+                'body' => 'Your Reservation are done, We just send email for the confirmation'
+            ];
+            Mail::to('joewlaptop@gmail.com')->send(new ReservationMail($details, 'reservation.mail'));
+            return redirect()->route('reservation.done');
+        }
+
     }
 }

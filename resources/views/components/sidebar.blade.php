@@ -37,30 +37,22 @@
             ],
         ];
 @endphp
-<div id="sidebar" class="md:sidebar h-full w-[5rem] hidden md:block overflow-hidden bg-base-100 menu z-50">
+<div id="sidebar" :class="!open ? 'w-56 md:w-[5rem]' : 'w-56'" class="sidebar z-[100] hidden md:block h-full overflow-hidden bg-base-100 menu" x-cloak>
     <div class="flex h-screen flex-col justify-center pt-2 pb-6 w-56 p-0">
-        <div class="w-full px-4 pt-10 flex items-center">
-            <div class="avatar">
-                <div class="w-8 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                    <img src="{{ asset('images/avatars/no-avatar.png')}}" />
-                </div>
-            </div>
-            <span class="title text-neutral text-md uppercase font-bold sidebar opacity-0 pl-5">{{auth()->guard('system')->user()->first_name}} {{auth()->guard('system')->user()->last_name}}</span> 
-        </div>
         <ul class="sbList mt-6 space-y-2">
             @foreach ($arrSideBarItems as $name => $item)
                 @if ($active == $name)
                     <li class="min-w-fit transition-all duration-300 ease-in-out bg-primary">
                         <a href="{{$item['link']}}" class="group flex items-center justify-start px-6 py-3">
                             <i class="h-5 w-6 text-white {{$item['icon']}}"></i>
-                            <span class="title text-white sidebar opacity-0 pl-2">{{$name}}</span>
+                            <span :class="!open ? 'opacity-100 md:opacity-0' : 'opacity-100' " class="title text-white sidebar pl-2">{{$name}}</span>
                         </a>
                     </li>
                 @else
                     <li class="min-w-max transition-all duration-300 ease-in-out hover:bg-primary">
                         <a href="{{$item['link']}}" class="group flex items-center justify-start px-6 py-3">
                             <i class="h-5 w-6 group-hover:text-white {{$item['icon']}}"></i>
-                            <span class="title group-hover:text-white sidebar opacity-0 pl-2">{{$name}}</span>
+                            <span :class="!open ? 'opacity-100 md:opacity-0' : 'opacity-100' " class="title group-hover:text-white sidebar pl-2">{{$name}}</span>
                         </a>
                     </li>
                 @endif
@@ -68,7 +60,7 @@
         </ul>
     </div>
 </div>
-<div class="btm-nav md:hidden z-[50]">
+<div x-data="{moreOpen: false}" class="btm-nav md:hidden z-[50]">
     @foreach ($arrSideBarItems as $name => $item)
         @if(($loop->index + 1) != 4)
             @if ($active == $name)
@@ -83,7 +75,12 @@
                 </button>
             @endif
         @else
-            <button tabindex="0">
+            <button @click="moreOpen = !moreOpen">
+                <div :class="moreOpen && 'dropdown-open' " class="fixed bottom-16 right-10 dropdown dropdown-left dropdown-top dropdown-end">
+                    <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                      <li><a>{{$name}}</a></li>
+                    </ul>
+                </div>
                 <i class="fa-solid fa-ellipsis h-5 w-6 group-hover:text-white"></i>
                 <span class="btm-nav-label">More</span>
             </button>   

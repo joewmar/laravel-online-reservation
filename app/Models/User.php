@@ -51,4 +51,7 @@ class User extends Authenticatable
     {
         return Carbon::parse($this->attributes['birthday'])->age;
     }
+    public function reservation(){
+        return $this->hasOne(Reservation::class, 'user_id');
+    }
 }

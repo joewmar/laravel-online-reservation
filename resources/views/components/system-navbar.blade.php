@@ -1,9 +1,17 @@
-<div class="fixed top-0 left-0 w-full z-50">
+<div class="fixed z-[100] top-0 left-0 w-full">
   <div class="navbar bg-base-100">
     <div class="flex-1">
-      <button type="button" id="menu" tabindex="0" class="btn btn-ghost btn-circle">
-        <svg class="swap-off fill-current" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 512 512"><path d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"/></svg>
-      </button>
+      <div class="flex md:hidden btn btn-ghost btn-circle avatar">
+        {{-- <div class="w-10 rounded-full">
+          <img src="{{asset('images/avatars/no-avatar.png')}}" />
+        </div> --}}
+        LOGO
+      </div>
+      <div class="hidden md:flex">
+        <label @click="open = !open" class="btn btn-circle btn-ghost swap swap-rotate">
+          <svg class="fill-current" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 512 512"><path d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"/></svg>
+        </label>
+      </div>
     </div>
     <div class="flex-none">
       <div class="dropdown dropdown-end">

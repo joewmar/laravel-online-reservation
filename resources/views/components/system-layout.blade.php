@@ -17,7 +17,7 @@
   @elseif(session()->has('error'))
     <x-alert type="error" message="{{session('error')}}"/>
   @endif
-  <div class="flex h-full flex-row bg-gray-100 text-gray-800 relative">
+  <div x-data="{open: true}" class="flex h-full flex-row bg-gray-100 text-gray-800 relative">
     <div class="flex-grow-0">
       <x-sidebar :active="$activeSb" />
     </div>        

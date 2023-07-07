@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RideController;
@@ -8,8 +7,10 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\TourMenuController;
+use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\RoomSettingController;
 use App\Http\Controllers\TourSettingController;
+use App\Http\Controllers\SystemReservationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,8 +60,8 @@ Route::middleware(['guest'])->group(function(){
     Route::post('/check', [UserController::class, 'check'])->name('check');
 });
 
-// Route::middleware(['auth:web', 'prevent-back-history'])->group(function(){
-Route::middleware(['auth', 'prevent-back-history'])->group(function(){
+// Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
+Route::middleware(['auth', 'preventBackhHistory'])->group(function(){
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::view('/profile', 'home')->name('profile');
 
@@ -74,6 +75,8 @@ Route::middleware(['auth', 'prevent-back-history'])->group(function(){
         Route::post('/detials', [ReservationController::class, 'detailsStore'])->name('details.store');
 
         Route::get('/confimation', [ReservationController::class, 'confirmation'])->name('confirmation');
+        Route::post('/store', [ReservationController::class, 'storeReservation'])->name('store');
+        Route::view('/done','reservation.done', ['activeNav' => 'Hello'])->name('done');
 
     });
 });
@@ -84,9 +87,9 @@ Route::prefix('system')->name('system.')->group(function(){
        Route::view('/login', 'system.login')->name('login');
        Route::post('/check', [SystemController::class, 'check'])->name('check');
     });
-    Route::middleware(['auth:system', 'prevent-back-history'])->group(function(){
+    Route::middleware(['auth:system', 'preventBackhHistory'])->group(function(){
         Route::view('/', 'system.dashboard.index',  ['activeSb' => 'Home'])->name('home');
-        Route::view('/reservation', 'system.reservation.index',  ['activeSb' => 'Reservation'])->name('reservation');
+        Route::get('/reservation', [SystemReservationController::class, 'index'])->name('reservation');
         Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
 
         Route::prefix('menu')->name('menu.')->group(function (){
