@@ -16,8 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->integer('room_id')->nullable();
             $table->integer('pax');
+            $table->tinyText('accommodation_type');
             $table->integer('age')->nullable();
-            $table->string('menu');
+            $table->string('menu')->nullable();;
             $table->date('check_in');
             $table->date('check_out');
             $table->tinyInteger('status')->default(0); /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */

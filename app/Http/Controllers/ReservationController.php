@@ -38,46 +38,48 @@ class ReservationController extends Controller
             $request['check_out'] = $date->format('Y-m-d');
         }
 
-        // Check in (startDate to endDate) trim convertion
-        if(str_contains($request['check_in'], 'to')){
-            $dateSeperate = explode('to', $request['check_in']);
-            $request['check_in'] = trim($dateSeperate[0]);
-            $request['check_out'] = trim ($dateSeperate[1]);
-        }
-        // Check out convertion word to date format
-        if(str_contains($request['check_out'], ', ')){
-            $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
-            $request['check_out'] = $date->format('Y-m-d');
-        }
-        
         $validator = [];
-        if($request['accommodation_type'] == 'Day Tour'){
+        if($request['accommodation_type'] === 'Day Tour'){
             $validator = Validator::make($request->all('check_in','check_out', 'pax'), [
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out'), 'date_equals:'.$request['check_out']],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_out')],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
-                'check_out.unique' => 'Sorry, this date is not available',
-                'pax.required' => 'Need fill up first',
-                'pax.exists' => 'Sorry, this guest you choose is not available',
-                'after' => 'The :attribute was chose',
+                'required' => 'Need fill up first',
+                'date_equals' => 'Choose only one day (Day Tour)',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
     
             ]);
         }
-        if($request['accommodation_type'] == 'Overnight' || $request['accommodation_type'] == 'Room Only'){
+        elseif($request['accommodation_type'] === 'Overnight'){
             $validator = Validator::make($request->all('check_in','check_out', 'pax'), [
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out')],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in'], Rule::unique('reservations', 'check_out')],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2), Rule::unique('reservations', 'check_out')],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_out.unique' => 'Sorry, this date is not available',
-                'pax.required' => 'Need fill up first',
-                'pax.exists' => 'Sorry, this guest you choose is not available',
-                'after' => 'The :attribute was chose',
+                'required' => 'Need fill up first',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
+                'after_or_equal' => 'Choose within 2 day and above (Overnight)',
+    
+            ]);
+        }
+        elseif($request['accommodation_type'] === 'Room Only'){
+            $validated = $request->validate([
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out')],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in'], Rule::unique('reservations', 'check_out')],
+                'accommodation_type' => ['required'],
+                'pax' => ['required', 'numeric', 'min:1', Rule::exists('room_rates', 'occupancy')],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_out.unique' => 'Sorry, this date is not available',
+                'required' => 'Need fill up first',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',
+                'after' => 'The :attribute was already chose from (Check-in)',
     
             ]);
         }
@@ -95,7 +97,6 @@ class ReservationController extends Controller
     }
     // Data Check
     public function dateStore(Request $request){
-        dd($request->all());
         // Check in (startDate to endDate) trim convertion
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
@@ -108,35 +109,37 @@ class ReservationController extends Controller
             $request['check_out'] = $date->format('Y-m-d');
         }
 
-        $validated = [];
-        if($request['accommodation_type'] == 'Day Tour'){
+        $validated = null;
+        if($request['accommodation_type'] === 'Day Tour'){
             $validated = $request->validate([
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out'), 'date_equals:'.$request['check_out']],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
-                'pax.exists' => 'Sorry, this guest you choose is not available',
+                'date_equals' => 'Choose only one day (Day Tour)',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
     
             ]);
         }
-        elseif($request['accommodation_type'] == 'Overnight'){
+        elseif($request['accommodation_type'] === 'Overnight'){
             $validated = $request->validate([
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out')],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in'], Rule::unique('reservations', 'check_out')],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2), Rule::unique('reservations', 'check_out')],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
-                'pax.exists' => 'Sorry, this guest you choose is not available',
-                'after' => 'The :attribute was chose',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
+                'after_or_equal' => 'Choose within 2 day and above (Overnight)',
     
             ]);
         }
-        elseif($request['accommodation_type'] == 'Room Only'){
+        elseif($request['accommodation_type'] === 'Room Only'){
             $validated = $request->validate([
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out')],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in'], Rule::unique('reservations', 'check_out')],
@@ -146,10 +149,13 @@ class ReservationController extends Controller
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
-                'pax.exists' => 'Sorry, this guest you choose is not available',
-                'after' => 'The :attribute was chose',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     
+                'after' => 'The :attribute was already chose from (Check-in)',
     
             ]);
+        }
+        else{
+            return redirect()->route('reservation.date')->with('error',"Something Wrong!")->withInput();
         }
         if(str_contains($validated['check_in'], 'to')){
             $dateSeperate = explode('to', $validated['check_in']);
@@ -198,6 +204,7 @@ class ReservationController extends Controller
                 "cin" =>  $dateList['cin'],
                 "cout" => $dateList['cout'],
                 "px" => $dateList['px'],
+                "at" => $dateList['at'],
                 "py" =>  $dateList['py'],
                 'cmenu' => $chooseMenu,
                 "user_days" => isset($noOfday) ? $noOfday : '',
@@ -205,7 +212,7 @@ class ReservationController extends Controller
             dd($dateList['py']);
         }
         
-        if($request->has(['cin', 'cout', 'px'])){
+        if($request->has(['cin', 'cout', 'px', 'at'])){
             $noOfday = checkDiffDates(decrypt(request('cin')), decrypt(request('cout')));
         }
         return view('reservation.step2', [
@@ -214,8 +221,9 @@ class ReservationController extends Controller
             'tour_menus' => TourMenu::all(), 
             "cin" =>  $request->has('cin') != null ? decrypt(request('cin')) : '',
             "cout" => $request->has('cout') != null ? decrypt(request('cout')) : '',
+            "at" => $request->has('at') != null ? decrypt(request('at')) : '',
             "px" => $request->has('px') != null ? decrypt(request('px')) : '',
-            "py" =>  $request->has('py') != null ? decrypt(request('px')) : '',
+            "py" =>  $request->has('py') != null ? decrypt(request('py')) : '',
             "user_days" => isset($noOfday) ? $noOfday : '',
         ]);      
 
@@ -236,17 +244,61 @@ class ReservationController extends Controller
             $request['check_out'] = $date->format('Y-m-d');
         }
 
-        $validated = $request->validate([
+        $validated = [];
+        if($request['accommodation_type'] === 'Day Tour'){
+            $validated = $request->validate([
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out'), 'date_equals:'.$request['check_out']],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
+                'accommodation_type' => ['required'],
+                'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'required' => 'Need fill up first',
+                'date_equals' => 'Choose only one day (Day Tour)',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
+    
+            ]);
+        }
+        elseif($request['accommodation_type'] === 'Overnight'){
+            $validated = $request->validate([
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out')],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
-                'pax' => 'required', 'min:1', 'numeric',
-                'payment_method' => 'required',
-            ], 
-            [
-                'check_out.after' => 'The :attribute was chose',
-                'pax.required' => 'The number of guest are required',
-            ]
-        );
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2), Rule::unique('reservations', 'check_out')],
+                'accommodation_type' => ['required'],
+                'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_out.unique' => 'Sorry, this date is not available',
+                'required' => 'Need fill up first',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
+                'after_or_equal' => 'Choose within 2 day and above (Overnight)',
+    
+            ]);
+        }
+        elseif($request['accommodation_type'] === 'Room Only'){
+            $validated = $request->validate([
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out')],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in'], Rule::unique('reservations', 'check_out')],
+                'accommodation_type' => ['required'],
+                'pax' => ['required', 'numeric', 'min:1', Rule::exists('room_rates', 'occupancy')],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_out.unique' => 'Sorry, this date is not available',
+                'required' => 'Need fill up first',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     
+                'after' => 'The :attribute was already chose from (Check-in)',
+    
+            ]);
+            $reservationInfo = [
+                "cin" =>  $request->has('cin') != null ? request('cin') : '',
+                "cout" => $request->has('cout') != null ? request('cout') : '',
+                "px" => $request->has('px') != null ? request('px'): '',
+                "at" => $request->has('at') != null ? request('at'): '',
+                "py" =>  $request->has('py') != null ? request('py') : '',
+            ];
+    
+            if(session()->has('rinfo')) foreach($reservationInfo as $key => $item) session('rinfo')[$key] = $reservationInfo[$key]; 
+            else session(['rinfo' => $reservationInfo]);
+        }
         if($validated){
             $getParamStep1 = [
                 "cin" =>  encrypt($validated['check_in'] ?? ''),
@@ -255,7 +307,6 @@ class ReservationController extends Controller
                 "py" =>  encrypt($validated['payment_method'] ?? ''),
             ];
             return redirect()->route('reservation.choose', [Arr::query($getParamStep1), '#tourmenu']);
-            
         }
 
     }
@@ -346,6 +397,7 @@ class ReservationController extends Controller
                 'pax' => $uinfo['px'] ?? '',
                 'age' => $uinfo['age'] ?? '',
                 'menu' => $uinfo['tm'] ?? '',
+                'accommodation_type' => $uinfo['at'] ?? '',
                 'check_in' => $uinfo['cin'] ?? '',
                 'check_out' => $uinfo['cout'] ?? '',
                 'check_out' => $uinfo['cout'] ?? '',

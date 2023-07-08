@@ -19,4 +19,9 @@ var nodes = document.getElementById("disabledAll").getElementsByTagName('*');
 for(var i = 0; i < nodes.length; i++){
     nodes[i].disabled = true;
 }
+document.querySelectorAll(".DISABLED-ALL").disabled = true;
+var nodes = document.querySelectorAll(".DISABLED-ALL").getElementsByTagName('*');
+for(var i = 0; i < nodes.length; i++){
+    nodes[i].disabled = true;
+}
 
