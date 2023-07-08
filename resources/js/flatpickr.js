@@ -18,4 +18,10 @@ flatpickr(".flatpickr-bithday", {
     dateFormat: "Y-m-d",
 
 });
+flatpickr(".flatpickr-reservation-one", {
+    altInput: true,
+    altFormat: "F j\\, Y",
+    dateFormat: "Y-m-d",
+
+});
 

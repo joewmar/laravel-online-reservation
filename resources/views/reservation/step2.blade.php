@@ -5,17 +5,19 @@
     $arrPayment = ['Walk-in', 'Gcash', 'Paymaya'];
     $TourInfo = [];
     $tourList = [];
-    if(request()->has(['cin', 'cout', 'px', 'py'])){
+    if(request()->has(['cin', 'cout', 'px', 'py', 'at'])){
       $TourInfo = [
         "cin" => request('cin') ?? '',
         "cout" => request('cout') ?? '',
         "px" => request('px') ?? '',
+        "at" => request('at') ?? '',
         "py" => request('py') ?? '',
       ];
     }
     if(session()->has('rinfo')){
         $tourList = explode(',', decrypt(session('rinfo')['tm']));
     }
+    $arrAccType = ['Room Only', 'Day Tour', 'Overnight']
 
 @endphp
 
@@ -112,18 +114,20 @@
       @csrf
       <div class="mt-4 ">
         <div :class="filterOpen ? 'transition-all duration-1000 ease-in-out' : 'hidden' " class="space-y-4 lg:block">
-          @if(request()->has(['cin', 'cout', 'px', 'py']))
+          @if(request()->has(['cin', 'cout', 'px', 'py', 'at']))
             <div class="opacity-50" id="disabledAll">
           @else
             <div>
           @endif
               <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$cin !== ''  ? $cin : ''}}"/>
               <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$cout !== '' ? $cout : ''}}" />
+              <x-select alpineModel="select" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$at ?? old('accommodation_type')}}" />
+
               {{-- Number of Guest --}}
               <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$px === null ? '' : $px}}"/>
               {{-- Payment Method  --}}
               <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$py ?? ''}}"/>
-              @if(request()->has(['cin', 'cout', 'px', 'py']))
+              @if(request()->has(['cin', 'cout', 'px', 'py', 'at']))
                   <div class="hidden">
               @else
                   <div class="lg:flex justify-start gap-5">
@@ -139,7 +143,7 @@
       </div>
     </form>
       <div class="divider"></div>
-      @if(request()->has(['cin', 'cout', 'px', 'py']))
+      @if(request()->has(['cin', 'cout', 'px', 'py', 'at']))
         <div id="tourmenu" class="w-full">
           <header>
             <p class="mt-4 max-w-md font-bold text-2xl">

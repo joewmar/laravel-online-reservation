@@ -1,10 +1,10 @@
-@props(['id' => '', 'name' => '', 'value', 'placeholder', 'selected' => old($name), 'title' => '', 'class' => '', 'disabled' => false])
+@props(['id' => '', 'name' => '', 'value', 'placeholder', 'selected' => old($name), 'title' => '', 'class' => '', 'disabled' => false, 'alpineModel' => ''])
 <div class="form-control w-full {{$disabled ? 'disabledAll opacity-50' : 'opacity-100'}}">
     <label for="{{$id}}" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
         @if($disabled)
-            <select name="{{$name}}" id="{{$id}}" {{$attributes->merge(['class' => 'w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'])}} disabled>
+            <select x-model="{{$alpineModel ?? ''}}" name="{{$name}}" id="{{$id}}" {{$attributes->merge(['class' => 'w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'])}} disabled>
         @else
-            <select name="{{$name}}" id="{{$id}}" {{$attributes->merge(['class' => 'w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'])}}>
+            <select x-model="{{$alpineModel ?? ''}}" name="{{$name}}" id="{{$id}}" {{$attributes->merge(['class' => 'w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'])}}>
         @endif
             <option value="" disabled selected>Please select</option>
             @foreach ($value as $key => $item)

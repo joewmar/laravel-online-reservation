@@ -25,7 +25,7 @@
     <main class="main flex flex-grow flex-col transition-all duration-150 ease-in-out md:ml-0 overflow-y-auto h-full">
       <div id="overlay" class="transition ease-in-out duration-300 hidden fixed w-full h-full bg-primary bg-opacity-70 z-50"></div>
       <x-system-navbar />
-      <div class="mt-24 ">
+      <div class="mt-10 md:mt-24">
         {{$slot}}
       </div>
     </main>

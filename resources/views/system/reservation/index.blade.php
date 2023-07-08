@@ -58,13 +58,30 @@
                                 <td>{{$list->userReservation->country ?? ''}}</td>
                                 <td>{{$list->status()}}</td>
                                 <th class="w-auto">
+                                    @php
+                                        $title = ''; 
+                                    @endphp
                                     @if($list->status() == "Pending")
-                                        <button class="btn btn-secondary btn-xs">Confirm</button>
+                                        @php $title = 'Approve' @endphp
+                                        <label for="reservation" class="btn btn-secondary btn-xs" >Confirm</label>
+                                        <label for="reservation" class="btn btn-success btn-xs" disabled>Check-in</label>
+                                        <label for="reservation" class="btn btn-info btn-xs" disabled>Check-out</label>
                                     @elseif($list->status() == "Confirmed")
-                                        <button class="btn btn-success btn-xs">Check-in</button>
+                                        @php $title = 'Check-in' @endphp
+                                        <label for="reservation" class="btn btn-secondary btn-xs" disabled>Confirm</label>
+                                        <label for="reservation" class="btn btn-success btn-xs">Check-in</label>
+                                        <label for="reservation" class="btn btn-info btn-xs" disabled>Check-out</label>
+
                                     @elseif($list->status() == "Check-in")
-                                        <button class="btn btn-info btn-xs">Check-out</button>
+                                        @php $title = 'Check-out' @endphp
+                                        <label for="reservation" class="btn btn-secondary btn-xs" disabled>Confirm</label>
+                                        <label for="reservation" class="btn btn-success btn-xs" disabled>Check-in</label>
+                                        <label for="reservation" class="btn btn-info btn-xs">Check-out</label>
                                     @endif
+                                    <form action="" method="post">
+                                        @csrf
+                                        <x-passcode-modal title="{{$title}} Confirmation" id="reservation" formId="reservation-form" />        
+                                    </form>
                                     <a href="" class="btn btn-circle btn-ghost">
                                         <i class="fa-solid fa-ellipsis text-lg"></i>                        
                                     </a>
