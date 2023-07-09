@@ -1,3 +1,14 @@
+@php
+    $reservation = [];
+    if(request()->exists('cin', 'cout', 'at', 'px') ){
+      $reservation = [
+        "cin" => request()->get('cin'),
+        "cout" => request()->get('cout'),
+        "px" => request()->get('px'),
+        "at" => request()->get('at'),
+      ];
+    }
+@endphp
 <x-landing-layout>
   <div class="flex w-full justify-center">
     <div class="card w-full md:w-[40%] bg-base-100 rounded-box my-10">
@@ -16,7 +27,11 @@
           </div>
         </div>
         <div class="divider">Sign up with social accounts</div>
+      @if(request()->exists('cin', 'cout', 'at', 'px', 'ck'))
+        <form action="{{ route('create', $reservation) }}" method="post">
+      @else
         <form action="{{ route('create') }}" method="post">
+      @endif
           @csrf
           {{-- First Name --}}
           <x-input type="text" name="first_name" placeholder="First Name"/>
@@ -25,11 +40,11 @@
           {{-- Birthday --}}
           <x-datetime-picker name="birthday" id="birthday" placeholder="Birthday" class="flatpickr-bithday" />
           {{-- Nationality--}}
-          <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" :title="$nationality"/>
+          <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" :title="$nationality" selected="{{old('nationality') ?? ''}}" />
           {{-- Country--}}
-          <x-select id="country" name="country" placeholder="Country" :value="$countries" :title="$countries" />
+          <x-select id="country" name="country" placeholder="Country" :value="$countries" :title="$countries" selected="{{old('country') ?? ''}}" />
           {{-- Phone Number  --}}
-          <x-input type="tel" name="contact" placeholder="Phone Number"/>
+          <x-input type="number" name="contact" placeholder="Phone Number"/>
           {{-- Email  --}}
           <x-input type="email" name="Email" placeholder="Contact Email"/>
 

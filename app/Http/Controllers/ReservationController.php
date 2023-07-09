@@ -23,7 +23,19 @@ class ReservationController extends Controller
             $dateList = decryptedArray(session('rinfo'));
             return view('reservation.step1', ['cin' => $dateList['cin'], 'cout' => $dateList['cout'], 'at' => $dateList['at'], 'px' => $dateList['px']]);
         }
-        return view('reservation.step1', ['cin' => $request['check_in'], 'cout' => $request['check_out'], 'at' => $request['accommodation_type'], 'px' => $request['pax'], 'ck' => $request['ck'] ?? '0']);
+        if($request->exists('cin', 'cout', 'px', 'at', 'ck')){
+            $reserve = [
+              "cin" => request('cin'),
+              "cout" => request('cout'),
+              "px" => request('px'),
+              "at" => request('at'),
+            ];
+            $reserve =  decryptedArray($reserve);
+            return view('reservation.step1', ['cin' => $reserve['cin'], 'cout' => $reserve['cout'], 'at' => $reserve['at'], 'px' => $reserve['px']]);
+
+        }
+        return view('reservation.step1');
+        // return view('reservation.step1', ['cin' => $request['check_in'], 'cout' => $request['check_out'], 'at' => $request['accommodation_type'], 'px' => $request['pax'], 'ck' => $request['ck'] ?? '0']);
     }
     public function dateCheck(Request $request){
         // Check in (startDate to endDate) trim convertion
@@ -76,7 +88,7 @@ class ReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out'), 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in'], Rule::unique('reservations', 'check_out')],
                 'accommodation_type' => 'required',
-                'pax' => ['required', 'numeric', 'min:1', Rule::exists('room_rates', 'occupancy')],
+                'pax' => ['required', 'numeric', 'min:1', Rule::exists('room_rates', 'max_occupancy')],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
@@ -89,19 +101,19 @@ class ReservationController extends Controller
         }
         else{
             return redirect()->route('reservation.date')->with('error',"Choose the Accommodation type")->withInput();
-            session(['ck' => false]);
+            session('ck', false);
 
         }
         if ($validator->fails()) {            
             return redirect()->route('reservation.date')
             ->withErrors($validator)
             ->withInput();
-            session(['ck' => false]);
+            session('ck', false);
         }
 
         $validated = $validator->validated();
         if($validated){
-            session(['ck' => true]);
+            session('ck', true);
             return redirect()->route('reservation.date')->with('success',"Your choose date is now available, Let s proceed if you will make reservation")->withInput();
         }
 
@@ -157,7 +169,7 @@ class ReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out'), 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in'], Rule::unique('reservations', 'check_out')],
                 'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1', Rule::exists('room_rates', 'occupancy')],
+                'pax' => ['required', 'numeric', 'min:1', Rule::exists('room_lists', 'max_occupancy')],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
@@ -182,7 +194,6 @@ class ReservationController extends Controller
             "cout" =>  $validated['check_out'] === '' ? null : encrypt($validated['check_out']),
             "at" =>  $validated['accommodation_type'] === '' ? null : encrypt($validated['accommodation_type']),
             "px" =>  $validated['pax'] === '' ? null : encrypt($validated['pax']),
-            "ck" =>  $request['ck'],
         );
         if(session()->has('rinfo')){
             $paramsDates = array(
@@ -193,8 +204,10 @@ class ReservationController extends Controller
             );
             return redirect()->route('reservation.choose', Arr::query($paramsDates));
             
-        } 
-        return redirect()->route('reservation.choose', Arr::query($paramsDates));
+        }
+        if(Auth::guard('web')->check()) return redirect()->route('reservation.choose', Arr::query($paramsDates));
+        else return redirect()->route('login', Arr::query($paramsDates));
+ 
 
     }
     // Choose Form
@@ -297,7 +310,7 @@ class ReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', Rule::unique('reservations', 'check_in'), Rule::unique('reservations', 'check_out'), 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in'], Rule::unique('reservations', 'check_out')],
                 'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1', Rule::exists('room_rates', 'occupancy')],
+                'pax' => ['required', 'numeric', 'min:1', Rule::exists('room_lists', 'max_occupancy')],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
@@ -321,7 +334,7 @@ class ReservationController extends Controller
         }
         else{
             return back()->with('error',"Choose the Accommodation type")->withInput();
-            session(['ck' => false]);
+            session('ck', false);
         }
 
         if($validated){

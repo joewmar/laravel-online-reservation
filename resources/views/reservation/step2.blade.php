@@ -2,22 +2,32 @@
 
 @endpush
 @php
+    $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
     $arrPayment = ['Walk-in', 'Gcash', 'Paymaya'];
+    $reserve = [];
     $TourInfo = [];
     $tourList = [];
-    if(request()->has(['cin', 'cout', 'px', 'py', 'at'])){
+    if(request()->has(['cin', 'cout', 'px', 'at'])){
       $TourInfo = [
         "cin" => request('cin') ?? old('check_in'),
         "cout" => request('cout') ?? old('check_out'),
-        "px" => request('px') ?? old(''),
-        "at" => request('at') ?? old(''),
+        "px" => request('px') ?? old('pax'),
+        "at" => request('at') ?? old('accommodation_type'),
+        "ck" => request('ck') ?? '',
+      ];
+    }
+    elseif(request()->has(['cin', 'cout', 'px', 'py', 'at'])){
+      $TourInfo = [
+        "cin" => request('cin') ?? old('check_in'),
+        "cout" => request('cout') ?? old('check_out'),
+        "px" => request('px') ?? old('pax'),
+        "at" => request('at') ?? old('accommodation_type'),
         "py" => request('py') ?? old('payment_method'),
       ];
     }
     if(session()->has('rinfo')){
         $tourList = explode(',', decrypt(session('rinfo')['tm']));
     }
-    $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
 
 @endphp
 
@@ -132,7 +142,7 @@
                   <div class="lg:flex justify-start gap-5">
               @endif
                   <div class="mt-8 flex gap-4">
-                    <a href="{{route('reservation.date')}}" class="btn btn-ghost">Back</a>
+                    <a href="{{route('reservation.date', Arr::query($TourInfo))}}" class="btn btn-ghost">Back</a>
                     <button type="submit" class="btn btn-primary">Continue</button>
                   </div>
                 </div>
@@ -295,7 +305,7 @@
         </div>
         <div class="hidden lg:flex justify-start gap-5">
           <div class="mt-8 flex gap-4">
-            <a href="{{route('reservation.choose', Arr::query(["cin" =>  request('cin'), "cout" =>  request('cout')]) ) }}" class="btn btn-ghost">Back</a>
+            <a href="{{route('reservation.choose', Arr::query(["cin" =>  request('cin'), "cout" =>  request('cout'), "px" =>  request('px'), "at" =>  request('at')]) ) }}" class="btn btn-ghost">Back</a>
             <button onclick="event.preventDefault(); document.getElementById('tour-form').submit();" class="btn btn-primary">Next</button>
           </div>
         </div>

@@ -11,8 +11,7 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-    public function create(Request $request)
-    {
+    public function create(Request $request){
         // Validate input
         $validator = Validator::make($request->all(), [
             'first_name' => ['required', 'min:3'],
@@ -30,15 +29,17 @@ class UserController extends Controller
         }
         $validated = $validator->validated();
         
-        // Hash password
-        $validated['password'] = bcrypt($validated['password']);
+        if($validated){
+            // Hash password
+            $validated['password'] = bcrypt($validated['password']);
 
-        // Create User
-        $user = User::create($validated);
+            // Create User
+            $user = User::create($validated);
 
-        $user = Auth::guard('web')->login($user);
-        if($user){
-            return redirect()->route('home')->with('success', 'Welcome First timer' . auth()->user()->first_name);
+            $user = Auth::guard('web')->login($user);
+            if($user){
+                return redirect()->route('home')->with('success', 'Welcome First timer' . auth()->user()->first_name);
+            }
         }
     }
     // Verify login
@@ -52,10 +53,13 @@ class UserController extends Controller
         if(auth('web')->attempt($validated)){
             $request->session()->regenerate(); //Regenerate Session ID
 
-            if ($request->has([$request['cin'], $request['cout']])) {
+            if (request()->exists('cin', 'cout', 'at', 'px', 'ck')) {
                 $paramDates = array(
-                    "cin" =>   $request['cin'],
-                    "cout" =>  $request['cout'],
+                    "cin" => $request->get('cin'),
+                    "cout" => $request->get('cout'),
+                    "px" => $request->get('px'),
+                    "at" => $request->get('at'),
+                    "ck" => $request->get('ck'),
                 );
                 return redirect()->route('reservation.choose', Arr::query($paramDates));
             }
@@ -63,7 +67,6 @@ class UserController extends Controller
                 return redirect()->route('home')->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
             }
             
-        // dd($request['cin']);
         }
         else{
             return back()->withErrors(['email' => 'Invalid Credentials'])->onlyInput('email');

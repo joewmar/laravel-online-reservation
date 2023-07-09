@@ -19,7 +19,11 @@
         </div>
       </div>
       <div class="divider">OR</div>
-      <form action="{{ route('create') }}" method="post">
+      @if(request()->exists('cin', 'cout', 'at', 'px', 'ck'))
+        <form action="{{ route('create', $reservation) }}" method="post">
+      @else
+        <form action="{{ route('create') }}" method="post">
+      @endif
         @csrf
         {{-- First Name --}}
         <x-input type="text" name="first_name" placeholder="First Name"/>
@@ -28,9 +32,9 @@
         {{-- Birthday --}}
         <x-datetime-picker name="birthday" id="birthday" placeholder="Birthday" class="flatpickr-bithday" />
         {{-- Nationality--}}
-        <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" :title="$nationality" />
+        <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" :title="$nationality" selected="{{old('nationality') ?? ''}}" />
         {{-- Country--}}
-        <x-select id="country" name="country" placeholder="Country" :value="$countries" :title="$countries" />
+        <x-select id="country" name="country" placeholder="Country" :value="$countries" :title="$countries" selected="{{old('country') ?? ''}}" />
         {{-- Phone Number  --}}
         <x-input type="tel" name="contact" placeholder="Phone Number"/>
         {{-- Email  --}}
