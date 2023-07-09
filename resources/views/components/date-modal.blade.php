@@ -1,7 +1,7 @@
-@props(['id' => ''])
 @php
-    $arrAccType = ['Room Only', 'Day Tour', 'Overnight']
+    $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
 @endphp
+@props(['id' => ''])
 <input type="checkbox" id="{{$id}}" class="modal-toggle" />
 <div class="modal modal-bottom sm:modal-top" id="{{$id}}">
   <div class="modal-box">
@@ -9,7 +9,7 @@
     <p class="py-4">
       <form id="reservation-form" action=" {{ route('reservation.date.check') }}" method="POST">
         @csrf
-        <x-select alpineModel="select" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" />
+        <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" />
         <div class="w-auto text-center flex space-x-4 " x-transition>
           <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation"/>
           <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" />

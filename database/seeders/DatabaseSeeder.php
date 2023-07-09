@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             // 'room_id' => 1,
             'pax' => 1,
             'menu' => '1_1',
+            'accommodation_type' => 'Day Tour',
             'age' => User::findOrfail(1)->age(),
             'check_in' => Carbon::now()->toDateTimeString(),
             'check_out' => Carbon::now()->addDays(3)->toDateTimeString(),
@@ -121,5 +122,20 @@ class DatabaseSeeder extends Seeder
             'price' => '13200', /* '13200 + 4,000' */
             'pax' => '1',
         ]);
+
+        /// ROom
+        \App\Models\RoomList::create([
+            'name' => 'Charlet',
+            'min_occupancy' => 1,
+            'max_occupancy' => 4,
+            'many_room' => 5,
+        ]);
+        for($room_count = 0; $room_count < \App\Models\RoomList::findOrFail(1)->many_room; $room_count++){
+            \App\Models\Room::create([
+                'room_id' => \App\Models\RoomList::findOrFail(1)->id,
+                'room_no' => 0,
+            ]);
+        }
+        refreshRoomNumber();
     }
 }

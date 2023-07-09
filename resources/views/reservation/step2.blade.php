@@ -7,11 +7,11 @@
     $tourList = [];
     if(request()->has(['cin', 'cout', 'px', 'py', 'at'])){
       $TourInfo = [
-        "cin" => request('cin') ?? '',
-        "cout" => request('cout') ?? '',
-        "px" => request('px') ?? '',
-        "at" => request('at') ?? '',
-        "py" => request('py') ?? '',
+        "cin" => request('cin') ?? old('check_in'),
+        "cout" => request('cout') ?? old('check_out'),
+        "px" => request('px') ?? old(''),
+        "at" => request('at') ?? old(''),
+        "py" => request('py') ?? old('payment_method'),
       ];
     }
     if(session()->has('rinfo')){
@@ -119,14 +119,14 @@
           @else
             <div>
           @endif
-              <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$cin !== ''  ? $cin : ''}}"/>
-              <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$cout !== '' ? $cout : ''}}" />
-              <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$at ?? ''}}" />
+              <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$cin}}"/>
+              <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$cout }}" />
+              <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$at}}" />
               {{-- Number of Guest --}}
-              <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$px === null ? '' : $px}}"/>
+              <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$px}}"/>
               {{-- Payment Method  --}}
-              <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$py ?? ''}}"/>
-              @if(request()->has(['cin', 'cout', 'px', 'py', 'at']) && decrypt($at ?? '') != 'Room Type')
+              <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$py}}"/>
+              @if(request()->has(['cin', 'cout', 'px', 'py', 'at']) && $at != 'Room Type')
                   <div class="hidden">
               @else
                   <div class="lg:flex justify-start gap-5">
@@ -142,7 +142,7 @@
       </div>
     </form>
       <div class="divider"></div>
-      @if(request()->has(['cin', 'cout', 'px', 'py', 'at']) && decrypt($at ?? '') != 'Room Type')
+      @if(request()->has(['cin', 'cout', 'px', 'py', 'at']) && $at != 'Room Type')
         <div id="tourmenu" class="w-full">
           <header>
             <p class="mt-4 max-w-md font-bold text-2xl">
