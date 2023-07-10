@@ -2,7 +2,7 @@
   $totalPrice = 0;
 @endphp
 <x-landing-layout>
-  <section class="m-5 p-5">
+  <section class="my-10 p-5 h-screen">
     <div class="flex justify-center item- pb-10 text-center ">
       <ul class="w-full steps steps-horizontal">
         <li data-content="✓" class="step step-primary">Dates</li>
@@ -14,62 +14,74 @@
     <div>
       <h1 class="sr-only">Checkout</h1>
 
-      <div class="mx-auto grid max-w-screen-2xl grid-cols-1 md:grid-cols-2">
+      <div class="mx-auto grid max-w-screen-xl grid-cols-1 md:grid-cols-2">
         <div class="bg-base-100 py-12 md:py-24">
           <div class="mx-auto max-w-lg space-y-8 px-4 lg:px-8">
             <div class="flex items-center gap-4">
               <span class="h-10 w-10 rounded-full bg-primary"></span>
               <h2 class="font-medium text-gray-900">Your Cart</h2>
             </div>
-            <div>
+            <div class="space-y-3">
               <p class="text-md font-medium tracking-tight text-gray-900">
-                Number of Guest: {{$uinfo['px'] > 1 ? $uinfo['px'] . ' guests' : $uinfo['px'] . ' guest' }}
+                <strong>Number of Guest: </strong> {{$uinfo['px'] > 1 ? $uinfo['px'] . ' guests' : $uinfo['px'] . ' guest' }}
               </p>            
               <p class="text-md font-medium tracking-tight text-gray-900">
-                Payment Method: 
+                <strong>Type: </strong> {{$uinfo['at'] ?? ''}}
+              </p>            
+              <p class="text-md font-medium tracking-tight text-gray-900">
+                <strong>Payment Method: </strong> {{$uinfo['py'] ?? ''}}
               </p>            
             </div>
             <div>
-              <div class="flow-root">
-                <div class="overflow-x-auto">
-                  <table class="table table-zebra">
-                    <!-- head -->
-                    <thead>
-                      <tr>
-                        <th>Menu</th>
-                        <th>Price</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <!-- rowS -->
-                      @if(session()->has('rinfo'))
-                        <form id="reservation-form" action="{{ route('reservation.store')}}" method="POST">
-                          @foreach ($user_menu as $key => $item)
-                              <tr>
-                                <td>{{$item['title']}}</td>
-                                <td>
-                                    <input type="hidden" name="amount[]" value="{{$item['price']}}">{{ number_format($item['price'], 2) }}</td>
-                                    @csrf
-                                @php $totalPrice += (double)$item['price']  @endphp
-                              </tr>
-                          @endforeach
-                        </form>
-                      @else
-                        <tr colspan="2">
-                          <td>No Cart</td>
-                        </tr>
-                      @endif
-                    </tbody>
-                  </table>
+              <form id="reservation-form" action="{{ route('reservation.store')}}" method="POST">
+                @csrf
+                <div class="flow-root">
+                  @if($uinfo['at'] !== 'Room Only')
+                    <div class="overflow-x-auto">
+                      <table class="table table-zebra">
+                        <!-- head -->
+                        <thead>
+                          <tr>
+                            <th>Menu</th>
+                            <th>Price</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <!-- rowS -->
+                          @if(session()->has('rinfo'))
+                              @foreach ($user_menu as $key => $item)
+                                  <tr>
+                                    <td>{{$item['title']}}</td>
+                                    <td>
+                                        <input type="hidden" name="amount[]" value="{{$item['price']}}">{{ number_format($item['price'], 2) }}</td>
+                                    @php $totalPrice += (double)$item['price']  @endphp
+                                  </tr>
+                              @endforeach
+                          @else
+                            <tr colspan="2">
+                              <td>No Cart</td>
+                            </tr>
+                          @endif
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="float-right">
+                      <p class="text-md font-medium tracking-tight text-gray-900">
+                        Total Cost: <span>P </span>{{ number_format($totalPrice, 2) }}
+                      </p>
+                    </div>
+                    @endif
+                  <div class="float-left">
+                    <p class="text-md font-medium tracking-tight text-error">
+                      Note: The availability of the room depends on the number of guests, so please wait for the approval to process your reservation.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </form>
+
             </div>
 
-            <div class="float-right">
-              <p class="text-md font-medium tracking-tight text-gray-900">
-                Total Cost: <span>P </span>{{ number_format($totalPrice, 2) }}
-              </p>
-            </div>
+
 
           </div>
         </div>
@@ -138,7 +150,7 @@
                 </label>
 
                 <x-modal id="reservation_confirm" title="Confirmation" type="YesNo" formID="reservation-form">
-                  <p class="">Are you sure your information?</p>
+                  <p class="">Are you sure your correct your information?</p>
                 </x-modal>
               </div>
             </div>

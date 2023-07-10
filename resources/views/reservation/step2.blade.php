@@ -1,6 +1,3 @@
-@push('styles')
-
-@endpush
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
     $arrPayment = ['Walk-in', 'Gcash', 'Paymaya'];
@@ -26,7 +23,9 @@
       ];
     }
     if(session()->has('rinfo')){
+      if(decrypt(session('rinfo')['at']) !== 'Room Only'){
         $tourList = explode(',', decrypt(session('rinfo')['tm']));
+      }
     }
 
 @endphp

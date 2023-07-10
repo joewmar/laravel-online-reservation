@@ -23,8 +23,8 @@ return new class extends Migration
             $table->date('check_out');
             $table->tinyInteger('status')->default(0); /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
             $table->string('additional_menu')->nullable();
-            $table->string('amount');
-            $table->decimal('total');
+            $table->string('amount')->nullable();
+            $table->decimal('total')->nullable();
             $table->timestamps();
         });
     }

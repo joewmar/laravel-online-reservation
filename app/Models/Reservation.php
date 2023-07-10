@@ -13,6 +13,7 @@ class Reservation extends Model
         'room_id',
         'pax',
         'age',
+        'accommodation_type',
         'menu',
         'check_in',
         'check_out',
