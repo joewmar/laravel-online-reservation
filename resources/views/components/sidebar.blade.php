@@ -9,7 +9,7 @@
             ],
             "Reservation" => [
                 "icon" => "fa-sharp fa-solid fa-book",
-                "link" => "/system/reservation",
+                "link" => route('system.reservation.home'),
             ],
             "Rooms" => [
                 "icon" => "fa-solid fa-hotel",

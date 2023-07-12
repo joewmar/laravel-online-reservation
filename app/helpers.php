@@ -3,6 +3,8 @@
 use Carbon\Carbon;
 use App\Models\Room;
 use Illuminate\Support\Facades\Storage;
+use Telegram\Bot\Laravel\Facades\Telegram;
+
 
 function deleteFile($filename){
     if (Storage::disk('public')->exists($filename)) {
@@ -57,3 +59,33 @@ function decryptedArray($array){
     }, $array);
     return $var;
 }
+// Convert to user to chat_id
+function getChatIdByUsername($username){
+    $updates = Telegram::getUpdates();
+
+    foreach ($updates as $update) {
+        $message = $update->getMessage();
+        $chat = $message->getChat();
+
+        if ($chat->getUsername() === $username) {
+            return $chat->getId();
+        }
+    }
+
+    return null;
+}
+
+function getChatIdByGroup(){
+    $updates = Telegram::getUpdates();
+
+    foreach ($updates as $update) {
+        $message = $update->getMessage();
+        $chat = $message->getChat();
+
+        if ($chat->getType() === 'group') {
+            return $chat->getId();
+        }
+    }
+    return null;
+}
+

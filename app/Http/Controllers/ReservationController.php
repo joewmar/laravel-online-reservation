@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\ReservationMail;
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\RoomList;
 use App\Models\TourMenu;
 use App\Models\Reservation;
-use App\Models\RoomList;
 use Illuminate\Support\Arr;
 use App\Models\TourMenuList;
 use Illuminate\Http\Request;
+use App\Mail\ReservationMail;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Telegram\Bot\Laravel\Facades\Telegram;
 
 class ReservationController extends Controller
 {
@@ -120,6 +121,7 @@ class ReservationController extends Controller
     }
     // Data Check
     public function dateStore(Request $request){
+        
         // Check in (startDate to endDate) trim convertion
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
@@ -212,7 +214,6 @@ class ReservationController extends Controller
     }
     // Choose Form
     public function choose(Request $request){
-
         if(session()->has('rinfo')){
             $dateList = decryptedArray(session('rinfo'));
             $noOfday = checkDiffDates($dateList['cin'], $dateList['cout']);
@@ -254,24 +255,24 @@ class ReservationController extends Controller
         }
     
 
-        if($request->has(['cin', 'cout', 'px', 'at', 'py'])){
-            $noOfday = checkDiffDates(decrypt(request('cin')), decrypt(request('cout')));
-            return view('reservation.step2', [
-                'tour_lists' => TourMenuList::all(), 
-                'tour_category' => TourMenuList::distinct()->get('category'), 
-                'tour_menus' => TourMenu::all(), 
-                "cin" =>  $request->has('cin') != null ? decrypt(request('cin')) : '',
-                "cout" => $request->has('cout') != null ? decrypt(request('cout')) : '',
-                "at" => $request->has('at') != null ? decrypt(request('at')) : '',
-                "px" => $request->has('px') != null ? decrypt(request('px')) : '',
-                "py" =>  $request->has('py') != null ? decrypt(request('py')) : '',
-                "user_days" => isset($noOfday) ? $noOfday : '',
-            ]); 
-        }
+        $noOfday = checkDiffDates(decrypt(request('cin')), decrypt(request('cout')));
+        return view('reservation.step2', [
+            'tour_lists' => TourMenuList::all(), 
+            'tour_category' => TourMenuList::distinct()->get('category'), 
+            'tour_menus' => TourMenu::all(), 
+            "cin" =>  $request->has('cin') != null ? decrypt(request('cin')) : '',
+            "cout" => $request->has('cout') != null ? decrypt(request('cout')) : '',
+            "at" => $request->has('at') != null ? decrypt(request('at')) : '',
+            "px" => $request->has('px') != null ? decrypt(request('px')) : '',
+            "py" =>  $request->has('py') != null ? decrypt(request('py')) : '',
+            "user_days" => isset($noOfday) ? $noOfday : '',
+        ]); 
+        
     }
     // Check Step 1 on Choose Form
     public function chooseCheck1(Request $request){
         // Check in (startDate to endDate) trim convertion
+        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
             $request['check_in'] = trim($dateSeperate[0]);
@@ -364,6 +365,7 @@ class ReservationController extends Controller
 
     }
     public function chooseCheckAll(Request $request){
+        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         $validate = Validator::make($request->all('tour_menu'), [
             'tour_menu.*' => 'required',
         ]);
@@ -395,9 +397,11 @@ class ReservationController extends Controller
 
     }
     public function details(Request $request){
+        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         return view('reservation.step3');
     }
     public function detailsStore(Request $request){
+        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         $user = User::findOrFail(auth('web')->user()->id);
         $validated =[
             'first_name' => $user->first_name,
@@ -420,6 +424,7 @@ class ReservationController extends Controller
         }
     }
     public function confirmation(){
+        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $user_menu = [];
         if($uinfo['at'] !== 'Room Only' && $uinfo['tm'] != null){
@@ -438,6 +443,7 @@ class ReservationController extends Controller
         ]);
     }
     public function storeReservation(Request $request){
+        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $reserve_info = null;
         if($uinfo['at'] !== 'Room Only'){
@@ -468,6 +474,20 @@ class ReservationController extends Controller
                 'accommodation_type' => $uinfo['at'] ?? '',
             ]);
         }
+        $text = "New Reservation!\n" .
+        "Name: ". $reserve_info->userReservation->first_name . " " . $reserve_info->userReservation->last_name ."\n" . 
+        "Age: " . $reserve_info->age ."\n" .  
+        "Nationality: " . $reserve_info->age  ."\n" . 
+        "Country: " . $reserve_info->userReservation->country ."\n" . 
+        "Check-in: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_in)->format('F j, Y') ."\n" . 
+        "Check-out: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_out)->format('F j, Y') ."\n" . 
+        "Type" . $reserve_info->accommodation_type ;
+        // Send Notification to Telegram
+        Telegram::sendMessage([
+            'chat_id' => getChatIdByUsername('joewmar'),
+            'parse_mode' => 'HTML',
+            'text' => $text,
+        ]);
         $details = [
             'title' => 'Reservation Complete',
             'body' => 'Your Reservation are done, We just send email for the approve or disapprove confirmation'

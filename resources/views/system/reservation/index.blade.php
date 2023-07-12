@@ -5,11 +5,18 @@
             <i class="fa fa-user" aria-hidden="true"></i>
             Add Book
         </button>
-        <div class="my-20 ">
-            <div id='calendar' class=""></div>
-
-        </div>   
-    
+        <div tabindex="0" class="collapse collapse-arrow border border-base-300 bg-base-100 focus:bg-base-300 text-neutral mt-20"> 
+            <div class="collapse-title text-xl font-medium">
+                Calendar
+            </div>
+            <div class="collapse-content"> 
+                <p>
+                    <div class="my-5 p-5">
+                        <div id='calendar' class=""></div>
+                    </div> 
+                </p>
+            </div>
+        </div>
         {{-- Table  --}}
         <div class="my-20 w-full">
             <div class="flex justify-between w-full">
@@ -57,34 +64,9 @@
                                 <td>{{$list->age ?? ''}} years old</td>
                                 <td>{{$list->userReservation->country ?? ''}}</td>
                                 <td>{{$list->status()}}</td>
-                                <th class="w-auto">
-                                    @php
-                                        $title = ''; 
-                                    @endphp
-                                    @if($list->status() == "Pending")
-                                        @php $title = 'Approve' @endphp
-                                        <label for="reservation" class="btn btn-secondary btn-xs" >Confirm</label>
-                                        <label for="reservation" class="btn btn-success btn-xs" disabled>Check-in</label>
-                                        <label for="reservation" class="btn btn-info btn-xs" disabled>Check-out</label>
-                                    @elseif($list->status() == "Confirmed")
-                                        @php $title = 'Check-in' @endphp
-                                        <label for="reservation" class="btn btn-secondary btn-xs" disabled>Confirm</label>
-                                        <label for="reservation" class="btn btn-success btn-xs">Check-in</label>
-                                        <label for="reservation" class="btn btn-info btn-xs" disabled>Check-out</label>
 
-                                    @elseif($list->status() == "Check-in")
-                                        @php $title = 'Check-out' @endphp
-                                        <label for="reservation" class="btn btn-secondary btn-xs" disabled>Confirm</label>
-                                        <label for="reservation" class="btn btn-success btn-xs" disabled>Check-in</label>
-                                        <label for="reservation" class="btn btn-info btn-xs">Check-out</label>
-                                    @endif
-                                    <form action="" method="post">
-                                        @csrf
-                                        <x-passcode-modal title="{{$title}} Confirmation" id="reservation" formId="reservation-form" />        
-                                    </form>
-                                    <a href="" class="btn btn-circle btn-ghost">
-                                        <i class="fa-solid fa-ellipsis text-lg"></i>                        
-                                    </a>
+                                <th class="w-auto">
+                                    <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs" >View</a>
                                 </th>
                             </tr>
                             @endforeach
