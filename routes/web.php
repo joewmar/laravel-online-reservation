@@ -61,11 +61,13 @@ Route::middleware(['guest'])->group(function(){
     Route::view('/register', 'users.register')->name('register');
     Route::post('/create', [UserController::class, 'create'])->name('create');
     Route::post('/check', [UserController::class, 'check'])->name('check');
+    
     Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('google.redirect');
     Route::get('/auth/google/callback', [LoginController::class, 'handleGoogleCallback'])->name('google.callback');
-    Route::get('/auth/google/fillup', [UserController::class, 'fillupGoogle'])->name('google.fillup');
-    Route::get('/auth/google/fillup', [UserController::class, 'fillupGoogleStore'])->name('google.fillup.store');
 
+    Route::get('/auth/google/{id}/fillup', [UserController::class, 'fillupGoogle'])->name('google.fillup');
+    Route::put('/auth/google/{id}/fillup/update', [UserController::class, 'fillupGoogleUpdate'])->name('google.fillup.update');
+    
 });
 
 // Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){

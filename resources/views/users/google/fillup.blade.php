@@ -13,14 +13,15 @@
   <div class="flex w-full justify-center">
     <div class="card w-full md:w-[40%] bg-base-100 rounded-box my-10">
       <div class="card-body">
-        <h2 class="mb-1 font-bold text-xl md:text-3xl text-center">Let's Complete the other information</h2>
+        <h2 class="mb-1 font-bold text-xl md:text-3xl text-center">Complete the other information of {{$user_info->first_name}} {{$user_info->last_name}}</h2>
 
       {{-- @if(request()->exists('cin', 'cout', 'at', 'px', 'ck'))
         <form action="{{ route('create', $reservation) }}" method="post">
       @else --}}
-        <form action="{{ route('google.fillup.store') }}" method="post">
+        <form action="{{ route('google.fillup.update', $user_info->google_id) }}" method="post">
       {{-- @endif --}}
           @csrf
+          @method('PUT')
           {{-- Birthday --}}
           <x-datetime-picker name="birthday" id="birthday" placeholder="Birthday" class="flatpickr-bithday" />
           {{-- Nationality--}}

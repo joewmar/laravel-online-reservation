@@ -18,10 +18,11 @@ class UserController extends Controller
             'last_name' => ['required', 'min:3'],
             'birthday' => ['required'],
             'country' => ['required', 'min:3'],
-            'contact' => ['required', 'min:3'],
+            'contact' => ['required', 'numeric', 'min:7'],
             'email' => ['required', 'email', Rule::unique('users', 'email')],
             'password' => 'required|confirmed|min:6'
         ], [
+            'contact.min' => 'Contact number must be valid',
             'required' => 'Need to fill up your :attribute',
         ]);
         if($validator->fails()){
@@ -83,10 +84,28 @@ class UserController extends Controller
         
         return redirect('/');
     }
-    public function fillupGoogle(){
-        
+    public function fillupGoogle(Request $request){
+        return view('users.google.fillup', ['user_info' => User::where('google_id', $request->id)->firstOrFail()]);
     }
-    public function fillupGoogleStore(){
+    public function fillupGoogleUpdate(Request $request){
+        $finduser = User::where('google_id', $request->id)->first();
+        if($finduser){
+            $validated = $request->validate([
+                'birthday' => ['required'],
+                'country' => ['required'],
+                'nationality' => ['required'],
+                'contact' => ['required', 'numeric', 'min:7'],
+            ], [
+                'contact.min' => 'Contact number must be valid',
+                'required' => 'Need to fill up your :attribute',
+            ]);        
+            $finduser->update($validated);
+            Auth::guard('web')->login($finduser);
+            return redirect()->route('home')->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
+        }
+        else{
+            return redirect()->route('google.redirect');
+        }
 
     }
 }
