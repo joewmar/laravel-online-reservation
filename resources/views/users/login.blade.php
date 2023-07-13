@@ -53,7 +53,7 @@
             <div class="divider">Login with social accounts</div>
             <div class="flex justify-center gap-5 w-full my-5">
               <div class="tooltip" data-tip="Sign in with Google">
-                <a class="btn btn-circle btn-outline btn-error">
+                <a href={{route('google.redirect')}} class="btn btn-circle btn-outline btn-error">
                   <i class="fa-brands fa-google"></i>
                 </a>
               </div>

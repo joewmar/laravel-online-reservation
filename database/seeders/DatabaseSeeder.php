@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             'nationality' => 'Filipino',
             'country' => 'Philippines',
             'contact' => '09123456789',
-            'email'=> 'recelestino90@gmail.com',
+            'email'=> 'juan@email.com',
             'password' => Hash::make('123456789'),
         ]);
 

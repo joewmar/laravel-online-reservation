@@ -83,5 +83,10 @@ class UserController extends Controller
         
         return redirect('/');
     }
+    public function fillupGoogle(){
+        
+    }
+    public function fillupGoogleStore(){
 
+    }
 }

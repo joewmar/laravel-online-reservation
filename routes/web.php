@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\LandingController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +61,11 @@ Route::middleware(['guest'])->group(function(){
     Route::view('/register', 'users.register')->name('register');
     Route::post('/create', [UserController::class, 'create'])->name('create');
     Route::post('/check', [UserController::class, 'check'])->name('check');
+    Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('google.redirect');
+    Route::get('/auth/google/callback', [LoginController::class, 'handleGoogleCallback'])->name('google.callback');
+    Route::get('/auth/google/fillup', [UserController::class, 'fillupGoogle'])->name('google.fillup');
+    Route::get('/auth/google/fillup', [UserController::class, 'fillupGoogleStore'])->name('google.fillup.store');
+
 });
 
 // Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
