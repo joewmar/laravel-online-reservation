@@ -33,13 +33,11 @@ class UserController extends Controller
         if($validated){
             // Hash password
             $validated['password'] = bcrypt($validated['password']);
-
             // Create User
             $user = User::create($validated);
-
             $user = Auth::guard('web')->login($user);
             if($user){
-                return redirect()->route('home')->with('success', 'Welcome First timer' . auth()->user()->first_name);
+                return redirect()->intended(route('home'))->with('success', 'Welcome First timer' . auth()->user()->first_name);
             }
         }
     }
@@ -53,21 +51,7 @@ class UserController extends Controller
         // Attempt to log the user in (If user credentials are correct)
         if(auth('web')->attempt($validated)){
             $request->session()->regenerate(); //Regenerate Session ID
-
-            if (request()->exists('cin', 'cout', 'at', 'px', 'ck')) {
-                $paramDates = array(
-                    "cin" => $request->get('cin'),
-                    "cout" => $request->get('cout'),
-                    "px" => $request->get('px'),
-                    "at" => $request->get('at'),
-                    "ck" => $request->get('ck'),
-                );
-                return redirect()->route('reservation.choose', Arr::query($paramDates));
-            }
-            else{
-                return redirect()->route('home')->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
-            }
-            
+            return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
         }
         else{
             return back()->withErrors(['email' => 'Invalid Credentials'])->onlyInput('email');
@@ -90,8 +74,9 @@ class UserController extends Controller
     public function fillupGoogleUpdate(Request $request){
         $finduser = User::where('google_id', $request->id)->first();
         if($finduser){
+            // dd($request->all());
             $validated = $request->validate([
-                'birthday' => ['required'],
+                'birthday' => ['required', ' date'],
                 'country' => ['required'],
                 'nationality' => ['required'],
                 'contact' => ['required', 'numeric', 'min:7'],
@@ -101,7 +86,7 @@ class UserController extends Controller
             ]);        
             $finduser->update($validated);
             Auth::guard('web')->login($finduser);
-            return redirect()->route('home')->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
+            return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
         }
         else{
             return redirect()->route('google.redirect');

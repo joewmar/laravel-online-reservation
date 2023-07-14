@@ -34,13 +34,14 @@ class DatabaseSeeder extends Seeder
             'pax' => 1,
             'menu' => '1_1',
             'accommodation_type' => 'Day Tour',
+            'payment_method' => 'Gcash',
             'age' => User::findOrfail(1)->age(),
             'check_in' => Carbon::now()->toDateTimeString(),
             'check_out' => Carbon::now()->addDays(3)->toDateTimeString(),
             'status' => 0,
             // 'additional_menu',
-            'amount' => '3100.00, 10600.00',
-            'total' => 10600.00,
+            'amount' => '3100.00',
+            'total' => 3100.00,
         ]);
 
         \App\Models\System::factory()->create([
@@ -133,6 +134,19 @@ class DatabaseSeeder extends Seeder
         for($room_count = 0; $room_count < \App\Models\RoomList::findOrFail(1)->many_room; $room_count++){
             \App\Models\Room::create([
                 'room_id' => \App\Models\RoomList::findOrFail(1)->id,
+                'room_no' => 0,
+            ]);
+        }
+        /// ROom
+        \App\Models\RoomList::create([
+            'name' => 'Big House',
+            'min_occupancy' => 3,
+            'max_occupancy' => 7,
+            'many_room' => 5,
+        ]);
+        for($room_count = 0; $room_count < \App\Models\RoomList::findOrFail(2)->many_room; $room_count++){
+            \App\Models\Room::create([
+                'room_id' => \App\Models\RoomList::findOrFail(2)->id,
                 'room_no' => 0,
             ]);
         }

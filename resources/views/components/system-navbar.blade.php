@@ -1,4 +1,4 @@
-<div class="fixed z-[100] top-0 left-0 w-full">
+<div class="fixed z-[90] top-0 left-0 w-full">
   <div class="navbar bg-base-100">
     <div class="flex-1">
       <div class="flex md:hidden btn btn-ghost btn-circle avatar">

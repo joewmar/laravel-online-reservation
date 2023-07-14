@@ -121,7 +121,6 @@ class ReservationController extends Controller
     }
     // Data Check
     public function dateStore(Request $request){
-        
         // Check in (startDate to endDate) trim convertion
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
@@ -208,24 +207,25 @@ class ReservationController extends Controller
             return redirect()->route('reservation.choose', Arr::query($paramsDates));
             
         }
-        if(Auth::guard('web')->check()) return redirect()->route('reservation.choose', Arr::query($paramsDates));
-        else return redirect()->route('login', Arr::query($paramsDates));
- 
+        return redirect()->route('reservation.choose', Arr::query($paramsDates));
+
     }
     // Choose Form
     public function choose(Request $request){
+        if(Reservation::where('user_id', '=' , auth('web')->user()->id )->first()) {
+            session(['ck' => false]);
+            return redirect()->route('home')->with('error',"Sorry you can 1 only fill up the reservation");
+        }
         if(session()->has('rinfo')){
             $dateList = decryptedArray(session('rinfo'));
             $noOfday = checkDiffDates($dateList['cin'], $dateList['cout']);
             $chooseMenu = [];
             if($dateList['at'] !== 'Room Only' && $dateList['tm'] != null){
                 foreach(explode(',', $dateList['tm']) as $key => $item){
-                    $chooseMenu[$key] = explode('_', $item);
+                    $chooseMenu[$key]['price'] = TourMenu::findOrFail($item[$key])->price;
+                    $chooseMenu[$key]['title'] = TourMenu::findOrFail($item[$key])->tourMenu->title;
                 }
-                foreach($chooseMenu as $key => $item){
-                    $chooseMenu[$key]['title'] = TourMenuList::select('title')->findOrFail($chooseMenu[$key][0])->title;
-                    $chooseMenu[$key]['price'] = TourMenu::select('price')->findOrFail($chooseMenu[$key][1])->price;
-                }
+                
                 return view('reservation.step2', [
                     'tour_lists' => TourMenuList::all(), 
                     'tour_category' => TourMenuList::distinct()->get('category'), 
@@ -235,44 +235,27 @@ class ReservationController extends Controller
                     "px" => $dateList['px'],
                     "at" => $dateList['at'],
                     "py" =>  $dateList['py'],
-                    'cmenu' => $chooseMenu,
-                    "user_days" => isset($noOfday) ? $noOfday : '',
-                ]); 
-            }
-            else{
-                return view('reservation.step2', [ 
-                    'tour_lists' => TourMenuList::all(), 
-                    'tour_category' => TourMenuList::distinct()->get('category'), 
-                    'tour_menus' => TourMenu::all(), 
-                    "cin" =>  $dateList['cin'],
-                    "cout" => $dateList['cout'],
-                    "px" => $dateList['px'],
-                    "at" => $dateList['at'],
-                    "py" =>  $dateList['py'],
+                    'cmenu' => $chooseMenu ?? '',
                     "user_days" => isset($noOfday) ? $noOfday : '',
                 ]); 
             }
         }
-    
-
         $noOfday = checkDiffDates(decrypt(request('cin')), decrypt(request('cout')));
         return view('reservation.step2', [
             'tour_lists' => TourMenuList::all(), 
             'tour_category' => TourMenuList::distinct()->get('category'), 
             'tour_menus' => TourMenu::all(), 
-            "cin" =>  $request->has('cin') != null ? decrypt(request('cin')) : '',
-            "cout" => $request->has('cout') != null ? decrypt(request('cout')) : '',
-            "at" => $request->has('at') != null ? decrypt(request('at')) : '',
-            "px" => $request->has('px') != null ? decrypt(request('px')) : '',
-            "py" =>  $request->has('py') != null ? decrypt(request('py')) : '',
-            "user_days" => isset($noOfday) ? $noOfday : '',
+            "cin" =>  decrypt(request('cin')) ?? '',
+            "cout" =>  decrypt(request('cout')) ?? '',
+            "at" =>  decrypt(request('at')) ?? '',
+            "px" => decrypt(request('px')) ?? '',
+            "py" =>   decrypt(request('py')) ?? '',
+            "user_days" => $noOfday ?? '',
         ]); 
-        
     }
     // Check Step 1 on Choose Form
     public function chooseCheck1(Request $request){
         // Check in (startDate to endDate) trim convertion
-        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
             $request['check_in'] = trim($dateSeperate[0]);
@@ -354,18 +337,17 @@ class ReservationController extends Controller
 
         if($validated){
             $getParamStep1 = [
-                "cin" =>  encrypt($validated['check_in'] ?? ''),
-                "cout" =>  encrypt($validated['check_out'] ?? ''),
-                "px" =>  encrypt($validated['pax'] ?? ''),
-                "at" =>  encrypt($validated['accommodation_type'] ?? ''),
-                "py" =>  encrypt($validated['payment_method'] ?? ''),
+                "cin" =>  encrypt($validated['check_in']),
+                "cout" =>  encrypt($validated['check_out']),
+                "px" =>  encrypt($validated['pax']),
+                "at" =>  encrypt($validated['accommodation_type']),
+                "py" =>  encrypt($validated['payment_method']),
             ];
             return redirect()->route('reservation.choose', [Arr::query($getParamStep1), '#tourmenu']);
         }
 
     }
     public function chooseCheckAll(Request $request){
-        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         $validate = Validator::make($request->all('tour_menu'), [
             'tour_menu.*' => 'required',
         ]);
@@ -375,7 +357,7 @@ class ReservationController extends Controller
                 "cout" => $request->has('cout') != null ? request('cout') : '',
                 "at" => $request->has('at') != null ? request('at') : '',
                 "px" => $request->has('px') != null ? request('px'): '',
-                "py" =>  $request->has('py') != null ? request('px') : '',
+                "py" =>  $request->has('py') != null ? request('py') : '',
             ];
             return redirect()->route('reservation.choose', [Arr::query($getParam), '#tour-menu'])
             ->with('error', 'You have not selected anything in the cart yet. Please make a selection first.');
@@ -386,10 +368,9 @@ class ReservationController extends Controller
             "cout" => $request->has('cout') != null ? request('cout') : '',
             "at" => $request->has('at') != null ? request('at'): '',
             "px" => $request->has('px') != null ? request('px'): '',
-            "py" =>  $request->has('py') != null ? request('py') : '',
-            "tm" => encrypt(implode(', ', $validate['tour_menu'])),
+            "py" =>  $request->has('py') != null? request('py') : '',
+            "tm" => encrypt(implode(',', $validate['tour_menu'])),
         ];
-
         if(session()->has('rinfo')) foreach($reservationInfo as $key => $item) session('rinfo')[$key] = $reservationInfo[$key]; 
         else session(['rinfo' => $reservationInfo]);
        
@@ -397,11 +378,9 @@ class ReservationController extends Controller
 
     }
     public function details(Request $request){
-        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         return view('reservation.step3');
     }
     public function detailsStore(Request $request){
-        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         $user = User::findOrFail(auth('web')->user()->id);
         $validated =[
             'first_name' => $user->first_name,
@@ -424,26 +403,20 @@ class ReservationController extends Controller
         }
     }
     public function confirmation(){
-        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $user_menu = [];
         if($uinfo['at'] !== 'Room Only' && $uinfo['tm'] != null){
-            foreach(explode(',', $uinfo['tm']) as $key => $item) $umenu[$key] = explode('_', $item);
-            foreach($umenu as $key => $item){
-                $user_menu[$key]['title'] = TourMenuList::select('title')->findOrFail($umenu[$key][0])->title;
-                $user_menu[$key]['price'] = TourMenu::select('price')->findOrFail($umenu[$key][1])->price;
+            foreach(explode(',', $uinfo['tm']) as $key => $item){
+                $user_menu[$key]['price'] = TourMenu::findOrFail($item[$key])->price;
+                $user_menu[$key]['title'] = TourMenu::findOrFail($item[$key])->tourMenu->title;
             }
-            return view('reservation.step4', [
-                'user_menu' => $user_menu,
-                'uinfo' => $uinfo,
-            ]);
         }
         return view('reservation.step4', [
+            'user_menu' => $user_menu ?? '',
             'uinfo' => $uinfo,
         ]);
     }
     public function storeReservation(Request $request){
-        if(!session()->exists('rinfo')) return redirect()->route('reservation.step1');
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $reserve_info = null;
         if($uinfo['at'] !== 'Room Only'){
@@ -474,19 +447,26 @@ class ReservationController extends Controller
                 'accommodation_type' => $uinfo['at'] ?? '',
             ]);
         }
-        $text = "New Reservation!\n" .
+        $text = 
+        "New Reservation!\n" .
         "Name: ". $reserve_info->userReservation->first_name . " " . $reserve_info->userReservation->last_name ."\n" . 
         "Age: " . $reserve_info->age ."\n" .  
-        "Nationality: " . $reserve_info->age  ."\n" . 
+        "Nationality: " . $reserve_info->nationality  ."\n" . 
         "Country: " . $reserve_info->userReservation->country ."\n" . 
         "Check-in: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_in)->format('F j, Y') ."\n" . 
         "Check-out: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_out)->format('F j, Y') ."\n" . 
-        "Type" . $reserve_info->accommodation_type ;
-        // Send Notification to Telegram
+        "Type: " . $reserve_info->accommodation_type ;
+        // Send Notification to 
+        $keyboard = [
+            [
+                ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reserve_info->id))],
+            ],
+        ];
         Telegram::sendMessage([
-            'chat_id' => getChatIdByUsername('joewmar'),
+            'chat_id' => getChatIdByUsername(env('TELEGRAM_USERNAME')),
             'parse_mode' => 'HTML',
             'text' => $text,
+            'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
         ]);
         $details = [
             'title' => 'Reservation Complete',

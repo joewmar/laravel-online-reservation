@@ -99,10 +99,14 @@ Route::prefix('system')->name('system.')->group(function(){
     });
     Route::middleware(['auth:system', 'preventBackhHistory'])->group(function(){
         Route::view('/', 'system.dashboard.index',  ['activeSb' => 'Home'])->name('home');
+        
         Route::prefix('reservation')->name('reservation.')->group(function(){
             Route::get('/', [SystemReservationController::class, 'index'])->name('home');
             Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');
+            Route::get('/{id}/show/room', [SystemReservationController::class, 'showRooms'])->name('show.rooms');
+            Route::put('/{id}/show/room', [SystemReservationController::class, 'updateReservation'])->name('show.rooms.update');
         });
+        
         Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
 
         Route::prefix('menu')->name('menu.')->group(function (){

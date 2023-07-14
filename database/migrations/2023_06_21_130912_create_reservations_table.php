@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('room_id')->nullable();
             $table->integer('pax');
             $table->tinyText('accommodation_type');
+            $table->tinyText('payment_method');
             $table->integer('age')->nullable();
             $table->string('menu')->nullable();;
             $table->date('check_in');

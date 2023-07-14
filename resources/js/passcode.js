@@ -17,7 +17,6 @@ const btnhidden = document.getElementById("btn-hidden");
               const userCode = [...inputs].map((input) => input.value).join("");
               result.value = userCode;
 
-              inputs[key].disabled = true;
               btnhidden.classList.remove('hidden');
             }
             else {
@@ -36,7 +35,6 @@ const btnhidden = document.getElementById("btn-hidden");
           inputs[key - 1].focus();
           btnhidden.classList.add('hidden');
           if(key == 0) inputs[key].focus();
-          
         }
       });
     });

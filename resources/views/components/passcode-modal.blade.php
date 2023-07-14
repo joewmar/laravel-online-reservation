@@ -14,7 +14,7 @@
       </div>
       <div class="modal-action">
         <label for="{{$id}}" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 text-xl">✕</label>
-        <label for="{{$id}}" id="btn-hidden" class="hidden btn btn-primary" onclick="event.preventDefault(); document.getElementById('{{$formId}}').submit();">Proceed</label>
+        <label for="{{$id}}" id="btn-hidden" @keyup.enter="event.preventDefault(); document.getElementById('{{$formId}}').submit();" class="hidden btn btn-primary" @click="event.preventDefault(); document.getElementById('{{$formId}}').submit();">Proceed</label>
       </div>
     </div>
   </div>

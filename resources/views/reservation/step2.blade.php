@@ -13,7 +13,7 @@
         "ck" => request('ck') ?? '',
       ];
     }
-    elseif(request()->has(['cin', 'cout', 'px', 'py', 'at'])){
+    if(request()->has(['cin', 'cout', 'px', 'py', 'at'])){
       $TourInfo = [
         "cin" => request('cin') ?? old('check_in'),
         "cout" => request('cout') ?? old('check_out'),
@@ -27,7 +27,6 @@
         $tourList = explode(',', decrypt(session('rinfo')['tm']));
       }
     }
-
 @endphp
 
 <x-landing-layout>
@@ -221,7 +220,9 @@
               </div>
             </div>
           </form>
-    
+          <div class="w-full text-center">
+              <span x-show="!document.querySelector('[x-cloak]')" class="loading loading-spinner loading-lg text-primary"></span>
+          </div>
             <div x-data="{category: null}" x-cloak>
               @foreach ($tour_category as $category)
                 @if($loop->index === 0)
@@ -273,7 +274,7 @@
                                             @php $menu_count = $loop->index + 1; @endphp
                                             @if($menu->menu_id === $list->id)
                                                   <div class="w-full h-full">
-                                                    <input id="{{!$px < $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->menu_id . '_' . $menu->id}}"  x-model="price" />
+                                                    <input id="{{!$px < $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
                                                     <label for="{{!$px < $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
                                                       <div class="flex items-center justify-between">
                                                         <p class="text-neutral">{{$menu->type}} ({{$menu->pax}} pax)</p>

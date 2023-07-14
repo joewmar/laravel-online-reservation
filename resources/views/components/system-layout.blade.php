@@ -13,9 +13,17 @@
 </head>
 <body class="bg-white h-screen">
   @if(session()->has('success'))
-    <x-alert type="success" message="{{session('success')}}"/>
+    @if(is_array(session('success')))
+      <x-alert type="success" :message="session('success')"/>
+    @else
+      <x-alert type="success" message="{{session('success')}}"/>
+    @endif
   @elseif(session()->has('error'))
-    <x-alert type="error" message="{{session('error')}}"/>
+    @if(is_array(session('error')))
+      <x-alert type="error" :message="session('error')"/>
+    @else
+      <x-alert type="error" message="{{session('error')}}"/>
+    @endif
   @endif
   <div x-data="{open: true}" class="flex h-full flex-row bg-gray-100 text-gray-800 relative">
     <div class="flex-grow-0">
