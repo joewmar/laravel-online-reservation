@@ -19,9 +19,11 @@ class SystemReservationController extends Controller
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
         $tour_menu = [];
-        foreach(explode(',' , $reservation->menu) as $key => $item){
-            $tour_menu[$key]['title'] = TourMenuList::find(explode('_' , $item)[0])->title;
-            $tour_menu[$key]['price'] = TourMenu::find(explode('_' , $item)[1])->price;
+        if(!$reservation->accommodation_type == 'Room Only'){
+            foreach(explode(',' , $reservation->menu) as $key => $item){
+                $tour_menu[$key]['title'] = TourMenuList::find(explode('_' , $item)[0])->title;
+                $tour_menu[$key]['price'] = TourMenu::find(explode('_' , $item)[1])->price;
+            }
         }
         return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu]);
     }
@@ -33,23 +35,47 @@ class SystemReservationController extends Controller
     }
     public function updateReservation(Request $request){
         $reservation = Reservation::findOrFail(decrypt($request->id));
+
         $validator = Validator::make($request->all(), [
             'passcode' =>  ['required', 'numeric', 'digits:4'],
             'rooms.*' => ['required', 'numeric'],
         ]);
         $error = [];
         if(!empty($request['rooms'])){
-            // $guest = (int)$reservation->pax;
-            // foreach($request['rooms'] as $key => $item){
-            //     $room = Room::find($item);
-            //     if(!($guest == $room->room->min_occupancy || $guest <= ((int)$room->room->max_occupancy))){
-            //         $error[$key] = 'Room No.' . $room->room_no . ' (' . $room->room->name . ') capacity does not match ('. $room->room->min_occupancy . ' up to '. $room->room->max_occupancy  .' capacity. However ' . $reservation->userReservation->first_name . ' ' . $reservation->userReservation->last_name . ' Guest was ' . $reservation->pax . ')';
-            //     }
-            //     else{
-            //         $error[$key] = 'Room No.' . $room->room_no . ' (' . $room->room->name . ') can reserve';
-            //         $guest = (int)$room->room->max_occupancy;
-            //     }
-            // }
+            
+            $arrCus = array();
+            $countPax = 0;
+            foreach($request['rooms'] as $key => $item){
+                $room = Room::find($item);
+                $selectedRoom = $item;
+
+                if($room->room->availability ===  true ){
+                    $error[$key] = 'Room No.' . $room->room_no . ' (' . $room->room->name . ') was not available';
+                }   
+                // elseif ( $selectedRoom  >= $room->room->min_occupancy &&  $selectedRoom  <= $room->room->max_occupancy){
+                //     if($selectedRoom == $room->room->id){
+                //         $selectedRoom = $room->room->id
+                //     else{
+                //         $error[$key] = 'Room No.' . $room->room_no . ' (' . $room->room->name . ') was not available for this guest ('. $reservation->pax .' pax)';
+
+                //     }
+                // }
+                // else{
+                //     $error[$key] = 'Room No.' . $room->room_no . ' (' . $room->room->name . ') was not available for this guest ('. $reservation->pax .' pax)';
+                // }
+
+                foreach (explode(',', $room->customer) as $key => $item) {
+                    $arrCus[$key]['cusid'] = explode('-', $item)[0] ?? '';
+                    $arrCus[$key]['pax'] = explode('-', $item)[1] ?? '';
+                    if($room->room->max_occupancy ==  $countPax ){
+                        $room->update(['availability' => true]);
+                    }
+                    else{
+                        $room->update(['availability' => false]);
+                        $countPax += (int)$arrCus[$key]['pax'];
+                    }
+                }
+            }
         }
         else{
             return back()->with('error', 'Need to choose rooms');

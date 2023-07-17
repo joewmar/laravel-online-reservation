@@ -28,17 +28,56 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('123456789'),
         ]);
 
+        User::factory()->create([
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'birthday' => '1999-12-25',
+            'nationality' => 'American',
+            'country' => 'Canada',
+            'contact' => '123456897',
+            'email'=> 'johndoe@email.com',
+            'password' => Hash::make('123456789'),
+        ]);
+        \App\Models\RoomRate::create([
+            'name' => 'Single Room',
+            'occupancy' => 1,
+            'price' => 3150.00,
+        ]);
+
+        \App\Models\RoomRate::create([
+            'name' => 'Double Bed',
+            'occupancy' => 2,
+            'price' => 2100.00,
+        ]);
+
         \App\Models\Reservation::factory()->create([
             'user_id' => 1,
-            // 'room_id' => 1,
+            'room_id' => 1,
+            'room_rate_id' => 1,
             'pax' => 1,
+            // 'menu' => '2_1',
+            'accommodation_type' => 'Room Only',
+            'payment_method' => 'Walk-in',
+            'age' => User::findOrfail(1)->age(),
+            'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
+            'check_out' => Carbon::now()->addDays(22)->toDateTimeString(),
+            'status' => 0,
+            // 'additional_menu',
+            'amount' => '3150.00',
+            'total' => 3150.00,
+        ]);
+        \App\Models\Reservation::factory()->create([
+            'user_id' => 2,
+            // 'room_id' => 1,
+            // 'room_rate_id' => 1,
+            'pax' => 2,
             'menu' => '1_1',
             'accommodation_type' => 'Day Tour',
             'payment_method' => 'Gcash',
             'age' => User::findOrfail(1)->age(),
             'check_in' => Carbon::now()->toDateTimeString(),
             'check_out' => Carbon::now()->addDays(3)->toDateTimeString(),
-            'status' => 0,
+            'status' => 1,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
             // 'additional_menu',
             'amount' => '3100.00',
             'total' => 3100.00,
@@ -151,5 +190,8 @@ class DatabaseSeeder extends Seeder
             ]);
         }
         refreshRoomNumber();
+
+
+
     }
 }

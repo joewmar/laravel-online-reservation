@@ -25,6 +25,9 @@ class Reservation extends Model
     public function userReservation(){
         return $this->belongsTo(User::class, 'user_id');
     }
+    public function room(){
+        return $this->hasMany(Room::class, 'room_id');
+    }
     public function status(){
         $status = '';
         if($this->attributes['status'] == 0) $status = 'Pending';

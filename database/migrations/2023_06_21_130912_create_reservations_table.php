@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->integer('room_id')->nullable();
+            $table->tinyText('room_id')->nullable();
+            $table->tinyText('room_rate_id')->nullable();
             $table->integer('pax');
             $table->tinyText('accommodation_type');
             $table->tinyText('payment_method');
