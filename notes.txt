@@ -5,6 +5,7 @@ Don't forget to fix bug of passcode confirmation (multiple passcode)!
 Don't forget to add same spot reservation!
 Don't forget to pax when come to rooms!
 Don't forget to same account reservation authentication!
+Don't forget to make function for conflit of schedule (Room)!
 
 
 Cloning laravel project from github

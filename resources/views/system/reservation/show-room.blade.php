@@ -25,6 +25,9 @@
                       </div>
                 </div>
             </div>
+            @php
+                print_r(old('rooms'));
+            @endphp
             <form id="reservation-form" action="{{route('system.reservation.show.rooms.update', encrypt($r_list->id))}}" method="post">
                 @csrf
                 @method('PUT')
@@ -33,7 +36,7 @@
                     <div id="{{$item->availability == 1 ? 'disabledAll' : 'none'}}">
                         @if($item->availability == 1)
                             <input type="checkbox" name="rooms[]" value="{{$item->id}}" id="{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block" disabled/>
-                        @elseif($errors->has('rooms') && in_array($item->id, old('rooms')))
+                        @elseif($errors->has('rooms') && Arr::exists(old('rooms'), $item->id))
                             <input type="checkbox" name="rooms[]" value="{{$item->id}}" id="{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block" checked/>
                         @else
                             <input type="checkbox" name="rooms[]" value="{{$item->id}}" id="{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block" />
