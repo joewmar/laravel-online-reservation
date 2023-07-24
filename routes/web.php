@@ -109,6 +109,7 @@ Route::prefix('system')->name('system.')->group(function(){
             
             Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');
             Route::get('/{id}/show/room', [SystemReservationController::class, 'showRooms'])->name('show.rooms');
+            Route::get('/{id}/disaprove', [SystemReservationController::class, 'disaprove'])->name('disaprove');
             Route::put('/{id}/show/room', [SystemReservationController::class, 'updateReservation'])->name('show.rooms.update');
         });
         

@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Reservation extends Model
+class Archive extends Model
 {
     use HasFactory;
     use HasUuids;
+
     protected $fillable = [
         'user_id',
         'room_id',
@@ -25,6 +26,7 @@ class Reservation extends Model
         'additional_menu',
         'amount',
         'total',
+        'message',
     ];
     public function userReservation(){
         return $this->belongsTo(User::class, 'user_id');
@@ -34,10 +36,10 @@ class Reservation extends Model
     }
     public function status(){
         $status = '';
-        if($this->attributes['status'] == 0) $status = 'Pending';
-        elseif($this->attributes['status'] == 1) $status = 'Confirmed';
-        elseif($this->attributes['status'] == 2) $status = 'Check-in';
-        elseif($this->attributes['status'] == 3) $status = 'Check-out';
+        if($this->attributes['status'] == 0) $status = 'Done';
+        elseif($this->attributes['status'] == 1) $status = 'Disaprove';
+        elseif($this->attributes['status'] == 2) $status = 'Cancel';
+        // elseif($this->attributes['status'] == 3) $status = 'Check-out';
             
         return $status ?? $this->attributes['status'];
     }

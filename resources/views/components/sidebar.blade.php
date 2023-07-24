@@ -64,21 +64,30 @@
     @foreach ($arrSideBarItems as $name => $item)
         @if(($loop->index + 1) != 4)
             @if ($active == $name)
-                <button class="active">
+                <a href="{{$item['link']}}" class="text-primary active">
                     <i class="h-5 w-6 group-hover:text-white {{$item['icon']}}"></i>
                     <span class="btm-nav-label">{{$name}}</span>
-                </button>
+                </a>
             @else
-                <button>
+                <a href="{{$item['link']}}">
                     <i class="h-5 w-6 group-hover:text-white {{$item['icon']}}"></i>
                     <span class="btm-nav-label">{{$name}}</span>
-                </button>
+                </a>
             @endif
         @else
             <button @click="moreOpen = !moreOpen">
                 <div :class="moreOpen && 'dropdown-open' " class="fixed bottom-16 right-10 dropdown dropdown-left dropdown-top dropdown-end">
                     <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                      <li><a>{{$name}}</a></li>
+                        @foreach ($arrSideBarItems as $name => $item)
+                            @if(($loop->index + 1) >= 4)
+                                @if ($active == $name)
+                                    <li class="bg-primary text-primary-content"><a href="{{$item['link']}}">{{$name}}</a></li>
+
+                                @else
+                                    <li><a href="{{$item['link']}}">{{$name}}</a></li>
+                                @endif
+                            @endif
+                        @endforeach
                     </ul>
                 </div>
                 <i class="fa-solid fa-ellipsis h-5 w-6 group-hover:text-white"></i>

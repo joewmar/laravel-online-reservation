@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
-
 class SystemReservationController extends Controller
 {
     public function index(Request $request){
@@ -72,6 +71,21 @@ class SystemReservationController extends Controller
             }
         }
         return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict]);
+    }
+    public function disaprove($id){
+        $reservation = Reservation::findOrFail(decrypt($id));
+        $tour_menu = [];
+        if($reservation->accommodation_type != 'Room Only'){
+            foreach(explode(',' , $reservation->menu) as $key => $item){
+                $tour_menu[$key]['title'] = TourMenu::find($item)->tourMenu->title;
+                $tour_menu[$key]['type'] = TourMenu::find($item)->type;
+                $tour_menu[$key]['pax'] = TourMenu::find($item)->pax;
+                if(explode('-' , explode(',' , $reservation->amount)[$key])[0] == 'tm'.$item)
+                    $tour_menu[$key]['price'] = explode('-' , explode(',' , $reservation->amount)[$key])[1];
+                
+            }
+        }
+        return view('system.reservation.disaprove',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu]);
     }
     public function showRooms($id){
         $id = decrypt($id);

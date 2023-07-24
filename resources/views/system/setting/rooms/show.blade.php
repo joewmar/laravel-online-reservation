@@ -4,7 +4,7 @@
         <div class="md:w-96 flex flex-col justify-center items-start">
           <div class="avatar">
             <div class="w-full p-3 border-2 border-dashed rounded-md border-primary text-neutral">
-              <img id="room_img" src="{{$room_list->image ? asset('storage/' . $room_list->image) : asset('images/avatars/no-avatar.png')}}" alt="{{$room_list->name}}"/>
+              <img id="room_img" src="{{$room_list->image ? asset('storage/' . $room_list->image) : asset('images/logo.png')}}" alt="{{$room_list->name}}"/>
             </div>
           </div>
         </div>

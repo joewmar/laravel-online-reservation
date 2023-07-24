@@ -89,7 +89,8 @@
             </form>
         </div>
         <div class="flex justify-end space-x-1">
-            <label for="reservation" class="btn btn-secondary btn-sm" >Confirm</label>
+            <label for="reservation" class="btn btn-secondary btn-sm" >Approve</label>
+            <a href="{{route('system.reservation.disaprove', encrypt($r_list->id))}}" class="btn btn-error btn-sm" >Disapprove</a>
         </div>
     </x-system-content>
 </x-system-layout>

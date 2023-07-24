@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reservations', function (Blueprint $table) {
+        Schema::create('archives', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->tinyText('room_id')->nullable();
@@ -23,10 +23,11 @@ return new class extends Migration
             $table->string('menu')->nullable();;
             $table->date('check_in');
             $table->date('check_out');
-            $table->tinyInteger('status')->default(0); /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
+            $table->tinyInteger('status')->default(0); /* 0 => done, 1 => disaprove, 2 => cancellation, 3 => ? */
             $table->string('additional_menu')->nullable();
             $table->string('amount')->nullable();
             $table->decimal('total')->nullable();
+            $table->string('message')->nullable();
             $table->timestamps();
         });
     }
@@ -36,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('reservations');
+        Schema::dropIfExists('archives');
     }
 };
