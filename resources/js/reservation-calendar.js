@@ -11,6 +11,15 @@ document.addEventListener('DOMContentLoaded', function() {
           center: 'title',
           right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
       },
+      events: window.location + '/calendar',
+      eventClick: function(info) {
+          if (info.event.url) {
+              window.location.href = info.event.url;
+          }
+      },
+      
+        // Add more events here as needed
+      
   });
 
   calendar.render();

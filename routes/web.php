@@ -59,6 +59,8 @@ Route::prefix('reservation')->name('reservation.')->group(function (){
 Route::middleware(['guest'])->group(function(){
     Route::view('/login', 'users.login')->name('login');
     Route::view('/register', 'users.register')->name('register');
+    Route::get('/register/verify', [UserController::class, 'verify'])->name('register.verify');
+    Route::post('/register/verify', [UserController::class, 'verifyStore'])->name('register.verify.store');
     Route::post('/create', [UserController::class, 'create'])->name('create');
     Route::post('/check', [UserController::class, 'check'])->name('check');
     
@@ -102,6 +104,9 @@ Route::prefix('system')->name('system.')->group(function(){
         
         Route::prefix('reservation')->name('reservation.')->group(function(){
             Route::get('/', [SystemReservationController::class, 'index'])->name('home');
+            Route::get('/calendar', [SystemReservationController::class, 'event'])->name('event');
+
+            
             Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');
             Route::get('/{id}/show/room', [SystemReservationController::class, 'showRooms'])->name('show.rooms');
             Route::put('/{id}/show/room', [SystemReservationController::class, 'updateReservation'])->name('show.rooms.update');
@@ -134,9 +139,15 @@ Route::prefix('system')->name('system.')->group(function(){
         Route::view('/webcontent', 'system.webcontent.index',  ['activeSb' => 'Web Content'])->name('webcontent');
 
         // System Settings Moudle
-        Route::prefix('setting')->name('setting.')->group(function(){
+        Route::prefix('settings')->name('setting.')->group(function(){
             Route::view('/', 'system.setting.index',  ['activeSb' => 'Setting'])->name('home');
-            // Route::view('/accounts', 'system.setting.accounts',  ['activeSb' => 'Accounts'])->name('accounts');
+            Route::get('/accounts', [SystemController::class, 'index'])->name('accounts');
+            Route::post('/accounts/search', [SystemController::class, 'search'])->name('accounts.search');
+            Route::view('/accounts/create', 'system.setting.accounts.create',  ['activeSb' => 'Setting'])->name('accounts.create');
+            Route::post('/accounts/create', [SystemController::class, 'store'])->name('accounts.create.store');
+
+
+            Route::get('/accounts/{id}', [SystemController::class, 'show'])->name('accounts.show');
 
 
             Route::prefix('rooms')->name('rooms.')->group(function(){

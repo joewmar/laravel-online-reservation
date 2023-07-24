@@ -44,6 +44,8 @@
                           <thead>
                             <tr>
                               <th>Tour</th>
+                              <th>Type</th>
+                              <th>Pax</th>
                               <th>Price</th>
                             </tr>
                           </thead>
@@ -53,8 +55,11 @@
                                 @foreach ($user_menu as $key => $item)
                                     <tr>
                                       <td>{{$item['title']}}</td>
+                                      <td>{{$item['type']}}</td>
+                                      <td>{{$item['pax']}}</td>
                                       <td>
-                                          <input type="hidden" name="amount[]" value="{{$item['price']}}">{{ number_format($item['price'], 2) }}</td>
+                                          <input type="hidden" name="amount[]" value="tm{{$item['id']}}-{{$item['price']}}">{{ number_format($item['price'], 2) }}
+                                        </td>
                                       @php $totalPrice += (double)$item['price']  @endphp
                                     </tr>
                                 @endforeach

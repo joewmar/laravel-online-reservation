@@ -12,7 +12,7 @@ class Room extends Model
     protected $fillable = [
         'room_no',
         'availability',
-        'customer_id',
+        'customer',
     ];
 
     public function room(){

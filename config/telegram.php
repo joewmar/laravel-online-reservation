@@ -31,8 +31,16 @@ return [
     |             ]
     */
     'bots' => [
-        'mybot' => [
+        'bot1' => [
             'token' => env('TELEGRAM_BOT_TOKEN', 'YOUR-BOT-TOKEN'),
+            'certificate_path' => env('TELEGRAM_CERTIFICATE_PATH', 'YOUR-CERTIFICATE-PATH'),
+            'webhook_url' => env('TELEGRAM_WEBHOOK_URL', 'YOUR-BOT-WEBHOOK-URL'),
+            'commands' => [
+                //Acme\Project\Commands\MyTelegramBot\BotCommand::class
+            ],
+        ],
+        'bot2' => [
+            'token' => env('TELEGRAM_BOT2_TOKEN', 'YOUR-BOT-TOKEN'),
             'certificate_path' => env('TELEGRAM_CERTIFICATE_PATH', 'YOUR-CERTIFICATE-PATH'),
             'webhook_url' => env('TELEGRAM_WEBHOOK_URL', 'YOUR-BOT-WEBHOOK-URL'),
             'commands' => [
@@ -54,7 +62,7 @@ return [
     | your default bot for regular use.
     |
     */
-    'default' => 'mybot',
+    'default' => 'bot1',
 
     /*
     |--------------------------------------------------------------------------
@@ -181,7 +189,7 @@ return [
         */
 
         /* // Group Type: 4
-           'myBot' => [
+           'bot1' => [
                 'admin', // Command Group Name.
                 'subscription', // Command Group Name.
                 'status', // Shared Command Name.

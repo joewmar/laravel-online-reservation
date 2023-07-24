@@ -38,7 +38,7 @@
         {{-- Phone Number  --}}
         <x-input type="tel" name="contact" placeholder="Phone Number"/>
         {{-- Email  --}}
-        <x-input type="email" name="Email" placeholder="Contact Email"/>
+        <x-input type="email" name="email" placeholder="Contact Email"/>
 
         {{-- Password --}}
         <x-input type="password" name="password" placeholder="Password"/>

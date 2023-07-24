@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->tinyText('room_id')->nullable();
-            $table->tinyText('room_rate_id')->nullable();
+            $table->integer('room_rate_id')->nullable();
             $table->integer('pax');
             $table->tinyText('accommodation_type');
             $table->tinyText('payment_method');

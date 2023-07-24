@@ -26,6 +26,9 @@ class System extends Authenticatable
         'email',
         'username',
         'password',
+        'passcode',
+        'telegram_username',
+        'telegram_chatID',
         'type'
     ];
 
@@ -48,4 +51,12 @@ class System extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+    public function role(){
+        $role = '';
+        if($this->attributes['type'] === 0) $role = "Admin";
+        elseif ($this->attributes['type'] === 1)  $role = "Manager";
+        elseif ($this->attributes['type'] === 2)  $role = "Front Desk";
+        elseif ($this->attributes['type'] === 3)  $role = "Staff";
+        return $role ?? $this->attributes['type'];
+    }
 }

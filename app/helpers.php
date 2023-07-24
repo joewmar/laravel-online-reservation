@@ -61,18 +61,35 @@ function decryptedArray($array){
 }
 // Convert to user to chat_id
 function getChatIdByUsername($username){
-    $updates = Telegram::getUpdates();
-
-    foreach ($updates as $update) {
+    $updatesBot1 = Telegram::getUpdates();
+    $updatesBot2 = Telegram::bot('bot2')->getUpdates();
+    $chat_id = null;
+    foreach ($updatesBot1 as $update) {
+        $message = $update->getMessage();
+        $chat = $message->getChat();
+        
+        if ($chat->getUsername() === $username) {
+            $chat_id['bot1'] = $chat->getId();
+        }
+        else{
+            $chat_id['bot1'] = null;
+        }
+    }
+    foreach ($updatesBot2 as $update) {
         $message = $update->getMessage();
         $chat = $message->getChat();
 
         if ($chat->getUsername() === $username) {
-            return $chat->getId();
+            $chat_id['bot2'] = $chat->getId();
+        }
+        else{
+            $chat_id['bot2'] = null;
         }
     }
-
-    return null;
+    if($chat_id['bot1'] == $chat_id['bot2']){
+        $chat_id = $chat_id['bot1'];
+    }
+    return $chat_id;
 }
 
 function getChatIdByGroup(){
@@ -87,5 +104,30 @@ function getChatIdByGroup(){
         }
     }
     return null;
+}
+function checkAvailRooms($pax){
+    $isFull = false;
+    $countPax = 0;
+    $rooms = Room::all();
+    $maxOccAll = 0;
+    foreach($rooms as $key => $room){
+        $countOccupancy = 0;
+        $maxOccAll += $room->room->max_occupancy;
+        foreach (explode(',', $room->customer) as $key => $item) {
+            $arrPreCus[$key]['pax'] = explode('-', $item)[1] ?? '';
+            if(!($room->room->max_occupancy ==  $countOccupancy )){
+                $countOccupancy += (int)$arrPreCus[$key]['pax'];
+            }
+        }
+        $countPax += (int)$countOccupancy;
+    }
+    $compute = $maxOccAll - $countPax ; // Get Available Room
+    if($compute >= $pax){
+        $isFull = false;
+    }
+    else{
+        $isFull = true;
+    }
+    return $isFull;
 }
 

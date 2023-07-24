@@ -1,4 +1,3 @@
-
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="">
         {{-- User Details --}}
@@ -25,12 +24,35 @@
                       </div>
                 </div>
             </div>
-            @php
-                print_r(old('rooms'));
-            @endphp
             <form id="reservation-form" action="{{route('system.reservation.show.rooms.update', encrypt($r_list->id))}}" method="post">
                 @csrf
                 @method('PUT')
+                <div class="form-control w-full">
+                    <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
+                            <select name="room_rate" id="room_rate" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
+                            <option value="" disabled selected>Please select</option>
+                            @foreach ($rates as $key => $rate)
+                                @if(old('room_rate') == $rate->id);
+                                    <option value="{{$rate->id}}" selected>{{$rate->name}} ({{$rate->occupancy}} pax)</option>
+                                @elseif($rate->occupancy == $r_list->pax)
+                                    <option value="{{$rate->id}}" selected>{{$rate->name}} ({{$rate->occupancy}} pax)</option>
+                                @else
+                                    <option value="{{$rate->id}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
+                                @endif
+                            @endforeach
+                        </select>        
+                        <span id="room_rate" class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-neutral transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                            Room Type
+                        </span>
+                    </label>
+                    <label class="label">
+                        <span class="label-text-alt">
+                            @error('room_rate')
+                                <span class="label-text-alt text-error">{{$message}}</span>
+                            @enderror
+                        </span>
+                    </label>
+                </div>                    
                 <div class="flex flex-wrap justify-center md:justify-normal flex-grow m-5 gap-5 w-full">
                     @forelse ($rooms as $key => $item)
                     <div id="{{$item->availability == 1 ? 'disabledAll' : 'none'}}">

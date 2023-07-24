@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
             'nationality' => 'American',
             'country' => 'Canada',
             'contact' => '123456897',
-            'email'=> 'johndoe@email.com',
+            'email'=> 'recelestino90@gmail.com',
             'password' => Hash::make('123456789'),
         ]);
         \App\Models\RoomRate::create([
@@ -49,11 +49,16 @@ class DatabaseSeeder extends Seeder
             'occupancy' => 2,
             'price' => 2100.00,
         ]);
+        \App\Models\RoomRate::create([
+            'name' => 'Triple Bed',
+            'occupancy' => 3,
+            'price' => 1100.00,
+        ]);
 
         \App\Models\Reservation::factory()->create([
             'user_id' => 1,
-            'room_id' => 1,
-            'room_rate_id' => 1,
+            // 'room_id' => 1, (1, 1)
+            // 'room_rate_id' => 1,
             'pax' => 1,
             // 'menu' => '2_1',
             'accommodation_type' => 'Room Only',
@@ -63,25 +68,25 @@ class DatabaseSeeder extends Seeder
             'check_out' => Carbon::now()->addDays(22)->toDateTimeString(),
             'status' => 0,
             // 'additional_menu',
-            'amount' => '3150.00',
-            'total' => 3150.00,
+            // 'amount' => '3150.00, 2150.00',
+            // 'total' => 3150.00,
         ]);
-        \App\Models\Reservation::factory()->create([
-            'user_id' => 2,
-            // 'room_id' => 1,
-            // 'room_rate_id' => 1,
-            'pax' => 2,
-            'menu' => '1_1',
-            'accommodation_type' => 'Day Tour',
-            'payment_method' => 'Gcash',
-            'age' => User::findOrfail(1)->age(),
-            'check_in' => Carbon::now()->toDateTimeString(),
-            'check_out' => Carbon::now()->addDays(3)->toDateTimeString(),
-            'status' => 1,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-            // 'additional_menu',
-            'amount' => '3100.00',
-            'total' => 3100.00,
-        ]);
+        // \App\Models\Reservation::factory()->create([
+        //     'user_id' => 2,
+        //     // 'room_id' => 1,
+        //     // 'room_rate_id' => 1,
+        //     'pax' => 2,
+        //     'menu' => '1_1',
+        //     'accommodation_type' => 'Day Tour',
+        //     'payment_method' => 'Gcash',
+        //     'age' => User::findOrfail(1)->age(),
+        //     'check_in' => Carbon::now()->toDateTimeString(),
+        //     'check_out' => Carbon::now()->addDays(3)->toDateTimeString(),
+        //     'status' => 1,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
+        //     // 'additional_menu',
+        //     'amount' => '3100.00',
+        //     'total' => 3100.00,
+        // ]);
 
         \App\Models\System::factory()->create([
             'first_name' => 'Hello',
@@ -92,6 +97,8 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('987654321'),
             'type' => '0',
             'passcode' => Hash::make('2255'),
+            'telegram_username' => 'joewmar',
+            'telegram_chatID' => '5870248478'
 
         ]);
         \App\Models\System::factory()->create([
@@ -103,6 +110,8 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('147852369'),
             'type' => '1',
             'passcode' => Hash::make('5566'),
+            'telegram_username' => 'joewmar',
+            'telegram_chatID' => '5870248478'
         ]);
 
         \App\Models\TourMenuList::factory()->create([

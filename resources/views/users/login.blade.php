@@ -73,6 +73,6 @@
     </div>
   </div>
 </x-landing-layout>
-{{-- <x-register-modal id="register" /> --}}
+<x-register-modal id="register" />
 
 

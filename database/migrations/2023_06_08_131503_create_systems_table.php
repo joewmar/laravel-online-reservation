@@ -23,7 +23,9 @@ return new class extends Migration
             $table->string('password');
             $table->tinyInteger('type')->default(0);
             $table->string('passcode');
-            /* Users: 0=>Admin, 1=>Manager, 2=>Staff */
+            $table->string('telegram_username')->nullable();
+            $table->string('telegram_chatID')->nullable();;
+            /* Users: 0=>Admin, 1=>Manager, 2=>Front Desk 3=>Staff */
             $table->rememberToken();
             $table->timestamps();
         });
