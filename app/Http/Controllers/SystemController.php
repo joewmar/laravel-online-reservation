@@ -7,6 +7,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
@@ -30,8 +31,8 @@ class SystemController extends Controller
         return view ('system.setting.accounts.index',  ['activeSb' => 'Accounts', 'employees' => $employees]);
     }
     public function show($id){
-        $id = decrypt($id);
-        // return view ('system.setting.accounts.index',  ['activeSb' => 'Accounts', 'employees' => System::all()]);
+        $employee = System::findOrFail(decrypt($id));
+        return view ('system.setting.accounts.show',  ['activeSb' => 'Accounts', 'employee' => $employee]);
 
     }
     public function search(Request $request){
@@ -80,6 +81,23 @@ class SystemController extends Controller
             abort(401, 'Unauthorized User');
         }
 
+    }
+    public function destroy(Request $request, $id) {
+        if(!auth('system')->user()->type === 0) abort(401, 'Unauthorized User');
+        $validated = $request->validate([
+            'passcode' => ['required', 'digits:4'],
+        ]);
+        if(Hash::check($validated['passcode'], auth('system')->user()->passcode)){
+            $systemUser = System::findOrFail(decrypt($id));
+            $systemUser->delete();
+            return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Deleted');
+
+        }
+        else{
+            return back()->with('error', 'Invalid Passcode');
+        }
+
+        
     }
     // Check if Valid System Credentials
     public function check(Request $request){

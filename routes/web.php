@@ -148,6 +148,7 @@ Route::prefix('system')->name('system.')->group(function(){
 
 
             Route::get('/accounts/{id}', [SystemController::class, 'show'])->name('accounts.show');
+            Route::delete('/accounts/{id}', [SystemController::class, 'destroy'])->name('accounts.destroy');
 
 
             Route::prefix('rooms')->name('rooms.')->group(function(){
