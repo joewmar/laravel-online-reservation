@@ -19,10 +19,11 @@
               <li><a href="/profile">Profile</a></li>
               <li><a href="/reservation">My Reservation</a></li>  
             @endauth
-            
         </ul>
       </div>
-      <a class="text-white btn btn-ghost normal-case text-xl toggleColour">LOGO</a>
+      <a href="{{route('home')}}" class="text-white btn btn-ghost btn-circle toggleColour">
+        <x-logo />
+      </a>
     </div>
     <div class="navbar-center hidden lg:flex">
       <ul class="toggleColour text-white menu menu-horizontal px-1">
@@ -54,16 +55,13 @@
           <li>
             <a class="justify-between">
               Profile
-              <span class="badge">New</span>
             </a>
           </li>
-          <li><a>Settings</a></li>
           <li>
             <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
               Logout
             </a>
           </li>
-          
           <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
             @csrf
           </form>

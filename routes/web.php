@@ -148,6 +148,8 @@ Route::prefix('system')->name('system.')->group(function(){
 
 
             Route::get('/accounts/{id}', [SystemController::class, 'show'])->name('accounts.show');
+            Route::get('/accounts/{id}/edit', [SystemController::class, 'edit'])->name('accounts.edit');
+            Route::put('/accounts/{id}/edit', [SystemController::class, 'update'])->name('accounts.update');
             Route::delete('/accounts/{id}', [SystemController::class, 'destroy'])->name('accounts.destroy');
 
 

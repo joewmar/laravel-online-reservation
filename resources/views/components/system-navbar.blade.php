@@ -2,10 +2,7 @@
   <div class="navbar bg-base-100">
     <div class="flex-1">
       <div class="flex md:hidden btn btn-ghost btn-circle avatar">
-        {{-- <div class="w-10 rounded-full">
-          <img src="{{asset('images/avatars/no-avatar.png')}}" />
-        </div> --}}
-        LOGO
+        <x-logo />
       </div>
       <div class="hidden md:flex">
         <label @click="open = !open" class="btn btn-circle btn-ghost swap swap-rotate">
@@ -43,7 +40,7 @@
               Profile
             </a>
           </li>
-          <li><a href="/system/setting">Settings</a></li>
+          <li><a href="{{route('system.setting.home')}}">Settings</a></li>
           <li>
             <a href="{{ route('system.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
             <form action="{{ route('system.logout') }}" class="w-full" method="POST" id="logout-form">

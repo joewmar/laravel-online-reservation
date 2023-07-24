@@ -35,6 +35,11 @@ class SystemController extends Controller
         return view ('system.setting.accounts.show',  ['activeSb' => 'Accounts', 'employee' => $employee]);
 
     }
+    public function edit($id){
+        $employee = System::findOrFail(decrypt($id));
+        return view ('system.setting.accounts.edit',  ['activeSb' => 'Accounts', 'employee' => $employee]);
+
+    }
     public function search(Request $request){
         if($request['type'] == null){
             $request['type'] = "all";
@@ -76,6 +81,69 @@ class SystemController extends Controller
         if(auth('system')->user()->type === 0){
             $systemUser = System::create($validated);
             return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Created');
+        }
+        else{
+            abort(401, 'Unauthorized User');
+        }
+
+    }
+    public function update(Request $request, $id){
+        // dd($request->all());
+        $systemUser = System::findOrFail(decrypt($id));
+
+        $validated = $request->validate([
+                'type' => ['required'],
+                'avatar' =>  ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
+                'first_name' => ['required'],
+                'last_name' => ['required'],
+                'contact' => ['required', 'numeric', 'min:7'],
+                'email' => ['required', 'email'],
+                'username' => ['required'],
+                'password' => ['nullable', 'min:6'],
+                'passcode' => ['nullable', 'numeric', 'digits:4'],
+                'telegram_username' => ['nullable'],
+        ], [
+            'required' => 'Required to fill up this form'
+        ]);
+        if($validated['password'] == null){
+            $validated['password'] = $systemUser->password;
+        }
+        else{
+            $validated['password'] = bcrypt($validated['password']);
+        }
+        if($validated['passcode'] == null){
+            $validated['passcode'] = $systemUser->passcode;
+        }
+        else{
+            $validated['passcode'] = bcrypt($validated['passcode']);
+        }
+        if($validated['telegram_username'] == null){
+            $validated['telegram_username'] = $systemUser->telegram_username;
+        }
+        else{
+            if($validated['telegram_username'] != null){
+                $chat_id = getChatIdByUsername($validated['telegram_username']) ;
+                if($chat_id == null){
+                    return back()->withErrors(['telegram_username' => 'Invalid Username or did not do it when typing in chat bots'])->withInput($validated);
+                }
+                else{
+                    $validated['telegram_chatID'] = $chat_id;
+                }
+            }
+        }
+
+        if($request->hasFile('avatar')){                          // storage/app/logos
+            if($systemUser->avatar) 
+                deleteFile($systemUser->avatar);
+            $validated['avatar'] = $request->file('avatar')->store('employee', 'public');
+        }
+        if(auth('system')->user()->type === 0){
+            $updated = $systemUser->update($validated);
+            if($updated)
+                return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Updated');
+            else
+                return back()->with('error', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Something Error, Try Again');
+
         }
         else{
             abort(401, 'Unauthorized User');
