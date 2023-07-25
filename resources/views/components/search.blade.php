@@ -1,7 +1,7 @@
 <div class="join">
 	<div>
 	  <div>
-		<input class="input input-primary input-sm join-item" placeholder="Search..."/>
+		<input class="input input-primary input-sm join-item" name="search" placeholder="Search..."/>
 	  </div>
 	</div>
 	{{-- <select class="select select-primary select-sm join-item">

@@ -104,12 +104,14 @@ Route::prefix('system')->name('system.')->group(function(){
         
         Route::prefix('reservation')->name('reservation.')->group(function(){
             Route::get('/', [SystemReservationController::class, 'index'])->name('home');
+            Route::post('/search', [SystemReservationController::class, 'search'])->name('search');
             Route::get('/calendar', [SystemReservationController::class, 'event'])->name('event');
 
             
             Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');
             Route::get('/{id}/show/room', [SystemReservationController::class, 'showRooms'])->name('show.rooms');
             Route::get('/{id}/disaprove', [SystemReservationController::class, 'disaprove'])->name('disaprove');
+            Route::post('/{id}/disaprove', [SystemReservationController::class, 'disaproveStore'])->name('disaprove.store');
             Route::put('/{id}/show/room', [SystemReservationController::class, 'updateReservation'])->name('show.rooms.update');
         });
         

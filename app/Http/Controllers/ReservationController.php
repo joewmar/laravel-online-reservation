@@ -490,12 +490,14 @@ class ReservationController extends Controller
                 'text' => $text,
                 'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
             ]);
+            $text = null;
         }
         $details = [
             'title' => 'Reservation Complete',
             'body' => 'Your Reservation are done, We just send email for the approve or disapprove confirmation'
         ];
         Mail::to($reserve_info->userReservation->email)->send(new ReservationMail($details, 'reservation.mail'));
+        $details = null;
         session()->forget('rinfo');
         session()->forget('ck');
         return redirect()->route('reservation.done');

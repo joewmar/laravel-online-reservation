@@ -28,7 +28,7 @@ class Archive extends Model
         'total',
         'message',
     ];
-    public function userReservation(){
+    public function userArchive(){
         return $this->belongsTo(User::class, 'user_id');
     }
     public function room(){

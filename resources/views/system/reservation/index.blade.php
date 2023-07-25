@@ -23,9 +23,13 @@
                     <a href="{{route('system.reservation.home', 'tab=confirmed')}}" class="tab tab-bordered {{request('tab') == 'confirmed' ? 'tab-active' : ''}}">Confirmed</a> 
                     <a href="{{route('system.reservation.home', 'tab=checkin')}}" class="tab tab-bordered {{request('tab') == 'checkin' ? 'tab-active' : ''}}">Check-in</a>
                     <a href="{{route('system.reservation.home', 'tab=checkout')}}" class="tab tab-bordered {{request('tab') == 'checkout' ? 'tab-active' : ''}}">Check-out</a>
+                    <a href="{{route('system.reservation.home', 'tab=previous')}}" class="tab tab-bordered {{request('tab') == 'previous' ? 'tab-active' : ''}}">Previous</a>
                     <a href="{{route('system.reservation.home', 'tab=cancelation')}}" class="tab tab-bordered {{request('tab') == 'cancelation' ? 'tab-active' : ''}}">Cancelation</a>
+                    <a href="{{route('system.reservation.home', 'tab=disaprove')}}" class="tab tab-bordered {{request('tab') == 'disaprove' ? 'tab-active' : ''}}">Disaprove</a>
+                    {{-- <a href="{{route('system.reservation.home', 'tab=archive')}}" class="tab tab-bordered {{request('tab') == 'archive' ? 'tab-active' : ''}}">Archive</a> --}}
                 </div>
-                <form action="{{route('system.reservation.home')}}">
+                <form action="{{route('system.reservation.search')}}" method="POST">
+                    @csrf
                     <x-search />
                 </form>
             </div>

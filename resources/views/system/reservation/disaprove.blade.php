@@ -69,42 +69,44 @@
             @endif
         </div>
         <div class="divider"></div>
-        <article x-data="{reason: ''}" class="text-md tracking-tight text-neutral my-5 px-0 md:px-24 w-auto">
-            <h2 class="text-2xl mb-5 font-bold">Why Disaprove Request of {{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}</h2>
-            <div class="form-control w-full">
-                <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
-                    <select x-model="reason" name="reason" id="reason" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
-                        <option value="" disabled selected>Please select</option>
-                        <option value="No Room Available">No Room Available</option>
-                        <option value="Unable to pay the downpayment">Unable to pay the downpayment</option>
-                        <option value="Other" selected>Other</option>
-                    </select>        
-                    <span id="room_rate" class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-neutral transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                        Reason To Disaprove
-                    </span>
-                </label>
-                <label class="label">
-                    <span class="label-text-alt">
-                        @error('room_rate')
-                            <span class="label-text-alt text-error">{{$message}}</span>
-                        @enderror
-                    </span>
-                </label>
-            </div>
-            <div x-show="reason == 'Other' " class="my-5">
-                <span class="text-xl font-medium ">Other</span>
-                <div class="mt-3">
-                    <x-textarea name="message" id="message" placeholder="Reason Message" />
+            <article x-data="{reason: '{{old('reason')}}'}" class="text-md tracking-tight text-neutral my-5 px-0 md:px-24 w-auto">
+                <form id="disaprove-form" action="{{route('system.reservation.disaprove.store', encrypt($r_list->id))}}" method="post">
+                    @csrf
+                <h2 class="text-2xl mb-5 font-bold">Why Disaprove Request of {{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}</h2>
+                <div class="form-control w-full">
+                    <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
+                        <select x-model="reason" name="reason" id="reason" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
+                            <option value="" disabled selected>Please select</option>
+                            <option value="No Room Available">No Room Available</option>
+                            <option value="Unable to pay the downpayment">Unable to pay the downpayment</option>
+                            <option value="Other">Other</option>
+                        </select>        
+                        <span id="room_rate" class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-neutral transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                            Reason To Disaprove
+                        </span>
+                    </label>
+                    <label class="label">
+                        <span class="label-text-alt">
+                            @error('reason')
+                                <span class="label-text-alt text-error">{{$message}}</span>
+                            @enderror
+                        </span>
+                    </label>
                 </div>
-            </div>    
-        </article>
-        <div class="flex justify-end space-x-1">
-            <label for="reservation" class="btn btn-error btn-sm">Disaprove</label>
-            <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-sm">Back</a>
-            <form action="" method="post">
-                @csrf
-                <x-passcode-modal title="Disaprove Confirmation" id="reservation" formId="reservation-form" />        
-            </form>
-        </div>
+                <div x-show="reason == 'Other' " class="my-5">
+                    <span class="text-xl font-medium ">Other</span>
+                    <div class="mt-3">
+                        <x-textarea name="message" id="message" placeholder="Reason Message" />
+                    </div>
+                </div> 
+                <x-passcode-modal title="Disaprove Confirmation" id="disaprove" formId="disaprove-form" />        
+            </form>   
+            </article>
+       
+            <div class="flex justify-end space-x-1">
+                <label for="disaprove" class="btn btn-error btn-sm">Disaprove</label>
+                <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-sm">Back</a>
+            </div>
+        
     </x-system-content>
 </x-system-layout>

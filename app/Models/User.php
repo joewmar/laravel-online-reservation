@@ -57,4 +57,7 @@ class User extends Authenticatable
     public function reservation(){
         return $this->hasOne(Reservation::class, 'user_id');
     }
+    public function archive(){
+        return $this->hasOne(Archive::class, 'user_id');
+    }
 }
