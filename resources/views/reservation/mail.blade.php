@@ -1,30 +1,13 @@
 <x-landing-layout>
-    <h1>{{ $details['title'] }}</h1>
-    <p>{{ $details['body'] }}</p>
-    @if (isset($details['list']))
-        <div class="overflow-x-auto">
-        <table class="table">
-          <!-- head -->
-          <thead>
-            <tr>
-                <th>Tour</th>
-                <th>Type</th>
-                <th>Pax</th>
-                <th>Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            @foreach ($collection as $item)
-                <tr>
-                    <td>{{$item['title']}}</td> 
-                    <td>{{$item['type']}}</td> 
-                    <td>{{$item['pax']}} pax</td> 
-                    <td>{{number_format($item['price'], 2)}}</td> 
-                </tr>
-            @endforeach
-          </tbody>
-        </table>
-      </div>
-    @endif
-    <p>Thank you</p>
+  <x-full-content>
+    <div class="flex justify-center items-center w-full h-screen bg-primary">
+      <article class="prose shadow-2xl bg-base-200 w-96 h-72 p-10">
+          <h3 class="font-bold">Dear {{$details['name']}}</h3>
+          <p class="font-medium">
+            {{$details['body']}}
+          </p>
+          <p>Thank you</p>
+      </article>
+    </div>
+  </x-full-content>
 </x-landing-layout>

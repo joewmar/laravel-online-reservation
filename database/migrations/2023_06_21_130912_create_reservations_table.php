@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('additional_menu')->nullable();
             $table->string('amount')->nullable();
             $table->decimal('total')->nullable();
+            $table->dateTime('payment_cutoff')->nullable();
             $table->timestamps();
         });
     }

@@ -14,16 +14,27 @@
 </head>
 <body class="bg-base-100 selection:bg-primary selection:text-base-100">
   @if(session()->has('success'))
-    <x-alert type="success" message="{{session('success')}}"/>
+    @if(is_array(session('success')))
+      <x-alert type="success" :message="session('success')"/>
+    @else
+      <x-alert type="success" message="{{session('success')}}"/>
+    @endif
   @endif
   @if(session()->has('error'))
-    <x-alert type="error" message="{{session('error')}}"/>
+    @if(is_array(session('error')))
+      <x-alert type="error" :message="session('error')" />
+    @else
+      <x-alert type="error" message="{{session('error')}}" />
+    @endif
   @endif
   @if(session()->has('info'))
-    <x-alert type="info" message="{{session('info')}}"/>
+    @if(is_array(session('info')))
+      <x-alert type="info" :message="session('info')" />
+    @else
+      <x-alert type="info" message="{{session('info')}}" />
+    @endif
   @endif
   {{$slot}}
-
   @include('partials.footer')
   @stack('scripts')
 </body>

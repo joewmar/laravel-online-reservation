@@ -89,6 +89,7 @@
                                             <label for="reservation" class="btn btn-info btn-xs">Check-out</label>
                                         @endif
                                         <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs" >View</a>
+                                        <a href="{{route('system.reservation.show.receipt', encrypt($list->id))}}" class="btn btn-accent btn-xs" >Receipt</a>
                                     </th>
                                 
                                 </tr>

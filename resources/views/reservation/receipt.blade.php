@@ -163,28 +163,28 @@ tr:hover .cut { opacity: 1; }
 			<h1>Receipt</h1>
 			<address >
 				<p>{{ str_replace('_', ' ', config('app.name'))}}</p>
-				<p>New Kalmunani Road,<br>Battialoa,<br>Sri Lanka.</p>
-				<p>(+94) 65 222 44 55</p>
+				<p>Sta. Juliana, Capas Tarlac, Philippines.</p>
+				<p>09123456789</p>
 			</address>
 			{{-- <span><img alt="" src="assets/img/sun.png"></span> --}}
 		</header>
 		<article>
 			<h1>Recipient</h1>
 			<address >
-				<p><?php echo $title.$fname." ".$lname ?> <br></p>
+				<p>{{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}<br></p>
 			</address>
 			<table class="meta">
 				<tr>
 					<th><span >Invoice #</span></th>
-					<td><span ><?php echo $id; ?></span></td>
+					<td><span >{{$r_list->id}}</span></td>
 				</tr>
 				<tr>
 					<th><span >Date</span></th>
-					<td><span ><?php echo $cout; ?> </span></td>
+					<td><span >{{ \Carbon\Carbon::createFromFormat('Y-m-d H:m:s', $r_list->updated_at)->format('F j, Y') ?? 'None'}}</span></td>
 				</tr>
 				
 			</table>
-			<table class="inventory">
+			{{-- <table class="inventory">
 				<thead>
 					<tr>
 						<th><span >Item</span></th>
@@ -196,42 +196,41 @@ tr:hover .cut { opacity: 1; }
 				</thead>
 				<tbody>
 					<tr>
-						<td><span ><?php echo $troom; ?></span></td>
-						<td><span ><?php echo $days; ?> </span></td>
-						<td><span data-prefix>$</span><span ><?php  echo $type_of_room;?></span></td>
-						<td><span ><?php echo $nroom;?> </span></td>
-						<td><span data-prefix>$</span><span><?php echo $ttot; ?></span></td>
+						{{-- <td><span >Room no. {{$r_list->room->room_no}}</span></td> --}}
+						{{-- <td><span>  </span></td> 
+						<td><span data-prefix>$</span><span ></span></td>
+						<td><span data-prefix>$</span><span></span></td>
 					</tr>
 					<tr>
-						<td><span ><?php echo $bed; ?>  Bed </span></td>
-						<td><span ><?php echo $days; ?></span></td>
-						<td><span data-prefix>$</span><span ><?php  echo $type_of_bed;?></span></td>
-						<td><span ><?php echo $nroom;?> </span></td>
-						<td><span data-prefix>$</span><span><?php echo $btot; ?></span></td>
+						<td><span >  Bed </span></td>
+						<td><span ></span></td>
+						<td><span data-prefix>$</span><span ></span></td>
+						<td><span > </span></td>
+						<td><span data-prefix>$</span><span></span></td>
 					</tr>
 					<tr>
-						<td><span ><?php echo $meal; ?>  </span></td>
-						<td><span ><?php echo $days; ?></span></td>
-						<td><span data-prefix>$</span><span ><?php  echo $type_of_meal?></span></td>
-						<td><span ><?php echo $nroom;?> </span></td>
-						<td><span data-prefix>$</span><span><?php echo $mepr; ?></span></td>
+						<td><span >  </span></td>
+						<td><span >/span></td>
+						<td><span data-prefix>$</span><span ></span></td>
+						<td><span > </span></td>
+						<td><span data-prefix>$</span><span></span></td>
 					</tr>
 				</tbody>
-			</table>
+			</table> --}}
 			
 			<table class="balance">
 				<tr>
 					<th><span >Total</span></th>
-					<td><span data-prefix>$</span><span><?php echo $fintot; ?></span></td>
+					<td><span data-prefix>₱ </span><span>{{$r_list->total}}</span></td>
 				</tr>
-				<tr>
+				{{-- <tr>
 					<th><span >Amount Paid</span></th>
 					<td><span data-prefix>$</span><span >0.00</span></td>
-				</tr>
-				<tr>
+				</tr> --}}
+				{{-- <tr>
 					<th><span >Balance Due</span></th>
 					<td><span data-prefix>$</span><span><?php echo $fintot; ?></span></td>
-				</tr>
+				</tr> --}}
 			</table>
 		</article>
 		<aside>

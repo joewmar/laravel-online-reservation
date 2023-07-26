@@ -11,11 +11,13 @@ use Illuminate\Support\Arr;
 use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
+use App\Models\OnlinePayment;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Telegram\Bot\Laravel\Facades\Telegram;
+
 
 class ReservationController extends Controller
 {
@@ -493,13 +495,59 @@ class ReservationController extends Controller
             $text = null;
         }
         $details = [
+            'name' => $reserve_info->userReservation->first_name . ' ' . $reserve_info->userReservation->last_name,
             'title' => 'Reservation Complete',
             'body' => 'Your Reservation are done, We just send email for the approve or disapprove confirmation'
         ];
-        Mail::to($reserve_info->userReservation->email)->send(new ReservationMail($details, 'reservation.mail'));
+        Mail::to($reserve_info->userReservation->email)->send(new ReservationMail($details, 'reservation.mail', $details['title']));
         $details = null;
         session()->forget('rinfo');
         session()->forget('ck');
         return redirect()->route('reservation.done');
+    }
+    public function gcash($id){
+        $reservation = Reservation::findOrFail(decrypt($id));
+        if($reservation->status() === 'Confirmed' && $reservation->payment_method === 'Gcash'){
+            return view('reservation.gcash.index', ['reservation' => $reservation]);
+        }
+        else{
+            abort(404);
+        }
+    }
+    public function paymentStore(Request $request, $id){
+        $reservation = Reservation::findOrFail(decrypt($id));
+        if($reservation->status() === 'Confirmed'){
+            $validator = Validator::make($request->all(), [
+                'image' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
+                'amount' => ['required', 'numeric'],
+                'reference_no' => ['required'],
+                'payment_name' => ['required'],
+            ],[
+                'required' => 'Need to fill up this information (:attribute)',
+            ]);
+            if($validator->fails()){
+                return back()->with('error', $validator->errors()->all());
+            }
+            if($validator->valid()){
+                $validated =  $validator->validate();
+                $validated['image'] = $request->file('image')->store('online_payment', 'public');
+                $validated['reservation_id'] = $reservation->id;
+                $validated['payment_method'] = $reservation->payment_method;
+                $sended = OnlinePayment::create($validated);
+                if($sended) return view('reservation.gcash.success');
+            }
+        }
+        else{
+            abort(404);
+        }
+        
+
+    }
+    public function paypal($id){
+        $reservation = Reservation::findOrFail(decrypt($id));
+        if($reservation->status() === 'Confirmed' && $reservation->payment_method === 'PayPal')
+            return view('reservation.paypal.index', ['reservation' => $reservation]);
+        else
+            abort(404);
     }
 }

@@ -9,7 +9,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class ReservationMail extends Mailable
+class ReservationConfirmation extends Mailable
 {
     use Queueable, SerializesModels;
     public $details, $view, $subject;
@@ -17,12 +17,11 @@ class ReservationMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct($details, $view, $subject)
+    public function __construct($subject, $details, $view)
     {
         $this->details = $details;
         $this->view = $view;
         $this->subject = $subject;
-
     }
 
     /**

@@ -49,6 +49,8 @@
                         <thead>
                             <tr>
                                 <th>Tour</th>
+                                <th>Type</th>
+                                <th>Pax</th>
                                 <th>Price</th>
                             </tr>
                         </thead>
@@ -56,7 +58,9 @@
                             @foreach ($menu as $key => $item)
                                 <tr>
                                     <td>{{$item['title']}}</td> 
-                                    <td>{{number_format(explode(',', $r_list->amount)[$key], 2)}}</td> 
+                                    <td>{{$item['type']}}</td> 
+                                    <td>{{$item['pax']}} pax</td> 
+                                    <td>{{number_format($item['price'], 2)}}</td> 
                                 </tr>
                             @endforeach
                         </tbody>
@@ -129,18 +133,18 @@
                 $title = ''; 
             @endphp
             @if($r_list->status() == "Pending")
-                <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-sm">Confirm</a>
+                <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-sm" >Confirm</a>
                 <label for="reservation" class="btn btn-success btn-sm" disabled>Check-in</label>
                 <label for="reservation" class="btn btn-info btn-sm" disabled>Check-out</label>
             @elseif($r_list->status() == "Confirmed")
                 @php $title = 'Check-in' @endphp
-                <a href="" class="btn btn-secondary btn-sm">Confirm</a>
+                <a href="" class="btn btn-secondary btn-sm" disabled>Confirm</a>
                 <label for="reservation" class="btn btn-success btn-sm">Check-in</label>
                 <label for="reservation" class="btn btn-info btn-sm" disabled>Check-out</label>
 
             @elseif($r_list->status() == "Check-in")
                 @php $title = 'Check-out' @endphp
-                <a href="" class="btn btn-secondary btn-sm">Confirm</a>
+                <a href="" class="btn btn-secondary btn-sm" disabled>Confirm</a>
                 <label for="reservation" class="btn btn-success btn-sm" disabled>Check-in</label>
                 <label for="reservation" class="btn btn-info btn-sm">Check-out</label>
             @endif

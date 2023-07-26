@@ -32,6 +32,9 @@ class Reservation extends Model
     public function room(){
         return $this->hasMany(Room::class, 'room_id');
     }
+    public function roomRate(){
+        return $this->hasMany(RoomRate::class, 'room_rate_id');
+    }
     public function status(){
         $status = '';
         if($this->attributes['status'] == 0) $status = 'Pending';
@@ -40,5 +43,8 @@ class Reservation extends Model
         elseif($this->attributes['status'] == 3) $status = 'Check-out';
             
         return $status ?? $this->attributes['status'];
+    }
+    public function payment(){
+        $this->belongsTo(OnlinePayment::class, 'reservation_id');
     }
 }

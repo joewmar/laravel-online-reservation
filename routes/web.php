@@ -1,14 +1,16 @@
 <?php
 
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\LandingController;
+use App\Mail\ReservationMail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RideController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SystemController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\TourMenuController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\RoomSettingController;
 use App\Http\Controllers\TourSettingController;
@@ -44,6 +46,7 @@ Auth::routes();
 Route::get('/', function () {
     return view('index', ['activeNav' => 'Home']);
 })->name('home');
+
 
 Route::get('/about', function () {
     return view('landing.about_us', ['activeNav' => 'About Us']);
@@ -90,6 +93,10 @@ Route::middleware(['auth', 'preventBackhHistory'])->group(function(){
         Route::post('/store', [ReservationController::class, 'storeReservation'])->name('store');
         Route::view('/done','reservation.done', ['activeNav' => 'Hello'])->name('done');
 
+        Route::get('/{id}/gcash', [ReservationController::class, 'gcash'])->name('gcash');
+        Route::get('/{id}/paypal', [ReservationController::class, 'paypal'])->name('paypal');
+        Route::post('/{id}/payment', [ReservationController::class, 'paymentStore'])->name('payment.store');
+
     });
 });
 
@@ -110,6 +117,7 @@ Route::prefix('system')->name('system.')->group(function(){
             
             Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');
             Route::get('/{id}/show/room', [SystemReservationController::class, 'showRooms'])->name('show.rooms');
+            Route::get('/{id}/show/receipt', [SystemReservationController::class, 'receipt'])->name('show.receipt');
             Route::get('/{id}/disaprove', [SystemReservationController::class, 'disaprove'])->name('disaprove');
             Route::post('/{id}/disaprove', [SystemReservationController::class, 'disaproveStore'])->name('disaprove.store');
             Route::put('/{id}/show/room', [SystemReservationController::class, 'updateReservation'])->name('show.rooms.update');
