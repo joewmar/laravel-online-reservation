@@ -1,6 +1,8 @@
-
+@php
+    $arrTrType = ['All', 'Day Tour', 'Overnight'];
+@endphp
 <x-system-layout :activeSb="$activeSb">
-  <x-system-content title="Edit {{$service_menu->title}}">
+  <x-system-content title="Edit {{$service_menu->title}}" back=true>
     <form id="update-form" action=" {{ route('system.menu.update', encrypt($service_menu->id)) }}" method="post" autocomplete="off">
       @csrf
       @method('PUT')
@@ -8,10 +10,9 @@
       <div class="w-full md:w-96">
         <x-input type="text" id="title" name="title" placeholder="Title" value="{{$service_menu->title}}"/>
         <x-datalist-input id="category" name="category" placeholder="Category" value="{{$service_menu->category}}"/>
-        {{-- <x-multiple-input type="text" id="inclusion" name="inclusion" placeholder="Inclusion" /> --}}
+        <x-select id="tour_type" name="tour_type" placeholder="Tour Type" :value="$arrTrType" :title="$arrTrType" selected="{{$service_menu->tour_type ?? old('tour_type')}}" />
+        <x-input type="number" id="no_day" name="no_day" placeholder="Number of days" value="{{$service_menu->no_day}}" />
         <x-textarea id="inclusion" name="inclusion" placeholder="Inclusion (Item 1, Item 2)" value="{{$service_menu->inclusion}}" />
-        <x-input type="number" id="no_day" name="no_day" placeholder="Number of days" value="{{$service_menu->days}}" />
-        <x-input type="number" id="hrs" name="hrs" placeholder="Number of hours" value="{{$service_menu->hrs}}" />
         <label for="add_modal" class="btn btn-primary w-full">Save</label>
         <x-passcode-modal title="Edit Menu Confirmation" id="add_modal" formId="update-form" />        
       </div>

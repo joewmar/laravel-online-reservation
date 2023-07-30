@@ -29,6 +29,8 @@
           <p><strong>Room Rate: </strong>  {{ $details['room_rate'] }}</p>
           <p><strong>Total: </strong>  {{ $details['total'] }}</p>
           <p><strong>Payment Method: </strong>  {{ $details['payment_method'] }}</p>
+          <p>If you want a receipt: <a href="{{$details['receipt_link'] ?? '#'}}">View<a></p>
+          <p>And</p>
           <p>If you want downpayment: <a href="{{$details['payment_link'] ?? '#'}}">Click here<a></p>
           <p>Payment Deadline: {{$details['payment_cutoff'] ?? ''}}</p>
           <p>Note: You need to pay a downpayment for the reservation fee, if you fail to make the payment, your reservation will be automatically canceled.</p>

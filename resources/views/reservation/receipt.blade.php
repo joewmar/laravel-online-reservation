@@ -76,7 +76,13 @@ article, article address, table.meta, table.inventory { margin: 0 0 3em; }
 article:after { clear: both; content: ""; display: table; }
 article h1 { clip: rect(0 0 0 0); position: absolute; }
 
-article address { float: left; font-size: 125%; font-weight: bold; }
+article address { font-size: 125%; font-weight: bold; }
+article address > span{ font-size: 60%; font-weight: 500; }
+
+/* Details */
+div.details {padding-top: 5%; margin-bottom: 3%;}
+div.details h5 {font-weight: bold; font-size: 15px; margin-top: 2%;  margin-bottom: 2%}
+div.details h5 > span {font-weight: normal;}
 
 /* table meta & balance */
 
@@ -166,13 +172,10 @@ tr:hover .cut { opacity: 1; }
 				<p>Sta. Juliana, Capas Tarlac, Philippines.</p>
 				<p>09123456789</p>
 			</address>
-			{{-- <span><img alt="" src="assets/img/sun.png"></span> --}}
+			{{-- <span><img alt="" src="{{asset('images/logo.png')}}"></span> --}}
 		</header>
 		<article>
-			<h1>Recipient</h1>
-			<address >
-				<p>{{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}<br></p>
-			</address>
+
 			<table class="meta">
 				<tr>
 					<th><span >Invoice #</span></th>
@@ -180,48 +183,97 @@ tr:hover .cut { opacity: 1; }
 				</tr>
 				<tr>
 					<th><span >Date</span></th>
-					<td><span >{{ \Carbon\Carbon::createFromFormat('Y-m-d H:m:s', $r_list->updated_at)->format('F j, Y') ?? 'None'}}</span></td>
-				</tr>
-				
+					<td><span >{{ \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $r_list->updated_at)->format('F j, Y') ?? 'None'}}</span></td>
+				</tr>	
 			</table>
-			{{-- <table class="inventory">
+			<h1>Recipient</h1>
+			<address >
+				<p>{{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}<br></p>
+				<span>{{$r_list->age}} years old from {{$r_list->userReservation->country}}<br></span>
+				<div>
+
+				</div>
+			</address>
+			<div class="details">
+				<h5>Check-in: <span>{{\Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_in)->format('l F j, Y') ?? 'None'}}</span></h5>
+				<h5>Check-out: <span>{{\Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out)->format('l F j, Y') ?? 'None'}}</span></h5>
+				<h5>Service Type: <span>{{$r_list->accommodation_type ?? 'None'}}</span></h5>
+				<h5>Payment Method: <span>{{$r_list->payment_method ?? 'None'}}</span></h5>
+			</div>
+			@if($r_list->accommodation_type != 'Room Only')
+				<table class="inventory">
+					<thead>
+						<tr>
+							<th><span >Tour</span></th>
+							<th><span >Type</span></th>
+							<th><span >Pax</span></th>
+							<th><span >Price</span></th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach ($menu as $item)
+							<tr>
+								<td><span >{{$item['title']}}</span></td>
+								<td><span>{{$item['type']}}</span></td> 
+								<td><span>{{$item['pax']}} guest</span></td> 
+								<td><span data-prefix>₱ </span><span>{{ number_format($item['price'], 2)}}</span></td>
+							</tr>
+						@endforeach
+					</tbody>
+				</table>
+			@endif
+			
+			<table class="inventory">
 				<thead>
 					<tr>
-						<th><span >Item</span></th>
-						<th><span >No of Days</span></th>
+						<th><span >Room</span></th>
+						<th><span >Room Type</span></th>
 						<th><span >Rate</span></th>
-						<th><span >Quantity</span></th>
-						<th><span >Price</span></th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr>
-						{{-- <td><span >Room no. {{$r_list->room->room_no}}</span></td> --}}
-						{{-- <td><span>  </span></td> 
-						<td><span data-prefix>$</span><span ></span></td>
-						<td><span data-prefix>$</span><span></span></td>
-					</tr>
-					<tr>
-						<td><span >  Bed </span></td>
-						<td><span ></span></td>
-						<td><span data-prefix>$</span><span ></span></td>
-						<td><span > </span></td>
-						<td><span data-prefix>$</span><span></span></td>
-					</tr>
-					<tr>
-						<td><span >  </span></td>
-						<td><span >/span></td>
-						<td><span data-prefix>$</span><span ></span></td>
-						<td><span > </span></td>
-						<td><span data-prefix>$</span><span></span></td>
-					</tr>
+					@foreach ($rooms as $key => $item)
+						<tr>
+							<td><span >Room No. {{$item->room_no}} ({{$item->room->name}})</span></td>
+							<td><span>{{$rate->name}}</span></td> 
+							<td><span data-prefix>₱ </span><span>{{ number_format($rate->price, 2)}}</span></td>
+						</tr>
+					@endforeach
 				</tbody>
-			</table> --}}
+			</table>
+			@if(!empty($add_menu))
+				{{-- <table class="inventory">
+					<thead>
+						<tr>
+							<th><span >Room</span></th>
+							<th><span >Room Type</span></th>
+							<th><span >Rate</span></th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach ($rooms as $key => $item)
+							<tr>
+								<td><span >Room No. {{$item->room_no}} ({{$item->room->name}})</span></td>
+								<td><span>{{$rate->name}}</span></td> 
+								<td><span data-prefix>₱ </span><span>{{ number_format($rate->price, 2)}}</span></td>
+							</tr>
+						@endforeach
+					</tbody>
+				</table> --}}
+			@endif
 			
 			<table class="balance">
 				<tr>
 					<th><span >Total</span></th>
-					<td><span data-prefix>₱ </span><span>{{$r_list->total}}</span></td>
+					<td><span data-prefix>₱ </span><span>{{number_format($r_list->total, 2)}}</span></td>
+				</tr>
+				<tr>
+					<th><span >Downpayment</span></th>
+					{{-- <td><span data-prefix>₱ </span><span>{{number_format($r_list->total, 2) ?? 'None'}}</span></td> --}}
+				</tr>
+				<tr>
+					<th><span >Balance</span></th>
+					{{-- <td><span data-prefix>₱ </span><span>{{number_format($r_list->total, 2) ?? 'None'}}</span></td> --}}
 				</tr>
 				{{-- <tr>
 					<th><span >Amount Paid</span></th>

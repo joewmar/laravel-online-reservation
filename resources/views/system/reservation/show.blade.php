@@ -3,8 +3,14 @@
         {{-- User Details --}}
         <div class="w-full p-8 sm:flex sm:space-x-6">
             <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
-                <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
-            </div>
+                @if(filter_var(auth('web')->user()->avatar ?? '', FILTER_VALIDATE_URL))
+                    <img src="{{auth('web')->user()->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
+                @elseif(auth('web')->user()->avatar ?? false)
+                    <img src="{{asset('storage/'. auth('web')->user()->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
+                @else
+                    <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
+                @endif
+            </div>            
             <div class="flex flex-col space-y-4">
                 <div>
                     <h2 class="text-2xl font-semibold">{{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}</h2>
@@ -23,6 +29,18 @@
                     </span>
                 </div>
             </div>
+        </div>
+        <div class="flex justify-end space-x-1">
+            @if($r_list->status() === 'Confirmed')
+            <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}" class="btn btn-info btn-sm">
+                <i class="fa-solid fa-credit-card"></i>
+                Online Payment
+            </a>
+            <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-success btn-sm">
+                <i class="fa-solid fa-receipt"></i>
+                Reciept
+            </a>
+            @endif
         </div>
         <div class="divider"></div>
         @if($r_list->accommodation_type !== 'Room Only')

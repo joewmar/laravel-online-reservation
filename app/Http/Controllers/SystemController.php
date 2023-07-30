@@ -186,7 +186,7 @@ class SystemController extends Controller
     }
     
     public function logout(Request $request){
-        Auth::guard('system')->logout();
+        auth('system')->logout();
         // Recommend to invalidate the users session and regenerate the toke from @crfs
         $request->session()->invalidate();
         $request->session()->regenerateToken();

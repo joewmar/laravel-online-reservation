@@ -1,14 +1,4 @@
-{{-- @php
-    $reservation = [];
-    if(request()->exists('cin', 'cout', 'at', 'px') ){
-      $reservation = [
-        "cin" => request()->get('cin'),
-        "cout" => request()->get('cout'),
-        "px" => request()->get('px'),
-        "at" => request()->get('at'),
-      ];
-    }
-@endphp --}}
+
 <x-landing-layout>
   <div class="flex w-full justify-center">
     <div class="card w-full md:w-[40%] bg-base-100 rounded-box my-10">
@@ -18,10 +8,9 @@
       {{-- @if(request()->exists('cin', 'cout', 'at', 'px', 'ck'))
         <form action="{{ route('create', $reservation) }}" method="post">
       @else --}}
-        <form action="{{ route('google.fillup.update', $user_info->google_id) }}" method="post">
+        <form action="{{ route('google.fillup.store')}}" method="post">
       {{-- @endif --}}
           @csrf
-          @method('PUT')
           {{-- Birthday --}}
           <x-datetime-picker name="birthday" id="birthday" placeholder="Birthday" class="flatpickr-bithday" />
           {{-- Nationality--}}

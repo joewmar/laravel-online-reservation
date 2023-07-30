@@ -19,7 +19,7 @@
                     <x-input type="password" name="password" id="password" placeholder="Password" />
                     <x-input type="number" name="passcode" id="passcode" placeholder="Passcode" />
                     <x-input type="text" name="telegram_username" id="telegram_username" placeholder="Telegram Username" />
-                    <p class="text-red-500 my-5">Note: To be valid and obtain a chat ID for sending notifications, simply search for "<strong>{{ \Telegram\Bot\Laravel\Facades\Telegram::getMe()->getUsername()}}</strong>" and "<strong>{{\Telegram\Bot\Laravel\Facades\Telegram::bot('bot2')->getMe()->getUsername()}}</strong>" (for Employee Notification) on telegram app. Then, type anything and send it. If you receive a message from Telegram, it means that the Telegram username is valid.</p>
+                    <p class="text-red-500 my-5">Note: To be valid and obtain a chat ID for sending notifications, simply search for <kbd class="kbd">{{ \Telegram\Bot\Laravel\Facades\Telegram::getMe()->getUsername()}}</kbd> and <kbd class="kbd">{{\Telegram\Bot\Laravel\Facades\Telegram::bot('bot2')->getMe()->getUsername()}}</kbd> (for Employee Notification) on telegram app. Then, type anything and send it. If you receive a message from Telegram, it means that the Telegram username is valid.</p>
                     <input type="file" name="avatar" class="file-input file-input-bordered file-input-primary w-full" />
                     @error('avatar')
                         <span class="mb-5 label-text-alt text-error">{{$message}}</span>

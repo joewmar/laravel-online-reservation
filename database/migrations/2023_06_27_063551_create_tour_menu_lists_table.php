@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('title');
             $table->string('category');
             $table->text('inclusion');
+            $table->string('tour_type')->default('all');
             $table->integer('no_day');
-            $table->decimal('hrs', 2, 1);
             $table->timestamps();
         });
     }

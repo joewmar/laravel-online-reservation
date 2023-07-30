@@ -13,14 +13,18 @@ return new class extends Migration
     {
         Schema::create('archives', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('name')->nullable();
+            $table->integer('age')->nullable();
+            $table->string('country')->nullable();
+            $table->string('nationality')->nullable();
+            $table->string('contact')->nullable();
+            $table->string('email')->nullable();
+            $table->integer('user_id')->nullable();
             $table->tinyText('room_id')->nullable();
-            $table->integer('room_rate_id')->nullable();
             $table->integer('pax');
             $table->tinyText('accommodation_type');
             $table->tinyText('payment_method');
-            $table->integer('age')->nullable();
-            $table->string('menu')->nullable();;
+            $table->string('menu')->nullable();
             $table->date('check_in');
             $table->date('check_out');
             $table->tinyInteger('status')->default(0); /* 0 => done, 1 => disaprove, 2 => cancellation, 3 => ? */

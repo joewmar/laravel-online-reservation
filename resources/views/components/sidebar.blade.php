@@ -42,17 +42,17 @@
         <ul class="sbList mt-6 space-y-2">
             @foreach ($arrSideBarItems as $name => $item)
                 @if ($active == $name)
-                    <li class="min-w-fit transition-all duration-300 ease-in-out bg-primary">
+                    <li class="min-w-fit transition-all duration-300 ease-in-out bg-primary hover:bg-success">
                         <a href="{{$item['link']}}" class="group flex items-center justify-start px-6 py-3">
-                            <i class="h-5 w-6 text-white {{$item['icon']}}"></i>
-                            <span :class="!open ? 'opacity-100 md:opacity-0' : 'opacity-100' " class="title text-white sidebar pl-2">{{$name}}</span>
+                            <i class="h-5 w-6 group-hover:text-success-content text-primary-content {{$item['icon']}}"></i>
+                            <span :class="!open ? 'opacity-100 md:opacity-0' : 'opacity-100' " class="title text-white group-hover:text-success-content sidebar pl-2">{{$name}}</span>
                         </a>
                     </li>
                 @else
                     <li class="min-w-max transition-all duration-300 ease-in-out hover:bg-primary">
                         <a href="{{$item['link']}}" class="group flex items-center justify-start px-6 py-3">
-                            <i class="h-5 w-6 group-hover:text-white {{$item['icon']}}"></i>
-                            <span :class="!open ? 'opacity-100 md:opacity-0' : 'opacity-100' " class="title group-hover:text-white sidebar pl-2">{{$name}}</span>
+                            <i class="h-5 w-6 group-hover:text-primary-content {{$item['icon']}}"></i>
+                            <span :class="!open ? 'opacity-100 md:opacity-0' : 'opacity-100' " class="title group-hover:text-primary-content sidebar pl-2">{{$name}}</span>
                         </a>
                     </li>
                 @endif
@@ -65,12 +65,12 @@
         @if(($loop->index + 1) != 4)
             @if ($active == $name)
                 <a href="{{$item['link']}}" class="text-primary active">
-                    <i class="h-5 w-6 group-hover:text-white {{$item['icon']}}"></i>
+                    <i class="h-5 w-6 group-hover:text-primary-content {{$item['icon']}}"></i>
                     <span class="btm-nav-label">{{$name}}</span>
                 </a>
             @else
                 <a href="{{$item['link']}}">
-                    <i class="h-5 w-6 group-hover:text-white {{$item['icon']}}"></i>
+                    <i class="h-5 w-6 group-hover:text-primary-content {{$item['icon']}}"></i>
                     <span class="btm-nav-label">{{$name}}</span>
                 </a>
             @endif
@@ -90,7 +90,7 @@
                         @endforeach
                     </ul>
                 </div>
-                <i class="fa-solid fa-ellipsis h-5 w-6 group-hover:text-white"></i>
+                <i class="fa-solid fa-ellipsis h-5 w-6 group-hover:text-primary-content"></i>
                 <span class="btm-nav-label">More</span>
             </button>   
             @break

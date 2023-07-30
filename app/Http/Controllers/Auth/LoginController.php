@@ -41,11 +41,12 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
     }
+    // Google Login
     public function redirectToGoogle(){
+        session()->forget('ginfo');
         return Socialite::driver('google')->redirect();
 
     }
-
     public function handleGoogleCallback(){
         try {
             $user = Socialite::driver('google')->user();
@@ -55,18 +56,47 @@ class LoginController extends Controller
                 return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
             }
             else{
-                $newUser = User::create([
+                session('ginfo', [
                     'google_id' => $user->id,
                     'avatar' => $user->avatar,
                     'first_name' => $user['given_name'],
                     'last_name' => $user['family_name'],
                     'email'=> $user->email,
                 ]);
-                return redirect()->route('google.fillup', $newUser->google_id);
+                return redirect()->route('google.fillup');
             }
         } 
         catch (Exception $e) {
             return redirect()->route('google.redirect');
+        }
+    }
+
+    // Facebook Login
+    public function redirectToFacebook(){
+        return Socialite::driver('facebook')->redirect();
+    }
+    public function handleFacebookCallback(){
+        try {
+            $user = Socialite::driver('facebook')->user();
+            dd($user);
+            // $finduser = User::where('google_id', $user->id)->first();
+            // if($finduser){
+            //     Auth::login($finduser);
+            //     return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
+            // }
+            // else{
+            //     $newUser = User::create([
+            //         'google_id' => $user->id,
+            //         'avatar' => $user->avatar,
+            //         'first_name' => $user['given_name'],
+            //         'last_name' => $user['family_name'],
+            //         'email'=> $user->email,
+            //     ]);
+            //     return redirect()->route('google.fillup', $newUser->google_id);
+            // }
+        } 
+        catch (Exception $e) {
+            return redirect()->route('facebook.redirect');
         }
     }
 }

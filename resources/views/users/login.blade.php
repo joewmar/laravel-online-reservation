@@ -27,7 +27,7 @@
             @csrf
             <x-input type="email" name="email" placeholder="Email"/>
             <div x-data="{ show: true }" class="form-control w-full">
-              <label for="password" class="relative flex rounded-md border border-gray-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary" >
+              <label for="password" class="relative flex rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error('password') ring-1 ring-error border-error @enderror" >
                 <input :type="show ? 'password' : 'text'" id="password" name="password" class="input input-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0" placeholder="Password" />
                 <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs" >
                   Password
@@ -39,14 +39,25 @@
                   </button>
                 </span>
               </label>
+              @error('password')
+                <label class="label">
+                  <span class="label-text-alt text-error">{{$message}}</span>
+                </label>
+              @enderror
               <label class="label">
-              <span class="label-text-alt">
-                  @error('password')
-                      <span class="label-text-alt text-error">{{$message}}</span>
-                  @enderror
-              </span>
+                  <span class="label-text-alt">
+                      <span class="label-text-alt flex items-center space-x-2 cursor-pointer">
+                        <input name="remember" type="checkbox" class="checkbox checkbox-primary checkbox-sm" value="1" />
+                        <span >Remember Me</span>
+                      </span>
+                  </span>
+                  <span class="label-text-alt">
+                        <span class="label-text-alt">
+                          <a href="{{route('forgot.password')}}" class="link link-primary">Forgot the password?</a>
+                        </span>
+                  </span>
               </label>
-          </div>
+            </div>
             <div class="form-control mt-6">
               <button type="submit" class="btn btn-primary">Sign in</button>
             </div>
@@ -58,7 +69,7 @@
                 </a>
               </div>
               <div class="tooltip" data-tip="Sign in with Facebook">
-                <a class="btn btn-circle btn-outline btn-info">
+                <a href={{route('facebook.redirect')}} class="btn btn-circle btn-outline btn-info">
                   <i class="fa-brands fa-facebook"></i>
                 </a>
               </div>

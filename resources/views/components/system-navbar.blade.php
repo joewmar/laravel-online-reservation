@@ -31,7 +31,13 @@
       <div class="dropdown dropdown-end">
         <label tabindex="0" class="btn btn-ghost btn-circle avatar">
           <div class="w-10 rounded-full">
-            <img src="{{asset('images/avatars/no-avatar.png')}}" />
+            @if(filter_var(auth('web')->user()->avatar ?? '', FILTER_VALIDATE_URL))
+                <img src="{{auth('web')->user()->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
+            @elseif(auth('web')->user()->avatar ?? false)
+                <img src="{{asset('storage/'. auth('web')->user()->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
+            @else
+                <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
+            @endif
           </div>
         </label>
         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
@@ -42,8 +48,8 @@
           </li>
           <li><a href="{{route('system.setting.home')}}">Settings</a></li>
           <li>
-            <a href="{{ route('system.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
-            <form action="{{ route('system.logout') }}" class="w-full" method="POST" id="logout-form">
+            <a onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+            <form action="{{ route('system.logout') }}" class="w-full" method="POST" id="logout-form" class="hidden">
               @csrf
             </form>
           </li>

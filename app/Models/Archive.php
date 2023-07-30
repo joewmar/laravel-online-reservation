@@ -12,20 +12,24 @@ class Archive extends Model
     use HasUuids;
 
     protected $fillable = [
-        'user_id',
-        'room_id',
-        'room_rate_id',
-        'pax',
+        'name' ,
         'age',
-        'accommodation_type',
-        'payment_method',
+        'country',
+        'nationality' ,
+        'contact',
+        'email' ,
+        'user_id' ,
+        'pax',
+        'room_id',
+        'accommodation_type' ,
+        'payment_method' ,
         'menu',
         'check_in',
-        'check_out',
+        'check_out' ,
         'status',
         'additional_menu',
         'amount',
-        'total',
+        'total' ,
         'message',
     ];
     public function userArchive(){

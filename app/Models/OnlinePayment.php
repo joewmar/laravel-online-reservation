@@ -19,7 +19,7 @@ class OnlinePayment extends Model
         'approval',
         'reference_no',
     ];
-    public function payment(){
-        $this->hasMany(Reservation::class, 'reservation_id');
+    public function reserve(){
+        $this->belongsTo(Reservation::class, 'reservation_id');
     }
 }

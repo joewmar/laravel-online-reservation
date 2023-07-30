@@ -25,6 +25,7 @@
         "chart.js": "^4.3.0",
         "flatpickr": "^4.6.13",
         "fullcalendar": "^6.1.8",
-        "swiper": "^9.4.1"
+        "swiper": "^9.4.1",
+        "tesseract.js": "^4.1.1"
     }
 }

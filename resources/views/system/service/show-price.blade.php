@@ -1,6 +1,6 @@
 
 <x-system-layout :activeSb="$activeSb">
-  <x-system-content title="Edit {{$tourList_title}}'s {{$tour_menu->type}} Price">
+  <x-system-content title="Edit {{$tour_menu->tourMenu->title}} - {{$tour_menu->type}} Price" back=true>
     <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
       <div class="w-full md:w-96">
         <form id="edit-price-form" action="{{route('system.menu.update.price', ['id' => encrypt($tour_menu->menu_id), 'priceid' => encrypt($tour_menu->id) ])}}" method="POST">

@@ -14,7 +14,7 @@ class TourMenuList extends Model
         'category',
         'inclusion',
         'no_day',
-        'hrs',
+        'tour_type',
     ];
     public function tourMenuLists(){
         return $this->hasMany(TourMenu::class, 'menu_id');

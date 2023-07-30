@@ -24,7 +24,9 @@ class Reservation extends Model
         'status',
         'additional_menu',
         'amount',
+        'downpayment',
         'total',
+        'request_message',
     ];
     public function userReservation(){
         return $this->belongsTo(User::class, 'user_id');
@@ -45,6 +47,6 @@ class Reservation extends Model
         return $status ?? $this->attributes['status'];
     }
     public function payment(){
-        $this->belongsTo(OnlinePayment::class, 'reservation_id');
+        return $this->hasMany(OnlinePayment::class, 'reservation_id');
     }
 }

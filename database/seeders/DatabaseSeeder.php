@@ -113,29 +113,29 @@ class DatabaseSeeder extends Seeder
             'telegram_username' => 'joewmar',
             'telegram_chatID' => '5870248478'
         ]);
+        \App\Models\System::factory(10)->create();
 
         \App\Models\TourMenuList::factory()->create([
             'title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
             'inclusion' => 'Duration: 1 hr. to 1.5 hrs.',
+            'tour_type' => 'Day Tour',
             'no_day' => '1',
-            'hrs' => '1.5',
-
         ]);
         \App\Models\TourMenuList::factory()->create([
             'title' => 'Tambo Lake Trail Rate',
             'category' => 'ATV Trail Rate',
             'inclusion' => 'Free trek meal and bottled water, 100 add-ons (conservation fees, tourism fees)',
+            'tour_type' => 'Day Tour',
             'no_day' => '1',
-            'hrs' => '1.5',
         ]);
 
         \App\Models\TourMenuList::factory()->create([
             'title' => 'ATV Long Trail (going to Pinatubo drop point car)',
             'category' => 'ATV Trail Rate',
             'inclusion' => 'Free trek meal and bottled water, 100 add-ons (conservation fees, tourism fees)',
+            'tour_type' => 'Day Tour',
             'no_day' => '1',
-            'hrs' => '1.5',
         ]);
 
         \App\Models\TourMenu::factory()->create([
@@ -199,7 +199,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
         refreshRoomNumber();
-
+        // \App\Models\Archive::factory(10)->create();
 
 
     }

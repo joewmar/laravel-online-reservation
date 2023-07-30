@@ -1,6 +1,6 @@
 @props(['type' => 'text', 'placeholder' ,'name', 'id' => '', 'placeholder' => '', 'value' => '', 'disabled' => false, 'alpineCMD' => ''])
 <div class="form-control w-full {{$disabled ? 'disabledAll opacity-50' : 'opacity-100'}}">
-    <label for="{{$id}}" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
+    <label for="{{$id}}" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error($name) ring-1 ring-error border-error @enderror ">
         @if($disabled)
             <input type="{{$type}}" id="{{$id}}" name="{{$name}}" placeholder="{{$placeholder}}" {{ $attributes->merge(['class'=> "w-full cursor-pointer input input-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0"])}} value="{{$value == '' ? old($name) : $value}}" {{ $attributes }} {{$alpineCMD}} disabled/>
         @else

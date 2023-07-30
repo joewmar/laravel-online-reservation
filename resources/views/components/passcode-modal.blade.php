@@ -1,6 +1,6 @@
 @props(['id'=>'', 'formId'=> '', 'title'=> ''])
 <input type="checkbox" id="{{$id}}" class="launch-checkbox modal-toggle" />
-<div class="modal modal-bottom sm:modal-middle launch" id="{{$id}}">
+  <div x-data="{loader: false}" class="modal modal-bottom sm:modal-middle launch" id="{{$id}}">
     <div class="modal-box">
       <h3 class="font-bold text-lg">{{$title}}</h3>
       <div class="w-full text-center my-5">
@@ -14,9 +14,10 @@
       </div>
       <div class="modal-action">
         <label for="{{$id}}" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 text-xl">✕</label>
-        <label for="{{$id}}" id="btn-hidden" @keyup.enter="event.preventDefault(); document.getElementById('{{$formId}}').submit();" class="hidden btn btn-primary" @click="event.preventDefault(); document.getElementById('{{$formId}}').submit();">Proceed</label>
+        <label for="{{$id}}" id="btn-hidden" @keyup.enter="event.preventDefault(); document.getElementById('{{$formId}}').submit();" class="hidden btn btn-primary" @click="event.preventDefault(); document.getElementById('{{$formId}}').submit(); loader = true">Proceed</label>
       </div>
     </div>
+    <x-loader />
   </div>
 <script src="{{Vite::asset("resources/js/passcode.js")}}"></script>
    

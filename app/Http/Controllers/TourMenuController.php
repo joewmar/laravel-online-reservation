@@ -13,6 +13,7 @@ use Laravel\Ui\Presets\React;
 class TourMenuController extends Controller
 {
     public function index(){
+        if(auth('system')->user()->type !== 0) abort(404);
         return view('system.service.index', ['activeSb' => 'Tour Menu', 'tour_lists' => TourMenuList::all()]);
     }
     public function create(Request $request){
@@ -35,7 +36,7 @@ class TourMenuController extends Controller
         }
     }
     public function store(Request $request){
-        $system_user = auth()->guard('system')->user();
+        $system_user = auth('system')->user();
         if($system_user->type === 0){
             if($request->has(['tlid'])){
                 $validated = $request->validate([
@@ -61,9 +62,8 @@ class TourMenuController extends Controller
                     'title' => ['required', Rule::unique('tour_menu_lists', 'title')],
                     'category' =>  ['required'],
                     'inclusion' => ['nullable'],
-                    'no_day' =>  ['required', 'numeric', 'min:1'],
-                    'hrs' =>  ['required', 'numeric'],
-                    'type' =>  ['required'],
+                    'no_day' =>  ['required', 'numeric', 'min:1', Rule::when(($request['tour_type'] === 'Day Tour'), ['min:1', 'max:1']), Rule::when(($request['tour_type'] === 'Overnight'), ['min:2'])],
+                    'tour_type' =>  ['required'],
                     'pax' => ['required'],
                     'price' =>  ['required', 'numeric', 'decimal:0,2'],
                     'passcode' =>  ['required', 'numeric', 'digits:4'],
@@ -74,8 +74,9 @@ class TourMenuController extends Controller
                             'title' => $validated['title'],
                             'category' => $validated['category'],
                             'inclusion' => $validated['inclusion'] ?? null,
-                            'no_day' =>  $validated['no_day'],
-                            'hrs' =>  $validated['hrs'],
+                            'tour_type' =>  $validated['tour_type'],
+                            'no_day' =>  ['required', 'numeric', 'min:1', Rule::when(($request['tour_type'] === 'Day Tour'), ['min:1', 'max:1']), Rule::when(($request['tour_type'] === 'Overnight'), ['min:2'])],
+
 
                         ]);
                         TourMenu::create([
@@ -103,25 +104,29 @@ class TourMenuController extends Controller
     }
 
     public function show (Request $request){
+        if(auth('system')->user()->type !== 0) abort(404);
         $id = decrypt($request->id);
         return view('system.service.show', ['activeSb' => 'Tour Menu', 'tour_list' => TourMenuList::findOrFail($id), 'tour_menu' => TourMenu::where('menu_id', '=' ,$id)]);
 
     }
 
     public function edit (Request $request){
+        if(auth('system')->user()->type !== 0) abort(404);
         $id = decrypt($request->id);
-        return view('system.service.edit', ['activeSb' => 'Tour Menu', 'service_menu' => TourMenu::findOrFail($id)]);
+        return view('system.service.edit', ['activeSb' => 'Tour Menu', 'service_menu' => TourMenuList::findOrFail($id)]);
 
     }
     public function update (Request $request){
-        $system_user = auth()->guard('system')->user();
+        $system_user = auth('system')->user();
         if($system_user->type === 0){
             $id = decrypt($request->id);
             $validated = $request->validate([
                 'title' => ['required'],
                 'category' =>  ['required'],
                 'inclusion' => ['nullable'],
-                'no_day' =>  ['required', 'numeric', 'min:1'],
+                'tour_type' => ['nullable'],
+                'no_day' =>  ['required', 'numeric', 'min:1', Rule::when(($request['tour_type'] === 'Day Tour'), ['min:1', 'max:1']), Rule::when(($request['tour_type'] === 'Overnight'), ['min:2'])],
+
                 'hrs' =>  ['required', 'numeric', 'decimal:0,2'],
                 'passcode' =>  ['required', 'numeric', 'digits:4'],
             ]);
@@ -147,7 +152,7 @@ class TourMenuController extends Controller
     public function editPrice(Request $request){
         $priceid = decrypt($request->priceid);
         $id = decrypt($request->id);
-        return view('system.service.show-price', ['activeSb' => 'Tour Menu', 'tourList_title' => TourMenuList::findOrFail($id)->title, 'tour_menu' => TourMenu::findOrFail($priceid)]);
+        return view('system.service.show-price', ['activeSb' => 'Tour Menu', 'tour_menu' => TourMenu::findOrFail($priceid)]);
     }
     public function updatePrice(Request $request){
         $system_user = auth()->guard('system')->user();

@@ -47,22 +47,23 @@
             @if(auth('web')->user()->google_id != null)
               <img src="{{asset(auth('web')->user()->avatar) ?? asset('images/avatars/no-avatar.png')}}" />
             @else
-              <img src="{{asset('storage/'. auth('web')->user()->avatar) ?? asset('images/avatars/no-avatar.png')}}" />
+              <img src="{{auth('web')->user()->avatar ? asset('storage/'. auth('web')->user()->avatar) : asset('images/avatars/no-avatar.png')}}" />
             @endif
           </div>
         </label>
         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+          <li><span class="text-lg font-bold">{{auth('web')->user()->first_name}} {{auth('web')->user()->last_name}}</span></li>
           <li>
             <a class="justify-between">
               Profile
             </a>
           </li>
           <li>
-            <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <a onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
               Logout
             </a>
           </li>
-          <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+          <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
             @csrf
           </form>
         </ul>

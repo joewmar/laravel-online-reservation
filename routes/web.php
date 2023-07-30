@@ -52,6 +52,9 @@ Route::get('/about', function () {
     return view('landing.about_us', ['activeNav' => 'About Us']);
 })->name('about.us');
 
+Route::get('reservation/{id}/receipt', [SystemReservationController::class, 'receipt'])->name('reservation.receipt');
+
+
 Route::prefix('reservation')->name('reservation.')->group(function (){
     Route::get('/date', [ReservationController::class, 'date'])->name('date');
     Route::post('/date', [ReservationController::class, 'dateCheck'])->name('date.check');
@@ -59,24 +62,28 @@ Route::prefix('reservation')->name('reservation.')->group(function (){
 });
 
 // Route::middleware(['guest:web'])->group(function(){
-Route::middleware(['guest'])->group(function(){
+Route::middleware(['guest:web'])->group(function(){
     Route::view('/login', 'users.login')->name('login');
     Route::view('/register', 'users.register')->name('register');
     Route::get('/register/verify', [UserController::class, 'verify'])->name('register.verify');
     Route::post('/register/verify', [UserController::class, 'verifyStore'])->name('register.verify.store');
     Route::post('/create', [UserController::class, 'create'])->name('create');
     Route::post('/check', [UserController::class, 'check'])->name('check');
+    Route::view('/forgot-password','auth.passwords.email')->name('forgot.password');
     
     Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('google.redirect');
     Route::get('/auth/google/callback', [LoginController::class, 'handleGoogleCallback'])->name('google.callback');
 
-    Route::get('/auth/google/{id}/fillup', [UserController::class, 'fillupGoogle'])->name('google.fillup');
-    Route::put('/auth/google/{id}/fillup/update', [UserController::class, 'fillupGoogleUpdate'])->name('google.fillup.update');
+    Route::get('/auth/facebook', [LoginController::class, 'redirectToFacebook'])->name('facebook.redirect');
+    Route::get('/auth/facebook/callback', [LoginController::class, 'handleFacebookCallback'])->name('facebook.callback');
+
+    Route::get('/auth/google/fillup', [UserController::class, 'fillupGoogle'])->name('google.fillup');
+    Route::post('/auth/google/fillup/update', [UserController::class, 'fillupGoogleUpdate'])->name('google.fillup.store');
     
 });
 
 // Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
-Route::middleware(['auth', 'preventBackhHistory'])->group(function(){
+Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::view('/profile', 'home')->name('profile');
 
@@ -113,11 +120,13 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::get('/', [SystemReservationController::class, 'index'])->name('home');
             Route::post('/search', [SystemReservationController::class, 'search'])->name('search');
             Route::get('/calendar', [SystemReservationController::class, 'event'])->name('event');
+            Route::get('/create', [SystemReservationController::class, 'create'])->name('create');
+            Route::post('/create', [SystemReservationController::class, 'storeStep1'])->name('store.step.one');
 
             
             Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');
+            Route::get('/{id}/show/online-payment', [SystemReservationController::class, 'showOnlinePayment'])->name('show.online.payment');
             Route::get('/{id}/show/room', [SystemReservationController::class, 'showRooms'])->name('show.rooms');
-            Route::get('/{id}/show/receipt', [SystemReservationController::class, 'receipt'])->name('show.receipt');
             Route::get('/{id}/disaprove', [SystemReservationController::class, 'disaprove'])->name('disaprove');
             Route::post('/{id}/disaprove', [SystemReservationController::class, 'disaproveStore'])->name('disaprove.store');
             Route::put('/{id}/show/room', [SystemReservationController::class, 'updateReservation'])->name('show.rooms.update');

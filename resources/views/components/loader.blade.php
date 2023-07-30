@@ -1,6 +1,5 @@
-<div class="w-screen h-screen flex place-items-center justify-center">
-    <div class="w-11/12">
-        <div class="tire-loader"></div>
-        <div class="custom-loader"></div>
+<template x-if="loader">
+    <div class="flex justify-center item-center fixed top-0 left-0 w-full h-screen z-[100] bg-opacity-50 bg-base-200">
+        <span class="loading loading-bars loading-lg  text-primary z-[200] opacity-100"></span>
     </div>
-</div>
+</template>

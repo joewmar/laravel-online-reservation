@@ -1,6 +1,6 @@
 
 <x-system-layout :activeSb="$activeSb">
-  <x-system-content title="Edit {{$service_menu->title}}">
+  <x-system-content title="Edit {{$service_menu->title}}" back=true>
     <form id="update-form" action=" {{ route('system.menu.update', encrypt($service_menu->id)) }}" method="post" autocomplete="off">
       @csrf
       @method('PUT')

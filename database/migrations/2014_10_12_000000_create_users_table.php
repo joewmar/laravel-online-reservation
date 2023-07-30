@@ -14,16 +14,17 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('google_id')->nullable();
+            $table->string('facebook_id')->nullable();
             $table->string('avatar')->nullable();
             $table->string('first_name');
             $table->string('last_name');
-            $table->date('birthday')->nullable();;
-            $table->string('nationality')->nullable();;
-            $table->string('country')->nullable();
-            $table->string('contact')->nullable();
+            $table->date('birthday');
+            $table->string('nationality');
+            $table->string('country');
+            $table->string('contact');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password')->nullable();
+            $table->string('password');
             $table->rememberToken();
             $table->timestamps();
         });

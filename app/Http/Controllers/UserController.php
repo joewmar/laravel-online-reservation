@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
 use Illuminate\Validation\Rule;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Auth\Events\Registered;
+
 
 class UserController extends Controller
 {
@@ -49,10 +52,10 @@ class UserController extends Controller
         if(! session()->has('uinfo')) return redirect()->route('register');
         $otp = mt_rand(1111,9999);
         $details = [
-            'title' => 'Email Verification',
+            'title' => "Let's Verify your Email",
             'body' => 'Verification Code: ' . $otp,
         ];
-        Mail::to(session('uinfo')['email'])->send(new ReservationMail($details, 'reservation.mail'));
+        Mail::to(session('uinfo')['email'])->send(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
         $user_info = session('uinfo');
         $user_info['otp'] = $otp;
         session(['uinfo' => $user_info]);
@@ -83,7 +86,7 @@ class UserController extends Controller
         ]);
 
         // Attempt to log the user in (If user credentials are correct)
-        if(auth('web')->attempt($validated)){
+        if(auth('web')->attempt($validated, ($request->get('remember') ?? false))){
             $request->session()->regenerate(); //Regenerate Session ID
             return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
         }
@@ -94,20 +97,18 @@ class UserController extends Controller
     }
     // Logout
     public function logout(Request $request){
-        Auth::guard('web')->logout();
-
+        auth('web')->logout();
         // Recommend to invalidate the users session and regenerate the toke from @crfs
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        
-        return redirect('/');
+        return redirect()->route('home')->with('success', 'Thank you for services');
     }
-    public function fillupGoogle(Request $request){
-        return view('users.google.fillup', ['user_info' => User::where('google_id', $request->id)->firstOrFail()]);
+    public function fillupGoogle(){
+        if(session()->has('ginfo')) return view('users.google.fillup');
+        else redirect()->route('google.redirect');
     }
     public function fillupGoogleUpdate(Request $request){
-        $finduser = User::where('google_id', $request->id)->first();
-        if($finduser){
+        if(session()->has('ginfo')){
             // dd($request->all());
             $validated = $request->validate([
                 'birthday' => ['required', ' date'],
@@ -117,14 +118,27 @@ class UserController extends Controller
             ], [
                 'contact.min' => 'Contact number must be valid',
                 'required' => 'Need to fill up your :attribute',
-            ]);        
-            $finduser->update($validated);
-            Auth::guard('web')->login($finduser);
-            return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
+            ]);
+            $user = session('ginfo'); 
+            $validated['google_id'] = $user['google_id'];
+            $validated['avatar'] = $user['avatar'];
+            $validated['first_name'] = $user['first_name'];
+            $validated['last_name'] = $user['last_name'];
+            $validated['email'] = $user['email'];
+            $validated['password'] = Str::password();
+            $newUser = User::create($validated);
+            if($newUser){
+                session()->forget('ginfo');
+                Auth::guard('web')->login($newUser);
+                return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
+            }
+            else{
+                return back()->with('error', 'Something Wrong')->withInput( $validated);
+            }
+           
         }
-        else{
-            return redirect()->route('google.redirect');
-        }
+        else redirect()->route('google.redirect');
+
 
     }
 }

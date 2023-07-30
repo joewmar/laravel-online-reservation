@@ -22,10 +22,10 @@ class RedirectIfAuthenticated
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
                 if($guard === 'system'){
-                    return redirect()->route('system.home');
+                    return redirect()->intended(route('system.home'));
                 }
                 else{
-                    return redirect()->route('home');
+                    return redirect()->intended(route('home'));
                 }
             }
         }

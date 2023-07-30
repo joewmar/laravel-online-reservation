@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\System;
 use App\Models\RoomList;
 use App\Models\TourMenu;
 use App\Models\Reservation;
@@ -439,6 +440,7 @@ class ReservationController extends Controller
         ]);
     }
     public function storeReservation(Request $request){
+        $systemUser = System::all();
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $reserve_info = null;
         if($uinfo['at'] !== 'Room Only'){
@@ -470,30 +472,34 @@ class ReservationController extends Controller
                 'accommodation_type' => $uinfo['at'] ?? '',
             ]);
         }
-        if(env('TELEGRAM_USERNAME') != null){
-            $text = 
-            "New Reservation!\n" .
-            "Name: ". $reserve_info->userReservation->first_name . " " . $reserve_info->userReservation->last_name ."\n" . 
-            "Age: " . $reserve_info->age ."\n" .  
-            "Nationality: " . $reserve_info->userReservation->nationality  ."\n" . 
-            "Country: " . $reserve_info->userReservation->country ."\n" . 
-            "Check-in: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_in)->format('F j, Y') ."\n" . 
-            "Check-out: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_out)->format('F j, Y') ."\n" . 
-            "Type: " . $reserve_info->accommodation_type ;
-            // Send Notification to 
-            $keyboard = [
-                [
-                    ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reserve_info->id))],
-                ],
-            ];
-            Telegram::sendMessage([
-                'chat_id' => getChatIdByUsername(env('TELEGRAM_USERNAME') ?? 'joewmar'),
-                'parse_mode' => 'HTML',
-                'text' => $text,
-                'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
-            ]);
-            $text = null;
+        $text = 
+        "New Reservation!\n" .
+        "Name: ". $reserve_info->userReservation->first_name . " " . $reserve_info->userReservation->last_name ."\n" . 
+        "Age: " . $reserve_info->age ."\n" .  
+        "Nationality: " . $reserve_info->userReservation->nationality  ."\n" . 
+        "Country: " . $reserve_info->userReservation->country ."\n" . 
+        "Check-in: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_in)->format('F j, Y') ."\n" . 
+        "Check-out: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_out)->format('F j, Y') ."\n" . 
+        "Type: " . $reserve_info->accommodation_type ;
+        // Send Notification to 
+        $keyboard = [
+            [
+                ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reserve_info->id))],
+            ],
+        ];
+        foreach($systemUser as $user){
+            if($user->telegram_chatID != null){
+                Telegram::sendMessage([
+                    'chat_id' => $user->telegram_chatID,
+                    'parse_mode' => 'HTML',
+                    'text' => $text,
+                    'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
+                ]);
+            }
+
         }
+        $text = null;
+        $keyboard  = null;
         $details = [
             'name' => $reserve_info->userReservation->first_name . ' ' . $reserve_info->userReservation->last_name,
             'title' => 'Reservation Complete',
@@ -516,6 +522,7 @@ class ReservationController extends Controller
     }
     public function paymentStore(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
+        $systemUser = System::all();
         if($reservation->status() === 'Confirmed'){
             $validator = Validator::make($request->all(), [
                 'image' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
@@ -534,7 +541,36 @@ class ReservationController extends Controller
                 $validated['reservation_id'] = $reservation->id;
                 $validated['payment_method'] = $reservation->payment_method;
                 $sended = OnlinePayment::create($validated);
-                if($sended) return view('reservation.gcash.success');
+                if($sended) {
+                    $text = 
+                    "Payment Reservation !\n" .
+                    "Name: ". $reservation->userReservation->first_name . " " . $reservation->userReservation->last_name ."\n" . 
+                    "Country: " . $reservation->userReservation->country ."\n" . 
+                    "Payment Method: " . $validated['payment_method'] ."\n" . 
+                    "Payment Name: " . $validated['payment_name'] ."\n" . 
+                    "Total Amount " . number_format($validated['amount'], 2) ."\n" . 
+                    "Reference No: " . $validated['reference_no'];
+                    $keyboard = [
+                        [
+                            ['text' => 'View Details', 'url' => route('system.reservation.show.online.payment', encrypt($reservation->id))],
+                        ],
+                    ];
+                    foreach($systemUser as $user){
+                        if($user->telegram_chatID != null){
+                            Telegram::sendMessage([
+                                'chat_id' => $user->telegram_chatID,
+                                'parse_mode' => 'HTML',
+                                'text' => $text,
+                                'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
+                            ]);
+                            
+                        }
+            
+                    }
+                    $text = null;
+                    $keyboard = null;
+                    return view('reservation.gcash.success');
+                }
             }
         }
         else{

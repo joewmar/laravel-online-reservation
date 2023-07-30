@@ -43,8 +43,8 @@
                     </div>
                 </div>
                 <div x-show="step2" class="flex flex-col-reverse md:flex-row  justify-center items-center w-full h-full space-y-2 md:space-x-3">
-                    <div  class="w-96 rounded">
-                        <p class="text-neutral text-2xl"><span class="font-bold">Step 2: </span>Send Screenshot of Receipt of Gcash</p>
+                    <div class="w-96 rounded">
+                        <p class="text-neutral text-2xl"><span class="font-bold">Step 2: </span>Send Screenshot of Receipt of Gcash and Fill up the information for verify your payment</p>
                         <div class="form-control w-full mt-5">
                             <label class="label">
                             <span class="label-text text-neutral">Send Screenshot here</span>
@@ -57,9 +57,15 @@
                                 <span class="label-text-alt">We have sample below here</span>
                             </label>
                         </div>
+                        <div id="info">
+                            <x-input xModel="amount" type="numeric" placeholder="Total Amount" name="amount" id="amount" />
+                            <x-input xModel="refNo" placeholder="Reference No." name="reference_no" id="reference_no" />
+                            <x-input xModel="gcashName" placeholder="Gcash Name" name="payment_name" id="payment_name" />
+                        </div>
                         <div class="flex justify-end space-x-1">
                             <button type="button" @click="step1 = true, step2 = false" class="btn btn-ghost btn-primary">Back</button>
-                            <button type="button" @click="step2 = false, step3 = true" class="btn btn-primary">Go Step 3</button>
+                            <button id="verify" type="button" class="btn btn-primary">Check</button>
+                            <button id="done" type="button" @click="step2 = false, step3 = true" class="btn btn-primary">Go Step 3</button>
                         </div>
                     </div>
                     <div class="mockup-phone">
@@ -72,40 +78,18 @@
                     </div>
                 </div>
                 <div x-show="step3" class="flex flex-col-reverse md:flex-row  justify-center items-center w-full h-full space-y-2 md:space-x-3">
-                    <div  class="w-96 rounded">
-                        <p class="text-neutral text-2xl"><span class="font-bold">Step 3: </span>Fill up the information for verify your payment</p>
-                        <div class="mt-5">
-                            <x-input xModel="amount" type="numeric" placeholder="Total Amount" name="amount" id="amount" />
-                            <x-input xModel="refNo" placeholder="Reference No." name="reference_no" id="reference_no" />
-                            <x-input xModel="gcashName" placeholder="Gcash Name" name="payment_name" id="payment_name" />
-                        </div>
-                        <div class="flex justify-end space-x-1">
-                            <button type="button" @click="step2 = true, step3 = false" class="btn btn-ghost">Back</button>
-                            <button type="button" @click="step4 = true, step3 = false" class="btn btn-primary">Confirm</button>
-                        </div>
-                    </div>
-                    <div class="mockup-phone">
-                        <div class="camera"></div> 
-                        <div class="display">
-                            <div class="artboard artboard-demo phone-1"> 
-                                <img src="{{asset('images/payment/sample-gcash-receipt.jpg')}}" class="show_img" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div x-show="step4" class="flex flex-col-reverse md:flex-row  justify-center items-center w-full h-full space-y-2 md:space-x-3">
-                    <div  class="w-96 rounded">
+                    <div x-data="{loader: false}" class="w-96 rounded">
                         <p class="text-neutral text-2xl"><span class="font-bold">Step 4: </span>Confirm the information</p>
                         <div class="mt-5">
                             <p class="text-neutral text-lg"><span class="font-bold">Gcash Name </span><span x-text="gcashName">None</p>
                             <p class="text-neutral text-lg"><span class="font-bold">Reference No.: </span><span x-text="refNo">None</p>
                             <p class="text-neutral text-lg"><span class="font-bold">Total Amount </span><span x-text="amount">None</p>
-
                         </div>
                         <div class="flex justify-end space-x-1">
-                            <button type="button" @click="step4 = false, step3 = true" class="btn btn-ghost btn-primary">Back</button>
-                            <button type="submit" class="btn btn-primary">Send Now</button>
+                            <button type="button" @click="step3 = false, step2 = true" class="btn btn-ghost btn-primary">Back</button>
+                            <button @click="loader = true" type="submit" class="btn btn-primary">Send Now</button>
                         </div>
+                        <x-loader />
                     </div>
                     <div class="mockup-phone">
                         <div class="camera"></div> 
@@ -120,20 +104,6 @@
         </form>
     </x-full-content>
     @push('scripts')
-        <script>
-            let imgElements = document.getElementsByClassName('show_img');
-            let input = document.getElementById('image');
-        
-            input.addEventListener("change", () => {
-                let files = input.files;
-                for (let i = 0; i < imgElements.length; i++) {
-                    console.log(files); // Tingnan kung tama ang file na nakukuha
-                    console.log(imgElements[i]); // Tingnan kung tama ang image element na napipili
-                    if (files[0]) {
-                        imgElements[i].src = URL.createObjectURL(files[0]);
-                    }
-                }
-            });
-        </script>
+        <script type="module" src="{{Vite::asset('resources/js/payment-image.js')}}"></script>
     @endpush
 </x-landing-layout>
