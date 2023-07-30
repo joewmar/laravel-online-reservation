@@ -14,20 +14,20 @@ return new class extends Migration
         Schema::create('reservations', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->tinyText('room_id')->nullable();
+            $table->json('room_id')->nullable();
             $table->integer('room_rate_id')->nullable();
             $table->integer('pax');
             $table->tinyText('accommodation_type');
             $table->tinyText('payment_method');
             $table->integer('age')->nullable();
-            $table->string('menu')->nullable();;
+            $table->json('menu')->nullable();;
             $table->date('check_in');
             $table->date('check_out');
             $table->tinyInteger('status')->default(0); /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-            $table->string('additional_menu')->nullable();
-            $table->string('amount')->nullable();
+            $table->json('additional_menu')->nullable();
+            $table->json('amount')->nullable();
             $table->decimal('total')->nullable();
-            $table->decimal('downpayment')->nullable();
+            $table->decimal('downpayment')->default(0);
             $table->text('request_message')->nullable();
             $table->dateTime('payment_cutoff')->nullable();
             $table->timestamps();

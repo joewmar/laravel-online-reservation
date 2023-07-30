@@ -13,50 +13,40 @@ use Illuminate\Support\Facades\Storage;
 
 class RoomSettingController extends Controller
 {
+    private $system_user;
+
+    public function __construct()
+    {
+        $this->middleware(['auth:system']);
+        $this->system_user = auth()->guard('system')->user();
+        if(!$this->system_user->type === 0) abort(404);
+    }
     // Show All Rooms View
     public function index(Request $request){
-        $systemType = auth()->guard('system')->user()->type;
-        if($systemType === 0){
             if($request->tab == '2'){
                 return view('system.setting.rooms.index', ['activeSb' => 'Rooms', 'room_rates' =>  RoomRate::all(), 'room_lists' => null]);
             }
             else{
                 return view('system.setting.rooms.index',  ['activeSb' => 'Rooms', 'room_lists' =>  RoomList::all(), 'room_rates' => null]);
-    
             }
-        }
-        else{
-            abort(404);
-        }
     }
     // Show Single View
     public function show(Request $request){
-        $systemType = auth()->guard('system')->user()->type;
-        if($systemType == 0){
+        
             $id = decrypt($request->id);
             return view('system.setting.rooms.show',  ['activeSb' => 'Rooms', 'room_list' =>  RoomList::findOrFail($id)]);
-        }
-        else{
-            abort(404);
-        }
        
     }
     // Show Edit Form
     public function edit(Request $request){
-        $systemType = auth()->guard('system')->user()->type;
-        if($systemType == 0){
+        
             $id = decrypt($request->id);
             return view('system.setting.rooms.edit',  ['activeSb' => 'Rooms', 'room_list' =>  RoomList::findOrFail($id)]);
-        }
-        else{
-            abort(404);
-        }
-       
+        
     }
     // Add New Room
     public function store(Request $request){
-        $system_user = auth('system')->user();
-        if($system_user->type == 0){
+        
             $validated = $request->validate([
                 'name' => ['required', Rule::unique('room_lists', 'name')],
                 'min_occupancy' =>  ['required', 'numeric', 'min:1'],
@@ -67,7 +57,7 @@ class RoomSettingController extends Controller
                 'passcode' =>  ['required', 'numeric', 'digits:4'],
             ]);
 
-            if (Hash::check($validated['passcode'], $system_user->passcode)) {
+            if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
 
                 if($validated){
 
@@ -102,23 +92,12 @@ class RoomSettingController extends Controller
             else{
                 return back()->with('error', 'Passcode Invalid');
             }
-        }
-        else{
-            abort(404);
-        }
-
     }
     // Process update room
     public function update(Request $request){
         $id = decrypt($request->id);
-        $system_user = System::find(auth()->guard('system')->id());
         $room_list = RoomList::find($id);
 
-        // Make sure logged in user is owner and system user
-        if(!$system_user){
-            abort(403, 'Unauthorized Action');
-        }
-        
         // Validations
         $validated = $request->validate([
             'name' => ['required'],
@@ -133,12 +112,11 @@ class RoomSettingController extends Controller
         if($request->hasFile('image')){  
             if($room_list->image) 
                 deleteFile($room_list->image);
-        
             $validated['image'] = $request->file('image')->store('room_lists', 'public');
         }
 
         //Get the code if it match on system
-        if (Hash::check($validated['passcode'], $system_user->passcode)) {
+        if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
             // Check if updated many_room greater than previous many_room the add in room table
             if($validated['many_room'] >= $room_list->many_room){
                 $length =  abs((int)$validated['many_room'] - (int)$room_list->many_room);
@@ -148,7 +126,6 @@ class RoomSettingController extends Controller
                     $room->room_no = 0;
                     $room->save(); 
                 }
-
                 refreshRoomNumber(); 
             }
             // Check if updated many_room lesst than previous many_room then delete the last
@@ -163,8 +140,6 @@ class RoomSettingController extends Controller
             }
             $room_list->update($validated);
             return back()->with('success', $room_list->name .' Room was updated');
-
-            
         } 
         else{
             return back()->with('error', 'Passcode Invalid');
@@ -172,18 +147,10 @@ class RoomSettingController extends Controller
     }
 
     public function destroy(Request $request){
-        $system_user = System::find(auth()->guard('system')->id());
-
         $validated = $request->validate([
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
-
-        if (Hash::check($validated['passcode'], $system_user->passcode)) {
-
-            if(!$system_user){
-                abort(403, 'Unauthorized Action');
-            }
-
+        if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
             $id = decrypt($request->id);
             $room_list =  RoomList::find($id);
             
@@ -203,8 +170,6 @@ class RoomSettingController extends Controller
 
     // Room Rates /////////////////////////////////////////////
     public function storeRate(Request $request){
-        $system_user = System::find(auth()->guard('system')->id());
-
         $validated = $request->validate([
             'name' => ['required', Rule::unique('room_rates', 'name')],
             'price' =>  ['required', 'numeric', 'regex:/^\d+(\.\d{1,2})?$/', 'min:0.01'],
@@ -212,10 +177,7 @@ class RoomSettingController extends Controller
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
 
-        if (Hash::check($validated['passcode'], $system_user->passcode)) {
-            if(!$system_user){
-                abort(403, 'Unauthorized Action');
-            }
+        if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
 
             // Save to database and get value
             RoomRate::create($validated);  
@@ -229,20 +191,12 @@ class RoomSettingController extends Controller
 
     }
     public function editRate(Request $request){
-        $systemType = auth()->guard('system')->user()->type;
-        if($systemType === 0){
             $id = decrypt($request->id);
             return view('system.setting.rooms.rate.edit',  ['activeSb' => 'Rooms', 'room_rate' =>  RoomRate::findOrFail($id)]);
-        }
-        else{
-            abort(404);
-        }
         
     }
     public function updateRate(Request $request){
-        $id = decrypt($request->id);
-        $system_user = System::find(auth()->guard('system')->id());
-        $room_rate = RoomRate::find($id);
+        $id = decrypt($request->id);        $room_rate = RoomRate::find($id);
 
         $validated = $request->validate([
             'name' => ['required'],
@@ -251,10 +205,7 @@ class RoomSettingController extends Controller
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
 
-        if (Hash::check($validated['passcode'], $system_user->passcode)) {
-            if(!$system_user){
-                abort(403, 'Unauthorized Action');
-            }
+        if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
             // Update Data Process
             $room_rate->update($validated) ;
         
@@ -263,19 +214,12 @@ class RoomSettingController extends Controller
         else{
             return back()->with('error', 'Passcode Invalid');
         }
-
-
     }
     public function destroyRate(Request $request){
-        $system_user = System::find(auth()->guard('system')->id());
-
         $validated = $request->validate([
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
-        if(!$system_user){
-            abort(403, 'Unauthorized Action');
-        }
-        if (Hash::check($validated['passcode'], $system_user->passcode)) {
+        if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
 
             $room_rate = RoomRate::findOrFail(decrypt($request->id));
             $room_rate_name = $room_rate->name;

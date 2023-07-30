@@ -11,31 +11,24 @@ use Illuminate\Support\Facades\Storage;
 
 class RideController extends Controller
 {
+    private $system_user;
+
+    public function __construct()
+    {
+        $this->middleware(['auth:system']);
+        $this->system_user = auth()->guard('system')->user();
+        if(!$this->system_user->type === 0) abort(404);
+    }
     public function index(){
-        $systemType = auth()->guard('system')->user()->type;
-        if($systemType === 0){
-            return view('system.setting.rides.index', ['activeSb' => 'Ride', 'rides' =>  Ride::all()]);
-        }
-        else{
-            abort(404);
-        }
-       
+        return view('system.setting.rides.index', ['activeSb' => 'Ride', 'rides' =>  Ride::all()]);
+    
     }
     public function edit(Request $request){
-        $systemUser = auth()->guard('system')->user();
-        if($systemUser->type === 0){
             $id = decrypt($request->id);
-            return view('system.setting.rides.edit',  ['activeSb' => 'Ride', 'ride' =>  Ride::findOrFail($id)]);
-        }
-        else{
-            abort(404);
-        }
-       
+            return view('system.setting.rides.edit',  ['activeSb' => 'Ride', 'ride' =>  Ride::findOrFail($id)]); 
     }
     // Add New Room
     public function store(Request $request){
-        $systemUser = auth()->guard('system')->user();
-        if($systemUser->type === 0){
             $validated = $request->validate([
                 'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
                 'model' => ['required', Rule::unique('rides', 'model')],
@@ -47,7 +40,7 @@ class RideController extends Controller
             if($request->hasFile('image')){                          // storage/app/logos
                 $validated['image'] = $request->file('image')->store('rides', 'public');
             }
-            if (Hash::check($validated['passcode'], $systemUser->passcode)) {
+            if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
                 // Save to database and get value
                 Ride::create($validated);  
 
@@ -56,16 +49,11 @@ class RideController extends Controller
             else{
                 return back()->with('error', 'Passcode Invalid');
             }
-        }
-        else{
-            abort(404);
-        }
+
     
     }
     // Process update room
     public function update(Request $request){
-        $systemUser = auth()->guard('system')->user();
-        if($systemUser->type === 0){
             $id = decrypt($request->id);
             $ride = Ride::find($id);
             $validated = $request->validate([
@@ -83,7 +71,7 @@ class RideController extends Controller
                 $validated['image'] = $request->file('image')->store('rides', 'public');
             }
 
-            if (Hash::check($validated['passcode'], $systemUser->passcode)) {
+            if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
                 // Save to database and get value
                 $ride->update($validated);  
 
@@ -92,21 +80,16 @@ class RideController extends Controller
             else{
                 return back()->with('error', 'Passcode Invalid');
             }
-        }
-        else{
-            abort(404);
-        }
+
     }
 
     public function destroy(Request $request){
-        $systemUser = auth()->guard('system')->user();
-        if($systemUser->type === 0){
             $id = decrypt($request->id);
             $ride = Ride::find($id);
             $validated = $request->validate([
                 'passcode' =>  ['required', 'numeric', 'digits:4'],
             ]);
-            if (Hash::check($validated['passcode'], $systemUser->passcode)) {
+            if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
                 if($ride->image) 
                     deleteFile($ride->image);
 
@@ -119,9 +102,6 @@ class RideController extends Controller
             else{
                 return back()->with('error', 'Passcode Invalid');
             }
-        }
-        else{
-            abort(404);
-        }
+
     }
 }

@@ -203,14 +203,14 @@ class SystemReservationController extends Controller
         $reservation = Reservation::findOrFail($id);
         $tour_menu = [];
         $conflict = Reservation::all()->where('check_in', $reservation->check_in)->where('status', 0)->except($reservation->id);;
+        // dd($reservation->amount);
+
         if($reservation->accommodation_type != 'Room Only'){
-            foreach(explode(',' , $reservation->menu) as $key => $item){
+            foreach($reservation->menu as $key => $item){
                 $tour_menu[$key]['title'] = TourMenu::find($item)->tourMenu->title;
                 $tour_menu[$key]['type'] = TourMenu::find($item)->type;
                 $tour_menu[$key]['pax'] = TourMenu::find($item)->pax;
-                if(explode('-' , explode(',' , $reservation->amount)[$key])[0] == 'tm'.$item)
-                    $tour_menu[$key]['price'] = explode('-' , explode(',' , $reservation->amount)[$key])[1];
-                
+                $tour_menu[$key]['price'] = $reservation->amount['tm'.$item];
             }
         }
         return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict]);

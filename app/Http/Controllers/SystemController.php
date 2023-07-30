@@ -13,6 +13,14 @@ use Telegram\Bot\Laravel\Facades\Telegram;
 
 class SystemController extends Controller
 {
+    private $system_user;
+
+    public function __construct()
+    {
+        $this->middleware(['auth:system']);
+        $this->system_user = auth()->guard('system')->user();
+        if(!$this->system_user->type === 0) abort(404);
+    }
     public function index(Request $request){
         if($request['type'] != 'all'){
             $employees  = System::where('id', 'like', '%' . $request['search'] . '%')
@@ -78,13 +86,9 @@ class SystemController extends Controller
         if($request->hasFile('avatar')){                          // storage/app/logos
             $validated['avatar'] = $request->file('avatar')->store('employee', 'public');
         }
-        if(auth('system')->user()->type === 0){
+    
             $systemUser = System::create($validated);
             return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Created');
-        }
-        else{
-            abort(401, 'Unauthorized User');
-        }
 
     }
     public function update(Request $request, $id){
@@ -137,17 +141,13 @@ class SystemController extends Controller
                 deleteFile($systemUser->avatar);
             $validated['avatar'] = $request->file('avatar')->store('employee', 'public');
         }
-        if(auth('system')->user()->type === 0){
+    
             $updated = $systemUser->update($validated);
             if($updated)
                 return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Updated');
             else
                 return back()->with('error', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Something Error, Try Again');
 
-        }
-        else{
-            abort(401, 'Unauthorized User');
-        }
 
     }
     public function destroy(Request $request, $id) {
@@ -155,7 +155,7 @@ class SystemController extends Controller
         $validated = $request->validate([
             'passcode' => ['required', 'digits:4'],
         ]);
-        if(Hash::check($validated['passcode'], auth('system')->user()->passcode)){
+        if(Hash::check($validated['passcode'], $this->system_user->passcode)){
             $systemUser = System::findOrFail(decrypt($id));
             $systemUser->delete();
             return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Deleted');

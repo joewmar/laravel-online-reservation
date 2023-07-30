@@ -216,7 +216,7 @@ class ReservationController extends Controller
 
     }
     // Choose Form
-    public function choose(Request $request){
+    public function choose(){
         if(Reservation::where('user_id', '=' , auth('web')->user()->id )->first()) {
             session(['ck' => false]);
             return redirect()->route('home')->with('error',"Sorry you can 1 only fill up the reservation");
@@ -226,15 +226,15 @@ class ReservationController extends Controller
             $noOfday = checkDiffDates($dateList['cin'], $dateList['cout']);
             $chooseMenu = [];
             if($dateList['at'] !== 'Room Only' && $dateList['tm'] != null){
-                foreach(explode(',', $dateList['tm']) as $key => $item){
-                    $chooseMenu[$key]['price'] = TourMenu::findOrFail($item[$key])->price;
-                    $chooseMenu[$key]['title'] = TourMenu::findOrFail($item[$key])->tourMenu->title;
+                foreach($dateList['tm'] as $key => $item){
+                    $chooseMenu[$key]['price'] = TourMenu::findOrFail($item)->price;
+                    $chooseMenu[$key]['title'] = TourMenu::findOrFail($item)->tourMenu->title;
+                    $chooseMenu[$key]['type'] = TourMenu::findOrFail($item)->type;
+                    $chooseMenu[$key]['pax'] = TourMenu::findOrFail($item)->pax;
                 }
-                
                 return view('reservation.step2', [
                     'tour_lists' => TourMenuList::all(), 
                     'tour_category' => TourMenuList::distinct()->get('category'), 
-                    'tour_menus' => TourMenu::all(), 
                     "cin" =>  $dateList['cin'],
                     "cout" => $dateList['cout'],
                     "px" => $dateList['px'],
@@ -263,7 +263,6 @@ class ReservationController extends Controller
             return view('reservation.step2', [
                 'tour_lists' => TourMenuList::all(), 
                 'tour_category' => TourMenuList::distinct()->get('category'), 
-                'tour_menus' => TourMenu::all(), 
                 "cin" =>  decrypt(request('cin')) ?? '',
                 "cout" =>  decrypt(request('cout')) ?? '',
                 "at" =>  decrypt(request('at')) ?? '',
@@ -371,6 +370,7 @@ class ReservationController extends Controller
         $validate = Validator::make($request->all('tour_menu'), [
             'tour_menu.*' => 'required',
         ]);
+        
         if(!$request->has('tour_menu') || $validate->fails()){
             $getParam = [
                 "cin" =>  $request->has('cin') != null ? request('cin') : '',
@@ -382,17 +382,16 @@ class ReservationController extends Controller
             return redirect()->route('reservation.choose', [Arr::query($getParam), '#tour-menu'])
             ->with('error', 'You have not selected anything in the cart yet. Please make a selection first.');
         }
-        $validate = $validate->validate();
+        $validated = $validate->validate();
         $reservationInfo = [
-            "cin" =>  $request->has('cin') != null ? request('cin') : '',
-            "cout" => $request->has('cout') != null ? request('cout') : '',
-            "at" => $request->has('at') != null ? request('at'): '',
-            "px" => $request->has('px') != null ? request('px'): '',
-            "py" =>  $request->has('py') != null? request('py') : '',
-            "tm" => encrypt(implode(',', $validate['tour_menu'])),
+            "cin" =>  $request['cin'] ?? '',
+            "cout" => $request['cout'] ?? '',
+            "at" => $request['at'] ?? '',
+            "px" => $request['px'] ?? '',
+            "py" =>  $request['py'] ?? '',
+            "tm" =>  encrypt($validated['tour_menu']) ?? '',
         ];
-        if(session()->has('rinfo')) foreach($reservationInfo as $key => $item) session('rinfo')[$key] = $reservationInfo[$key]; 
-        else session(['rinfo' => $reservationInfo]);
+        session(['rinfo' => $reservationInfo]);
        
         return redirect()->route('reservation.details');
 

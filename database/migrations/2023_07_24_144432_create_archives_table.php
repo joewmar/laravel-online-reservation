@@ -20,16 +20,16 @@ return new class extends Migration
             $table->string('contact')->nullable();
             $table->string('email')->nullable();
             $table->integer('user_id')->nullable();
-            $table->tinyText('room_id')->nullable();
+            $table->json('room_id')->nullable();
             $table->integer('pax');
             $table->tinyText('accommodation_type');
             $table->tinyText('payment_method');
-            $table->string('menu')->nullable();
+            $table->json('menu')->nullable();
             $table->date('check_in');
             $table->date('check_out');
             $table->tinyInteger('status')->default(0); /* 0 => done, 1 => disaprove, 2 => cancellation, 3 => ? */
-            $table->string('additional_menu')->nullable();
-            $table->string('amount')->nullable();
+            $table->json('additional_menu')->nullable();
+            $table->json('amount')->nullable();
             $table->decimal('total')->nullable();
             $table->string('message')->nullable();
             $table->timestamps();

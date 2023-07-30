@@ -9,14 +9,19 @@ use Illuminate\Support\Facades\Hash;
 
 class TourSettingController extends Controller
 {
+    private $system_user;
+
+    public function __construct()
+    {
+        $this->middleware(['auth:system']);
+        $this->system_user = auth()->guard('system')->user();
+        if(!$this->system_user->type === 0) abort(404);
+    }
     public function index(){
         return view('system.setting.tour.index', ['activeSb' => 'HEllo', 'tours' => Tour::all()]);
     }
     public function store(Request $request){
-        $system_user = System::find(auth()->guard('system')->id());
-
         // Check if user is admin
-        if($system_user->type == '0'){
             $validated = $request->validate([
                 'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
                 'name' => ['required'],
@@ -24,7 +29,7 @@ class TourSettingController extends Controller
                 'location'=> ['required'],
                 'passcode'=> ['required', 'numeric', 'digits:4'],
             ]);
-            if (Hash::check($validated['passcode'], $system_user->passcode)) {
+            if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
                 if($request->hasFile('image')){                          // storage/app/logos
                     $validated['image'] = $request->file('image')->store('tours', 'public');
                 }
@@ -34,28 +39,16 @@ class TourSettingController extends Controller
             else{
                 return back()->with('error', 'Passcode Invalid');
             }
-        }
-        else{
-            abort(404);
-        }
     }
     public function edit(Request $request){
-        $system_user = System::find(auth()->guard('system')->id());
-        // Check if user is admin
-        if($system_user->type == '0'){
+        // Check if user is admi
             $id = decrypt($request->id);
             return view('system.setting.tour.edit', ['activeSb' => 'asdasd', 'tour' => Tour::findOrFail($id)]);
-        }
-        else{
-            abort(404);
-        }  
     }
 
     public function update(Request $request){
-        $system_user = System::find(auth()->guard('system')->id());
 
         // Check if user is admin
-        if($system_user->type == '0'){
             $validated = $request->validate([
                 'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
                 'name' => ['required'],
@@ -63,7 +56,7 @@ class TourSettingController extends Controller
                 'location'=> ['required'],
                 'passcode'=> ['required', 'numeric', 'digits:4'],
             ]);
-            if (Hash::check($validated['passcode'], $system_user->passcode)) {
+            if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
                 $id = decrypt($request->id);
                 $tour = Tour::findOrfail($id);
                 // Update Image
@@ -78,20 +71,14 @@ class TourSettingController extends Controller
             else{
                 return back()->with('error', 'Passcode Invalid');
             }
-        }
-        else{
-            abort(404);
-        }
+        
     }
     public function destroy(Request $request){
-        $system_user = System::find(auth()->guard('system')->id());
-
         // Check if user is admin
-        if($system_user->type == '0'){
             $validated = $request->validate([
                 'passcode'=> ['required', 'numeric', 'digits:4'],
             ]);
-            if (Hash::check($validated['passcode'], $system_user->passcode)) {
+            if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
                 $id = decrypt($request->id);
                 $tour = Tour::findOrfail($id);
                 if($tour->image) deleteFile($tour->image); // Delete Image
@@ -102,9 +89,6 @@ class TourSettingController extends Controller
             else{
                 return back()->with('error', 'Passcode Invalid');
             }
-        }
-        else{
-            abort(404);
-        }
+        
     }
 }
