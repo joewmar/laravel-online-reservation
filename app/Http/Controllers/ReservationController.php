@@ -14,14 +14,35 @@ use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
 use App\Models\OnlinePayment;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Auth;
+use AmrShawky\LaravelCurrency\Facade\Currency;
+use App\Models\Archive;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
 
+
 class ReservationController extends Controller
 {
+    private $user;
+    public function __construct()
+    {
+        $this->user = auth('web')->user();
+        $this->middleware(function ($request, $next) {
+            $existingReservation = Reservation::where('user_id', $this->user->id)->first();
+
+            if ($existingReservation) {
+                return redirect()->route('home')->with('error', "Sorry, you can only make one reservation.");
+            }
+            return $next($request);
+        })->except(['date', 'dateCheck', 'dateStore', 'index']); // You can specify the specific method where this middleware should be applied.
+    }
+
+    public function index(){
+        $reservation = Reservation::where('user_id', auth('web')->user()->id) ?? '';
+        $archives = Archive::where('user_id', auth('web')->user()->id) ?? '';
+        return view('users.reservation.index', ['activeNav' => 'My Reservation', 'reservation' => $reservation, 'archive' => $archives]);
+    }
     public function date(Request $request){
         $dateList = [];
         if(session()->has('rinfo')){
@@ -421,22 +442,37 @@ class ReservationController extends Controller
             return redirect()->route('reservation.confirmation');
         }
     }
-    public function confirmation(){
+    public function confirmation(Request $request){
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $user_menu = [];
+
         if($uinfo['at'] !== 'Room Only' && $uinfo['tm'] != null){
-            foreach(explode(',', $uinfo['tm']) as $key => $item){
-                $user_menu[$key]['id'] = TourMenu::findOrFail($item[$key])->id;
-                $user_menu[$key]['price'] = TourMenu::findOrFail($item[$key])->price;
-                $user_menu[$key]['title'] = TourMenu::findOrFail($item[$key])->tourMenu->title;
-                $user_menu[$key]['type'] = TourMenu::findOrFail($item[$key])->type;
-                $user_menu[$key]['pax'] = TourMenu::findOrFail($item[$key])->pax . ' pax';
+            foreach($uinfo['tm'] as $key => $item){
+                $user_menu[$key]['id'] = TourMenu::findOrFail($item)->id;
+                if($request->has('cur') && !empty($request['cur'])){
+                    $converted = Currency::convert()->from('PHP')->to($request['cur'])->amount(TourMenu::findOrFail($item)->price)->get();
+                    $user_menu[$key]['price'] = $converted;
+                    $user_menu[$key]['orig_price'] = TourMenu::findOrFail($item)->price;
+                }
+                else{
+                    $user_menu[$key]['price'] = TourMenu::findOrFail($item)->price;
+                    $user_menu[$key]['orig_price'] = TourMenu::findOrFail($item)->price;
+                }
+                $user_menu[$key]['title'] = TourMenu::findOrFail($item)->tourMenu->title;
+                $user_menu[$key]['type'] = TourMenu::findOrFail($item)->type;
+                $user_menu[$key]['pax'] = TourMenu::findOrFail($item)->pax . ' pax';
             }
         }
+        
         return view('reservation.step4', [
             'user_menu' => $user_menu ?? '',
             'uinfo' => $uinfo,
+            'uinfo' => $uinfo,
         ]);
+    }
+    public function convert(Request $request){
+        $validated = $request->validate(['cur' => 'required']);
+        return redirect()->route('reservation.confirmation', ['cur' => $validated['cur']]);
     }
     public function storeReservation(Request $request){
         $systemUser = System::all();
@@ -488,12 +524,7 @@ class ReservationController extends Controller
         ];
         foreach($systemUser as $user){
             if($user->telegram_chatID != null){
-                Telegram::sendMessage([
-                    'chat_id' => $user->telegram_chatID,
-                    'parse_mode' => 'HTML',
-                    'text' => $text,
-                    'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
-                ]);
+                telegramSendMessage($user->telegram_chatID, $text, $keyboard);
             }
 
         }

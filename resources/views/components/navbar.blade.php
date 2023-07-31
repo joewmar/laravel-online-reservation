@@ -1,7 +1,8 @@
-<div id="navbar" class="navbar transition duration-700 ease-in-out bg-transparent fixed z-10">
+@props(['activeNav' => '', 'type' => ''])
+<div id="navbar" class="navbar transition duration-700 ease-in-out {{$type == 'plain' ? 'bg-base-100 shadow-md' : 'bg-transparent'}} fixed z-10">
     <div class="navbar-start">
       <div class="dropdown">
-        <label tabindex="0" class="btn btn-ghost lg:hidden text-white toggleColour">
+        <label tabindex="0" class="btn btn-ghost lg:hidden {{$type == 'plain' ? 'text-neutral' : 'text-white toggleColour'}}">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" /></svg>
         </label>
         <ul tabindex="0" class="menu menu-compact dropdown-content mt-3 p-2 shadow bg-white rounded-box w-52">
@@ -12,12 +13,8 @@
                   <li><a href="{{$item}}">{{$key}}</a></li>
                 @endif
             @endforeach
-            @guest
-              <li><a href="{{route('login')}}" class="md:hidden">Login</a></li>
-            @endguest
             @auth
-              <li><a href="/profile">Profile</a></li>
-              <li><a href="/reservation">My Reservation</a></li>  
+              <li><a href="{{route('user.reservation.home')}}" class="{{$activeNav === 'My Reservation' ? 'text-primary' : ''}}">My Reservation</a></li>  
             @endauth
         </ul>
       </div>
@@ -26,7 +23,7 @@
       </a>
     </div>
     <div class="navbar-center hidden lg:flex">
-      <ul class="toggleColour text-white menu menu-horizontal px-1">
+      <ul class="{{$type == 'plain' ? 'text-neutral' : 'toggleColour text-white'}} menu menu-horizontal px-1">
         @foreach ($landingNavbar as $key => $item)
             @if ($key === $activeNav)
                 <li><a class="text-primary font-semibold" href="{{$item}}">{{$key}}</a></li>
@@ -35,7 +32,7 @@
             @endif
         @endforeach
         @auth
-          <li><a href="">My Reservation</a></li>  
+          <li><a href="{{route('user.reservation.home')}}" class="{{$activeNav === 'My Reservation' ? 'text-primary' : ''}}">My Reservation</a></li>  
         @endauth
       </ul>
     </div>
@@ -54,7 +51,7 @@
         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
           <li><span class="text-lg font-bold">{{auth('web')->user()->first_name}} {{auth('web')->user()->last_name}}</span></li>
           <li>
-            <a class="justify-between">
+            <a class="justify-between" class="{{$activeNav === 'Profile' ? 'text-primary' : ''}}">
               Profile
             </a>
           </li>
@@ -70,7 +67,7 @@
       </div>
     @else
         <div class="space-x-1">
-          <ul class="toggleColour text-white menu menu-horizontal px-1">
+          <ul class="{{$type == 'plain' ? 'text-neutral' : 'toggleColour text-white '}}menu menu-horizontal px-1">
             <li><a href="{{route('register')}}">Sign up</a></li>
           </ul>
           <a href="{{route('login')}}" class="btn btn-primary text-white">Sign in</a>

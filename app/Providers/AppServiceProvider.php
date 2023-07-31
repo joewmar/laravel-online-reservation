@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
           ];
         View::share('landingNavbar', $arrNavItems);
 
-        $arrNationality = array(
+        $arrNationality = [
             "Afghan",
             "Albanian",
             "Algerian",
@@ -174,7 +174,8 @@ class AppServiceProvider extends ServiceProvider
             "Qatari",
             "Romanian",
             "Russian",
-            );
+            ];
+
             View::share('nationality', $arrNationality);
 
             $arrCountries = [
@@ -373,6 +374,26 @@ class AppServiceProvider extends ServiceProvider
                 "Zimbabwe",
             ];
             View::share('countries', $arrCountries);
+            $arrCur = [
+                'PHP' => '₱',
+                'USD' => '$',
+                'EUR' => '€',
+                'JPY' => '¥',
+                'GBP' => '£',
+                'CHF' => 'CHF',
+                'CAD' => 'C$',
+                'AUD' => 'A$',
+                'CNY' => '¥',
+                'INR' => '₹',
+                'KRW' => '₩',
+                'BRL' => 'R$',
+                'RUB' => '₽',
+                'ZAR' => 'R',
+                'MXN' => '$',
+                'SAR' => '﷼',
+            ];
+            View::share('currencies', $arrCur);
+            View::share('currencyKey', array_keys($arrCur));
 
     }
 }

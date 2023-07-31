@@ -1,5 +1,5 @@
 <!-- Sidebar  -->
-@props(['active'])
+@props(['active' => ''])
 @php
     $arrSideBarItems = 
         [

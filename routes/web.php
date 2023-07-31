@@ -87,6 +87,9 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::view('/profile', 'home')->name('profile');
 
+    Route::prefix('my-reservation')->name('user.reservation.')->group(function (){
+        Route::get('/', [ReservationController::class, 'index'])->name('home');
+    });
     // Reservation Information
     Route::prefix('reservation')->name('reservation.')->group(function (){
         Route::get('/choose', [ReservationController::class, 'choose'])->name('choose');
@@ -97,6 +100,7 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
         Route::post('/detials', [ReservationController::class, 'detailsStore'])->name('details.store');
 
         Route::get('/confimation', [ReservationController::class, 'confirmation'])->name('confirmation');
+        Route::post('/confimation/convert', [ReservationController::class, 'convert'])->name('convert');
         Route::post('/store', [ReservationController::class, 'storeReservation'])->name('store');
         Route::view('/done','reservation.done', ['activeNav' => 'Hello'])->name('done');
 
