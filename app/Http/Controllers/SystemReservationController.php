@@ -339,7 +339,7 @@ class SystemReservationController extends Controller
                         $room = Room::find($item);
                         $newCus = [];
                         foreach($room->customer as $key => $item){
-                            $
+                            
                             $newCus[$reservation->id]  = $room->id;
                         }
                         if( $room->customer == null){
