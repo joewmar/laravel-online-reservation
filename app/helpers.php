@@ -2,6 +2,7 @@
 
 use Carbon\Carbon;
 use App\Models\Room;
+use App\Models\Reservation;
 use Illuminate\Support\Facades\Storage;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
@@ -109,12 +110,14 @@ function checkAvailRooms($pax){
     $isFull = false;
     $countPax = 0;
     $rooms = Room::all();
+    $reservation = Reservation::all();
     $maxOccAll = 0;
     foreach($rooms as $key => $room){
         $countOccupancy = 0;
         $maxOccAll += $room->room->max_occupancy;
         foreach (explode(',', $room->customer) as $key => $item) {
             $arrPreCus[$key]['pax'] = explode('-', $item)[1] ?? '';
+            
             if(!($room->room->max_occupancy ==  $countOccupancy )){
                 $countOccupancy += (int)$arrPreCus[$key]['pax'];
             }

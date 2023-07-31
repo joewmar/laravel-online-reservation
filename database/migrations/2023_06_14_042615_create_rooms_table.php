@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('room_id')->constrained('room_lists', 'id')->onDelete('cascade');
             $table->integer('room_no');
             $table->boolean('availability')->default(false);
-            $table->text('customer')->nullable(); // Ex. customerID-pax (1-1)
+            $table->json('customer')->nullable(); // Ex. customerID-pax ({'reservationID' : 'pax'})
             $table->timestamps();
         });
     }

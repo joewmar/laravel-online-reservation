@@ -37,11 +37,25 @@ class ReservationController extends Controller
             return $next($request);
         })->except(['date', 'dateCheck', 'dateStore', 'index']); // You can specify the specific method where this middleware should be applied.
     }
-
-    public function index(){
-        $reservation = Reservation::where('user_id', auth('web')->user()->id) ?? '';
-        $archives = Archive::where('user_id', auth('web')->user()->id) ?? '';
-        return view('users.reservation.index', ['activeNav' => 'My Reservation', 'reservation' => $reservation, 'archive' => $archives]);
+    public function index(Request $request){
+        $reservation = Reservation::all()->where('user_id', auth('web')->user()->id) ?? [];
+        $archives = Archive::all()->where('user_id', auth('web')->user()->id) ?? [];
+        if($request['tab'] == 'confirmed'){
+            $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 1) ?? [];
+        }
+        if($request['tab'] == 'cin'){
+            $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 2) ?? [];
+        }
+        if($request['tab'] == 'cout'){
+            $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 3) ?? [];
+        }
+        if($request['tab'] == 'canceled'){
+           $archives = Archive::all()->where('user_id', auth('web')->user()->id)->where('status', 2) ?? [];
+        }
+        if($request['tab'] == 'previous'){
+           $archives = Archive::all()->where('user_id', auth('web')->user()->id)->where('status', 0) ?? [];
+        }
+        return view('users.reservation.index', ['activeNav' => 'My Reservation', 'reservation' => $reservation, 'archives' => $archives]);
     }
     public function date(Request $request){
         $dateList = [];
@@ -72,7 +86,6 @@ class ReservationController extends Controller
             $dateSeperate = explode('to', $request['check_in']);
             $request['check_in'] = trim($dateSeperate[0]);
             $request['check_out'] = trim ($dateSeperate[1]);
-            
         }
         // Check out convertion word to date format
         if(str_contains($request['check_out'], ', ')){
@@ -93,7 +106,6 @@ class ReservationController extends Controller
                 'required' => 'Need fill up first',
                 'date_equals' => 'Choose only one day (Day Tour)',
                 'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
-    
             ]);
         }
         elseif($request['accommodation_type'] == 'Overnight'){

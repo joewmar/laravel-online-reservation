@@ -293,7 +293,7 @@ class SystemReservationController extends Controller
                 }
                 if($countOccupancy == 0) $error[$key] = 'Room No.' . $room->room_no . ' (' . $room->room->name . ') was avail due avail '. $reservation->pax .' pax on ' . implode(', ', $roomNo);
                 else{
-                    $roomCustomer[$item] = $reservation->user_id .'-' . ($countOccupancy);
+                    $roomCustomer[$item] = [$reservation->id => $countOccupancy];
                     $roomReservation[] = $room->id;
                 } 
 
@@ -318,13 +318,11 @@ class SystemReservationController extends Controller
                     return back()->withErrors(['room_rate' => 'Not equal to your pax in the rate you selected'])->withInput();
                 }
                 $total = 0;
-                $amount = ($reservation->amount != null ? explode(',', $reservation->amount) : []);
-                $amount[] = 'rid' . $rate->id .'-'. $rate->price;
+                $amount = $reservation->amount;
+                $amount[] = ['rid'.$rate->id => $rate->price];
                 foreach($amount as $item) {
-                    $total += (double)explode('-', $item)[1];
+                    $total += $item;
                 }
-                $amount = implode(',', $amount);
-
                 // UPdate Reservation
                 $reserved = $reservation->update([
                     'room_id' => implode(',', $roomReservation),
@@ -335,10 +333,15 @@ class SystemReservationController extends Controller
                 ]);
                 $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
                 $reservation->save();
-                if(true){
+                // Update Room Availability
+                if($reserved){
                     foreach($roomReservation as $item){
                         $room = Room::find($item);
-                        $newCus = $reservation->user_id . '_' . $room->id;
+                        $newCus = [];
+                        foreach($room->customer as $key => $item){
+                            $
+                            $newCus[$reservation->id]  = $room->id;
+                        }
                         if( $room->customer == null){
                             $room->update([
                                 'customer' => $newCus,
@@ -354,16 +357,16 @@ class SystemReservationController extends Controller
     
                         }
                         $countOccupancy = 0;
-                        foreach (explode(',', $room->customer) as $key => $item) {
-                            $arrPreCus[$key]['pax'] = explode('_', $item)[1] ?? '';
-                            if($room->room->max_occupancy ==  $countOccupancy ){
-                                $room->update(['availability' => true]);
-                            }
-                            else{
-                                $room->update(['availability' => false]);
-                                $countOccupancy += (int)$arrPreCus[$key]['pax'];
-                            }
-                        }
+                        // foreach (explode(',', $room->customer) as $key => $item) {
+                        //     $arrPreCus[$key]['pax'] = explode('_', $item)[1] ?? '';
+                        //     if($room->room->max_occupancy ==  $countOccupancy ){
+                        //         $room->update(['availability' => true]);
+                        //     }
+                        //     else{
+                        //         $room->update(['availability' => false]);
+                        //         $countOccupancy += (int)$arrPreCus[$key]['pax'];
+                        //     }
+                        // }
                     }
                     $tour_menu = [];
                     if($reservation->accommodation_type != 'Room Only'){

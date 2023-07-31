@@ -42,7 +42,7 @@ class RoomSettingController extends Controller
         
             $id = decrypt($request->id);
             return view('system.setting.rooms.edit',  ['activeSb' => 'Rooms', 'room_list' =>  RoomList::findOrFail($id)]);
-        
+
     }
     // Add New Room
     public function store(Request $request){
