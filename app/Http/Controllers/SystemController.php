@@ -17,9 +17,10 @@ class SystemController extends Controller
 
     public function __construct()
     {
-        $this->middleware(['auth:system']);
-        $this->system_user = auth()->guard('system')->user();
-        if(!$this->system_user->type === 0) abort(404);
+        $this->middleware(function (){
+            $this->system_user = auth()->guard('system')->user();
+            if(!$this->system_user->type === 0) abort(404);
+        })->except('check');
     }
     public function index(Request $request){
         if($request['type'] != 'all'){

@@ -16,6 +16,8 @@ use App\Models\OnlinePayment;
 use Illuminate\Validation\Rule;
 use AmrShawky\LaravelCurrency\Facade\Currency;
 use App\Models\Archive;
+use App\Notifications\EmailNotification;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Telegram\Bot\Laravel\Facades\Telegram;
@@ -487,13 +489,17 @@ class ReservationController extends Controller
         return redirect()->route('reservation.confirmation', ['cur' => $validated['cur']]);
     }
     public function storeReservation(Request $request){
-        $systemUser = System::all();
+        $systemUser = System::all()->where('type', 0)->where('type', 1);
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $reserve_info = null;
         if($uinfo['at'] !== 'Room Only'){
             $validated = $request->validate(['amount.*' => ['required']]);
             $total = 0;
-            foreach($validated['amount'] as $amount) $total += (double)explode('-', $amount)[1];
+
+            foreach($validated['amount'] as $amount) {
+                $amounts[explode('-', $amount)[0]] = (double)explode('-', $amount)[1];
+                $total += (double)explode('-', $amount)[1];
+            }
             if($validated){
                 $reserve_info = Reservation::create([
                     'user_id' => auth('web')->user()->id,
@@ -504,7 +510,7 @@ class ReservationController extends Controller
                     'accommodation_type' => $uinfo['at'] ?? '',
                     'check_in' => $uinfo['cin'] ?? '',
                     'check_out' => $uinfo['cout'] ?? '',
-                    'amount' => implode(', ', $validated['amount']) ?? '',
+                    'amount' => $amounts ?? '',
                     'total' => $total ?? '',
                 ]);
             }
@@ -547,6 +553,7 @@ class ReservationController extends Controller
             'title' => 'Reservation Complete',
             'body' => 'Your Reservation are done, We just send email for the approve or disapprove confirmation'
         ];
+        // Notification::send($reserve_info->userReservation, new EmailNotification('recelestino90@gmail.com', 'reservation.mail', $details));
         Mail::to($reserve_info->userReservation->email)->send(new ReservationMail($details, 'reservation.mail', $details['title']));
         $details = null;
         session()->forget('rinfo');
@@ -564,7 +571,7 @@ class ReservationController extends Controller
     }
     public function paymentStore(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
-        $systemUser = System::all();
+        $systemUser = System::all()->where('type', 0)->where('type', 1);
         if($reservation->status() === 'Confirmed'){
             $validator = Validator::make($request->all(), [
                 'image' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],

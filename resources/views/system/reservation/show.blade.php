@@ -53,7 +53,7 @@
                 <h2 class="text-2xl mb-5 font-bold">Details</h2>
                 <p class="my-1"><strong>Number of Guest: </strong>{{$r_list->pax ?? 'None'}}</p>
                 <p class="my-1"><strong>Type: </strong>{{$r_list->accommodation_type ?? 'None'}}</p>
-                <p class="my-1"><strong>Room No: </strong>{{$r_list->room_id ?? 'None'}}</p>
+                <p class="my-1"><strong>Room No: </strong>{{!empty($rooms) ? $rooms : 'None'}}</p>
                 <p class="my-1"><strong>Check-in: </strong>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_in )->format('l, F j, Y') ?? 'None'}}</p>
                 <p class="my-1"><strong>Check-out: </strong>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out )->format('l, F j, Y') ?? 'None'}}</p>
                 <p class="my-1"><strong>Payment Method: </strong>{{ $r_list->payment_method ?? 'None'}}</p>
@@ -78,14 +78,22 @@
                                     <td>{{$item['title']}}</td> 
                                     <td>{{$item['type']}}</td> 
                                     <td>{{$item['pax']}} pax</td> 
-                                    <td>{{number_format($item['price'], 2)}}</td> 
+                                    <td>₱ {{number_format($item['price'], 2)}}</td> 
                                 </tr>
                             @endforeach
                         </tbody>
                         </table>
                     </div>
+                    @if($r_list->status() === 'Confirmed')
+                        <p class="text-md tracking-tight text-neutral">
+                            <span class="font-medium">Room Rate: </span>₱ {{ number_format( \App\Models\RoomRate::find($r_list->room_rate_id)->price, 2) }}
+                        </p>
+                        <p class="text-md tracking-tight text-neutral">
+                            <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment ?? 0, 2) }}
+                        </p>
+                    @endif
                     <p class="text-md tracking-tight text-neutral my-5">
-                        <span class="font-medium">Total Cost: </span>P {{ number_format($r_list->total, 2) }}
+                        <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->total, 2) }}
                     </p>
                 </div>
             @endif
@@ -147,29 +155,20 @@
             </div>
         </article>
         <div class="flex justify-end space-x-1">
-            @php
-                $title = ''; 
-            @endphp
             @if($r_list->status() == "Pending")
-                <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-sm" >Confirm</a>
-                <label for="reservation" class="btn btn-success btn-sm" disabled>Check-in</label>
-                <label for="reservation" class="btn btn-info btn-sm" disabled>Check-out</label>
+                <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-xs">Confirm</a>
+                <label for="reservation" class="btn btn-success btn-xs" disabled>Check-in</label>
+                <label for="reservation" class="btn btn-info btn-xs" disabled>Check-out</label>
             @elseif($r_list->status() == "Confirmed")
-                @php $title = 'Check-in' @endphp
-                <a href="" class="btn btn-secondary btn-sm" disabled>Confirm</a>
-                <label for="reservation" class="btn btn-success btn-sm">Check-in</label>
-                <label for="reservation" class="btn btn-info btn-sm" disabled>Check-out</label>
-
+                <a class="btn btn-secondary btn-xs" disabled>Confirm</a>
+                <label for="checkin" class="btn btn-success btn-xs">Check-in</label>
+                <x-checkin name="{{$r_list->userReservation->first_name ?? ''}} {{$r_list->userReservation->last_name ?? ''}}" :datas="$r_list" />
+                <label for="reservation" class="btn btn-info btn-xs" disabled>Check-out</label>
             @elseif($r_list->status() == "Check-in")
-                @php $title = 'Check-out' @endphp
-                <a href="" class="btn btn-secondary btn-sm" disabled>Confirm</a>
-                <label for="reservation" class="btn btn-success btn-sm" disabled>Check-in</label>
-                <label for="reservation" class="btn btn-info btn-sm">Check-out</label>
+                <a href="" class="btn btn-secondary btn-xs" disabled>Confirm</a>
+                <label for="reservation" class="btn btn-success btn-xs" disabled>Check-in</label>
+                <label for="reservation" class="btn btn-warning btn-xs">Check-out</label>
             @endif
-            <form action="" method="post">
-                @csrf
-                <x-passcode-modal title="{{$title}} Confirmation" id="reservation" formId="reservation-form" />        
-            </form>
         </div>
     </x-system-content>
 </x-system-layout>

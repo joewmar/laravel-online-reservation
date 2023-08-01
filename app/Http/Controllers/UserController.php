@@ -17,6 +17,10 @@ use Illuminate\Auth\Events\Registered;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth:web'])->except('check');
+    }
     public function create(Request $request){
         // Validate input
         $validator = Validator::make($request->all(), [

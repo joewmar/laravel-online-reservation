@@ -234,7 +234,7 @@ tr:hover .cut { opacity: 1; }
 				<tbody>
 					@foreach ($rooms as $key => $item)
 						<tr>
-							<td><span >Room No. {{$item->room_no}} ({{$item->room->name}})</span></td>
+							<td><span >Room No. {{$item['no']}} ({{$item['name']}})</span></td>
 							<td><span>{{$rate->name}}</span></td> 
 							<td><span data-prefix>₱ </span><span>{{ number_format($rate->price, 2)}}</span></td>
 						</tr>

@@ -1,6 +1,6 @@
 @props(['id'=>'', 'title'=> '', 'alpinevar' => '', 'type' => 'Close', 'formID' => '', 'loader' => false])
 <input type="checkbox" id="{{$id}}" class="modal-toggle" />
-<div class="modal modal-bottom sm:modal-middle" id="{{$id}}">
+<div x-data="{loader: false}" class="modal modal-bottom sm:modal-middle" id="{{$id}}">
   <div class="modal-box">
     <h3 class="font-bold text-lg text-primary">{{$title}}</h3>
     <div class="my-4">
@@ -19,4 +19,5 @@
         @endif
     </div>
   </div>
+  <x-loader />
 </div>

@@ -133,10 +133,10 @@ function checkAvailRooms($pax){
     }
     return $isFull;
 }
-function telegramSendMessage($chatID, $message, $keyboard = null){
+function telegramSendMessage($chatID, $message, $keyboard = null, $bot = 'bot1'){
     try{
         if($keyboard != null){
-            Telegram::sendMessage([
+            Telegram::bot($bot)->sendMessage([
                 'chat_id' => $chatID,
                 'parse_mode' => 'HTML',
                 'text' => $message,
@@ -144,7 +144,7 @@ function telegramSendMessage($chatID, $message, $keyboard = null){
             ]);
         }
         else{
-            Telegram::sendMessage([
+            Telegram::bot($bot)->sendMessage([
                 'chat_id' => $chatID,
                 'parse_mode' => 'HTML',
                 'text' => $message,
