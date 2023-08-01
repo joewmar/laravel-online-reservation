@@ -4,19 +4,30 @@
           class="mx-auto max-w-screen-xl px-4 py-32 lg:flex lg:h-screen lg:items-center"
         >
           <div class="mx-auto max-w-xl text-center">
-            <h1 class="text-3xl font-extrabold sm:text-5xl">
-              Done!!👏
-            </h1>
+            <form action="{{route('reservation.done.message.store', ['id' => $id ?? abort(404)])}}" method="post">
+              @csrf
+              <h1 class="text-3xl font-extrabold sm:text-5xl">
+                Done!!👏
+              </h1>
+        
+              <p class="mt-4 sm:text-xl/relaxed">
+                Just wait the process of your reservation okay👍
+              </p>
+              <p class="mt-4 sm:text-xl/relaxed">
+                Do you want some request?
+                <x-textarea name="request_message" id="request_message" />
+                <div class="flex flex-wrap justDoy-center gap-4">
+                  <a class="btn btn-ghost" href="{{route('home')}}">
+                    Skip
+                  </a>
+                  <button class="btn btn-primary">
+                    Send
+                  </button>
+                </div>
+              </p>
       
-            <p class="mt-4 sm:text-xl/relaxed">
-              Just wait the process of your reservation okay👍
-            </p>
-    
-            <div class="mt-8 flex flex-wrap justify-center gap-4">
-              <a class="btn btn-primary" href="{{route('home')}}">
-                Go home
-              </a>
-            </div>
+
+            </form>
           </div>
         </div>
       </section>

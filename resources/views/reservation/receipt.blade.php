@@ -81,7 +81,7 @@ article address > span{ font-size: 60%; font-weight: 500; }
 
 /* Details */
 div.details {padding-top: 5%; margin-bottom: 3%;}
-div.details h5 {font-weight: bold; font-size: 15px; margin-top: 2%;  margin-bottom: 2%}
+div.details h5 {font-weight: bold; font-size: 15px; margin-top: 2%;}
 div.details h5 > span {font-weight: normal;}
 
 /* table meta & balance */
@@ -226,21 +226,37 @@ tr:hover .cut { opacity: 1; }
 			<table class="inventory">
 				<thead>
 					<tr>
-						<th><span >Room</span></th>
-						<th><span >Room Type</span></th>
-						<th><span >Rate</span></th>
+						<th><span >Room No</span></th>
+						<th><span >Room Name</span></th>
 					</tr>
 				</thead>
 				<tbody>
+					@php $amount = 0; @endphp
 					@foreach ($rooms as $key => $item)
 						<tr>
-							<td><span >Room No. {{$item['no']}} ({{$item['name']}})</span></td>
-							<td><span>{{$rate->name}}</span></td> 
-							<td><span data-prefix>₱ </span><span>{{ number_format($rate->price, 2)}}</span></td>
+							<td><span >Room No. {{$item['no']}}</span></td>
+							<td><span >{{$item['name']}} Room</span></td>
 						</tr>
 					@endforeach
 				</tbody>
 			</table>
+			<table class="inventory">
+				<thead>
+					<tr>
+						<th><span >Room Type</span></th>
+						<th><span >No. of days</span></th>
+						<th><span >Rate</span></th>
+						<th><span >Amount</span></th>
+					</tr>
+				</thead>
+				<tbody>
+					<td><span>{{$rate->name}}</span></td> 
+					<td><span>{{checkDiffDates($r_list->check_in, $r_list->check_out) > 1 ? checkDiffDates($r_list->check_in, $r_list->check_out) . ' days' : checkDiffDates($r_list->check_in, $r_list->check_out) . ' day'}}</span></td> 
+					<td><span data-prefix>₱ </span><span>{{ number_format($rate->price, 2)}}</span></td>
+					<td><span data-prefix>₱ </span><span>{{ number_format(($rate->price * (int) checkDiffDates($r_list->check_in, $r_list->check_out)), 2)}}</span></td>
+				</tbody>
+			</table>
+
 			@if(!empty($add_menu))
 				{{-- <table class="inventory">
 					<thead>
@@ -264,27 +280,25 @@ tr:hover .cut { opacity: 1; }
 			
 			<table class="balance">
 				<tr>
-					<th><span >Total</span></th>
+					<th><span >Amount Paid</span></th>
 					<td><span data-prefix>₱ </span><span>{{number_format($r_list->total, 2)}}</span></td>
 				</tr>
 				<tr>
 					<th><span >Downpayment</span></th>
-					{{-- <td><span data-prefix>₱ </span><span>{{number_format($r_list->total, 2) ?? 'None'}}</span></td> --}}
+					<td><span data-prefix>₱ </span><span>{{number_format($r_list->downpayment ?? 0, 2)}}</span></td>
 				</tr>
 				<tr>
-					<th><span >Balance</span></th>
-					{{-- <td><span data-prefix>₱ </span><span>{{number_format($r_list->total, 2) ?? 'None'}}</span></td> --}}
-				</tr>
-				{{-- <tr>
-					<th><span >Amount Paid</span></th>
-					<td><span data-prefix>$</span><span >0.00</span></td>
-				</tr> --}}
-				{{-- <tr>
 					<th><span >Balance Due</span></th>
-					<td><span data-prefix>$</span><span><?php echo $fintot; ?></span></td>
-				</tr> --}}
+					@php
+						$balance = (double) abs($r_list->total - $r_list->downpayment);
+					@endphp
+					<td><span data-prefix>₱ </span><span>{{number_format($balance ?? 0, 2)}}</span></td>
+				</tr>
 			</table>
 		</article>
+		<div class="details">
+			<h5 style="color:red">Note: <span>The total amount to be paid will still depend on the situation, such as add-ons. It will find out at the check-out how much it will really be.</span></h5>
+		</div>
 		<aside>
 			<h1><span >Contact us</span></h1>
 			<div >

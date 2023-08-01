@@ -546,19 +546,24 @@ class ReservationController extends Controller
             }
 
         }
-        $text = null;
-        $keyboard  = null;
         $details = [
             'name' => $reserve_info->userReservation->first_name . ' ' . $reserve_info->userReservation->last_name,
             'title' => 'Reservation Complete',
             'body' => 'Your Reservation are done, We just send email for the approve or disapprove confirmation'
         ];
         // Notification::send($reserve_info->userReservation, new EmailNotification('recelestino90@gmail.com', 'reservation.mail', $details));
-        Mail::to($reserve_info->userReservation->email)->send(new ReservationMail($details, 'reservation.mail', $details['title']));
-        $details = null;
+        Mail::to(env('SAMPLE_EMAIL') ?? $reserve_info->userReservation->email)->send(new ReservationMail($details, 'reservation.mail', $details['title']));
         session()->forget('rinfo');
         session()->forget('ck');
-        return redirect()->route('reservation.done');
+        unset($text, $keyboard, $details, $uinfo);
+        return view('reservation.done', ['id' => $reserve_info->id]);
+    }
+    public function storeMessage(Request $request){
+        $reservation = Reservation::findOrFail($request->id);
+        $validate = $request->validate([
+            'request_message' => 'required',
+        ]);
+        $reservation->update($validate);
     }
     public function gcash($id){
         $reservation = Reservation::findOrFail(decrypt($id));

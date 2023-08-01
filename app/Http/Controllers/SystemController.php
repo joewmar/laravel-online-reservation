@@ -18,8 +18,8 @@ class SystemController extends Controller
     public function __construct()
     {
         $this->middleware(function (){
-            $this->system_user = auth()->guard('system')->user();
-            if(!$this->system_user->type === 0) abort(404);
+            $this->system_user = auth()->guard('system');
+            if(!$this->system_user->user()->type === 0) abort(404);
         })->except('check');
     }
     public function index(Request $request){
@@ -56,8 +56,6 @@ class SystemController extends Controller
         return redirect()->route('system.setting.accounts', Arr::query(['search' => $request['search'], 'type' => $request['type']]));
     }
     public function store(Request $request){
-        // dd($request->all());
-
         $validated = $request->validate([
                 'type' => ['required'],
                 'avatar' =>  ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
@@ -88,14 +86,13 @@ class SystemController extends Controller
             $validated['avatar'] = $request->file('avatar')->store('employee', 'public');
         }
     
-            $systemUser = System::create($validated);
-            return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Created');
+        $systemUser = System::create($validated);
+        telegramSendMessage($systemUser->telegram_chatID, "Hello there, " . $systemUser->first_name . " Your username was verified", null, 'bot2');
+        return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Created');
 
     }
     public function update(Request $request, $id){
-        // dd($request->all());
         $systemUser = System::findOrFail(decrypt($id));
-
         $validated = $request->validate([
                 'type' => ['required'],
                 'avatar' =>  ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
@@ -110,21 +107,13 @@ class SystemController extends Controller
         ], [
             'required' => 'Required to fill up this form'
         ]);
-        if($validated['password'] == null){
-            $validated['password'] = $systemUser->password;
-        }
-        else{
-            $validated['password'] = bcrypt($validated['password']);
-        }
-        if($validated['passcode'] == null){
-            $validated['passcode'] = $systemUser->passcode;
-        }
-        else{
-            $validated['passcode'] = bcrypt($validated['passcode']);
-        }
-        if($validated['telegram_username'] == null){
-            $validated['telegram_username'] = $systemUser->telegram_username;
-        }
+        if($validated['password'] == null) $validated['password'] = $systemUser->password;
+        else $validated['password'] = bcrypt($validated['password']);
+
+        if($validated['passcode'] == null) $validated['passcode'] = $systemUser->passcode;
+        else $validated['passcode'] = bcrypt($validated['passcode']);
+
+        if($validated['telegram_username'] == null) $validated['telegram_username'] = $systemUser->telegram_username;
         else{
             if($validated['telegram_username'] != null){
                 $chat_id = getChatIdByUsername($validated['telegram_username']) ;
@@ -144,8 +133,10 @@ class SystemController extends Controller
         }
     
             $updated = $systemUser->update($validated);
-            if($updated)
+            if($updated){
+                telegramSendMessage($systemUser->telegram_chatID, "Hello there, " . $systemUser->first_name . " Your username was updated", null, 'bot2');
                 return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Updated');
+            }
             else
                 return back()->with('error', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Something Error, Try Again');
 
@@ -156,7 +147,7 @@ class SystemController extends Controller
         $validated = $request->validate([
             'passcode' => ['required', 'digits:4'],
         ]);
-        if(Hash::check($validated['passcode'], $this->system_user->passcode)){
+        if(Hash::check($validated['passcode'], $this->system_user->user()->passcode)){
             $systemUser = System::findOrFail(decrypt($id));
             $systemUser->delete();
             return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Deleted');

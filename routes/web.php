@@ -1,8 +1,6 @@
 <?php
 
-use App\Mail\ReservationMail;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RideController;
 use App\Http\Controllers\RoomController;
@@ -102,7 +100,7 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
         Route::get('/confimation', [ReservationController::class, 'confirmation'])->name('confirmation');
         Route::post('/confimation/convert', [ReservationController::class, 'convert'])->name('convert');
         Route::post('/store', [ReservationController::class, 'storeReservation'])->name('store');
-        Route::view('/done','reservation.done', ['activeNav' => 'Hello'])->name('done');
+        Route::post('/done/{id}/message/store', [ReservationController::class, 'storeMessage'])->name('done.message.store');
 
         Route::get('/{id}/gcash', [ReservationController::class, 'gcash'])->name('gcash');
         Route::get('/{id}/paypal', [ReservationController::class, 'paypal'])->name('paypal');

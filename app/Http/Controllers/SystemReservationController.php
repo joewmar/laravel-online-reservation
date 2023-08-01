@@ -263,6 +263,7 @@ class SystemReservationController extends Controller
     public function showRooms($id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
+        if($reservation->status <= 1) abort(404);
         $rooms = Room::all();
         $rates = RoomRate::all();
         return view('system.reservation.show-room',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rates]);
@@ -271,6 +272,7 @@ class SystemReservationController extends Controller
         $system_user = $this->system_user->user();
         $admins = System::all()->where('type', 0)->where('type', 1);
         $reservation = Reservation::findOrFail(decrypt($request->id));
+        if($reservation->status <= 1) abort(404);
         $validator = Validator::make($request->all(), [
             'passcode' =>  ['required', 'numeric', 'digits:4'],
             'room_rate' =>  ['required', 'numeric'],
@@ -329,7 +331,7 @@ class SystemReservationController extends Controller
                 }
                 $total = 0;
                 $amount = $reservation->amount;
-                $amount['rid'.$rate->id] = (int)$rate->price;
+                $amount['rid'.$rate->id] = $rate->price * (int)checkDiffDates($reservation->check_in, $reservation->check_out);
                 foreach($amount as $item) {
                     $total += $item;
                 }

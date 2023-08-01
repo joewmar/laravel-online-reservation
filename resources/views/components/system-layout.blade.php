@@ -3,6 +3,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="{{asset('images/logo.png')}}" type="image/x-icon"/>
     <meta name="viewport" content="viewport-fit=cover"> 
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     @vite(['resources/css/app.css'])
