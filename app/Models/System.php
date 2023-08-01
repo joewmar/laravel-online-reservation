@@ -59,4 +59,7 @@ class System extends Authenticatable
         elseif ($this->attributes['type'] === 3)  $role = "Staff";
         return $role ?? $this->attributes['type'];
     }
+    public function name(){
+        return  $this->attributes['first_name'] . ' ' . $this->attributes['last_name'];
+    }
 }

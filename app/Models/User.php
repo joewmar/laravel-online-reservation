@@ -60,4 +60,7 @@ class User extends Authenticatable
     public function archive(){
         return $this->hasOne(Archive::class, 'user_id');
     }
+    public function name(){
+        return  $this->attributes['first_name'] . ' ' . $this->attributes['last_name'];
+    }
 }

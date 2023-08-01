@@ -40,7 +40,7 @@
                 @forelse ($employees as $employee)
                   <tr>
                     <td>{{$employee->id}}</td>
-                    <td>{{$employee->first_name}} {{$employee->last_name}}</td>
+                    <td>{{$employee->name()}}</td>
                     <td>{{$employee->role()}}</td>
                     <th>
                       <a href="{{route('system.setting.accounts.show', encrypt($employee->id))}}" class="link link-primary">More details</a>

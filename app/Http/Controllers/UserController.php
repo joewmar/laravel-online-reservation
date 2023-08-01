@@ -76,7 +76,7 @@ class UserController extends Controller
 
             if($user){
                 session()->forget('uinfo');
-                return redirect()->intended(route('home'))->with('success', 'Welcome First timer' . auth()->user()->first_name);
+                return redirect()->intended(route('home'))->with('success', 'Welcome First timer' . auth()->user()->name);
             }
         }
         return redirect()->intended(route('home'));
@@ -134,7 +134,7 @@ class UserController extends Controller
             if($newUser){
                 session()->forget('ginfo');
                 Auth::guard('web')->login($newUser);
-                return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
+                return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name);
             }
             else{
                 return back()->with('error', 'Something Wrong')->withInput( $validated);

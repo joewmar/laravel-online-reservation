@@ -46,14 +46,14 @@
                                             <div class="flex items-center space-x-3">
                                                 <div class="avatar">
                                                     <div class="mask mask-squircle w-12 h-12">
-                                                        <img src="{{$list->userReservation->avatar ? asset('storage/'.$list->userReservation->avatar) : asset('images/avatars/no-avatar.png')}}" alt="{{$list->userReservation->first_name ?? ''}} {{$list->userReservation->last_name ?? ''}} Photo" />
+                                                        <img src="{{$list->userReservation->avatar ? asset('storage/'.$list->userReservation->avatar) : asset('images/avatars/no-avatar.png')}}" alt="{{$list->userReservation->name() ?? ''}} Photo" />
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
                                         <div>
-                                            <div class="font-bold">{{$list->userReservation->first_name ?? ''}} {{$list->userReservation->last_name ?? ''}}</div>
+                                            <div class="font-bold">{{$list->userReservation->name() ?? ''}}</div>
                                             <div class="text-sm opacity-50">{{$list->userReservation->country}}</div>
                                         </div>
                                         </td>
@@ -70,7 +70,7 @@
                                             @elseif($list->status() == "Confirmed")
                                                 <a class="btn btn-secondary btn-xs" disabled>Confirm</a>
                                                 <label for="checkin" class="btn btn-success btn-xs">Check-in</label>
-                                                <x-checkin name="{{$list->userReservation->first_name ?? ''}} {{$list->userReservation->last_name ?? ''}}" :datas="$list" />
+                                                <x-checkin name="{{$list->userReservation->name() ?? ''}}" :datas="$list" />
                                                 <label for="reservation" class="btn btn-info btn-xs" disabled>Check-out</label>
                                             @elseif($list->status() == "Check-in")
                                                 <a href="" class="btn btn-secondary btn-xs" disabled>Confirm</a>

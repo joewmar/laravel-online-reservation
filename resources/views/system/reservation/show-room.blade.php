@@ -3,7 +3,7 @@
         {{-- User Details --}}
         <div class="w-full">
             <div class="flex justify-between">
-                <h2 class="text-2xl font-semibold">Choose the room for {{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}</h2>
+                <h2 class="text-2xl font-semibold">Choose the room for {{$r_list->userReservation->name()}}</h2>
                 <div class="my-2 space-y-3">
                     <div class="dropdown dropdown-left">
                         <label tabindex="0" class="btn btn-ghost"><i class="fa-solid fa-circle-info"></i></label>
@@ -84,7 +84,7 @@
                         <p class="text-2xl font-semibold">No Record Found</p>
                     @endforelse
                 </div>
-                <x-passcode-modal title="Enter the correct passcode to approve for {{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}" id="reservation" formId="reservation-form" />
+                <x-passcode-modal title="Enter the correct passcode to approve for {{$r_list->userReservation->name()}}" id="reservation" formId="reservation-form" />
 
             </form>
         </div>

@@ -193,11 +193,10 @@ class SystemReservationController extends Controller
             if($reservation->status() == 'Check-in') $color = '#eab308';
             if($reservation->status() == 'Check-out') $color = '#64748b';
             $arrEvent[] = [
-                'title' => $reservation->userReservation->first_name . ' ' .  $reservation->userReservation->last_name . ' (' . $reservation->status() . ')', 
+                'title' =>  $reservation->userReservation->name() . ' (' . $reservation->status() . ')', 
                 'start' => $reservation->check_in,
                 'end' => $reservation->check_out,        
                 'url' => route('system.reservation.show', encrypt($reservation->id)), // URL na ipapunta kapag na-click ang event
-
                 'color' => $color ?? '',
             ];
         }
@@ -396,7 +395,7 @@ class SystemReservationController extends Controller
                     }
                     $text = 
                     "Employee Action: Approved Reservation !\n" .
-                    "Name: ". $reservation->userReservation->first_name . " " . $reservation->userReservation->last_name ."\n" . 
+                    "Name: ". $reservation->userReservation->name() ."\n" . 
                     "Age: " . $reservation->age ."\n" .  
                     "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
                     "Country: " . $reservation->userReservation->country ."\n" . 
@@ -404,7 +403,7 @@ class SystemReservationController extends Controller
                     "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y') ."\n" . 
                     "Type: " . $reservation->accommodation_type ."\n" . 
                     "Rooms: " . implode(',', $roomDetails) ."\n" . 
-                    "Who Approve: " . $system_user->first_name . ' ' .$system_user->last_name ;
+                    "Who Approve: " . $system_user->name;
         
                     foreach($admins as $admin){
                         if($admin->telegram_chatID != null) telegramSendMessage($admin->telegram_chatID, $text, null, 'bot2');
@@ -420,7 +419,7 @@ class SystemReservationController extends Controller
                     // }
 
                     $details = [
-                        'name' => $reservation->userReservation->first_name . ' ' . $reservation->userReservation->last_name,
+                        'name' => $reservation->userReservation->name(),
                         'title' => 'Reservation has Confirmed',
                         'body' => 'Your Reservation has Confirmed, Be on time',
                         "age" => $reservation->age,  
@@ -451,7 +450,7 @@ class SystemReservationController extends Controller
 
                     // Notification::send($reservation->userReservation, new EmailNotification($project));
                     Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->send(new ReservationConfirmation($details['title'], $details, 'reservation.confirm-mail'));                  
-                    return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->first_name .' '. $reservation->userReservation->last_name . ' was Confirmed');
+                    return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Confirmed');
                     unset($details, $text, $url);
                 }
         }
@@ -479,12 +478,12 @@ class SystemReservationController extends Controller
         ]);
         $text = 
         "Employee Action: Check-in !\n" .
-        "Name: ". $reservation->userReservation->first_name . " " . $reservation->userReservation->last_name ."\n" . 
+        "Name: ". $reservation->userReservation->name() ."\n" . 
         "Age: " . $reservation->age ."\n" .  
         "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
-        "Who Approve: " . $system_user->first_name . ' ' .$system_user->last_name ;
+        "Who Approve: " . $system_user->name ;
         $details = [
-            'name' => $reservation->userReservation->first_name . ' ' . $reservation->userReservation->last_name,
+            'name' => $reservation->userReservation->name(),
             'title' => 'Reservation Check-in',
             'body' => 'You now checked in at ' . Carbon::now()->format('F j, Y, g:i A'),
         ];
@@ -494,7 +493,7 @@ class SystemReservationController extends Controller
             }
             Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->send(new ReservationMail($details, 'reservation.mail', $details['title']));                  
             unset($text, $details);
-            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->first_name .' '. $reservation->userReservation->last_name . ' was Checked in');
+            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked in');
         }
        
 
@@ -538,7 +537,7 @@ class SystemReservationController extends Controller
         if(!Hash::check($validated['passcode'], auth('system')->user()->passcode))  return back()->with('error', 'Invalid Passcode, Try Again')->withInput($validated);
 
         $arrAcrhive = [
-            "name" => $reservation->userReservation->first_name . ' ' . $reservation->userReservation->last_name,
+            "name" => $reservation->userReservation->name(),
             "age" => $reservation->age,
             "country" => $reservation->userReservation->country,
             "nationality" => $reservation->userReservation->nationality,
@@ -567,7 +566,7 @@ class SystemReservationController extends Controller
             "Check-in: " . Carbon::createFromFormat('Y-m-d', $acrhived->check_in)->format('F j, Y') ."\n" . 
             "Check-out: " . Carbon::createFromFormat('Y-m-d', $acrhived->check_out)->format('F j, Y') ."\n" . 
             "Type: " . $reservation->accommodation_type ."\n" . 
-            "Who Disaprove?: " . auth('system')->user()->first_name . ' ' .auth('system')->user()->last_name . ' (' . auth('system')->user()->role . ')' ;
+            "Who Disaprove?: " . auth('system')->user()->name . ' (' . auth('system')->user()->role . ')' ;
             "Reason to Disaprove: " . $acrhived->message  ;
             // Send Notification to 
             // $keyboard = [

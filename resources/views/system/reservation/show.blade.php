@@ -13,7 +13,7 @@
             </div>            
             <div class="flex flex-col space-y-4">
                 <div>
-                    <h2 class="text-2xl font-semibold">{{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}</h2>
+                    <h2 class="text-2xl font-semibold">{{$r_list->userReservation->name()}}</h2>
                     <span class="block text-sm text-neutral">{{$r_list->userReservation->age()}} years old from {{$r_list->userReservation->country}}</span>
                     <span class="text-sm text-neutral">{{$r_list->userReservation->nationality}}</span>
 
@@ -100,7 +100,7 @@
         </div>
         <div class="divider"></div>
         <article class="text-md tracking-tight text-neutral my-5 px-0 md:px-24 w-auto">
-            <h2 class="text-2xl mb-5 font-bold">Conflict Schedule of {{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}</h2>
+            <h2 class="text-2xl mb-5 font-bold">Conflict Schedule of {{$r_list->userReservation->name()}}</h2>
             <div class="overflow-x-auto w-full">
                 <table class="table w-full">
                     <!-- head -->
@@ -130,7 +130,7 @@
                                 </td>
                                 <td>
                                 <div>
-                                    <div class="font-bold">{{$list->userReservation->first_name ?? ''}} {{$list->userReservation->last_name ?? ''}}</div>
+                                    <div class="font-bold">{{$list->userReservation->name() ?? ''}}</div>
                                     <div class="text-sm opacity-50">{{$list->userReservation->country}}</div>
                                 </div>
                                 </td>
@@ -162,7 +162,7 @@
             @elseif($r_list->status() == "Confirmed")
                 <a class="btn btn-secondary btn-xs" disabled>Confirm</a>
                 <label for="checkin" class="btn btn-success btn-xs">Check-in</label>
-                <x-checkin name="{{$r_list->userReservation->first_name ?? ''}} {{$r_list->userReservation->last_name ?? ''}}" :datas="$r_list" />
+                <x-checkin name="{{$r_list->userReservation->name() ?? ''}}" :datas="$r_list" />
                 <label for="reservation" class="btn btn-info btn-xs" disabled>Check-out</label>
             @elseif($r_list->status() == "Check-in")
                 <a href="" class="btn btn-secondary btn-xs" disabled>Confirm</a>

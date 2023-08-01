@@ -188,7 +188,7 @@ tr:hover .cut { opacity: 1; }
 			</table>
 			<h1>Recipient</h1>
 			<address >
-				<p>{{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}<br></p>
+				<p>{{$r_list->userReservation->name()}}<br></p>
 				<span>{{$r_list->age}} years old from {{$r_list->userReservation->country}}<br></span>
 				<div>
 

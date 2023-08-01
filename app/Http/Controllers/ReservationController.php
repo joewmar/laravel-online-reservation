@@ -527,7 +527,7 @@ class ReservationController extends Controller
         }
         $text = 
         "New Reservation!\n" .
-        "Name: ". $reserve_info->userReservation->first_name . " " . $reserve_info->userReservation->last_name ."\n" . 
+        "Name: ". $reserve_info->userReservation->name() ."\n" . 
         "Age: " . $reserve_info->age ."\n" .  
         "Nationality: " . $reserve_info->userReservation->nationality  ."\n" . 
         "Country: " . $reserve_info->userReservation->country ."\n" . 
@@ -547,7 +547,7 @@ class ReservationController extends Controller
 
         }
         $details = [
-            'name' => $reserve_info->userReservation->first_name . ' ' . $reserve_info->userReservation->last_name,
+            'name' => $reserve_info->userReservation->name(),
             'title' => 'Reservation Complete',
             'body' => 'Your Reservation are done, We just send email for the approve or disapprove confirmation'
         ];
@@ -598,7 +598,7 @@ class ReservationController extends Controller
                 if($sended) {
                     $text = 
                     "Payment Reservation !\n" .
-                    "Name: ". $reservation->userReservation->first_name . " " . $reservation->userReservation->last_name ."\n" . 
+                    "Name: ". $reservation->userReservation->name() ."\n" . 
                     "Country: " . $reservation->userReservation->country ."\n" . 
                     "Payment Method: " . $validated['payment_method'] ."\n" . 
                     "Payment Name: " . $validated['payment_name'] ."\n" . 

@@ -7,7 +7,7 @@
             </div>
             <div class="flex flex-col space-y-4">
                 <div>
-                    <h2 class="text-2xl font-semibold">{{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}</h2>
+                    <h2 class="text-2xl font-semibold">{{$r_list->userReservation->name()}}</h2>
                     <span class="block text-sm text-neutral">{{$r_list->userReservation->age()}} years old from {{$r_list->userReservation->country}}</span>
                     <span class="text-sm text-neutral">{{$r_list->userReservation->nationality}}</span>
 
@@ -72,7 +72,7 @@
             <article x-data="{reason: '{{old('reason')}}'}" class="text-md tracking-tight text-neutral my-5 px-0 md:px-24 w-auto">
                 <form id="disaprove-form" action="{{route('system.reservation.disaprove.store', encrypt($r_list->id))}}" method="post">
                     @csrf
-                <h2 class="text-2xl mb-5 font-bold">Why Disaprove Request of {{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}</h2>
+                <h2 class="text-2xl mb-5 font-bold">Why Disaprove Request of {{$r_list->userReservation->name()}}</h2>
                 <div class="form-control w-full">
                     <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
                         <select x-model="reason" name="reason" id="reason" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>

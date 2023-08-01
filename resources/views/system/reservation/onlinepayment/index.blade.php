@@ -13,7 +13,7 @@
             </div>
             <div class="flex flex-col space-y-4">
                 <div>
-                    <h2 class="text-2xl font-semibold">{{$r_list->userReservation->first_name}} {{$r_list->userReservation->last_name}}</h2>
+                    <h2 class="text-2xl font-semibold">{{$r_list->userReservation->name()}}</h2>
                     <span class="block text-sm text-neutral">{{$r_list->userReservation->age()}} years old from {{$r_list->userReservation->country}}</span>
                     <span class="text-sm text-neutral">{{$r_list->userReservation->nationality}}</span>
                 </div>

@@ -88,7 +88,7 @@ class SystemController extends Controller
     
         $systemUser = System::create($validated);
         telegramSendMessage($systemUser->telegram_chatID, "Hello there, " . $systemUser->first_name . " Your username was verified", null, 'bot2');
-        return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Created');
+        return redirect()->route('system.setting.accounts')->with('success', $systemUser->name() . ' was Created');
 
     }
     public function update(Request $request, $id){
@@ -134,8 +134,8 @@ class SystemController extends Controller
     
             $updated = $systemUser->update($validated);
             if($updated){
-                telegramSendMessage($systemUser->telegram_chatID, "Hello there, " . $systemUser->first_name . " Your username was updated", null, 'bot2');
-                return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Updated');
+                telegramSendMessage($systemUser->telegram_chatID, "Hello there, " . $systemUser->name() . " Your username was updated", null, 'bot2');
+                return redirect()->route('system.setting.accounts')->with('success', $systemUser->name() . ' was Updated');
             }
             else
                 return back()->with('error', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Something Error, Try Again');
@@ -150,7 +150,7 @@ class SystemController extends Controller
         if(Hash::check($validated['passcode'], $this->system_user->user()->passcode)){
             $systemUser = System::findOrFail(decrypt($id));
             $systemUser->delete();
-            return redirect()->route('system.setting.accounts')->with('success', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Deleted');
+            return redirect()->route('system.setting.accounts')->with('success', $systemUser->name() . ' was Deleted');
 
         }
         else{
