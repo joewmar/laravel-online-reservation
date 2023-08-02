@@ -28,6 +28,7 @@ class UserController extends Controller
             'last_name' => ['required', 'min:3'],
             'birthday' => ['required'],
             'country' => ['required', 'min:3'],
+            'nationality' => ['required'],
             'contact' => ['required', 'numeric', 'min:7'],
             'email' => ['required', 'email', Rule::unique('users', 'email')],
             'password' => ['required', 'confirmed', Password::min(8)->symbols()]
@@ -59,7 +60,7 @@ class UserController extends Controller
             'title' => "Let's Verify your Email",
             'body' => 'Verification Code: ' . $otp,
         ];
-        Mail::to(session('uinfo')['email'])->send(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
+        Mail::to(env('SAMPLE_EMAIL') ?? session('uinfo')['email'])->send(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
         $user_info = session('uinfo');
         $user_info['otp'] = $otp;
         session(['uinfo' => $user_info]);
@@ -76,7 +77,7 @@ class UserController extends Controller
 
             if($user){
                 session()->forget('uinfo');
-                return redirect()->intended(route('home'))->with('success', 'Welcome First timer' . auth()->user()->name);
+                return redirect()->intended(route('home'))->with('success', 'Welcome First timer' . auth()->user()->name());
             }
         }
         return redirect()->intended(route('home'));
@@ -134,7 +135,7 @@ class UserController extends Controller
             if($newUser){
                 session()->forget('ginfo');
                 Auth::guard('web')->login($newUser);
-                return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name);
+                return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
             }
             else{
                 return back()->with('error', 'Something Wrong')->withInput( $validated);

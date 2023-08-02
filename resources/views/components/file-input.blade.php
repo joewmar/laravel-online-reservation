@@ -1,4 +1,4 @@
-@props(['id' => '', 'name' => '', 'value', 'placeholder'])
+@props(['id' => '', 'name' => '', 'value', 'placeholder', 'imgID' => 'show_img'])
 <div class="form-control w-full">
     <label class="label">
         <span class="label-text">{{$placeholder}}</span>
@@ -13,7 +13,7 @@
     </label>
 </div>
 <script>
-    let img = document.getElementById('show_img');
+    let img = document.getElementById('{{$imgID}}');
     let input = document.getElementById('{{$id}}');
     input.addEventListener("change", () => {
         img.src = URL.createObjectURL(input.files[0]);

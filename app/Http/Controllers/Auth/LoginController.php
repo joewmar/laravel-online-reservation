@@ -53,7 +53,7 @@ class LoginController extends Controller
             $finduser = User::where('google_id', $user->id)->first();
             if($finduser){
                 Auth::login($finduser);
-                return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name);
+                return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
             }
             else{
                 session('ginfo', [

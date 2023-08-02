@@ -25,7 +25,6 @@ let processImage = async (imgFile) => {
     await worker.initialize('eng');
     let { data: { text } } = await worker.recognize(imgFile);
     lowerTextIMG = String(text.toLowerCase());
-    console.log(typeof text)
     await worker.terminate();
 }
 
@@ -37,7 +36,6 @@ input.addEventListener("change", () => {
         console.log(imgElements[i]); // Tingnan kung tama ang image element na napipili
         if (files[0]) {
             imgElements[i].src = URL.createObjectURL(files[0]);
-            console.log(imgElements);
             contentInfo.style.display = "block";
             btnVerify.style.display = "block";
             btnDone.style.display = "none";

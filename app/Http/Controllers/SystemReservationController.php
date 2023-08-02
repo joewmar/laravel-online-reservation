@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Notifications\Notification;
 use Carbon\Carbon;
 use App\Models\Room;
 use App\Models\System;
@@ -10,17 +9,19 @@ use App\Models\Archive;
 use App\Models\RoomList;
 use App\Models\RoomRate;
 use App\Models\TourMenu;
+use App\Jobs\TelegramJob;
 use App\Models\Reservation;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
-use App\Notifications\EmailNotification;
+use App\Mail\ReservationMail;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\ReservationMail;
 use App\Mail\ReservationConfirmation;
+use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Notifications\Notification;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
 class SystemReservationController extends Controller
@@ -262,7 +263,7 @@ class SystemReservationController extends Controller
     public function showRooms($id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
-        if($reservation->status <= 1) abort(404);
+        if($reservation->status >= 1) abort(404);
         $rooms = Room::all();
         $rates = RoomRate::all();
         return view('system.reservation.show-room',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rates]);
@@ -271,7 +272,7 @@ class SystemReservationController extends Controller
         $system_user = $this->system_user->user();
         $admins = System::all()->where('type', 0)->where('type', 1);
         $reservation = Reservation::findOrFail(decrypt($request->id));
-        if($reservation->status <= 1) abort(404);
+        if($reservation->status >= 1) abort(404);
         $validator = Validator::make($request->all(), [
             'passcode' =>  ['required', 'numeric', 'digits:4'],
             'room_rate' =>  ['required', 'numeric'],
@@ -403,12 +404,11 @@ class SystemReservationController extends Controller
                     "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y') ."\n" . 
                     "Type: " . $reservation->accommodation_type ."\n" . 
                     "Rooms: " . implode(',', $roomDetails) ."\n" . 
-                    "Who Approve: " . $system_user->name;
+                    "Who Approve: " . $system_user->name();
         
                     foreach($admins as $admin){
-                        if($admin->telegram_chatID != null) telegramSendMessage($admin->telegram_chatID, $text, null, 'bot2');
+                        if($admin->telegram_chatID != null) TelegramJob::dispatch($admin->telegram_chatID, $text, 'bot2');
                     }
-                    
                     $text = null;
                     $url = null;
                     if($reservation->payment_method == "Gcash"){
@@ -439,17 +439,8 @@ class SystemReservationController extends Controller
                         'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
                     ];
                     unset($roomDetails);
-                    // $project = [
-                    //     'greeting' => 'Hi '.$reservation->userReservation->first_name . ' ' . $reservation->userReservation->last_name.',',
-                    //     'body' => 'This is the project assigned to you.',
-                    //     'thanks' => 'Thank you this is from codeanddeploy.com',
-                    //     'actionText' => 'View Details',
-                    //     'actionURL' => url('/'),
-                    //     'id' => 57
-                    // ];
-
                     // Notification::send($reservation->userReservation, new EmailNotification($project));
-                    Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->send(new ReservationConfirmation($details['title'], $details, 'reservation.confirm-mail'));                  
+                    Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationConfirmation($details['title'], $details, 'reservation.confirm-mail'));
                     return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Confirmed');
                     unset($details, $text, $url);
                 }
@@ -488,10 +479,9 @@ class SystemReservationController extends Controller
             'body' => 'You now checked in at ' . Carbon::now()->format('F j, Y, g:i A'),
         ];
         if($updated){
-            foreach($admins as $admin){
-                if($admin->telegram_chatID != null) telegramSendMessage($admin->telegram_chatID, $text, null, 'bot2');
-            }
-            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->send(new ReservationMail($details, 'reservation.mail', $details['title']));                  
+            foreach($admins as $admin) if($admin->telegram_chatID != null) TelegramJob::dispatch($admin->telegram_chatID, $text, 'bot2');
+        
+            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             unset($text, $details);
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked in');
         }
@@ -515,6 +505,8 @@ class SystemReservationController extends Controller
     }
     public function disaproveStore(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
+        $system_user = $this->system_user->user();
+
         if($request['reason'] === 'Other'){
             $validated = $request->validate([
                 'reason' => ['required'],
@@ -534,7 +526,7 @@ class SystemReservationController extends Controller
             ]);
             $validated['message'] =  $validated['reason'];
         }
-        if(!Hash::check($validated['passcode'], auth('system')->user()->passcode))  return back()->with('error', 'Invalid Passcode, Try Again')->withInput($validated);
+        if(!Hash::check($validated['passcode'], $system_user->passcode))  return back()->with('error', 'Invalid Passcode, Try Again')->withInput($validated);
 
         $arrAcrhive = [
             "name" => $reservation->userReservation->name(),
@@ -566,7 +558,7 @@ class SystemReservationController extends Controller
             "Check-in: " . Carbon::createFromFormat('Y-m-d', $acrhived->check_in)->format('F j, Y') ."\n" . 
             "Check-out: " . Carbon::createFromFormat('Y-m-d', $acrhived->check_out)->format('F j, Y') ."\n" . 
             "Type: " . $reservation->accommodation_type ."\n" . 
-            "Who Disaprove?: " . auth('system')->user()->name . ' (' . auth('system')->user()->role . ')' ;
+            "Who Disaprove?: " . $system_user->name . ' (' . $system_user->role . ')' ;
             "Reason to Disaprove: " . $acrhived->message  ;
             // Send Notification to 
             // $keyboard = [
@@ -575,12 +567,7 @@ class SystemReservationController extends Controller
             //     ],
             // ];
             if(!auth('system')->user()->type === 0){
-                Telegram::bot('bot2')->sendMessage([
-                    'chat_id' => auth()->user()->telegram_chatID,
-                    'parse_mode' => 'HTML',
-                    'text' => $text,
-                    // 'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
-                ]);
+                TelegramJob::dispatch($system_user->telegram_chatID, $text, 'bot2');
             }
             $text = null;
             $details = [
@@ -588,7 +575,7 @@ class SystemReservationController extends Controller
                 'title' => 'Reservation Disaprove',
                 'body' => 'Your Reservation are disapprove due of ' . $acrhived->message. 'Sorry for waiting. Please try again to make reservation in another dates',
             ];
-            Mail::to($acrhived->userArchive->email)->send(new ReservationMail($details, 'reservation.mail', $details['title']));
+            Mail::to(env('SAMPLE_EMAIL', $acrhived->userArchive->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             $details = null;
             return redirect()->route('system.reservation.home')->with('success', 'Disaprove of ' . $acrhived->userArchive->first_name . ' ' . $acrhived->userArchive->last_name . ' was Successful');
         }

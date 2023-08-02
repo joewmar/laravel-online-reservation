@@ -111,8 +111,12 @@
           </div>
           
           <div class="order-first md:order-last bg-white py-12 md:py-24">
-            <div class="divider flex md:hidden"></div>
             <div class="mx-auto max-w-lg px-4 lg:px-8">
+              <div class="mb-5 py-4 w-full flex justify-center">
+                <div class="rounded {{!empty(session()->has('rinfo')) ? 'border shadow-xl w-80' : 'bg-transparent w-96'}} ">
+                  <img src="{{!empty(decrypt(session('rinfo')['valid_id']) )? asset(decrypt(session('rinfo')['valid_id'])) : asset('images/logo.png')}}" alt="Valid ID"  class="object-center" />
+                </div>
+              </div>
               <div class="grid grid-cols-6 gap-8">
                 <div class="col-span-2">
                   <label for="FirstName" class="block text-xs font-medium text-gray-700">

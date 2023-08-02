@@ -60,6 +60,6 @@ class System extends Authenticatable
         return $role ?? $this->attributes['type'];
     }
     public function name(){
-        return  $this->attributes['first_name'] . ' ' . $this->attributes['last_name'];
+        return $this->attributes['first_name'] . ' ' . $this->attributes['last_name'];
     }
 }

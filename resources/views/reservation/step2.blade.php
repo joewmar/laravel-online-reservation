@@ -1,6 +1,6 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
-    $arrPayment = ['Walk-in', 'Gcash', 'Paypal'];
+    $arrPayment = ['Gcash', 'Paypal'];
     $reserve = [];
     $TourInfo = [];
     $tourListCart = [];

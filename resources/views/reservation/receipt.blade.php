@@ -163,7 +163,7 @@ tr:hover .cut { opacity: 1; }
 		</style>
 	
 	</head>
-	<body>
+	<body style="height: auto;">
 	
 		<header>
 			<h1>Receipt</h1>

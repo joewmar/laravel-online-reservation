@@ -49,7 +49,7 @@
           </div>
         </label>
         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
-          <li><span class="text-lg font-bold">{{auth('web')->user()->name}}</span></li>
+          <li><span class="text-lg font-bold">{{auth('web')->user()->name()}}</span></li>
           <li>
             <a class="justify-between" class="{{$activeNav === 'Profile' ? 'text-primary' : ''}}">
               Profile

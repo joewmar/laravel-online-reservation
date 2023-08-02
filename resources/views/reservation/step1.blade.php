@@ -27,14 +27,29 @@
                         <i class="fa-solid fa-arrow-left"></i>
                         <span class="hidden md:inline">Go Home</span>
                     </a>
-                    <button class="btn btn-primary">
-                        @if(session()->has('ck') && session('ck')  === true)
+                    @if(session()->has('ck') && session('ck')  === true)
+                        <label for="step2" class="btn btn-primary">
                             <span class="hidden md:inline">Proceed</span>
                             <i class="fa-solid fa-arrow-right"></i>
-                        @else
+                        </label>
+                        <x-modal id="step2" title="Before to proceed" >
+                            <p class="py-4 text-error"><strong>Note:</strong> When making an online reservation, it is required to pay for downpayment.</p>
+                            <p class="py-4"><strong>Allow To Pay for Online Reservation</strong></p>
+                            <p>
+                                <ul class="marker:text-primary">
+                                    <li>Gcash</li>
+                                    <li>PayPal</li>
+                                </ul>
+                            </p>
+                            <div class="modal-action">
+                                <button type="submit" class="btn btn-primary">Continue</button>
+                            </div>
+                        </x-modal>
+                    @else
+                        <button class="btn btn-primary">
                             <span class="hidden md:inline">Check</span>
-                        @endif
-                    </button>
+                        </button>
+                    @endif
                 </div>
             </form>
         </div>

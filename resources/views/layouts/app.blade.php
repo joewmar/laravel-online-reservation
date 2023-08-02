@@ -54,7 +54,7 @@
                             <ul class="p-2 shadow menu dropdown-content bg-base-100 rounded-box w-52">
                               <li>
                                 <a href="#">
-                                    {{ Auth::user()->name }}
+                                    {{ Auth::user()->name() }}
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">

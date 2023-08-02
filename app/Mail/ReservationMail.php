@@ -9,7 +9,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class ReservationMail extends Mailable
+class ReservationMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
     public $details, $view, $subject;
@@ -38,12 +38,12 @@ class ReservationMail extends Mailable
     /**
      * Get the message content definition.
      */
-    public function content(): Content
+    public function build()
     {
-        return new Content(
-            view: $this->view,
-        );
+        return $this->view($this->view, ['details' => $this->details])
+                    ->subject($this->details['title']);
     }
+
 
     /**
      * Get the attachments for the message.

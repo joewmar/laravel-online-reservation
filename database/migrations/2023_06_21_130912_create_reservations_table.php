@@ -29,6 +29,7 @@ return new class extends Migration
             $table->decimal('total')->nullable();
             $table->decimal('downpayment')->default(0);
             $table->text('request_message')->nullable();
+            // $table->string('valid_id');
             $table->dateTime('payment_cutoff')->nullable();
             $table->timestamps();
         });

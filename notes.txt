@@ -17,4 +17,6 @@ Cloning laravel project from github
 6.Run php artisan serve
 7.Go to link localhost:8000
 
+php artisan queue:work -- wag kalimutan gawin sa testing
+
 

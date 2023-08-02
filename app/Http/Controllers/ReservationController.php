@@ -15,6 +15,7 @@ use App\Mail\ReservationMail;
 use App\Models\OnlinePayment;
 use Illuminate\Validation\Rule;
 use AmrShawky\LaravelCurrency\Facade\Currency;
+use App\Jobs\TelegramJob;
 use App\Models\Archive;
 use App\Notifications\EmailNotification;
 use Illuminate\Notifications\Notification;
@@ -29,9 +30,10 @@ class ReservationController extends Controller
     private $user;
     public function __construct()
     {
-        $this->user = auth('web')->user();
+        $this->user = auth('web');
         $this->middleware(function ($request, $next) {
-            $existingReservation = Reservation::where('user_id', $this->user->id)->first();
+
+            $existingReservation = Reservation::where('user_id', $this->user->user()->id)->first();
 
             if ($existingReservation) {
                 return redirect()->route('home')->with('error', "Sorry, you can only make one reservation.");
@@ -80,6 +82,7 @@ class ReservationController extends Controller
         // return view('reservation.step1', ['cin' => $request['check_in'], 'cout' => $request['check_out'], 'at' => $request['accommodation_type'], 'px' => $request['pax'], 'ck' => $request['ck'] ?? '0']);
     }
     public function dateCheck(Request $request){
+        session()->forget('rinfo');
         if(checkAvailRooms($request['pax'])){
             return redirect()->route('reservation.date')->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput();
         }
@@ -432,10 +435,43 @@ class ReservationController extends Controller
 
     }
     public function details(Request $request){
+        if($request->has('details') && $request['details'] == "update"){
+            $user = User::find(decrypt($request['user']) ?? null);
+            return view('reservation.step3', ['user' => $user]);
+        }
         return view('reservation.step3');
+    }
+    public function detailsUpdate(Request $request){
+        $user = User::find(decrypt($request->id));
+        $validated = $request->validate([
+            'first_name' => ['required', 'min:3'],
+            'last_name' => ['required', 'min:3'],
+            'birthday' => ['required'],
+            'country' => ['required', 'min:3'],
+            'nationality' => ['required'],
+            'contact' => ['required', 'numeric', 'min:7'],
+            'email' => Rule::when($user->email === $request['email'], ['required', 'email'] ,['required', 'email',  Rule::unique('users', 'email')]),
+        ]);
+        $user->update($validated);
+        if($user) return redirect()->route('reservation.details')->with('success', $user->name() . ' was updated!');
     }
     public function detailsStore(Request $request){
         $user = User::findOrFail(auth('web')->user()->id);
+        $validated = $request->validate([
+            'valid_id' => ['required' ,'image', 'mimes:jpeg,png,jpg', 'max:5024'], 
+        ], [
+            'required' => 'The image is required',
+            'image' => 'The file must be an image of type: jpeg, png, jpg',
+            'mimes' => 'The image must be of type: jpeg, png, jpg',
+            'max' => 'The image size must not exceed 5 MB',
+        ]);
+        
+        if ($request->hasFile('valid_id')) {
+            $file = $request->file('valid_id');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('temp'), $filename);
+
+        }
         $validated =[
             'first_name' => $user->first_name,
             'last_name' => $user->last_name,
@@ -444,13 +480,12 @@ class ReservationController extends Controller
             'nationality' => $user->nationality,
             'contact' => $user->contact,
             'email' => $user->email,
+            'valid_id' => 'temp/' . $filename,
         ];
         if($validated){
             $encryptedArray  = encryptedArray($validated);
             $reserveInfo = session('rinfo');
-            foreach(array_keys($encryptedArray) as $item){
-                $reserveInfo[$item] = $encryptedArray[$item];
-            }
+            foreach(array_keys($encryptedArray) as $item) $reserveInfo[$item] = $encryptedArray[$item];
             // Reset Session Info
             session(['rinfo' => $reserveInfo]);
             return redirect()->route('reservation.confirmation');
@@ -542,9 +577,8 @@ class ReservationController extends Controller
         ];
         foreach($systemUser as $user){
             if($user->telegram_chatID != null){
-                telegramSendMessage($user->telegram_chatID, $text, $keyboard);
+                TelegramJob::dispatch($user->telegram_chatID, $text, $keyboard);
             }
-
         }
         $details = [
             'name' => $reserve_info->userReservation->name(),
@@ -552,7 +586,7 @@ class ReservationController extends Controller
             'body' => 'Your Reservation are done, We just send email for the approve or disapprove confirmation'
         ];
         // Notification::send($reserve_info->userReservation, new EmailNotification('recelestino90@gmail.com', 'reservation.mail', $details));
-        Mail::to(env('SAMPLE_EMAIL') ?? $reserve_info->userReservation->email)->send(new ReservationMail($details, 'reservation.mail', $details['title']));
+        Mail::to(env('SAMPLE_EMAIL', $reserve_info->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
         session()->forget('rinfo');
         session()->forget('ck');
         unset($text, $keyboard, $details, $uinfo);
@@ -611,13 +645,7 @@ class ReservationController extends Controller
                     ];
                     foreach($systemUser as $user){
                         if($user->telegram_chatID != null){
-                            Telegram::sendMessage([
-                                'chat_id' => $user->telegram_chatID,
-                                'parse_mode' => 'HTML',
-                                'text' => $text,
-                                'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
-                            ]);
-                            
+                            TelegramJob::dispatch($user->telegram_chatID, $text, $keyboard); 
                         }
             
                     }

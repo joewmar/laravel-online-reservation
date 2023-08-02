@@ -94,8 +94,9 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
         Route::post('/choose/check', [ReservationController::class, 'chooseCheckAll'])->name('choose.check.all');
 
         Route::post('/choose/check/one', [ReservationController::class, 'chooseCheck1'])->name('choose.check.one');
-        Route::get('/detials', [ReservationController::class, 'details'])->name('details');
-        Route::post('/detials', [ReservationController::class, 'detailsStore'])->name('details.store');
+        Route::get('/details', [ReservationController::class, 'details'])->name('details');
+        Route::post('/details', [ReservationController::class, 'detailsStore'])->name('details.store');
+        Route::put('/details/user/{id}/update', [ReservationController::class, 'detailsUpdate'])->name('details.update');
 
         Route::get('/confimation', [ReservationController::class, 'confirmation'])->name('confirmation');
         Route::post('/confimation/convert', [ReservationController::class, 'convert'])->name('convert');
