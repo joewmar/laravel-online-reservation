@@ -28,6 +28,7 @@ class Reservation extends Model
         'amount',
         'downpayment',
         'total',
+        'valid_id',
         'request_message',
     ];
     public function userReservation(){

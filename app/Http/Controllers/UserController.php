@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Auth\Events\Registered;
-
+use Mockery\CountValidator\AtMost;
 
 class UserController extends Controller
 {
@@ -60,7 +60,7 @@ class UserController extends Controller
             'title' => "Let's Verify your Email",
             'body' => 'Verification Code: ' . $otp,
         ];
-        Mail::to(env('SAMPLE_EMAIL') ?? session('uinfo')['email'])->send(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
+        Mail::to(env('SAMPLE_EMAIL', session('uinfo')['email']))->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
         $user_info = session('uinfo');
         $user_info['otp'] = $otp;
         session(['uinfo' => $user_info]);
@@ -91,7 +91,7 @@ class UserController extends Controller
         ]);
 
         // Attempt to log the user in (If user credentials are correct)
-        if(auth('web')->attempt($validated, ($request->get('remember') ?? false))){
+        if(Auth::guard('web')->attempt($validated, $request['remember'] ?? 0)){
             $request->session()->regenerate(); //Regenerate Session ID
             return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
         }
@@ -102,7 +102,7 @@ class UserController extends Controller
     }
     // Logout
     public function logout(Request $request){
-        auth('web')->logout();
+        Auth::guard('web')->logout();
         // Recommend to invalidate the users session and regenerate the toke from @crfs
         $request->session()->invalidate();
         $request->session()->regenerateToken();

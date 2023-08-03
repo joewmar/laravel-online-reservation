@@ -88,7 +88,7 @@ class SystemController extends Controller
         }
     
         $systemUser = System::create($validated);
-        TelegramJob::dispatch($systemUser->telegram_chatID, "Hello there, " . $systemUser->first_name . " Your username was verified", 'bot2');
+        telegramSendMessage($systemUser->telegram_chatID, "Hello there, " . $systemUser->first_name . " Your username was verified", null, 'bot2');
         return redirect()->route('system.setting.accounts')->with('success', $systemUser->name() . ' was Created');
 
     }
@@ -131,8 +131,6 @@ class SystemController extends Controller
     
             $updated = $systemUser->update($validated);
             if($updated){
-                telegramSendMessage($systemUser->telegram_chatID, "Hello there, " . $systemUser->name() . " Your username was updated", null, 'bot2');
-                TelegramJob::dispatch($systemUser->telegram_chatID, "Hello there, " . $systemUser->first_name . " Your username was verified updated", 'bot2');
                 return redirect()->route('system.setting.accounts')->with('success', $systemUser->name() . ' was Updated');
             }
             else
@@ -165,7 +163,7 @@ class SystemController extends Controller
         ]);
 
         // guard('your_guard_created') Attempt to log the user in (If user credentials are correct)
-        if(auth('system')->attempt($validated)){
+        if(Auth::guard('system')->attempt($validated)){
             $request->session()->regenerate(); //Regenerate Session ID
             return redirect()->intended(route('system.home'));
         }
@@ -175,7 +173,8 @@ class SystemController extends Controller
     }
     
     public function logout(Request $request){
-        auth('system')->logout();
+        Auth::logout();
+        Auth::guard('system')->logout();
         // Recommend to invalidate the users session and regenerate the toke from @crfs
         $request->session()->invalidate();
         $request->session()->regenerateToken();

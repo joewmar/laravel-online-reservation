@@ -55,38 +55,38 @@ class DatabaseSeeder extends Seeder
             'price' => 1100.00,
         ]);
 
-        \App\Models\Reservation::factory()->create([
-            'user_id' => 1,
-            // 'room_id' => 1, (1, 1)
-            // 'room_rate_id' => 1,
-            'pax' => 1,
-            // 'menu' => '2_1',
-            'accommodation_type' => 'Room Only',
-            'payment_method' => 'Gcash',
-            'age' => User::findOrfail(1)->age(),
-            'check_in' => Carbon::now()->addDays(30)->toDateTimeString(),
-            'check_out' => Carbon::now()->addDays(34)->toDateTimeString(),
-            'status' => 0,
-            // 'additional_menu',
-            // 'amount' => ['room1' => 3150.00],
-            // 'total' => 3150.00,
-        ]);
-        \App\Models\Reservation::factory()->create([
-            'user_id' => 2,
-            // 'room_id' => 1,
-            // 'room_rate_id' => 1,
-            'pax' => 2,
-            'menu' => [2],
-            'accommodation_type' => 'Day Tour',
-            'payment_method' => 'Gcash',
-            'age' => User::findOrfail(1)->age(),
-            'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
-            'check_out' => Carbon::now()->addDays(20)->toDateTimeString(),
-            'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-            // 'additional_menu',
-            'amount' => ['tm2' => 2100.00],
-            'total' => 3100.00,
-        ]);
+        // \App\Models\Reservation::factory()->create([
+        //     'user_id' => 1,
+        //     // 'room_id' => 1, (1, 1)
+        //     // 'room_rate_id' => 1,
+        //     'pax' => 1,
+        //     // 'menu' => '2_1',
+        //     'accommodation_type' => 'Room Only',
+        //     'payment_method' => 'Gcash',
+        //     'age' => User::findOrfail(1)->age(),
+        //     'check_in' => Carbon::now()->addDays(30)->toDateTimeString(),
+        //     'check_out' => Carbon::now()->addDays(34)->toDateTimeString(),
+        //     'status' => 0,
+        //     // 'additional_menu',
+        //     // 'amount' => ['room1' => 3150.00],
+        //     // 'total' => 3150.00,
+        // ]);
+        // \App\Models\Reservation::factory()->create([
+        //     'user_id' => 2,
+        //     // 'room_id' => 1,
+        //     // 'room_rate_id' => 1,
+        //     'pax' => 2,
+        //     'menu' => [2],
+        //     'accommodation_type' => 'Day Tour',
+        //     'payment_method' => 'Gcash',
+        //     'age' => User::findOrfail(1)->age(),
+        //     'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
+        //     'check_out' => Carbon::now()->addDays(20)->toDateTimeString(),
+        //     'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
+        //     // 'additional_menu',
+        //     'amount' => ['tm2' => 2100.00],
+        //     'total' => 3100.00,
+        // ]);
 
         \App\Models\System::factory()->create([
             'first_name' => 'Hello',
@@ -113,7 +113,7 @@ class DatabaseSeeder extends Seeder
             'telegram_username' => 'joewmar',
             'telegram_chatID' => '5870248478'
         ]);
-        \App\Models\System::factory(10)->create();
+        // \App\Models\System::factory(10)->create();
 
         \App\Models\TourMenuList::factory()->create([
             'title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike',
@@ -199,7 +199,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
         refreshRoomNumber();
-        // \App\Models\Archive::factory(10)->create();
+        \App\Models\Archive::factory(10)->create();
 
 
     }

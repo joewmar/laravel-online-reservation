@@ -35,6 +35,12 @@ return [
             'root' => storage_path('app'),
             'throw' => false,
         ],
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'), // Specify the directory path for private storage
+            'url' => env('APP_URL') . '/storage/private', // URL for private storage
+            'visibility' => 'private', // Set visibility to private
+        ],
 
         'public' => [
             'driver' => 'local',

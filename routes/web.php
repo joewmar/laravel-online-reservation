@@ -50,14 +50,13 @@ Route::get('/about', function () {
     return view('landing.about_us', ['activeNav' => 'About Us']);
 })->name('about.us');
 
-Route::get('reservation/{id}/receipt', [SystemReservationController::class, 'receipt'])->name('reservation.receipt');
-
 
 Route::prefix('reservation')->name('reservation.')->group(function (){
     Route::get('/date', [ReservationController::class, 'date'])->name('date');
     Route::post('/date', [ReservationController::class, 'dateCheck'])->name('date.check');
     Route::post('/date/check', [ReservationController::class, 'dateStore'])->name('date.check.store');
 });
+
 
 // Route::middleware(['guest:web'])->group(function(){
 Route::middleware(['guest:web'])->group(function(){
@@ -78,10 +77,11 @@ Route::middleware(['guest:web'])->group(function(){
     Route::get('/auth/google/fillup', [UserController::class, 'fillupGoogle'])->name('google.fillup');
     Route::post('/auth/google/fillup/update', [UserController::class, 'fillupGoogleUpdate'])->name('google.fillup.store');
     
+
 });
 
 // Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
-Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
+Route::middleware(['auth:web'])->group(function(){
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::view('/profile', 'home')->name('profile');
 
@@ -101,6 +101,7 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
         Route::get('/confimation', [ReservationController::class, 'confirmation'])->name('confirmation');
         Route::post('/confimation/convert', [ReservationController::class, 'convert'])->name('convert');
         Route::post('/store', [ReservationController::class, 'storeReservation'])->name('store');
+        Route::get('{id}/done', [ReservationController::class, 'done'])->name('done');
         Route::post('/done/{id}/message/store', [ReservationController::class, 'storeMessage'])->name('done.message.store');
 
         Route::get('/{id}/gcash', [ReservationController::class, 'gcash'])->name('gcash');
@@ -116,7 +117,9 @@ Route::prefix('system')->name('system.')->group(function(){
        Route::view('/login', 'system.login')->name('login');
        Route::post('/check', [SystemController::class, 'check'])->name('check');
     });
-    Route::middleware(['auth:system', 'preventBackhHistory'])->group(function(){
+    Route::middleware(['auth:system'])->group(function(){
+        Route::post('/logout', [SystemController::class, 'logout'])->name('logout');
+
         Route::view('/', 'system.dashboard.index',  ['activeSb' => 'Home'])->name('home');
         
         Route::prefix('reservation')->name('reservation.')->group(function(){
@@ -232,6 +235,11 @@ Route::prefix('system')->name('system.')->group(function(){
         });
 
 
-        Route::post('/logout', [SystemController::class, 'logout'])->name('logout');
     });  
 });
+
+Route::get('reservation/{id}/receipt', [SystemReservationController::class, 'receipt'])->name('reservation.receipt');
+
+// Route::middleware(['auth.image'])->group(function () {
+//     Route::get('/private/{folder}/{filename}', [HomeController::class,'showImage'])->name('private.image');
+// });

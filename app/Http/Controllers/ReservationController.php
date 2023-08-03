@@ -15,13 +15,11 @@ use App\Mail\ReservationMail;
 use App\Models\OnlinePayment;
 use Illuminate\Validation\Rule;
 use AmrShawky\LaravelCurrency\Facade\Currency;
-use App\Jobs\TelegramJob;
 use App\Models\Archive;
 use App\Notifications\EmailNotification;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-use Telegram\Bot\Laravel\Facades\Telegram;
 
 
 
@@ -38,8 +36,9 @@ class ReservationController extends Controller
             if ($existingReservation) {
                 return redirect()->route('home')->with('error', "Sorry, you can only make one reservation.");
             }
+
             return $next($request);
-        })->except(['date', 'dateCheck', 'dateStore', 'index']); // You can specify the specific method where this middleware should be applied.
+        })->except(['date', 'dateCheck', 'dateStore', 'index', 'done', 'storeMessage', 'gcash', 'paymentStore']); // You can specify the specific method where this middleware should be applied.
     }
     public function index(Request $request){
         $reservation = Reservation::all()->where('user_id', auth('web')->user()->id) ?? [];
@@ -83,9 +82,7 @@ class ReservationController extends Controller
     }
     public function dateCheck(Request $request){
         session()->forget('rinfo');
-        if(checkAvailRooms($request['pax'])){
-            return redirect()->route('reservation.date')->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput();
-        }
+
         // Check in (startDate to endDate) trim convertion
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
@@ -96,6 +93,9 @@ class ReservationController extends Controller
         if(str_contains($request['check_out'], ', ')){
             $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
             $request['check_out'] = $date->format('Y-m-d');
+        }
+        if(checkAvailRooms($request['pax'], $request['check_in'])){
+            return redirect()->route('reservation.date')->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
         }
 
         $validator = null;
@@ -175,7 +175,9 @@ class ReservationController extends Controller
             $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
             $request['check_out'] = $date->format('Y-m-d');
         }
-
+        if(checkAvailRooms($request['pax'], $request['check_in'])){
+            return redirect()->route('reservation.date')->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
+        }
         $validated = null;
         if($request['accommodation_type'] === 'Day Tour'){
             $validated = $request->validate([
@@ -435,7 +437,7 @@ class ReservationController extends Controller
 
     }
     public function details(Request $request){
-        if($request->has('details') && $request['details'] == "update"){
+        if($request->has('details') && $request['details'] === "update"){
             $user = User::find(decrypt($request['user']) ?? null);
             return view('reservation.step3', ['user' => $user]);
         }
@@ -455,24 +457,9 @@ class ReservationController extends Controller
         $user->update($validated);
         if($user) return redirect()->route('reservation.details')->with('success', $user->name() . ' was updated!');
     }
-    public function detailsStore(Request $request){
+    public function detailsStore(){
         $user = User::findOrFail(auth('web')->user()->id);
-        $validated = $request->validate([
-            'valid_id' => ['required' ,'image', 'mimes:jpeg,png,jpg', 'max:5024'], 
-        ], [
-            'required' => 'The image is required',
-            'image' => 'The file must be an image of type: jpeg, png, jpg',
-            'mimes' => 'The image must be of type: jpeg, png, jpg',
-            'max' => 'The image size must not exceed 5 MB',
-        ]);
-        
-        if ($request->hasFile('valid_id')) {
-            $file = $request->file('valid_id');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('temp'), $filename);
-
-        }
-        $validated =[
+        $unfo = [
             'first_name' => $user->first_name,
             'last_name' => $user->last_name,
             'age' => $user->age(),
@@ -480,21 +467,18 @@ class ReservationController extends Controller
             'nationality' => $user->nationality,
             'contact' => $user->contact,
             'email' => $user->email,
-            'valid_id' => 'temp/' . $filename,
         ];
-        if($validated){
-            $encryptedArray  = encryptedArray($validated);
-            $reserveInfo = session('rinfo');
-            foreach(array_keys($encryptedArray) as $item) $reserveInfo[$item] = $encryptedArray[$item];
-            // Reset Session Info
-            session(['rinfo' => $reserveInfo]);
-            return redirect()->route('reservation.confirmation');
-        }
+        $encryptedArray  = encryptedArray($unfo);
+        $reserveInfo = session('rinfo');
+        foreach(array_keys($encryptedArray) as $item) $reserveInfo[$item] = $encryptedArray[$item];
+        // Reset Session Info
+        session(['rinfo' => $reserveInfo]);
+        return redirect()->route('reservation.confirmation');
+        
     }
     public function confirmation(Request $request){
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $user_menu = [];
-
         if($uinfo['at'] !== 'Room Only' && $uinfo['tm'] != null){
             foreach($uinfo['tm'] as $key => $item){
                 $user_menu[$key]['id'] = TourMenu::findOrFail($item)->id;
@@ -526,11 +510,22 @@ class ReservationController extends Controller
     public function storeReservation(Request $request){
         $systemUser = System::all()->where('type', 0)->where('type', 1);
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
+        $validated = $request->validate([
+            'valid_id' => ['required' ,'image', 'mimes:jpeg,png,jpg', 'max:5024'], 
+            'amount' => Rule::when(!empty($request['amount']), ['required', 'array'], ['nullable']), 
+        ], [
+            'required' => 'The image is required',
+            'image' => 'The file must be an image of type: jpeg, png, jpg',
+            'mimes' => 'The image must be of type: jpeg, png, jpg',
+            'max' => 'The image size must not exceed 5 MB',
+        ]);
+        if($request->hasFile('valid_id')){  
+            $validated['valid_id'] = $request->file('valid_id')->store('valid_id', 'private');
+        }
+
         $reserve_info = null;
         if($uinfo['at'] !== 'Room Only'){
-            $validated = $request->validate(['amount.*' => ['required']]);
             $total = 0;
-
             foreach($validated['amount'] as $amount) {
                 $amounts[explode('-', $amount)[0]] = (double)explode('-', $amount)[1];
                 $total += (double)explode('-', $amount)[1];
@@ -547,6 +542,7 @@ class ReservationController extends Controller
                     'check_out' => $uinfo['cout'] ?? '',
                     'amount' => $amounts ?? '',
                     'total' => $total ?? '',
+                    'valid_id' => $validated['valid_id'],
                 ]);
             }
         }
@@ -558,6 +554,8 @@ class ReservationController extends Controller
                 'check_in' => $uinfo['cin'] ?? '',
                 'check_out' => $uinfo['cout'] ?? '',
                 'accommodation_type' => $uinfo['at'] ?? '',
+                'valid_id' => $validated['valid_id'],
+
             ]);
         }
         $text = 
@@ -575,11 +573,6 @@ class ReservationController extends Controller
                 ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reserve_info->id))],
             ],
         ];
-        foreach($systemUser as $user){
-            if($user->telegram_chatID != null){
-                TelegramJob::dispatch($user->telegram_chatID, $text, $keyboard);
-            }
-        }
         $details = [
             'name' => $reserve_info->userReservation->name(),
             'title' => 'Reservation Complete',
@@ -589,7 +582,16 @@ class ReservationController extends Controller
         Mail::to(env('SAMPLE_EMAIL', $reserve_info->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
         session()->forget('rinfo');
         session()->forget('ck');
+        // foreach($systemUser as $user){
+        //     if($user->telegram_chatID){
+        //         telegramSendMessageWithPhoto($user->telegram_chatID, $text, showImage($reserve_info->valid_id), $keyboard, $bot = 'bot1');
+        //     }
+        // }
         unset($text, $keyboard, $details, $uinfo);
+        return redirect()->route('reservation.done', ['id' => encrypt($reserve_info->id)]);
+    }
+    public function done($id){
+        $reserve_info = Reservation::findOrFail(decrypt($id));
         return view('reservation.done', ['id' => $reserve_info->id]);
     }
     public function storeMessage(Request $request){
@@ -598,6 +600,7 @@ class ReservationController extends Controller
             'request_message' => 'required',
         ]);
         $reservation->update($validate);
+        return redirect()->route('home')->with('success', 'Thank you for your request');
     }
     public function gcash($id){
         $reservation = Reservation::findOrFail(decrypt($id));
@@ -645,7 +648,7 @@ class ReservationController extends Controller
                     ];
                     foreach($systemUser as $user){
                         if($user->telegram_chatID != null){
-                            TelegramJob::dispatch($user->telegram_chatID, $text, $keyboard); 
+                            telegramSendMessage($user->telegram_chatID, $text, $keyboard); 
                         }
             
                     }

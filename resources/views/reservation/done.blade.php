@@ -16,12 +16,12 @@
               <p class="mt-4 sm:text-xl/relaxed">
                 Do you want some request?
                 <x-textarea name="request_message" id="request_message" />
-                <div class="flex flex-wrap justDoy-center gap-4">
+                <div class="flex flex-wrap justify-center gap-4">
                   <a class="btn btn-ghost" href="{{route('home')}}">
                     Skip
                   </a>
                   <button class="btn btn-primary">
-                    Send
+                    Send Request
                   </button>
                 </div>
               </p>

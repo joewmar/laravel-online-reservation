@@ -4,10 +4,9 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class Manager
+class AuthenticateImageAccess
 {
     /**
      * Handle an incoming request.
@@ -16,11 +15,14 @@ class Manager
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(Auth::guard('system')->check() && Auth::guard('system')->role() === "Manager"){
-            return $next($request);
+        // Check if the user is authenticated
+
+        if (!auth('system')->check() && !auth('web')->check()) 
+        {
+            abort(404); // Return unauthorized response
         }
-        else{
-            abort(404);
-        }
+
+        return $next($request);
+        
     }
 }

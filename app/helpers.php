@@ -3,6 +3,7 @@
 use Carbon\Carbon;
 use App\Models\Room;
 use App\Models\Reservation;
+use Telegram\Bot\FileUpload\InputFile;
 use Illuminate\Support\Facades\Storage;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
@@ -106,53 +107,81 @@ function getChatIdByGroup(){
     }
     return null;
 }
-function checkAvailRooms($pax){
+function checkAvailRooms($pax, $dates){
     $isFull = false;
     $countPax = 0;
     $rooms = Room::all();
-    $reservation = Reservation::all();
+    $reservation = Reservation::where('status', '>', 1);
     $maxOccAll = 0;
     foreach($rooms as $key => $room){
-        $countOccupancy = 0;
-        $maxOccAll += $room->room->max_occupancy;
-        foreach (explode(',', $room->customer) as $key => $item) {
-            $arrPreCus[$key]['pax'] = explode('-', $item)[1] ?? '';
-            
-            if(!($room->room->max_occupancy ==  $countOccupancy )){
-                $countOccupancy += (int)$arrPreCus[$key]['pax'];
+        if($room->availability == 0){
+            $countOccupancy = 0;
+            $maxOccAll += $room->room->max_occupancy;
+            if($room->customer){
+                foreach ($room->customer as $key => $item) {
+                    $arrPreCus[$key]['pax'] = $item ?? '';
+                    if(!($room->room->max_occupancy >=  $countOccupancy)){
+                        $countOccupancy += (int)$arrPreCus[$key]['pax'];
+                    }
+                }
+            }
+            $countPax += (int)$countOccupancy;
+        }
+    }
+    $compute = $maxOccAll - $countPax ; // Get All Available Room
+    if($compute >= $pax){
+        foreach($reservation as $item){
+            if(Carbon::parse($item->check_out)->timestamp < Carbon::parse($dates)->timestamp){
+                $isFull = true;
+                break;
+            }
+            else{
+                $isFull = false;
+    
             }
         }
-        $countPax += (int)$countOccupancy;
-    }
-    $compute = $maxOccAll - $countPax ; // Get Available Room
-    if($compute >= $pax){
-        $isFull = false;
     }
     else{
         $isFull = true;
     }
+    unset($compute, $countPax, $arrPreCus, $countOccupancy, $maxOccAll, $rooms, $reservation, $countPax);
     return $isFull;
 }
 function telegramSendMessage($chatID, $message, $keyboard = null, $bot = 'bot1'){
-    try{
-        if($keyboard != null){
-            Telegram::bot($bot)->sendMessage([
-                'chat_id' => $chatID,
-                'parse_mode' => 'HTML',
-                'text' => $message,
-                'reply_markup' => json_encode(['inline_keyboard' => $keyboard]) ,
-            ]);
-        }
-        else{
-            Telegram::bot($bot)->sendMessage([
-                'chat_id' => $chatID,
-                'parse_mode' => 'HTML',
-                'text' => $message,
-            ]);
-        }
+    if($keyboard != null){
+        Telegram::bot($bot)->sendMessage([
+            'chat_id' => $chatID,
+            'parse_mode' => 'HTML',
+            'text' => $message,
+            'reply_markup' => json_encode(['inline_keyboard' => $keyboard]) ,
+        ]);
     }
-    catch(Exception $e){
-
+    else{
+        Telegram::bot($bot)->sendMessage([
+            'chat_id' => $chatID,
+            'parse_mode' => 'HTML',
+            'text' => $message,
+        ]);
     }
+    
 }
-
+function telegramSendMessageWithPhoto($chatID, $message, $photoPath, $keyboard = null, $bot = 'bot1'){    
+    if($keyboard !== null){
+        $response = Telegram::bot($bot)->sendPhoto([
+            'chat_id' => $chatID,
+            'photo' => InputFile::create($photoPath),
+            'caption' => $message,
+            'parse' => 'HTML',
+            'reply_markup' => json_encode(['inline_keyboard' => $keyboard]) ,
+        ]);
+    }
+    else{
+        $response = Telegram::bot($bot)->sendPhoto([
+            'chat_id' => $chatID,
+            'parse' => 'HTML',
+            'photo' => InputFile::create($photoPath),
+            'caption' => $message,
+        ]);
+    }
+    return response($response);
+}

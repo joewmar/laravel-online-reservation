@@ -18,6 +18,7 @@ class System extends Authenticatable
      *
      * @var array<int, string>
      */
+    protected $guard = 'system';
     protected $fillable = [
         'avatar',
         'first_name',

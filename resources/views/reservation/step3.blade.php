@@ -32,44 +32,11 @@
                   Note: Don't worry this information will confidentials!
               </div>
             @endif
-            @if(!$update)
-              <div class="mt-8">
-                <form id="details-form" action="{{ route('reservation.details.store')}}" method="POST" class="space-y-4" enctype="multipart/form-data">
-                  @csrf
-                    <div class="form-control w-full">
-                      <label class="label">
-                          <span class="label-text">Send your valid ID (Government ID)</span>
-                      </label>
-                      <input type="file" id="valid_id" name="valid_id" class="file-input file-input-bordered file-input-primary file-input-sm w-full object-fill" accept="image/*;capture=camera" value="{{!empty(decrypt(session('rinfo')['valid_id']) )? asset(decrypt(session('rinfo')['valid_id'])) : old('valid_id')}}" />
-                      <label class="label">
-                          <span class="label-text-alt">
-                            @error('valid_id')
-                                <span class="label-text-alt text-error">{{$message}}</span>
-                            @enderror
-                          </span>
-                      </label>
-                    </div>
-                </form>
-              </div>
-              <input type="checkbox" id="image_modal" class="modal-toggle"/>
-              <div class="modal modal-bottom sm:modal-middle">
-                <div class="modal-box w-11/12 max-w-5xl">
-                  <h3 class="text-lg font-bold ">Your Valid ID!</h3>
-                  <div class="py-4 w-full flex justify-center">
-                    <div class="w-96 rounded">
-                      <img class="show_id" src="{{asset('images/logo2.png')}}" alt="Valid ID" />
-                    </div>
-                  </div>
-                  <div class="modal-action">
-                    <label for="image_modal" class="btn">Close</label>
-                  </div>
-                </div>
-              </div>
-            @endif
             <x-loader />
           </div>
-      
+
           <div class="rounded-lg bg-white p-8 shadow-2xl lg:col-span-3 lg:p-12 {{$update ? 'border border-primary border-s-4 border-e-4' : '' }}">
+            
             <div class="mt-4 flex justify-end gap-5">
                 @if(!$update)
                   <a href="{{route('reservation.details', ['user' => encrypt(auth('web')->user()->id), 'details' => 'update'])}}" @click="loader = true" type="submit" class="btn btn-info btn-sm gap-2">
@@ -84,6 +51,8 @@
                 @method('PUT')
                 <div>
             @else
+              <form action="{{ route('reservation.details.store')}}" method="POST" class="space-y-4">
+                @csrf
                 <div class="opacity-80" id="disabledAll">
             @endif
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 my-3">
@@ -108,24 +77,23 @@
                     <a href="{{route('reservation.details')}}" @click="loader = true" type="submit" class="btn btn-ghost gap-2">
                       Close
                     </a>
-                    <button @click="loader = true" type="submit" class="btn btn-info gap-2">
-                      <i class="fa-solid fa-floppy-disk"></i>
-                      Save
-                  </button>
+
+                      <button @click="loader = true" type="submit" class="btn btn-info gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Save
+                      </button>
                   @else
                     <a href="{{route('reservation.choose')}}" class="btn btn-ghost gap-2">
                       <i class="fa-solid fa-arrow-left"></i>            
                       Back
                     </a>
-                    <button @click="event.preventDefault(); document.getElementById('details-form').submit(); loader = true" type="submit" class="btn btn-primary gap-2">
+                    <button @click="loader = true" type="submit" class="btn btn-primary gap-2">
                       Next
                       <i class="fa-solid fa-arrow-right"></i>            
                     </button>
                   @endif
               </div>
-              @if($update)
-                </form>
-              @endif
+              </form>
           </div>
         </div>
       </div>

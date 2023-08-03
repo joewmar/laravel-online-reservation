@@ -181,24 +181,24 @@ class ArchiveFactory extends Factory
             $arrRooms[] = (string)  fake()->randomDigit();
         }
         return [
-           'name' => fake()->firstName() . ' ' . fake()->lastName(),
-           'age' => Carbon::createFromFormat('Y-m-d', fake()->date('Y-m-d'))->age,
-           'country' => fake()->country(),
-           'nationality' => fake()->randomElement($arrNationality) ,
-           'contact' => fake()->e164PhoneNumber(),
-           'email' => fake()->unique()->freeEmail(),
-           'pax' => fake()->numberBetween(1, 12),
-           'room_id' => implode(',', $arrRooms),
-           'accommodation_type' => fake()->randomElement(['Room Only', 'Day Tour', 'Overnight']),
-           'payment_method' => fake()->randomElement(['Walk-in', 'Gcash', 'PayPal']),
-           'menu' => implode(',', $arrMenu),
-           'check_in' => fake()->date(),
-           'check_out' =>  fake()->date(),
+        //    'name' => fake()->firstName() . ' ' . fake()->lastName(),
+        //    'age' => Carbon::createFromFormat('Y-m-d', fake()->date('Y-m-d'))->age,
+        //    'country' => fake()->country(),
+        //    'nationality' => fake()->randomElement($arrNationality) ,
+        //    'contact' => fake()->e164PhoneNumber(),
+        //    'email' => fake()->unique()->freeEmail(),
+        //    'pax' => fake()->numberBetween(1, 12),
+        //    'room_id' => implode(',', $arrRooms),
+        //    'accommodation_type' => fake()->randomElement(['Room Only', 'Day Tour', 'Overnight']),
+        //    'payment_method' => fake()->randomElement(['Walk-in', 'Gcash', 'PayPal']),
+        //    'menu' => implode(',', $arrMenu),
+           'check_in' => Carbon::now()->addRealDays(fake()->numberBetween(5, 100))->format('Y-m-d'),
+        //    'check_out' =>  fake()->date(),
            'status' => fake()->numberBetween(0, 2), /* 0 => done, 1 => disaprove, 2 => cancellation, 3 => ? */
-        //    'additional_menu' => implode(',', $arrAddMenu),
-           'amount' => implode(',', $arrAmount),
+        // //    'additional_menu' => implode(',', $arrAddMenu),
+        //    'amount' => implode(',', $arrAmount),
            'total' => fake()->randomFloat(2, 1100, 50000),
-           'message' => fake()->sentences(2) ,
+        //    'message' => fake()->sentences(2) ,
         ];
     }
 }

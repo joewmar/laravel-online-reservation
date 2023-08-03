@@ -16,7 +16,6 @@
                     <h2 class="text-2xl font-semibold">{{$r_list->userReservation->name()}}</h2>
                     <span class="block text-sm text-neutral">{{$r_list->userReservation->age()}} years old from {{$r_list->userReservation->country}}</span>
                     <span class="text-sm text-neutral">{{$r_list->userReservation->nationality}}</span>
-
                 </div>
                 <div class="space-y-1">
                     <span class="flex items-center space-x-2">
@@ -97,6 +96,20 @@
                     </p>
                 </div>
             @endif
+        </div>
+        <div class="divider"></div>
+        <div class="flex flex-wrap justify-center w-full">
+            <div class="w-96 rounded">
+                <h2 class="text-2xl mb-5 font-bold">Verify</h2>
+                <h2 class="text-xl"><span class=" font-semibold">First Name: </span>{{$r_list->userReservation->first_name}}</h2>
+                <h2 class="text-xl"><span class=" font-semibold">Last Name: </span>{{$r_list->userReservation->first_name}}</h2>
+                <h2 class="text-xl"><span class=" font-semibold">Birthday: </span>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->userReservation->birthday)->format('F j, Y')}}</h2>
+                <h2 class="text-xl"><span class=" font-semibold">Country: </span>{{$r_list->userReservation->country}}</h2>
+                <h2 class="text-xl"><span class=" font-semibold">Nationality: </span>{{$r_list->userReservation->nationality}}</h2>
+            </div>
+            <div class="w-96 rounded">
+                <img src="{{route('private.image', ['folder' => explode('/', $r_list->valid_id)[0], 'filename' => explode('/', $r_list->valid_id)[1]])}}" alt="">
+            </div>
         </div>
         <div class="divider"></div>
         <article class="text-md tracking-tight text-neutral my-5 px-0 md:px-24 w-auto">

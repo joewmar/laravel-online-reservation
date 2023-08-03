@@ -13,25 +13,25 @@ return new class extends Migration
     {
         Schema::create('archives', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name')->nullable();
-            $table->integer('age')->nullable();
-            $table->string('country')->nullable();
-            $table->string('nationality')->nullable();
-            $table->string('contact')->nullable();
-            $table->string('email')->nullable();
-            $table->integer('user_id')->nullable();
-            $table->json('room_id')->nullable();
-            $table->integer('pax');
-            $table->tinyText('accommodation_type');
-            $table->tinyText('payment_method');
-            $table->json('menu')->nullable();
+            // $table->string('name')->nullable();
+            // $table->integer('age')->nullable();
+            // $table->string('country')->nullable();
+            // $table->string('nationality')->nullable();
+            // $table->string('contact')->nullable();
+            // $table->string('email')->nullable();
+            // $table->integer('user_id')->nullable();
+            // $table->json('room_id')->nullable();
+            // $table->integer('pax');
+            // $table->tinyText('accommodation_type');
+            // $table->tinyText('payment_method');
+            // $table->json('menu')->nullable();
             $table->date('check_in');
-            $table->date('check_out');
+            // $table->date('check_out');
             $table->tinyInteger('status')->default(0); /* 0 => done, 1 => disaprove, 2 => cancellation, 3 => ? */
-            $table->json('additional_menu')->nullable();
-            $table->json('amount')->nullable();
+            // $table->json('additional_menu')->nullable();
+            // $table->json('amount')->nullable();
             $table->decimal('total')->nullable();
-            $table->string('message')->nullable();
+            // $table->string('message')->nullable();
             $table->timestamps();
         });
     }
