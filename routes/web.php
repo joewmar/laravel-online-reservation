@@ -9,6 +9,7 @@ use App\Http\Controllers\SystemController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\TourMenuController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\SystemHomeController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\RoomSettingController;
 use App\Http\Controllers\TourSettingController;
@@ -81,7 +82,7 @@ Route::middleware(['guest:web'])->group(function(){
 });
 
 // Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
-Route::middleware(['auth:web'])->group(function(){
+Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::view('/profile', 'home')->name('profile');
 
@@ -113,15 +114,14 @@ Route::middleware(['auth:web'])->group(function(){
 
 //For System Users Auth (System Panel)
 Route::prefix('system')->name('system.')->group(function(){
+
     Route::middleware(['guest:system'])->group(function(){
        Route::view('/login', 'system.login')->name('login');
        Route::post('/check', [SystemController::class, 'check'])->name('check');
     });
-    Route::middleware(['auth:system'])->group(function(){
+    Route::middleware(['auth:system', 'preventBackhHistory'])->group(function(){
         Route::post('/logout', [SystemController::class, 'logout'])->name('logout');
-
-        Route::view('/', 'system.dashboard.index',  ['activeSb' => 'Home'])->name('home');
-        
+        Route::get('/', [SystemHomeController::class, 'index'])->name('home');
         Route::prefix('reservation')->name('reservation.')->group(function(){
             Route::get('/', [SystemReservationController::class, 'index'])->name('home');
             Route::post('/search', [SystemReservationController::class, 'search'])->name('search');
@@ -240,6 +240,6 @@ Route::prefix('system')->name('system.')->group(function(){
 
 Route::get('reservation/{id}/receipt', [SystemReservationController::class, 'receipt'])->name('reservation.receipt');
 
-// Route::middleware(['auth.image'])->group(function () {
-//     Route::get('/private/{folder}/{filename}', [HomeController::class,'showImage'])->name('private.image');
-// });
+Route::middleware(['auth.image'])->group(function () {
+    Route::get('/private/{folder}/{filename}', [HomeController::class,'showImage'])->name('private.image');
+});

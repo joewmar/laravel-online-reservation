@@ -47,12 +47,13 @@
             </a>
           </li>
           <li><a href="{{route('system.setting.home')}}">Settings</a></li>
-          <li>
-            <a onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
-          </li>
-          <form action="{{ route('system.logout') }}" class="w-full" method="POST" id="logout-form" style="display: none;">
+          <form action="{{route('system.logout')}}" class="w-full" method="POST" id="logout-form" style="display: none;">
             @csrf
           </form>
+          <li>
+            {{-- <a href="">Logout</a> --}}
+            <a @click="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+          </li>
         </ul>
       </div>
     </div>

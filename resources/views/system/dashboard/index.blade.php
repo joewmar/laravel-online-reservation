@@ -4,7 +4,7 @@
       <x-system-content title="Dashboard">
           {{-- Summary System --}}
           <div class="my-8 block md:grid grid-cols-3 space-y-4 md:gap-3">
-            <x-system-card icon="fa-solid fa-earth-americas" title="Total Customer reserved online" description="50" />
+            <x-system-card icon="fa-solid fa-earth-americas" title="Total Customer reserved online" description="{{$countCus ?? 0}}" />
             <x-system-card icon="fa-solid fa-users" title="Total Customer physical reserved" description="25" />
             <x-system-card icon="fa-solid fa-users" title="Total Customer physical reserved" description="25" />
             <x-system-card icon="fa-solid fa-home" title="Best Room Type" description="Charlet Room" />
@@ -54,5 +54,7 @@
           </div>    
         </div>   
       </x-system-content>
-
+      @push('scripts')
+        <script type="module" src='{{Vite::asset("resources/js/analytics-chart.js")}}'></script>
+     @endpush
 </x-system-layout>

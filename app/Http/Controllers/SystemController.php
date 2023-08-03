@@ -3,25 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\System;
-use App\Jobs\TelegramJob;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
-use Telegram\Bot\Laravel\Facades\Telegram;
 
 class SystemController extends Controller
 {
     private $system_user;
-
     public function __construct()
     {
         $this->middleware(function (){
             $this->system_user = auth()->guard('system');
             if(!$this->system_user->user()->type === 0) abort(404);
-        })->except('check');
+        })->except(['check', 'logout']);
     }
     public function index(Request $request){
         if($request['type'] != 'all'){
@@ -171,13 +167,11 @@ class SystemController extends Controller
             return back()->withErrors(['username' => 'Invalid Credentials'])->onlyInput('username');
         }
     }
-    
     public function logout(Request $request){
-        Auth::logout();
         Auth::guard('system')->logout();
-        // Recommend to invalidate the users session and regenerate the toke from @crfs
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('system.login');
     }
+    
 }
