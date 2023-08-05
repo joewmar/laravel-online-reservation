@@ -35,7 +35,7 @@
                 <h2 class="text-2xl mb-5 font-bold">Details</h2>
                 <p class="my-1"><strong>Number of Guest: </strong>{{$r_list->pax ?? 'None'}}</p>
                 <p class="my-1"><strong>Type: </strong>{{$r_list->accommodation_type ?? 'None'}}</p>
-                <p class="my-1"><strong>Room No: </strong>{{$r_list->room_id ?? 'None'}}</p>
+                <p class="my-1"><strong>Room No: </strong>{{$r_list->roomid ?? 'None'}}</p>
                 <p class="my-1"><strong>Check-in: </strong>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_in )->format('l, F j, Y') ?? 'None'}}</p>
                 <p class="my-1"><strong>Check-out: </strong>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out )->format('l, F j, Y') ?? 'None'}}</p>
                 <p class="my-1"><strong>Payment Method: </strong>{{ $r_list->payment_method ?? 'None'}}</p>

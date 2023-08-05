@@ -14,6 +14,8 @@
       <p class="font-medium">
         {{$details['body']}}
       </p>
+      <p><strong>Payment deadline</strong>  {{ $details['payment_cutoff'] }}</p>
+      <a href="{{$details['link']}}">Pay Now</a>
       <p>Thank you!</p>
   </article>
 </body>

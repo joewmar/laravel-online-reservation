@@ -1,29 +1,20 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
     $arrPayment = ['Gcash', 'Paypal'];
-    $reserve = [];
     $TourInfo = [];
     $tourListCart = [];
-    if(request()->has(['cin', 'cout', 'px', 'at'])){
-      $TourInfo = [
-        "cin" => request('cin') ?? old('check_in'),
-        "cout" => request('cout') ?? old('check_out'),
-        "px" => request('px') ?? old('pax'),
-        "at" => request('at') ?? old('accommodation_type'),
-        "ck" => request('ck') ?? '',
+    $TourInfo = [
+        "cin" => request()->has('cin') ? decrypt(request('cin')) : old('check_in'),
+        "cout" => request()->has('cout') ? decrypt(request('cout')) : old('check_out'),
+        "px" => request()->has('px') ? decrypt(request('px')) : old('pax'),
+        "tpx" => request()->has('tpx') ? decrypt(request('tpx')) : old('tour_pax'),
+        "at" => request()->has('at') ? decrypt(request('at')) : old('accommodation_type'),
+        "py" => request()->has('py') ? decrypt(request('py')) : old('payment_method'),
+        "ck" => request()->has('ck') ? decrypt(request('ck')) : '',
       ];
-    }
-    if(request()->has(['cin', 'cout', 'px', 'py', 'at'])){
-      $TourInfo = [
-        "cin" => request('cin') ?? old('check_in'),
-        "cout" => request('cout') ?? old('check_out'),
-        "px" => request('px') ?? old('pax'),
-        "at" => request('at') ?? old('accommodation_type'),
-        "py" => request('py') ?? old('payment_method'),
-      ];
-    }
+
     if(session()->has('rinfo')){
-      if(decrypt(session('rinfo')['at']) !== 'Room Only'){
+      if(isset($dateList['tm'])){
         $tourListCart = decrypt(session('rinfo')['tm']);
       }
     }
@@ -36,7 +27,7 @@
         filterOpen: false, 
         alert: false,
         alertType: '',
-        @if(session()->has('rinfo'))
+        @if(session()->has('rinfo') && !empty(session()->get('rinfo')['tm']))
           carts: [
             @foreach($tourListCart as $key => $item)
               { id: '{{ $tourListCart[$key] ?? '' }}', 
@@ -123,25 +114,28 @@
       @csrf
       <div class="mt-4 ">
         <div :class="filterOpen ? 'transition-all duration-1000 ease-in-out' : 'hidden' " class="space-y-4 lg:block">
-          @if(request()->has(['cin', 'cout', 'px', 'py', 'at']))
+          @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']))
             <div class="opacity-50" id="disabledAll">
           @else
             <div>
           @endif
-              <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$cin}}"/>
-              <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$cout }}" />
-              <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$at}}" />
+              <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$TourInfo['cin']}}"/>
+              <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$TourInfo['cout'] }}" />
+              <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$TourInfo['at']}}" />
               {{-- Number of Guest --}}
-              <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$px}}"/>
+              <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$TourInfo['px']}}"/>
+              @if($TourInfo['at'] !== "Room Only")
+                <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$TourInfo['tpx']}}" />
+              @endif
               {{-- Payment Method  --}}
-              <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$py}}"/>
-              @if(request()->has(['cin', 'cout', 'px', 'py', 'at']) && $at != 'Room Type')
+              <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$TourInfo['py']}}"/>
+              @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']) && $at != 'Room Type' || request()->has(['cin', 'cout', 'px', 'py', 'tpx','at', 'cf']) && $at != 'Room Type')
                   <div class="hidden">
               @else
                   <div class="lg:flex justify-start gap-5">
               @endif
                   <div class="mt-8 flex gap-4">
-                    <a href="{{route('reservation.date', Arr::query($TourInfo))}}" class="btn btn-ghost">Back</a>
+                    <a href="{{route('reservation.date', Arr::query(['cin' => $TourInfo['cin'], 'cout' => $TourInfo['cout'], 'at' => $TourInfo['at'], 'px' => $TourInfo['px']]))}}" class="btn btn-ghost">Back</a>
                     <button type="submit" class="btn btn-primary">Continue</button>
                   </div>
                 </div>
@@ -151,7 +145,7 @@
       </div>
     </form>
       <div class="divider"></div>
-      @if(request()->has(['cin', 'cout', 'px', 'py', 'at']) && $at != 'Room Type')
+      @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']) && $at != 'Room Type' || request()->has(['cin', 'cout', 'px', 'py', 'tpx','at', 'cf']) && $at != 'Room Type')
         <div id="tourmenu" class="w-full">
           <header>
             <p class="mt-4 max-w-md font-bold text-2xl">
@@ -278,13 +272,13 @@
                                               $menu_count = $loop->index + 1; 
                                             @endphp
                                               @if(count($list->tourMenuLists) != 1)
-                                                <div id="{{$px != $menu->pax ? 'disabledAll' : ''}}" class="w-full h-full">
-                                                <input id="{{$px == $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
-                                                <label for="{{$px == $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
+                                                <div id="{{$TourInfo['tpx'] != $menu->pax ? 'disabledAll' : ''}}" class="w-full h-full">
+                                                <input id="{{$TourInfo['tpx'] == $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
+                                                <label for="{{$TourInfo['tpx'] == $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
                                               @else
                                                 <div class="w-full h-full">
-                                                  <input id="{{!$px < $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
-                                                  <label for="{{!$px < $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
+                                                  <input id="{{!$TourInfo['tpx'] < $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
+                                                  <label for="{{!$TourInfo['tpx'] < $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
                                               @endif
                                                     <div class="flex items-center justify-between">
                                                       <p class="text-neutral" x-ref="refType{{$list_count}}">{{$menu->type}} ({{$menu->pax}} guest)</p>
@@ -292,7 +286,7 @@
                                                     </div>
                                                     <p class="mt-1 text-neutral" x-ref="priceRef{{$list_count}}">P {{number_format($menu->price, 2)}}</p>
                                                     @if(count($list->tourMenuLists) !== 1)
-                                                      @if($px != $menu->pax)
+                                                      @if($TourInfo['tpx'] != $menu->pax)
                                                         <p class="absolute text-error text-xs">Invalid guest count for this price.</p>
                                                       @endif
                                                     @endif
@@ -300,11 +294,11 @@
                                                 </div>
                                           @endforeach
                                     </div>
-                                    <template x-if="price">
+                                    <div x-show="price" x-transition.duration.500ms>
                                       <label for="{{$user_days <= $list->no_day ? '' : Str::camel($list->title)}}"
                                       @click=" addToCart(price, $refs.titleRef{{$list_count}}.innerText, $refs.refType{{$list_count}}.innerText, $refs.priceRef{{$list_count}}.innerText)" 
                                       class="btn btn-primary float-right">Add to Cart</label>
-                                    </template>
+                                    </div>
                                   </x-modal>
                                 </div>
                               </div>

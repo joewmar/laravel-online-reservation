@@ -9,7 +9,6 @@ use App\Models\Archive;
 use App\Models\RoomList;
 use App\Models\RoomRate;
 use App\Models\TourMenu;
-use App\Jobs\TelegramJob;
 use App\Models\Reservation;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
@@ -19,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservationConfirmation;
+use App\Models\OnlinePayment;
 use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Notifications\Notification;
@@ -209,8 +209,8 @@ class SystemReservationController extends Controller
         $reservation = Reservation::findOrFail($id);
         $rooms = [];
         $tour_menu = [];
-        if($reservation->room_id){
-            foreach(json_decode($reservation->room_id) ?? $reservation->room_id as $item ){
+        if($reservation->roomid){
+            foreach($reservation->roomid as $item){
                 $rooms[] = 'Room No.' . Room::find($item)->room_no . ' ('.Room::find($item)->room->name.')';
             }
         }
@@ -224,6 +224,7 @@ class SystemReservationController extends Controller
                 $tour_menu[$key]['type'] = TourMenu::find($item)->type;
                 $tour_menu[$key]['pax'] = TourMenu::find($item)->pax;
                 $tour_menu[$key]['price'] = $reservation->amount['tm'.$item];
+                $tour_menu[$key]['amount'] = $reservation->amount['tm'.$item] * (int)$reservation->tour_pax;
             }
         }
         return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict, 'rooms' => implode(',', $rooms)]);
@@ -232,9 +233,9 @@ class SystemReservationController extends Controller
         $reservation = Reservation::findOrFail(decrypt($id));
         $tour_menu = [];
         $addtional_menu = [];
-        $rates = RoomRate::findOrFail($reservation->room_rate_id);
+        $rates = RoomRate::findOrFail($reservation->roomrateid);
         $rooms = [];
-        foreach(json_decode($reservation->room_id) as $item){
+        foreach($reservation->roomid as $item){
             $rooms[$item]['no'] = Room::findOrFail($item)->room_no;
             $rooms[$item]['name'] = Room::findOrFail($item)->room->name;
         }
@@ -246,6 +247,7 @@ class SystemReservationController extends Controller
                 $tour_menu[$key]['type'] = TourMenu::find($item)->type;
                 $tour_menu[$key]['pax'] = TourMenu::find($item)->pax;
                 $tour_menu[$key]['price'] = $reservation->amount['tm'.$item];
+                $tour_menu[$key]['amount'] = $reservation->amount['tm'.$item] * $reservation->tour_pax;
             }
             // if($reservation->additional_menu != null){
             //     foreach(explode(',' , $reservation->additional_menu) as $key => $item){
@@ -338,13 +340,13 @@ class SystemReservationController extends Controller
 
                 // Update Reservation
                 $reserved = $reservation->update([
-                    'room_id' => (array) $roomReservation,
-                    'room_rate_id' => $rate->id,
+                    'roomid' => (array) $roomReservation,
+                    'roomrateid' => $rate->id,
                     'amount' => $amount,
                     'total' => $total,
                     'status' => 1,
                 ]);
-                $reservation->payment_cutoff = Carbon::now()->addDays(2)->format('Y-m-d H:i:s');
+                $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
                 $reservation->save();
 
                 // Update Room Availability
@@ -388,10 +390,11 @@ class SystemReservationController extends Controller
                             $tour_menu[$key]['type'] = TourMenu::find($item)->type;
                             $tour_menu[$key]['pax'] = TourMenu::find($item)->pax;
                             $tour_menu[$key]['price'] = $reservation->amount['tm'.$item];
+                            $tour_menu[$key]['amount'] = $reservation->amount['tm'.$item] * $reservation->tour_pax;
                         }
                     }
                     $roomDetails = [];
-                    foreach($reservation->room_id as $item){
+                    foreach($reservation->roomid as $item){
                         $roomDetails[] = 'Room No' . Room::find($item)->room_no . '('.Room::find($item)->room->name.')';
                     }
                     $text = 
@@ -406,9 +409,11 @@ class SystemReservationController extends Controller
                     "Rooms: " . implode(',', $roomDetails) ."\n" . 
                     "Who Approve: " . $system_user->name();
         
-                    foreach($admins as $admin){
-                        if($admin->telegram_chatID != null) TelegramJob::dispatch($admin->telegram_chatID, $text, 'bot2');
-                    }
+                    // foreach($admins as $admin){
+                    //     if(!empty($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
+                    // }
+                    telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, 'bot2');
+
                     $text = null;
                     $url = null;
                     if($reservation->payment_method == "Gcash"){
@@ -421,7 +426,7 @@ class SystemReservationController extends Controller
                     $details = [
                         'name' => $reservation->userReservation->name(),
                         'title' => 'Reservation has Confirmed',
-                        'body' => 'Your Reservation has Confirmed, Be on time',
+                        'body' => 'Your Reservation has Confirmed, Be on time at ' . Carbon::createFromFormat('Y-m-d', $reservation->check_in, Carbon::now()->timezone->getName())->format('F j, Y') . ' to ' . Carbon::createFromFormat('Y-m-d', $reservation->check_in, Carbon::now()->timezone)->addDays(3)->format('F j, Y'),
                         "age" => $reservation->age,  
                         "nationality" =>  $reservation->userReservation->nationality , 
                         "country" =>  $reservation->userReservation->country, 
@@ -429,6 +434,8 @@ class SystemReservationController extends Controller
                         "check_out" =>  Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y'), 
                         "accommodation_type" =>  $reservation->accommodation_type,
                         "payment_method" =>  $reservation->payment_method,
+                        "pax" =>  $reservation->pax,
+                        "tour_pax" =>  $reservation->tour_pax,
                         'menu' => $tour_menu,
                         "room_no" =>  implode(',', $roomDetails),
                         "room_type" => $rate->name,
@@ -453,39 +460,44 @@ class SystemReservationController extends Controller
         $reservation = Reservation::findOrFail(decrypt($request->id));
         $validated = $request->validate([
             'payments' => ['required'],
-            'another_payment' => Rule::when(($request['$request'] == 'partial'), ['required', 'numeric']),
+            'another_payment' => Rule::when(($request['$request'] == 'partial'), ['required', 'numeric'], ['nullable']),
         ]);
+
         if($validated['payments'] == 'partial'){
-            $validated['downpayment'] = abs((double)$reservation->downpayment -(double)$validated['payments']);
+            $validated['downpayment'] = (double)$reservation->downpayment + (double)$validated['another_payment'];
             $validated['status'] = 2;
         }
         else{
             $validated['downpayment'] = $reservation->total;
             $validated['status'] = 2;
         }
+        $downpayment = [];
+        // foreach($reservation->downpayment as $key => $item) $downpayment[$key] = $item;
+        // $downpayment['checkin'] = $validated['downpayment'];
         $updated = $reservation->update([
             'downpayment' => (double)$validated['downpayment'],
+            // 'downpayment' => $downpayment,
             'status' => (int)$validated['status'],
         ]);
+        unset($downpayment);
         $text = 
         "Employee Action: Check-in !\n" .
         "Name: ". $reservation->userReservation->name() ."\n" . 
         "Age: " . $reservation->age ."\n" .  
         "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
-        "Who Approve: " . $system_user->name ;
+        "Who Approve: " . $system_user->name() ;
         $details = [
             'name' => $reservation->userReservation->name(),
             'title' => 'Reservation Check-in',
-            'body' => 'You now checked in at ' . Carbon::now()->format('F j, Y, g:i A'),
+            'body' => 'You now checked in at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
         ];
         if($updated){
-            foreach($admins as $admin) if($admin->telegram_chatID != null) TelegramJob::dispatch($admin->telegram_chatID, $text, 'bot2');
-        
+            // foreach($admins as $admin) if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
+            telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             unset($text, $details);
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked in');
         }
-       
 
     }
     public function disaprove($id){
@@ -567,7 +579,7 @@ class SystemReservationController extends Controller
             //     ],
             // ];
             if(!auth('system')->user()->type === 0){
-                TelegramJob::dispatch($system_user->telegram_chatID, $text, 'bot2');
+                telegramSendMessage($system_user->telegram_chatID, $text, 'bot2');
             }
             $text = null;
             $details = [
@@ -585,12 +597,60 @@ class SystemReservationController extends Controller
     }
     public function showOnlinePayment($id){
         $reservation = Reservation::findOrFail(decrypt($id));
-        // $onlinePayment = $reservation->payment;
         return view('system.reservation.onlinepayment.index', ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
-    public function storeOnlinePayment($id){
-        $reservation = Reservation::findOrFail(decrypt($id));
-        // $onlinePayment = $reservation->payment;
-        return view('system.reservation.onlinepayment.index', ['activeSb' => 'Reservation', 'r_list' => $reservation]);
+    public function storeOnlinePayment(Request $request, $id){
+        $validated = $request->validate(['amount' => ['required', 'numeric']]);
+        $online_payment = OnlinePayment::findOrFail(decrypt($id));
+        $reservation = Reservation::findOrFail($online_payment->reservation_id);
+        if(!empty($reservation->downpayment))  (double)$reservation->downpayment += (double)$validated['amount'];
+        else $reservation->downpayment = (double)$validated['amount'];
+        $reservation->save();
+        $online_payment->approval = true;
+        $online_payment->save();
+        if($reservation->downpayment >= 1000){
+            $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => 'Your online payment was approved',
+                'body' => 'Downpayment: ' .  $reservation->downpayement,
+
+            ];
+            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+        }
+        else{
+            if($reservation->payment_method == "Gcash"){
+                $url = route('reservation.gcash', encrypt($reservation->id));
+            }
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => 'Your online payment was approved, but the amount you paid was insufficient. There is a chance for you to make another payment',
+                'body' => 'Downpayment: ' .  $reservation->downpayment .' but minimuim payment is 1000 philippine pesos' ,            
+                'link' => $url,
+                'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
+            ];
+            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
+        }
+
+        return redirect()->route('system.reservation.show.online.payment', encrypt($reservation->id))->with('success', 'Approved payment successful');
+    }
+    public function disaproveOnlinePayment(Request $request, $id){
+        $validated = $request->validate(['reason' => ['required']]);
+        $online_payment = OnlinePayment::findOrFail(decrypt($id));
+        $reservation = Reservation::findOrFail($online_payment->reservation_id);
+        $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
+        $online_payment->approval = false;
+
+        if($reservation->payment_method == "Gcash"){
+            $url = route('reservation.gcash', encrypt($reservation->id));
+        }
+        $details = [
+            'name' => $reservation->userReservation->name(),
+            'title' => 'Your online payment was approved',
+            'body' => 'Reason:  ' .  $validated['reason'] . '. I will give you a chance to make payment',
+            'link' => $url,
+            'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
+        ];
+        Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
     }
 }

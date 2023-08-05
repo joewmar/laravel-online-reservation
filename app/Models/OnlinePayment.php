@@ -17,6 +17,7 @@ class OnlinePayment extends Model
         'image',
         'amount',
         'approval',
+        'attempt',
         'reference_no',
     ];
     public function reserve(){

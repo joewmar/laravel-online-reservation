@@ -148,40 +148,49 @@ function checkAvailRooms($pax, $dates){
     return $isFull;
 }
 function telegramSendMessage($chatID, $message, $keyboard = null, $bot = 'bot1'){
-    if($keyboard != null){
-        Telegram::bot($bot)->sendMessage([
-            'chat_id' => $chatID,
-            'parse_mode' => 'HTML',
-            'text' => $message,
-            'reply_markup' => json_encode(['inline_keyboard' => $keyboard]) ,
-        ]);
+    try{
+        if($keyboard != null){
+            Telegram::bot($bot)->sendMessage([
+                'chat_id' => $chatID,
+                'parse_mode' => 'HTML',
+                'text' => $message,
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard]) ,
+            ]);
+        }
+        else{
+            Telegram::bot($bot)->sendMessage([
+                'chat_id' => $chatID,
+                'parse_mode' => 'HTML',
+                'text' => $message,
+            ]);
+        }
     }
-    else{
-        Telegram::bot($bot)->sendMessage([
-            'chat_id' => $chatID,
-            'parse_mode' => 'HTML',
-            'text' => $message,
-        ]);
+    catch(Exception $e){
+        
     }
     
 }
 function telegramSendMessageWithPhoto($chatID, $message, $photoPath, $keyboard = null, $bot = 'bot1'){    
-    if($keyboard !== null){
-        $response = Telegram::bot($bot)->sendPhoto([
-            'chat_id' => $chatID,
-            'photo' => InputFile::create($photoPath),
-            'caption' => $message,
-            'parse' => 'HTML',
-            'reply_markup' => json_encode(['inline_keyboard' => $keyboard]) ,
-        ]);
+    try{
+        if($keyboard !== null){
+            Telegram::bot($bot)->sendPhoto([
+                'chat_id' => $chatID,
+                'photo' => InputFile::create($photoPath),
+                'caption' => $message,
+                'parse' => 'HTML',
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard]) ,
+            ]);
+        }
+        else{
+            Telegram::bot($bot)->sendPhoto([
+                'chat_id' => $chatID,
+                'parse' => 'HTML',
+                'photo' => InputFile::create($photoPath),
+                'caption' => $message,
+            ]);
+        }
     }
-    else{
-        $response = Telegram::bot($bot)->sendPhoto([
-            'chat_id' => $chatID,
-            'parse' => 'HTML',
-            'photo' => InputFile::create($photoPath),
-            'caption' => $message,
-        ]);
+    catch(Exception $e){
+
     }
-    return response($response);
 }

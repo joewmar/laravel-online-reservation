@@ -33,29 +33,55 @@
         <div class="divider"></div>
         <div class="block">
             <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
+                @php $total = 0 @endphp
                     @forelse ($r_list->payment as $item)
+                        @php $total += (double)$item->amount @endphp
                         @if($item->payment_method === $r_list->payment_method)
                             <div class="flex flex-col-reverse md:flex-row  justify-center items-center w-full h-full space-y-2 md:space-x-5">
-                                <div class="w-96 rounded">
+                                <div class="w-96 rounded my-5">
+                                    @if($item->approval === 1)
+                                        <div class="text-4xl text-primary flex items-center space-x-3">
+                                            <span><i class="fa-regular fa-face-smile"></i></span>
+                                            <span class="text-xl font-bold">Approve</span>
+                                        </div>
+                                    @endif
+                                    @if($item->approval === 0)
+                                    <div class="text-4xl text-error flex items-center space-x-3">
+                                        <span><i class="fa-regular fa-face-frown"></i></i></span>
+                                            <span class="text-xl font-bold">Disaprove</span>
+                                        </div>
+                                    @endif
                                     <p class="text-neutral font-bold text-2xl">Payment information</p>
                                     <div class="mt-5">
-                                        <x-input type="text" name="payment_name" id="payment_name" placeholder="Payer Name" value="{{$item->payment_name}}" />
-                                        <x-input type="text" name="reference_no" id="reference_no" placeholder="Reference No." value="{{$item->reference_no}}" />
-                                        <x-input type="number" name="amount" id="amount" placeholder="Total Amount" value="{{$item->amount}}" />
+                                        <p class="text-neutral text-xl"><strong>Payer Name: </strong>{{$item->payment_name}}</p>
+                                        <p class="text-neutral text-xl"><strong>Reference No.: </strong>{{$item->reference_no}}</p>
+                                        <p class="text-neutral text-xl"><strong>Amount: </strong>{{$item->amount}}</p>
                                     </div>
-                                    <div class="flex space-x-1 mt-5">
-                                        <label for="approve{{$item->id}}" class="btn btn-info btn-sm" >Approve</label>
-                                        <label for="disaprove{{$item->id}}"class="btn btn-error btn-sm" >Disaprove</label>
-                                        <x-modal id="approve{{$item->id}}" title="Approve for Payment Name: {{$item->payment_name}} ">
+                                    <div class="flex space-x-1 mt-5" id="{{!empty($item->approval) ? 'disabledAll' : ''}}">
+                                        @if(!empty($item->approval))
+                                            <label class="btn btn-info btn-sm" disabled>Approve</label>
+                                            <label class="btn btn-error btn-sm" disabled>Disaprove</label>
+                                        @else
+                                            <label for="approve{{$item->id}}" class="btn btn-info btn-sm">Approve</label>
+                                            <label for="disaprove{{$item->id}}"class="btn btn-error btn-sm" >Disaprove</label>
+                                        @endif
+                                        <x-modal id="approve{{$item->id}}" title="Approve for Payment Name: {{$item->payment_name}}" type="YesNo" formID="approve-form{{$item->id}}" >
+                                            <h1 class="text-xl text-neutral mb-5">Verified?</h1>
+                                            <form id="approve-form{{$item->id}}" action="{{route('system.reservation.online.payment.store', encrypt($item->id))}}" method="POST">
+                                                @csrf
+                                                <x-input type="number" name="amount" id="amount" placeholder="Total Amount" value="{{$total}}" />
+                                            </form>
                                         </x-modal>
-                                        <x-modal id="disaprove{{$item->id}}" title="Why disapprove of Payment Name: {{$item->payment_name}}?">
+                                        <x-modal id="disaprove{{$item->id}}" title="Why disapprove of Payment Name: {{$item->payment_name}}?" type="YesNo">
+                                            <form id="approve-form{{$item->id}}" action="{{route('system.reservation.online.payment.store', encrypt($item->id))}}" method="POST">
+                                                @csrf
+                                                <x-textarea type="text" name="reason" id="reason" placeholder="Reason" />
+                                            </form>
                                         </x-modal>
                                     </div>
                                 </div>
-                                <div class="avatar">
-                                    <div class="w-96 rounded">
-                                        <img src="{{asset('storage/'. $item->image)}}" class="show_img" />
-                                    </div>
+                                <div class="w-72 rounded">
+                                    <img src="{{asset('storage/'. $item->image)}}" />
                                 </div>
                             </div>
                             <div class="divider"></div>

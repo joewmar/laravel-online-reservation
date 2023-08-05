@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Addons;
 use App\Models\TourMenu;
 use Illuminate\Support\Arr;
 use App\Models\TourMenuList;
@@ -12,8 +13,15 @@ use Laravel\Ui\Presets\React;
 
 class TourMenuController extends Controller
 {
-    public function index(){
-        if(auth('system')->user()->type !== 0) abort(404);
+    public function __construct()
+    {
+        // dd(auth('system')->user());
+        // if(auth('system')->user()->type !== 0) abort(404);
+    } 
+    public function index(Request $request){
+        if($request->has('tab') && $request['tab'] === 'addons'){
+            return view('system.service.index', ['activeSb' => 'Tour Menu', 'addons_list' => Addons::all()]);
+        }
         return view('system.service.index', ['activeSb' => 'Tour Menu', 'tour_lists' => TourMenuList::all()]);
     }
     public function create(Request $request){
@@ -21,6 +29,39 @@ class TourMenuController extends Controller
             return view('system.service.create', ['activeSb' => 'Tour Menu', 'service_menus' => TourMenuList::all(), 'tl' =>  TourMenuList::findOrFail(decrypt($request['tl']))]);
         }
         return view('system.service.create', ['activeSb' => 'Tour Menu', 'service_menus' => TourMenuList::all()]);
+    }
+    public function createAddons(){
+        return view('system.service.addons.create', ['activeSb' => 'Tour Menu']);
+    }
+    public function storeAddons(Request $request){
+        $validated = $request->validate([
+            'title' => ['required'],
+            'price' => ['required', 'numeric', 'min:1'],
+            'passcode' => ['required', 'digits:4'],
+        ]);
+        if(!Hash::check($validated['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode')->withInput($request->except('passcode'));
+        $addons = Addons::create($validated);
+        if($addons) return redirect()->route('system.menu.home', Arr::query(['tab' => 'addons']))->with('success', $addons->title . ' was Added');
+    }
+    public function editAddons($id){
+        
+        return view('system.service.addons.edit', ['activeSb' => 'Tour Menu', 'addon' => Addons::findOrFail(decrypt($id))]);
+    }
+    public function updateAddons(Request $request, $id){
+        $addon = Addons::findOrFail(decrypt($id));
+        $validated = $request->validate([
+            'title' => ['required'],
+            'price' => ['required', 'numeric', 'min:1'],
+            'passcode' => ['required', 'digits:4'],
+        ]);
+        if(!Hash::check($validated['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode')->withInput($request->except('passcode'));
+        $addon->update($validated);
+        return redirect()->route('system.menu.home', Arr::query(['tab' => 'addons']))->with('success', $addon->title . ' was Updated');
+    }
+    public function destroyAddons(Request $request, $id){
+        $addon = Addons::findOrFail(decrypt($id));
+        $addon->delete();
+        return redirect()->route('system.menu.home', Arr::query(['tab' => 'addons']))->with('success', $addon->title . ' was Removed');
     }
 
     // Replace the Input 

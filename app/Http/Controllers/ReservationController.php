@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Validator;
 class ReservationController extends Controller
 {
     private $user;
+    // private $ruleRoomOnly = []
     public function __construct()
     {
         $this->user = auth('web');
@@ -34,11 +35,12 @@ class ReservationController extends Controller
             $existingReservation = Reservation::where('user_id', $this->user->user()->id)->first();
 
             if ($existingReservation) {
+                session(['ck' => false]);
                 return redirect()->route('home')->with('error', "Sorry, you can only make one reservation.");
             }
 
             return $next($request);
-        })->except(['date', 'dateCheck', 'dateStore', 'index', 'done', 'storeMessage', 'gcash', 'paymentStore']); // You can specify the specific method where this middleware should be applied.
+        })->except(['date', 'dateCheck', 'dateStore', 'index', 'done', 'storeMessage', 'gcash', 'doneGcash', 'paymentStore']); // You can specify the specific method where this middleware should be applied.
     }
     public function index(Request $request){
         $reservation = Reservation::all()->where('user_id', auth('web')->user()->id) ?? [];
@@ -66,7 +68,7 @@ class ReservationController extends Controller
             $dateList = decryptedArray(session('rinfo'));
             return view('reservation.step1', ['cin' => $dateList['cin'], 'cout' => $dateList['cout'], 'at' => $dateList['at'], 'px' => $dateList['px']]);
         }
-        if($request->exists('cin', 'cout', 'px', 'at', 'ck')){
+        if($request->has('cin', 'cout', 'px', 'at', 'tpx', 'py', 'ck')){
             $reserve = [
               "cin" => request('cin'),
               "cout" => request('cout'),
@@ -78,10 +80,9 @@ class ReservationController extends Controller
 
         }
         return view('reservation.step1');
-        // return view('reservation.step1', ['cin' => $request['check_in'], 'cout' => $request['check_out'], 'at' => $request['accommodation_type'], 'px' => $request['pax'], 'ck' => $request['ck'] ?? '0']);
     }
     public function dateCheck(Request $request){
-        session()->forget('rinfo');
+        // session()->forget('rinfo');
 
         // Check in (startDate to endDate) trim convertion
         if(str_contains($request['check_in'], 'to')){
@@ -89,11 +90,14 @@ class ReservationController extends Controller
             $request['check_in'] = trim($dateSeperate[0]);
             $request['check_out'] = trim ($dateSeperate[1]);
         }
+        $request['check_in'] = Carbon::createFromFormat('Y-m-d', $request['check_in'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::createFromFormat('Y-m-d', $request['check_out'] , 'Asia/Manila')->format('Y-m-d');
         // Check out convertion word to date format
         if(str_contains($request['check_out'], ', ')){
             $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
             $request['check_out'] = $date->format('Y-m-d');
         }
+
         if(checkAvailRooms($request['pax'], $request['check_in'])){
             return redirect()->route('reservation.date')->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
         }
@@ -104,13 +108,12 @@ class ReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
+                'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
                 'required' => 'Need fill up first',
                 'date_equals' => 'Choose only one day (Day Tour)',
-                'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
             ]);
         }
         elseif($request['accommodation_type'] == 'Overnight'){
@@ -118,15 +121,13 @@ class ReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
                 'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
+                'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
-                'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
                 'check_out.after_or_equal' => 'Choose within 2 day and above (Overnight)',
-    
             ]);
         }
         elseif($request['accommodation_type'] == 'Room Only'){
@@ -158,6 +159,7 @@ class ReservationController extends Controller
 
         $validated = $validator->validated();
         if($validated){
+            unset($validator);
             session(['ck' => true]);
             return redirect()->route('reservation.date')->with('success',"Your choose date is now available, Let s proceed if you will make reservation")->withInput();
         }
@@ -175,6 +177,9 @@ class ReservationController extends Controller
             $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
             $request['check_out'] = $date->format('Y-m-d');
         }
+        $request['check_in'] = Carbon::createFromFormat('Y-m-d', $request['check_in'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::createFromFormat('Y-m-d', $request['check_out'] , 'Asia/Manila')->format('Y-m-d');
+        
         if(checkAvailRooms($request['pax'], $request['check_in'])){
             return redirect()->route('reservation.date')->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
         }
@@ -184,7 +189,7 @@ class ReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
+                'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
@@ -199,7 +204,7 @@ class ReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
                 'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
+                'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
@@ -228,7 +233,7 @@ class ReservationController extends Controller
         }
         else{
             session(['ck' => false]);
-            return redirect()->route('reservation.date')->with('error',"Choose the Accommodation type")->withInput();
+            return back()->withErrors(['accommodation_type' => "Choose the Accommodation type"])->withInput($request->input());
         }
         if(str_contains($validated['check_in'], 'to')){
             $dateSeperate = explode('to', $validated['check_in']);
@@ -242,30 +247,25 @@ class ReservationController extends Controller
             "at" =>  $validated['accommodation_type'] === '' ? null : encrypt($validated['accommodation_type']),
             "px" =>  $validated['pax'] === '' ? null : encrypt($validated['pax']),
         );
+        unset($validated);
         if(session()->has('rinfo')){
             $paramsDates = array(
                 "cin" =>  session('rinfo')['cin'] ?? '',
                 "cout" =>   session('rinfo')['cout'] ?? '',
                 "at" =>   session('rinfo')['at'] ?? '',
                 "px" =>  session('rinfo')['px'] ?? '',
-            );
-            return redirect()->route('reservation.choose', Arr::query($paramsDates));
-            
+            );            
         }
         return redirect()->route('reservation.choose', Arr::query($paramsDates));
 
     }
     // Choose Form
     public function choose(){
-        if(Reservation::where('user_id', '=' , auth('web')->user()->id )->first()) {
-            session(['ck' => false]);
-            return redirect()->route('home')->with('error',"Sorry you can 1 only fill up the reservation");
-        }
         if(session()->has('rinfo')){
             $dateList = decryptedArray(session('rinfo'));
             $noOfday = checkDiffDates($dateList['cin'], $dateList['cout']);
             $chooseMenu = [];
-            if($dateList['at'] !== 'Room Only' && $dateList['tm'] != null){
+            if(isset($dateList['tm'])){
                 foreach($dateList['tm'] as $key => $item){
                     $chooseMenu[$key]['price'] = TourMenu::findOrFail($item)->price;
                     $chooseMenu[$key]['title'] = TourMenu::findOrFail($item)->tourMenu->title;
@@ -286,7 +286,7 @@ class ReservationController extends Controller
             }
         }
         $noOfday = checkDiffDates(decrypt(request('cin')), decrypt(request('cout')));
-        if(request()->has(['cin', 'cout', 'px', 'py', 'at'])){
+        if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at'])){
             return view('reservation.step2', [
                 'tour_lists' => TourMenuList::all(), 
                 'tour_category' => TourMenuList::distinct()->get('category'), 
@@ -301,14 +301,15 @@ class ReservationController extends Controller
         }
         if(request()->has(['cin', 'cout', 'px', 'at'])){
             return view('reservation.step2', [
-                'tour_lists' => TourMenuList::all(), 
-                'tour_category' => TourMenuList::distinct()->get('category'), 
-                "cin" =>  decrypt(request('cin')) ?? '',
-                "cout" =>  decrypt(request('cout')) ?? '',
-                "at" =>  decrypt(request('at')) ?? '',
-                "px" => decrypt(request('px')) ?? '',
-                "py" =>  '',
-                "user_days" => $noOfday ?? '',
+                // 'tour_lists' => TourMenuList::all(), 
+                // 'tour_category' => TourMenuList::distinct()->get('category'), 
+                // "cin" =>  decrypt(request('cin')) ?? '',
+                // "cout" =>  decrypt(request('cout')) ?? '',
+                // "at" =>  decrypt(request('at')) ?? '',
+                // "px" => decrypt(request('px')) ?? '',
+                // "p" =>  '',
+                // "py" =>  '',
+                // "user_days" => $noOfday ?? '',
             ]); 
         }
     }
@@ -325,21 +326,24 @@ class ReservationController extends Controller
             $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
             $request['check_out'] = $date->format('Y-m-d');
         }
-
+        $request['check_in'] = Carbon::createFromFormat('Y-m-d', $request['check_in'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::createFromFormat('Y-m-d', $request['check_out'] , 'Asia/Manila')->format('Y-m-d');
+        
         $validated = null;
         if($request['accommodation_type'] === 'Day Tour'){
             $validated = $request->validate([
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
+                'pax' => ['required', 'numeric', 'min:1'],
+                'tour_pax' => ['required', 'numeric', 'max:'.$request['pax']],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
                 'required' => 'Need fill up first',
                 'date_equals' => 'Choose only one day (Day Tour)',
-                'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
+                'tour_pax.max' => 'Sorry, this guest you choose is not available for Tour Services',
     
             ]);
         }
@@ -348,14 +352,15 @@ class ReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
                 'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1', Rule::exists('tour_menus', 'pax')],
+                'pax' => ['required', 'numeric', 'min:1'],
+                'tour_pax' => ['required', 'numeric', 'max:'.$request['pax']],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
-                'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
+                'tour_pax.max' => 'Sorry, this guest you choose is not available for Tour Services',
                 'check_out.after_or_equal' => 'Choose within 2 day and above (Overnight)',
     
             ]);
@@ -380,6 +385,7 @@ class ReservationController extends Controller
                 "cin" =>   $validated['check_in'] ?? '',
                 "cout" => $validated['check_out'] ?? '',
                 "at" => $validated['accommodation_type'] ??  '',
+                "tpx" => $validated['tour_pax'] ?? '',
                 "px" => $validated['pax'] ?? '',
                 "py" => $validated['payment_method'] ?? '',
             ];
@@ -391,7 +397,7 @@ class ReservationController extends Controller
         }
         else{
             session(['ck' => false]);
-            return back()->with('error',"Choose the Accommodation type")->withInput();
+            return back()->withErrors(['error' => "Choose the Accommodation type"])->withInput($validated);
         }
 
         if($validated){
@@ -399,6 +405,7 @@ class ReservationController extends Controller
                 "cin" =>  encrypt($validated['check_in']),
                 "cout" =>  encrypt($validated['check_out']),
                 "px" =>  encrypt($validated['pax']),
+                "tpx" =>  encrypt($validated['tour_pax']),
                 "at" =>  encrypt($validated['accommodation_type']),
                 "py" =>  encrypt($validated['payment_method']),
             ];
@@ -407,6 +414,7 @@ class ReservationController extends Controller
 
     }
     public function chooseCheckAll(Request $request){
+
         $validate = Validator::make($request->all('tour_menu'), [
             'tour_menu.*' => 'required',
         ]);
@@ -416,6 +424,7 @@ class ReservationController extends Controller
                 "cin" =>  $request->has('cin') != null ? request('cin') : '',
                 "cout" => $request->has('cout') != null ? request('cout') : '',
                 "at" => $request->has('at') != null ? request('at') : '',
+                "tpx" =>  $request['tpx'] ?? '',
                 "px" => $request->has('px') != null ? request('px'): '',
                 "py" =>  $request->has('py') != null ? request('py') : '',
             ];
@@ -424,15 +433,22 @@ class ReservationController extends Controller
         }
         $validated = $validate->validate();
         $reservationInfo = [
-            "cin" =>  $request['cin'] ?? '',
-            "cout" => $request['cout'] ?? '',
-            "at" => $request['at'] ?? '',
-            "px" => $request['px'] ?? '',
-            "py" =>  $request['py'] ?? '',
+            "cin" =>  encrypt($request['cin']) ?? '',
+            "cout" => encrypt($request['cout']) ?? '',
+            "at" => encrypt($request['at']) ?? '',
+            "px" => encrypt($request['px']) ?? '',
+            "tpx" =>  encrypt($request['tpx']) ?? '',
+            "py" =>  encrypt($request['py']) ?? '',
             "tm" =>  encrypt($validated['tour_menu']) ?? '',
         ];
+        if(session()->has('rinfo') && $request['cf'] == true){
+            $r_info = session()->get('rinfo');
+            foreach($reservationInfo as $key => $item) $r_info[$key] = $item;
+            session(['rinfo' => $reservationInfo]);
+            return redirect()->route('reservation.confirmation');
+
+        }
         session(['rinfo' => $reservationInfo]);
-       
         return redirect()->route('reservation.details');
 
     }
@@ -478,6 +494,9 @@ class ReservationController extends Controller
     }
     public function confirmation(Request $request){
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
+        if(empty($uinfo['tm'])) {
+            return redirect()->route('reservation.choose', Arr::query(['cin' => session()->get('rinfo')['cin'], 'cout' => session()->get('rinfo')['cout'], 'px' => session()->get('rinfo')['px'], 'tpx' => session()->get('rinfo')['tpx'], 'py' => session()->get('rinfo')['py'], 'at' => session()->get('rinfo')['at'], 'cf' => encrypt(true)], '#tourMenu'))->with('info', 'Your Tour Menu was empty');
+        }
         $user_menu = [];
         if($uinfo['at'] !== 'Room Only' && $uinfo['tm'] != null){
             foreach($uinfo['tm'] as $key => $item){
@@ -493,13 +512,13 @@ class ReservationController extends Controller
                 }
                 $user_menu[$key]['title'] = TourMenu::findOrFail($item)->tourMenu->title;
                 $user_menu[$key]['type'] = TourMenu::findOrFail($item)->type;
-                $user_menu[$key]['pax'] = TourMenu::findOrFail($item)->pax . ' pax';
+                $user_menu[$key]['pax'] = TourMenu::findOrFail($item)->pax . ' guest';
+                $user_menu[$key]['tour_pax'] = $uinfo['tpx'] . ' guest';
+                $user_menu[$key]['amount'] = (int)$uinfo['tpx'] * (double)$user_menu[$key]['orig_price'];
             }
         }
-        
         return view('reservation.step4', [
             'user_menu' => $user_menu ?? '',
-            'uinfo' => $uinfo,
             'uinfo' => $uinfo,
         ]);
     }
@@ -507,8 +526,37 @@ class ReservationController extends Controller
         $validated = $request->validate(['cur' => 'required']);
         return redirect()->route('reservation.confirmation', ['cur' => $validated['cur']]);
     }
+    public function destroyTour(Request $request){
+        $decrypted_uinfo = decryptedArray(session()->get('rinfo')) ?? '';
+        $encrypted_uinfo = session()->get('rinfo') ?? '';
+        if($decrypted_uinfo['at'] === 'Room Only' || !session()->has('rinfo')) return back();
+        $id = decrypt($request['id']);
+        $tm = $decrypted_uinfo['tm'];
+        if(!empty($tm)){
+            $newTm = [];
+            foreach($tm as $item){
+                if($item == $id) continue;
+                else $newTm[] = $item;
+            }
+        }
+        else{
+            return back();
+        }                                                                                                                                                                                       
+        if(empty($newTm)) {
+            $encrypted_uinfo['tm'] = encrypt($newTm);
+            foreach($encrypted_uinfo as $key => $item)if($key != 'tm') $new_unfo[$key] = $item;
+            session(['rinfo' => $new_unfo]);
+            return redirect()->route('reservation.choose', Arr::query(['cin' => $encrypted_uinfo['cin'], 'cout' => $encrypted_uinfo['cout'], 'px' => $encrypted_uinfo['px'], 'tpx' => $encrypted_uinfo['tpx'], 'py' => $encrypted_uinfo['py'], 'at' => $encrypted_uinfo['at'], 'cf' => encrypt(true)], '#tourmenu'))->with('info', 'Your Tour Menu was empty');
+        }
+        else{
+            $encrypted_uinfo['tm'] = encrypt($newTm);
+            session()->forget('rinfo');
+            session(['rinfo' => $encrypted_uinfo]);
+            return back()->with('success', TourMenu::find($id)->tourMenu->title . ' was Removed');
+        }
+    }
     public function storeReservation(Request $request){
-        $systemUser = System::all()->where('type', 0)->where('type', 1);
+        $systemUser = System::all()->where('type', '>=', 0)->where('type', '<=', 1);
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $validated = $request->validate([
             'valid_id' => ['required' ,'image', 'mimes:jpeg,png,jpg', 'max:5024'], 
@@ -527,13 +575,14 @@ class ReservationController extends Controller
         if($uinfo['at'] !== 'Room Only'){
             $total = 0;
             foreach($validated['amount'] as $amount) {
-                $amounts[explode('-', $amount)[0]] = (double)explode('-', $amount)[1];
+                $amounts[explode('-', $amount)[0]] = (double)explode('-', $amount)[1] * (int)$uinfo['px'];
                 $total += (double)explode('-', $amount)[1];
             }
             if($validated){
                 $reserve_info = Reservation::create([
                     'user_id' => auth('web')->user()->id,
                     'pax' => $uinfo['px'] ?? '',
+                    'tour_pax' => $uinfo['tpx'],
                     'age' => $uinfo['age'] ?? '',
                     'menu' => $uinfo['tm'] ?? '',
                     'payment_method' => $uinfo['py'] ?? '',
@@ -550,6 +599,7 @@ class ReservationController extends Controller
             $reserve_info = Reservation::create([
                 'user_id' => auth('web')->user()->id,
                 'pax' => $uinfo['px'] ?? '',
+                'tour_pax' => $uinfo['tpx'],
                 'age' => $uinfo['age'] ?? '',
                 'check_in' => $uinfo['cin'] ?? '',
                 'check_out' => $uinfo['cout'] ?? '',
@@ -578,15 +628,15 @@ class ReservationController extends Controller
             'title' => 'Reservation Complete',
             'body' => 'Your Reservation are done, We just send email for the approve or disapprove confirmation'
         ];
-        // Notification::send($reserve_info->userReservation, new EmailNotification('recelestino90@gmail.com', 'reservation.mail', $details));
         Mail::to(env('SAMPLE_EMAIL', $reserve_info->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+        foreach($systemUser as $user){
+            if(!empty($user->telegram_chatID)){
+                telegramSendMessage($user->telegram_chatID, $text, $keyboard, 'bot1');
+            }
+        }
         session()->forget('rinfo');
         session()->forget('ck');
-        // foreach($systemUser as $user){
-        //     if($user->telegram_chatID){
-        //         telegramSendMessageWithPhoto($user->telegram_chatID, $text, showImage($reserve_info->valid_id), $keyboard, $bot = 'bot1');
-        //     }
-        // }
+
         unset($text, $keyboard, $details, $uinfo);
         return redirect()->route('reservation.done', ['id' => encrypt($reserve_info->id)]);
     }
@@ -646,15 +696,17 @@ class ReservationController extends Controller
                             ['text' => 'View Details', 'url' => route('system.reservation.show.online.payment', encrypt($reservation->id))],
                         ],
                     ];
-                    foreach($systemUser as $user){
-                        if($user->telegram_chatID != null){
-                            telegramSendMessage($user->telegram_chatID, $text, $keyboard); 
-                        }
+                    // foreach($systemUser as $user){
+                    //     if($user->telegram_chatID != null){
+                    //         telegramSendMessage($user->telegram_chatID, $text, $keyboard); 
+                    //     }
             
-                    }
+                    // }
+                    telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, $keyboard); 
+
                     $text = null;
                     $keyboard = null;
-                    return view('reservation.gcash.success');
+                    return redirect()->route('reservation.gcash.done', encrypt($sended->id));
                 }
             }
         }
@@ -663,6 +715,10 @@ class ReservationController extends Controller
         }
         
 
+    }
+    public function doneGcash($id){
+        $online_payement = OnlinePayment::findOrFail(decrypt($id));
+        if($online_payement) return view('reservation.gcash.success');
     }
     public function paypal($id){
         $reservation = Reservation::findOrFail(decrypt($id));

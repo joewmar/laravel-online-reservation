@@ -21,7 +21,7 @@ class Archive extends Model
         'email' ,
         'user_id' ,
         'pax',
-        'room_id',
+        'roomid',
         'accommodation_type' ,
         'payment_method' ,
         'menu',
@@ -37,7 +37,7 @@ class Archive extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
     public function room(){
-        return $this->hasMany(Room::class, 'room_id');
+        return $this->hasMany(Room::class, 'roomid');
     }
     public function status(){
         $status = '';
@@ -48,7 +48,7 @@ class Archive extends Model
             
         return $status ?? $this->attributes['status'];
     }
-    protected function room_id(): Attribute
+    protected function roomid(): Attribute
     {
         return Attribute::make(
             get: fn ($value) => json_decode($value, true),

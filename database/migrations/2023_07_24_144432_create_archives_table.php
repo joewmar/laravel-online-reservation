@@ -20,7 +20,7 @@ return new class extends Migration
             // $table->string('contact')->nullable();
             // $table->string('email')->nullable();
             // $table->integer('user_id')->nullable();
-            // $table->json('room_id')->nullable();
+            // $table->json('roomid')->nullable();
             // $table->integer('pax');
             // $table->tinyText('accommodation_type');
             // $table->tinyText('payment_method');

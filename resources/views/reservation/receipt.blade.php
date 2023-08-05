@@ -195,34 +195,13 @@ tr:hover .cut { opacity: 1; }
 				</div>
 			</address>
 			<div class="details">
+				<h5>Guest: <span>{{$r_list->pax . ' guest' ?? 'None'}}</span></h5>
+				<h5>Guest going on tour: <span>{{$r_list->tour_pax . ' guest' ?? 'None'}}</span></h5>
 				<h5>Check-in: <span>{{\Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_in)->format('l F j, Y') ?? 'None'}}</span></h5>
 				<h5>Check-out: <span>{{\Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out)->format('l F j, Y') ?? 'None'}}</span></h5>
 				<h5>Service Type: <span>{{$r_list->accommodation_type ?? 'None'}}</span></h5>
 				<h5>Payment Method: <span>{{$r_list->payment_method ?? 'None'}}</span></h5>
 			</div>
-			@if($r_list->accommodation_type != 'Room Only')
-				<table class="inventory">
-					<thead>
-						<tr>
-							<th><span >Tour</span></th>
-							<th><span >Type</span></th>
-							<th><span >Pax</span></th>
-							<th><span >Price</span></th>
-						</tr>
-					</thead>
-					<tbody>
-						@foreach ($menu as $item)
-							<tr>
-								<td><span >{{$item['title']}}</span></td>
-								<td><span>{{$item['type']}}</span></td> 
-								<td><span>{{$item['pax']}} guest</span></td> 
-								<td><span data-prefix>₱ </span><span>{{ number_format($item['price'], 2)}}</span></td>
-							</tr>
-						@endforeach
-					</tbody>
-				</table>
-			@endif
-			
 			<table class="inventory">
 				<thead>
 					<tr>
@@ -256,6 +235,29 @@ tr:hover .cut { opacity: 1; }
 					<td><span data-prefix>₱ </span><span>{{ number_format(($rate->price * (int) checkDiffDates($r_list->check_in, $r_list->check_out)), 2)}}</span></td>
 				</tbody>
 			</table>
+			@if($r_list->accommodation_type != 'Room Only')
+			<table class="inventory">
+				<thead>
+					<tr>
+						<th><span >Tour</span></th>
+						<th><span >Type</span></th>
+						<th><span >Price</span></th>
+						<th><span >Amount</span></th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach ($menu as $item)
+						<tr>
+							<td><span >{{$item['title']}}</span></td>
+							<td><span>{{$item['type']}} - {{$item['pax']}} guest</span></td> 
+							<td><span data-prefix>₱ </span><span>{{ number_format($item['price'], 2)}}</span></td>
+							@php $amount = (double)$item['price'] * (int)$item['pax']; @endphp
+							<td><span data-prefix>₱ </span><span>{{ number_format($amount, 2)}}</span></td>
+						</tr>
+					@endforeach
+				</tbody>
+			</table>
+		@endif
 
 			@if(!empty($add_menu))
 				{{-- <table class="inventory">

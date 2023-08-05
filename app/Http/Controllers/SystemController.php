@@ -173,5 +173,4 @@ class SystemController extends Controller
         $request->session()->regenerateToken();
         return redirect()->route('system.login');
     }
-    
 }

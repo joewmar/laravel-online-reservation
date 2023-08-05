@@ -55,38 +55,41 @@ class DatabaseSeeder extends Seeder
             'price' => 1100.00,
         ]);
 
-        // \App\Models\Reservation::factory()->create([
-        //     'user_id' => 1,
-        //     // 'room_id' => 1, (1, 1)
-        //     // 'room_rate_id' => 1,
-        //     'pax' => 1,
-        //     // 'menu' => '2_1',
-        //     'accommodation_type' => 'Room Only',
-        //     'payment_method' => 'Gcash',
-        //     'age' => User::findOrfail(1)->age(),
-        //     'check_in' => Carbon::now()->addDays(30)->toDateTimeString(),
-        //     'check_out' => Carbon::now()->addDays(34)->toDateTimeString(),
-        //     'status' => 0,
-        //     // 'additional_menu',
-        //     // 'amount' => ['room1' => 3150.00],
-        //     // 'total' => 3150.00,
-        // ]);
-        // \App\Models\Reservation::factory()->create([
-        //     'user_id' => 2,
-        //     // 'room_id' => 1,
-        //     // 'room_rate_id' => 1,
-        //     'pax' => 2,
-        //     'menu' => [2],
-        //     'accommodation_type' => 'Day Tour',
-        //     'payment_method' => 'Gcash',
-        //     'age' => User::findOrfail(1)->age(),
-        //     'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
-        //     'check_out' => Carbon::now()->addDays(20)->toDateTimeString(),
-        //     'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-        //     // 'additional_menu',
-        //     'amount' => ['tm2' => 2100.00],
-        //     'total' => 3100.00,
-        // ]);
+        \App\Models\Reservation::factory()->create([
+            'user_id' => 1,
+            // 'roomid' => 1, (1, 1)
+            // 'roomrateid' => 1,
+            'pax' => 1,
+            // 'menu' => '2_1',
+            'accommodation_type' => 'Room Only',
+            'payment_method' => 'Gcash',
+            'age' => User::findOrfail(1)->age(),
+            'check_in' => Carbon::now()->addDays(30)->toDateTimeString(),
+            'check_out' => Carbon::now()->addDays(34)->toDateTimeString(),
+            'status' => 0,
+            'valid_id' => 'valid_id/Valid_ID-sample.jpg',
+            // 'additional_menu',
+            // 'amount' => ['room1' => 3150.00],
+            // 'total' => 3150.00,
+        ]);
+        \App\Models\Reservation::factory()->create([
+            'user_id' => 2,
+            // 'roomid' => 1,
+            // 'roomrateid' => 1,
+            'pax' => 2,
+            'tour_pax' => 2,
+            'menu' => [2],
+            'accommodation_type' => 'Day Tour',
+            'payment_method' => 'Gcash',
+            'age' => User::findOrfail(1)->age(),
+            'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
+            'check_out' => Carbon::now()->addDays(20)->toDateTimeString(),
+            'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
+            // 'additional_menu',
+            'valid_id' => 'valid_id/Valid_ID-sample.jpg',
+            'amount' => ['tm2' => 2100.00],
+            'total' => 4200.00,
+        ]);
 
         \App\Models\System::factory()->create([
             'first_name' => 'Hello',
@@ -181,7 +184,7 @@ class DatabaseSeeder extends Seeder
         ]);
         for($room_count = 0; $room_count < \App\Models\RoomList::findOrFail(1)->many_room; $room_count++){
             \App\Models\Room::create([
-                'room_id' => \App\Models\RoomList::findOrFail(1)->id,
+                'roomid' => \App\Models\RoomList::findOrFail(1)->id,
                 'room_no' => 0,
             ]);
         }
@@ -194,13 +197,20 @@ class DatabaseSeeder extends Seeder
         ]);
         for($room_count = 0; $room_count < \App\Models\RoomList::findOrFail(2)->many_room; $room_count++){
             \App\Models\Room::create([
-                'room_id' => \App\Models\RoomList::findOrFail(2)->id,
+                'roomid' => \App\Models\RoomList::findOrFail(2)->id,
                 'room_no' => 0,
             ]);
         }
         refreshRoomNumber();
         \App\Models\Archive::factory(10)->create();
-
+        \App\Models\Addons::create([
+            'title' => 'Coca Cola',
+            'price' => 70.00,
+        ]);
+        \App\Models\Addons::create([
+            'title' => 'Foam',
+            'price' => 100,
+        ]);
 
     }
 }

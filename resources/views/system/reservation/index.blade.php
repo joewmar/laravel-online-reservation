@@ -63,20 +63,7 @@
                                         <td>{{ \Carbon\Carbon::parse($list->created_at)->format('M j, Y g:i A')}}</td>
     
                                         <th class="w-auto">
-                                            @if($list->status() == "Pending")
-                                                <a href="{{route('system.reservation.show.rooms', encrypt($list->id))}}" class="btn btn-secondary btn-xs">Confirm</a>
-                                                <label for="reservation" class="btn btn-success btn-xs" disabled>Check-in</label>
-                                                <label for="reservation" class="btn btn-info btn-xs" disabled>Check-out</label>
-                                            @elseif($list->status() == "Confirmed")
-                                                <a class="btn btn-secondary btn-xs" disabled>Confirm</a>
-                                                <label for="checkin" class="btn btn-success btn-xs">Check-in</label>
-                                                <x-checkin name="{{$list->userReservation->name() ?? ''}}" :datas="$list" />
-                                                <label for="reservation" class="btn btn-info btn-xs" disabled>Check-out</label>
-                                            @elseif($list->status() == "Check-in")
-                                                <a href="" class="btn btn-secondary btn-xs" disabled>Confirm</a>
-                                                <label for="reservation" class="btn btn-success btn-xs" disabled>Check-in</label>
-                                                <label for="reservation" class="btn btn-warning btn-xs">Check-out</label>
-                                            @endif
+                                            <x-reservation-action :data="$list" />
                                             <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs" >View</a>
                                             {{-- <a href="{{route('system.reservation.show.receipt', encrypt($list->id))}}" class="btn btn-accent btn-xs" >Receipt</a> --}}
                                         </th>

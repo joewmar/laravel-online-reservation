@@ -14,9 +14,10 @@ class Reservation extends Model
     use HasUuids;
     protected $fillable = [
         'user_id',
-        'room_id',
-        'room_rate_id',
+        'roomid',
+        'roomrateid',
         'pax',
+        'tour_pax',
         'age',
         'accommodation_type',
         'payment_method',
@@ -35,10 +36,10 @@ class Reservation extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
     public function room(){
-        return $this->hasMany(Room::class, 'room_id');
+        return $this->hasMany(Room::class, 'roomid');
     }
     public function roomRate(){
-        return $this->hasMany(RoomRate::class, 'room_rate_id');
+        return $this->hasMany(RoomRate::class, 'roomrateid');
     }
     public function status(){
         $status = '';
@@ -52,7 +53,7 @@ class Reservation extends Model
     public function payment(){
         return $this->hasMany(OnlinePayment::class, 'reservation_id');
     }
-    protected function room_id(): Attribute
+    protected function roomid(): Attribute
     {
         return Attribute::make(
             get: fn ($value) => json_decode($value, true),

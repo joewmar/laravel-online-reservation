@@ -188,7 +188,7 @@ class ArchiveFactory extends Factory
         //    'contact' => fake()->e164PhoneNumber(),
         //    'email' => fake()->unique()->freeEmail(),
         //    'pax' => fake()->numberBetween(1, 12),
-        //    'room_id' => implode(',', $arrRooms),
+        //    'roomid' => implode(',', $arrRooms),
         //    'accommodation_type' => fake()->randomElement(['Room Only', 'Day Tour', 'Overnight']),
         //    'payment_method' => fake()->randomElement(['Walk-in', 'Gcash', 'PayPal']),
         //    'menu' => implode(',', $arrMenu),

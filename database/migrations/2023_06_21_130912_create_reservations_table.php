@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('reservations', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->json('room_id')->nullable();
-            $table->integer('room_rate_id')->nullable();
-            $table->integer('pax');
+            $table->json('roomid')->nullable();
+            $table->tinyInteger('roomrateid')->nullable();
+            $table->tinyInteger('pax');
+            $table->tinyInteger('tour_pax')->nullable();
             $table->tinyText('accommodation_type');
             $table->tinyText('payment_method');
             $table->integer('age')->nullable();
@@ -27,7 +28,7 @@ return new class extends Migration
             $table->json('additional_menu')->nullable();
             $table->json('amount')->nullable();
             $table->decimal('total')->nullable();
-            $table->decimal('downpayment')->default(0);
+            $table->decimal('downpayment')->nullable();
             $table->text('request_message')->nullable();
             $table->string('valid_id');
             $table->dateTime('payment_cutoff')->nullable();

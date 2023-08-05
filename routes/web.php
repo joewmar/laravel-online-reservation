@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\RideController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\UserController;
@@ -101,11 +102,13 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
 
         Route::get('/confimation', [ReservationController::class, 'confirmation'])->name('confirmation');
         Route::post('/confimation/convert', [ReservationController::class, 'convert'])->name('convert');
+        Route::get('/confimation/tour/{id}/destroy', [ReservationController::class, 'destroyTour'])->name('tour.destroy');
         Route::post('/store', [ReservationController::class, 'storeReservation'])->name('store');
         Route::get('{id}/done', [ReservationController::class, 'done'])->name('done');
         Route::post('/done/{id}/message/store', [ReservationController::class, 'storeMessage'])->name('done.message.store');
 
         Route::get('/{id}/gcash', [ReservationController::class, 'gcash'])->name('gcash');
+        Route::get('/{id}/gcash/done', [ReservationController::class, 'doneGcash'])->name('gcash.done');
         Route::get('/{id}/paypal', [ReservationController::class, 'paypal'])->name('paypal');
         Route::post('/{id}/payment', [ReservationController::class, 'paymentStore'])->name('payment.store');
 
@@ -132,6 +135,8 @@ Route::prefix('system')->name('system.')->group(function(){
             
             Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');
             Route::get('/{id}/show/online-payment', [SystemReservationController::class, 'showOnlinePayment'])->name('show.online.payment');
+            Route::post('/{id}/online-payment/create', [SystemReservationController::class, 'storeOnlinePayment'])->name('online.payment.store');
+            Route::post('/{id}/online-payment/disaprove', [SystemReservationController::class, 'disaproveOnlinePayment'])->name('online.payment.disaprove');
             Route::get('/{id}/show/room', [SystemReservationController::class, 'showRooms'])->name('show.rooms');
             Route::get('/{id}/disaprove', [SystemReservationController::class, 'disaprove'])->name('disaprove');
             Route::post('/{id}/disaprove', [SystemReservationController::class, 'disaproveStore'])->name('disaprove.store');
@@ -143,6 +148,14 @@ Route::prefix('system')->name('system.')->group(function(){
 
         Route::prefix('menu')->name('menu.')->group(function (){
             Route::get('/', [TourMenuController::class, 'index'])->name('home');
+
+            Route::prefix('addons')->name('addons.')->group(function (){
+                Route::get('/create', [TourMenuController::class, 'createAddons'])->name('create');
+                Route::post('/create', [TourMenuController::class, 'storeAddons'])->name('store');
+                Route::get('/{id}/edit', [TourMenuController::class, 'editAddons'])->name('edit');
+                Route::put('/{id}/update', [TourMenuController::class, 'updateAddons'])->name('update');
+                Route::delete('/{id}/delete', [TourMenuController::class, 'destroyAddons'])->name('destroy');
+            });
             Route::get('/create', [TourMenuController::class, 'create'])->name('create');
             Route::post('/create', [TourMenuController::class, 'store'])->name('store');
             Route::get('/create/price-details', [TourMenuController::class, 'priceDetails'])->name('price.details');

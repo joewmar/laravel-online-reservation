@@ -74,7 +74,7 @@ class RoomSettingController extends Controller
                     // Add Room One by one
                     for($count = 0; $count < $room_count; $count++){
                         $room = new Room();
-                        $room->room_id = $room_list->id; // Set the appropriate accommodation_id value
+                        $room->roomid = $room_list->id; // Set the appropriate accommodation_id value
                         $room->room_no = 0; 
                         $saved = $room->save(); 
                         if(!$saved){ // Check if Error Save data the Room
@@ -122,7 +122,7 @@ class RoomSettingController extends Controller
                 $length =  abs((int)$validated['many_room'] - (int)$room_list->many_room);
                 for($count = 0; $count < $length; $count++){
                     $room = new Room();
-                    $room->room_id = $room_list->id; // Set the appropriate accommodation_id value
+                    $room->roomid = $room_list->id; // Set the appropriate accommodation_id value
                     $room->room_no = 0;
                     $room->save(); 
                 }
@@ -133,7 +133,7 @@ class RoomSettingController extends Controller
 
                 $length =  abs((int)$room_list->many_room - (int)$validated['many_room']);
                 for($count = 0; $count < $length; $count++){
-                    $room = Room::where('room_id', $room_list->id)->orderBy('room_no', 'desc')->first();
+                    $room = Room::where('roomid', $room_list->id)->orderBy('room_no', 'desc')->first();
                     $room->delete();   
                 }
                 refreshRoomNumber();    
@@ -159,7 +159,7 @@ class RoomSettingController extends Controller
             $room_name = $room_list->name;
             $room_list->delete();
 
-            Room::where('room_id', $id)->delete();
+            Room::where('roomid', $id)->delete();
             refreshRoomNumber();    
             return redirect()->route('system.setting.rooms.home')->with('success', $room_name .' Room was deleted');
         } 

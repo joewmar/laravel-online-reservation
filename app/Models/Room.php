@@ -18,7 +18,7 @@ class Room extends Model
     ];
 
     public function room(){
-        return $this->belongsTo(RoomList::class, 'room_id');
+        return $this->belongsTo(RoomList::class, 'roomid');
     }
     protected function customer(): Attribute
     {

@@ -47,13 +47,16 @@
                   </div>
                 </div>
                 <div class="space-y-3">
-                  <p class="text-md font-medium tracking-tight text-gray-900">
+                  <p class="text-md font-medium tracking-tight text-neutral">
                     <strong>Number of Guest: </strong> {{$uinfo['px'] > 1 ? $uinfo['px'] . ' guests' : $uinfo['px'] . ' guest' }}
                   </p>            
-                  <p class="text-md font-medium tracking-tight text-gray-900">
+                  <p class="text-md font-medium tracking-tight text-neutral">
+                    <strong>Number of guest going on a tour: </strong> {{$uinfo['tpx'] > 1 ? $uinfo['tpx'] . ' guests' : $uinfo['tpx'] . ' guest' }}
+                  </p>            
+                  <p class="text-md font-medium tracking-tight text-neutral">
                     <strong>Type: </strong> {{$uinfo['at'] ?? ''}}
                   </p>            
-                  <p class="text-md font-medium tracking-tight text-gray-900">
+                  <p class="text-md font-medium tracking-tight text-neutral">
                     <strong>Payment Method: </strong> {{$uinfo['py'] ?? ''}}
                   </p>            
                 </div>
@@ -61,15 +64,15 @@
                     <div class="flow-root">
                           @if($uinfo['at'] !== 'Room Only')
                           <div class="overflow-x-auto ">
-
-                            <table class="table table-zebra">
+                            <table class="table table-zebra table-xs">
                               <!-- head -->
                               <thead>
                                 <tr>
                                   <th>Tour</th>
                                   <th>Type</th>
-                                  <th>Pax</th>
                                   <th>Price</th>
+                                  <th>Amount</th>
+                                  <th></th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -79,12 +82,28 @@
                                         <tr>
                                           <td>{{$item['title']}}</td>
                                           <td>{{$item['type']}}</td>
-                                          <td>{{$item['pax']}}</td>
+                                          {{-- <td>{{$item['pax']}}</td> --}}
                                           <td>
-                                              <input type="hidden" name="amount[]" value="tm{{$item['id']}}-{{$item['orig_price']}}">{{$currencies[request('cur')] ?? '₱'}} {{ number_format($item['price'], 2) }}
-                                            </td>
+                                              <input type="hidden" name="amount[]" value="tm{{$item['id']}}Price-{{$item['orig_price']}}">
+                                              {{$currencies[request('cur')] ?? '₱'}} {{ number_format($item['price'], 2) }}
+                                          </td>
+                                          <td>
+                                            {{$currencies[request('cur')] ?? '₱'}} {{ number_format($item['amount'], 2) }}
+                                          </td>
+                                          <td>
+                                            <label for="remove-tour" class="btn btn-ghost btn-circle btn-sm text-error">
+                                              <i class="fa-solid fa-trash"></i>                                              
+                                            </label>
+                                            <x-modal id="remove-tour" title="Do you want delete this: {{ $item['title']}}" loader=true>
+                                              <div class="modal-action">
+                                                <a href="{{route('reservation.tour.destroy', encrypt($item['id']) )}}" class="btn btn-primary">Yes</a>
+                                                <label for="remove-tour" class="btn btn-ghost">No</label>
+                                              </div>
+                                            </x-modal>
+                                          </td>
                                           @php $totalPrice += (double)$item['price']  @endphp
                                         </tr>
+
                                     @endforeach
                                 @else
                                   <tr colspan="2">
@@ -96,7 +115,7 @@
                           
                           </div>
                           <div class="flex justify-end mb-5">
-                            <p class="text-md font-medium tracking-tight text-gray-900">
+                            <p class="text-md font-medium tracking-tight text-neutral">
                               Total Cost: {{$currencies[request('cur')] ?? '₱'}} {{ number_format($totalPrice, 2) }}
                             </p>
                           </div>
