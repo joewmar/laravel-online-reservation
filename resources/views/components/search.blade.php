@@ -12,15 +12,14 @@
 <div class="join">
 	<div>
 	  <div>
-		<input class="input input-sm input-primary join-item" name="search" placeholder="Search..." value="{{request('search') ?? ""}}" />
+		<input class="input input-sm input-primary join-item placeholder:text-sm" name="search" placeholder="Search..." value="{{request('search') ?? ""}}" />
 	  </div>
 	</div>
-	<select name="action" class="select select-sm select-primary join-item">
+	<select name="action" class="select select-sm select-primary join-item text-xs">
 	  <option value="" selected>All</option>
 	  @foreach($arrAction as $key => $item)
 			@if (request('tab') == $key)
 				<option value="{{$key}}" selected>{{$item}}</option>
-
 			@else
 				<option value="{{$key}}" >{{$item}}</option>
 			@endif

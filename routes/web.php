@@ -134,6 +134,10 @@ Route::prefix('system')->name('system.')->group(function(){
 
             
             Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');
+            Route::get('/{id}/show/extend', [SystemReservationController::class, 'showExtend'])->name('show.extend');
+            Route::put('/{id}/show/extend/update', [SystemReservationController::class, 'updateExtend'])->name('show.extend.update');
+            Route::get('/{id}/show/addons', [SystemReservationController::class, 'showAddons'])->name('show.addons');
+            Route::put('/{id}/show/addons/update', [SystemReservationController::class, 'updateAddons'])->name('show.addons.update');
             Route::get('/{id}/show/online-payment', [SystemReservationController::class, 'showOnlinePayment'])->name('show.online.payment');
             Route::post('/{id}/online-payment/create', [SystemReservationController::class, 'storeOnlinePayment'])->name('online.payment.store');
             Route::post('/{id}/online-payment/disaprove', [SystemReservationController::class, 'disaproveOnlinePayment'])->name('online.payment.disaprove');

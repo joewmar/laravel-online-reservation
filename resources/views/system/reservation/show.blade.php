@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="">
+    <x-system-content title="" back=true>
         {{-- User Details --}}
         <div class="w-full p-8 sm:flex sm:space-x-6">
             <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
@@ -37,12 +37,11 @@
                 </a>
             @endif
             @if($r_list->status > 1)
-                <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-accent btn-sm">
+                <a href="{{route('system.reservation.show.extend', encrypt($r_list->id))}}" class="btn btn-accent btn-sm">
                     <i class="fa-solid fa-circle-plus"></i>                   
                     Extend Room Stay
                 </a>
-                <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-accent btn-sm">
-                    {{-- <i class="fa-solid fa-circle-plus"></i>                    --}}
+                <a href="{{route('system.reservation.show.addons', encrypt($r_list->id))}}" class="btn btn-accent btn-sm">
                     Add-ons
                 </a>
             @endif

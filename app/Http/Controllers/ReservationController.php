@@ -300,17 +300,7 @@ class ReservationController extends Controller
             ]); 
         }
         if(request()->has(['cin', 'cout', 'px', 'at'])){
-            return view('reservation.step2', [
-                // 'tour_lists' => TourMenuList::all(), 
-                // 'tour_category' => TourMenuList::distinct()->get('category'), 
-                // "cin" =>  decrypt(request('cin')) ?? '',
-                // "cout" =>  decrypt(request('cout')) ?? '',
-                // "at" =>  decrypt(request('at')) ?? '',
-                // "px" => decrypt(request('px')) ?? '',
-                // "p" =>  '',
-                // "py" =>  '',
-                // "user_days" => $noOfday ?? '',
-            ]); 
+            return view('reservation.step2'); 
         }
     }
     // Check Step 1 on Choose Form

@@ -11,14 +11,16 @@ use App\Models\RoomRate;
 use App\Models\TourMenu;
 use App\Models\Reservation;
 use Illuminate\Support\Arr;
+use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
+use App\Models\OnlinePayment;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservationConfirmation;
-use App\Models\OnlinePayment;
+use App\Models\Addons;
 use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Notifications\Notification;
@@ -652,5 +654,22 @@ class SystemReservationController extends Controller
             'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
         ];
         Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
+    }
+    public function showAddons($id){
+        $reservation = Reservation::findOrFail(decrypt($id));
+        $noOfday = checkDiffDates(Carbon::now('Asia/Manila')->format('Y-m-d'), $reservation->check_out);
+        return view('system.reservation.addons.index',  [
+            'activeSb' => 'Reservation', 
+            'r_list' => $reservation,
+            'tour_lists' => TourMenuList::all(), 
+            'tour_category' => TourMenuList::distinct()->get('category'), 
+            'tour_menus' => TourMenu::all(),
+            'addons_list' => Addons::all(),
+            'user_days' => $noOfday,
+        ]);
+    }
+    public function showExtend($id){
+        $reservation = Reservation::findOrFail(decrypt($id));
+        return view('system.reservation.extend.index',  ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
 }

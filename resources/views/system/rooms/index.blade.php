@@ -18,13 +18,21 @@
           </fieldset>
           <div class="mt-8 grid grid-flow-row md:grid-cols-3 gap-8">
             @forelse ($rooms as $room)
-              <a class="block rounded-xl border border-neutral-content p-8 shadow-md transition hover:border-primary">
+              @if($room->availability)
+                <label for="room_modal{{$room->id}}" class="block rounded-xl border border-neutral-content p-8 shadow-md transition hover:border-error bg-error">
+              @else
+                <label for="room_modal{{$room->id}}" class="block rounded-xl border border-neutral-content p-8 shadow-md transition hover:border-primary">
+              @endif
                 <h2 class="mt-4 text-xl font-bold text-neutral">Room No. {{$room->room_no}}</h2>
-                <h5 class="text-md font-medium text-neutral">{{$room->room->name}} Room</h5>
-                {{-- <p class="mt-1 text-sm text-neutral-600">
-                  
-                </p> --}}
-              </a>
+                <h5 class="text-md font-medium text-neutral">{{$room->room->name}} Room ({{$room->room->min_occupancy}} to {{$room->room->max_occupancy}} Capacity)</h5>
+              </label>
+              <x-modal id="room_modal{{$room->id}}" title="Who guest on Room No. {{$room->room_no}}">
+                @forelse((array)$room->customer as $key => $item)
+                  <h5 class="text-md font-medium text-neutral">{{ \App\Models\Reservation::find($key)->userReservation->name()}} - {{$item}} guest</h5>
+                @empty
+                  <h5 class="text-md font-medium text-neutral">No guest</h5>
+                @endforelse
+              </x-modal>
             @empty
               <h2 class="mt-4 text-xl font-bold text-neutral col-span-full w-full text-center">No Room found</h2>
             @endforelse
