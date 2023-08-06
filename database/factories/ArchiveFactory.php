@@ -195,7 +195,7 @@ class ArchiveFactory extends Factory
            'check_in' => Carbon::now()->addRealDays(fake()->numberBetween(5, 100))->format('Y-m-d'),
         //    'check_out' =>  fake()->date(),
            'status' => fake()->numberBetween(0, 2), /* 0 => done, 1 => disaprove, 2 => cancellation, 3 => ? */
-        // //    'additional_menu' => implode(',', $arrAddMenu),
+        // //    'additional' => implode(',', $arrAddMenu),
         //    'amount' => implode(',', $arrAmount),
            'total' => fake()->randomFloat(2, 1100, 50000),
         //    'message' => fake()->sentences(2) ,

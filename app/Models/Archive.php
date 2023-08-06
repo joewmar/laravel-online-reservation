@@ -28,7 +28,7 @@ class Archive extends Model
         'check_in',
         'check_out' ,
         'status',
-        'additional_menu',
+        'additional',
         'amount',
         'total' ,
         'message',
@@ -44,7 +44,10 @@ class Archive extends Model
         if($this->attributes['status'] == 0) $status = 'Done';
         elseif($this->attributes['status'] == 1) $status = 'Disaprove';
         elseif($this->attributes['status'] == 2) $status = 'Cancel';
-        // elseif($this->attributes['status'] == 3) $status = 'Check-out';
+        elseif($this->attributes['status'] == 3) $status = 'Check-out';
+        elseif($this->attributes['status'] == 4) $status = 'Canceled';
+        elseif($this->attributes['status'] == 5) $status = 'Disaproved'; /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => done, 4 => canceled, 5 => disaprove, 6 => reshedule*/
+        elseif($this->attributes['status'] == 6) $status = 'Reshedule'; 
             
         return $status ?? $this->attributes['status'];
     }
@@ -62,7 +65,7 @@ class Archive extends Model
             set: fn ($value) => json_encode($value),
         );
     } 
-    protected function additional_menu(): Attribute
+    protected function additional(): Attribute
     {
         return Attribute::make(
             get: fn ($value) => json_decode($value, true),

@@ -85,9 +85,10 @@ class DatabaseSeeder extends Seeder
             'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
             'check_out' => Carbon::now()->addDays(20)->toDateTimeString(),
             'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-            // 'additional_menu',
+            'downpayment' => 1000.00,
             'valid_id' => 'valid_id/Valid_ID-sample.jpg',
             'amount' => ['tm2' => 2100.00],
+            // 'amount' => ['tm2' => ['price' => 2100.00, 'amount' => 2100.00 * 2]],
             'total' => 4200.00,
         ]);
 

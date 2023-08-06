@@ -24,17 +24,17 @@
                 <p class="text-lg"><strong>Total: </strong>₱ {{number_format($datas->total ?? 0, 2)}}</p>
                 {{-- <p class="text-lg"><strong>Downpayment: </strong>₱ {{number_format($datas->downpayment ?? 0, 2)}}</p> --}}
                 @php $balance = abs((double)$datas->total ?? 0 - (double)$datas->$downpayment ?? 0); @endphp
-                <p class="text-lg"><strong>Balance: </strong>₱ {{number_format($balance  ?? 0, 2)}}</p>
+                <p class="text-lg"><strong>Balance: </strong>₱ {{$balance <= $datas->total ? 'No Balance' : number_format($balance, 2)}}</p>
                 <div class="py-3 space-x-2">
-                    <form x-data="{isFullPay: false}" action="{{route('system.reservation.show.checkin', encrypt($datas->id))}}" method="post">
+                    <form action="{{route('system.reservation.show.checkout', encrypt($datas->id))}}" x-data="{isFullPay: {{$balance <= $datas->total ? 'true' : 'false'}} }" action="{{route('system.reservation.show.checkin', encrypt($datas->id))}}" method="post">
                         @csrf
                         @method('PUT')
                         <div class="py-3 space-x-2">
-                            <input x-model="isFullPay" type="checkbox" id="isFullPaid" class="checkbox checkbox-sm checkbox-primary" value="true"/> 
+                            <input x-model="isFullPay" type="checkbox" id="isFullPaid" name="fullpay" class="checkbox checkbox-sm checkbox-primary" value="true" /> 
                             <label for="isFullPaid">Full Paid</label>
                         </div>
                         <div x-show ="isFullPay" class="modal-action" x-transition >
-                            <button @click="loader = true" class="btn btn-primary">Go</button>
+                            <button @click="loader = true" class="btn btn-primary">Check-out</button>
                         </div>
                     </form>
                 </div>

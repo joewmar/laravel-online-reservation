@@ -64,8 +64,8 @@ header:after { clear: both; content: ""; display: table; }
 
 header h1 { background: #000; border-radius: 0.25em; color: #FFF; margin: 0 0 1em; padding: 0.5em 0; }
 header address { float: left; font-size: 75%; font-style: normal; line-height: 1.25; margin: 0 1em 1em 0; }
-header address p { margin: 0 0 0.25em; }
-header span, header img { display: block; float: right; }
+header address p { margin: 0 0.25em; }
+header span, header img { display: block; float: left; }
 header span { margin: 0 0 1em 1em; max-height: 25%; max-width: 60%; position: relative; }
 header img { max-height: 100%; max-width: 100%; }
 header input { cursor: pointer; -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)"; height: 100%; left: 0; opacity: 0; position: absolute; top: 0; width: 100%; }
@@ -164,10 +164,10 @@ tr:hover .cut { opacity: 1; }
 	
 	</head>
 	<body style="height: auto;">
-	
 		<header>
 			<h1>Receipt</h1>
-			<address >
+			<img src="{{asset('images/logo.png')}}" alt="Logo" style="width: 15%">
+			<address style="margin-top: 17px">
 				<p>{{ str_replace('_', ' ', config('app.name'))}}</p>
 				<p>Sta. Juliana, Capas Tarlac, Philippines.</p>
 				<p>09123456789</p>
@@ -196,7 +196,9 @@ tr:hover .cut { opacity: 1; }
 			</address>
 			<div class="details">
 				<h5>Guest: <span>{{$r_list->pax . ' guest' ?? 'None'}}</span></h5>
-				<h5>Guest going on tour: <span>{{$r_list->tour_pax . ' guest' ?? 'None'}}</span></h5>
+				@if($r_list->accommodation_type != 'Room Only')
+					<h5>Guest going on tour: <span>{{$r_list->tour_pax . ' guest' ?? 'None'}}</span></h5>
+				@endif
 				<h5>Check-in: <span>{{\Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_in)->format('l F j, Y') ?? 'None'}}</span></h5>
 				<h5>Check-out: <span>{{\Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out)->format('l F j, Y') ?? 'None'}}</span></h5>
 				<h5>Service Type: <span>{{$r_list->accommodation_type ?? 'None'}}</span></h5>
@@ -282,25 +284,29 @@ tr:hover .cut { opacity: 1; }
 			
 			<table class="balance">
 				<tr>
-					<th><span >Amount Paid</span></th>
+					<th><span >{{$r_list->status < 3 ? 'Total' : 'Amount Paid'}}</span></th>
 					<td><span data-prefix>₱ </span><span>{{number_format($r_list->total, 2)}}</span></td>
 				</tr>
-				<tr>
-					<th><span >Downpayment</span></th>
-					<td><span data-prefix>₱ </span><span>{{number_format($r_list->downpayment ?? 0, 2)}}</span></td>
-				</tr>
-				<tr>
-					<th><span >Balance Due</span></th>
-					@php
-						$balance = (double) abs($r_list->total - $r_list->downpayment);
-					@endphp
-					<td><span data-prefix>₱ </span><span>{{number_format($balance ?? 0, 2)}}</span></td>
-				</tr>
+				@if($r_list->status < 3)
+					<tr>
+						<th><span >Downpayment</span></th>
+						<td><span data-prefix>₱ </span><span>{{number_format($r_list->downpayment ?? 0, 2)}}</span></td>
+					</tr>
+					<tr>
+						<th><span >Balance Due</span></th>
+						@php
+							$balance = (double) abs($r_list->total - $r_list->downpayment);
+						@endphp
+						<td><span data-prefix>₱ </span><span>{{number_format($balance ?? 0, 2)}}</span></td>
+					</tr>
+				@endif
 			</table>
 		</article>
-		<div class="details">
-			<h5 style="color:red">Note: <span>The total amount to be paid will still depend on the situation, such as add-ons. It will find out at the check-out how much it will really be.</span></h5>
-		</div>
+		@if($r_list->status < 3)
+			<div class="details">
+				<h5 style="color:red">Note: <span>The total amount to be paid will still depend on the situation, such as add-ons. It will find out at the check-out how much it will really be.</span></h5>
+			</div>
+		@endif
 		<aside>
 			<h1><span >Contact us</span></h1>
 			<div >

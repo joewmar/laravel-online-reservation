@@ -146,6 +146,7 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::post('/{id}/disaprove', [SystemReservationController::class, 'disaproveStore'])->name('disaprove.store');
             Route::put('/{id}/show/room', [SystemReservationController::class, 'updateReservation'])->name('show.rooms.update');
             Route::put('/{id}/show/checkin', [SystemReservationController::class, 'updateCheckin'])->name('show.checkin');
+            Route::put('/{id}/show/checkout', [SystemReservationController::class, 'updateCheckout'])->name('show.checkout');
         });
         
         Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');

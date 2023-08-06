@@ -28,7 +28,7 @@ class Reservation extends Model
         'downpayment',
         'total',
         'valid_id',
-        'request_message',
+        'message',
     ];
     public function userReservation(){
         return $this->belongsTo(User::class, 'user_id');

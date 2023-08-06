@@ -24,6 +24,7 @@ use App\Models\Addons;
 use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Artisan;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
 class SystemReservationController extends Controller
@@ -221,28 +222,29 @@ class SystemReservationController extends Controller
         $conflict = Reservation::all()->where('check_in', $reservation->check_in)->where('status', 0)->except($reservation->id);;
         // dd($reservation->amount);
 
-        if($reservation->accommodation_type != 'Room Only'){
             $count = 0;
             foreach($reservation->amount as $key => $item){
-                if (strpos($key, 'tm') !== false) {
-                    $tour_menuID = (int)str_replace('tm','', $key);
-                    $tour_menu[$count]['title'] = TourMenu::find($tour_menuID)->tourMenu->title;
-                    $tour_menu[$count]['type'] = TourMenu::find($tour_menuID)->type;
-                    $tour_menu[$count]['pax'] = TourMenu::find($tour_menuID)->pax;
-                    $tour_menu[$count]['price'] = $reservation->amount['tm'.$tour_menuID];
-                    $tour_menu[$count]['amount'] = $reservation->amount['tm'.$tour_menuID] * (int)$reservation->tour_pax;
+                if($reservation->accommodation_type != 'Room Only'){
+                    if (strpos($key, 'tm') !== false) {
+                        $tour_menuID = (int)str_replace('tm','', $key);
+                        $tour_menu[$count]['title'] = TourMenu::find($tour_menuID)->tourMenu->title;
+                        $tour_menu[$count]['type'] = TourMenu::find($tour_menuID)->type;
+                        $tour_menu[$count]['pax'] = TourMenu::find($tour_menuID)->pax;
+                        $tour_menu[$count]['price'] = $reservation->amount['tm'.$tour_menuID];
+                        $tour_menu[$count]['amount'] = $reservation->amount['tm'.$tour_menuID] * (int)$reservation->tour_pax;
+                    }
                 }
                 if (strpos($key, 'rid') !== false) {
                     $rateID = (int)str_replace('rid','', $key);
                     $rates['name'] = RoomRate::find($rateID)->name;
                     $rates['no_days'] = checkDiffDates($reservation->check_in, $reservation->check_out);
-                    $rates['amount'] = RoomRate::find($rateID)->price;
+                    $rates['amount'] = RoomRate::find($rateID)->price * $rates['no_days'];
                     $rates['price'] = $reservation->amount['rid'.$rateID];
                 }
                 $count++;
             }
             unset($count);
-        }
+    
         return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict, 'rooms' => implode(',', $rooms), 'rates' => $rates]);
     }
     public function receipt($id){
@@ -432,7 +434,7 @@ class SystemReservationController extends Controller
                     // foreach($admins as $admin){
                     //     if(!empty($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
                     // }
-                    telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, 'bot2');
+                    telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');
 
                     $text = null;
                     $url = null;
@@ -520,10 +522,41 @@ class SystemReservationController extends Controller
         }
 
     }
+    public function updateCheckout(Request $request){
+        $system_user = $this->system_user->user();
+        $admins = System::all()->where('type', 0)->where('type', 1);
+        $reservation = Reservation::findOrFail(decrypt($request->id));
+        $validated = $request->validate([
+            'fullpay' => ['accepted'],
+        ],[
+            'accepted' => 'Before proceeding, full payment must be made first.'
+        ]);
+        if($validated) {
+            $reservation->update(['status' => 3]);
+        }
+        // unset($downpayment);
+        $text = 
+        "Employee Action: Check-out !\n" .
+        "Name: ". $reservation->userReservation->name() ."\n" . 
+        "Age: " . $reservation->age ."\n" .  
+        "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+        "Who Approve: " . $system_user->name() ;
+        $details = [
+            'name' => $reservation->userReservation->name(),
+            'title' => 'Reservation Check-in',
+            'body' => 'You now checked in at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
+        ];   
+        // foreach($admins as $admin) if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
+        telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');
+        Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+        unset($text, $details);
+        return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked out');
+        
+    }
     public function disaprove($id){
         $reservation = Reservation::findOrFail(decrypt($id));
         $tour_menu = [];
-                if($reservation->accommodation_type != 'Room Only'){
+            if($reservation->accommodation_type != 'Room Only'){
             $count = 0;
             foreach($reservation->amount as $key => $item){
                 if (strpos($key, 'tm') !== false) {
@@ -570,39 +603,19 @@ class SystemReservationController extends Controller
             $validated['message'] =  $validated['reason'];
         }
         if(!Hash::check($validated['passcode'], $system_user->passcode))  return back()->with('error', 'Invalid Passcode, Try Again')->withInput($validated);
-
-        $arrAcrhive = [
-            "name" => $reservation->userReservation->name(),
-            "age" => $reservation->age,
-            "country" => $reservation->userReservation->country,
-            "nationality" => $reservation->userReservation->nationality,
-            "pax" => $reservation->pax,
-            "accommodation_type" => $reservation->accommodation_type,
-            "payment_method" => $reservation->payment_method,
-            "age" => $reservation->age,
-            // "menu" => $reservation->menu,
-            "check_in" => $reservation->check_in,
-            "check_out" => $reservation->check_out,
-            "status" => 1,
-            // "additional_menu" => $reservation->additional_menu,
-            "amount" => $reservation->amount,
-            "total" => $reservation->total,
-            "message" => $validated['message'],
-        ];
-        $reservation->delete(); // delete on reservation
-        $acrhived = Archive::create($arrAcrhive); // create on archive
-        if($acrhived){
+        $updated = $reservation->update(['status' => 5, 'message' => $validated['message']]); // delete on reservation
+        if($updated){
             $text = 
             "Employee Action: Disaprove Reservation !\n" .
-            "Name: ". $acrhived->userArchive->first_name . " " . $acrhived->userArchive->last_name ."\n" . 
-            "Age: " . $acrhived->age ."\n" .  
-            "Nationality: " . $acrhived->userArchive->nationality  ."\n" . 
-            "Country: " . $acrhived->userArchive->country ."\n" . 
-            "Check-in: " . Carbon::createFromFormat('Y-m-d', $acrhived->check_in)->format('F j, Y') ."\n" . 
-            "Check-out: " . Carbon::createFromFormat('Y-m-d', $acrhived->check_out)->format('F j, Y') ."\n" . 
+            "Name: ". $updated->userArchive->first_name . " " . $reservation->userArchive->last_name ."\n" . 
+            "Age: " . $updated->age ."\n" .  
+            "Nationality: " . $reservation->userArchive->nationality  ."\n" . 
+            "Country: " . $reservation->userArchive->country ."\n" . 
+            "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y') ."\n" . 
+            "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y') ."\n" . 
             "Type: " . $reservation->accommodation_type ."\n" . 
             "Who Disaprove?: " . $system_user->name . ' (' . $system_user->role . ')' ;
-            "Reason to Disaprove: " . $acrhived->message  ;
+            "Reason to Disaprove: " . $reservation->message;
             // Send Notification to 
             // $keyboard = [
             //     [
@@ -614,13 +627,13 @@ class SystemReservationController extends Controller
             }
             $text = null;
             $details = [
-                'name' => $acrhived->userArchive->first_name . ' ' . $acrhived->userArchive->last_name,
+                'name' => $updated->userArchive->first_name . ' ' . $updated->userArchive->last_name,
                 'title' => 'Reservation Disaprove',
-                'body' => 'Your Reservation are disapprove due of ' . $acrhived->message. 'Sorry for waiting. Please try again to make reservation in another dates',
+                'body' => 'Your Reservation are disapprove due of ' . $updated->message. 'Sorry for waiting. Please try again to make reservation in another dates',
             ];
-            Mail::to(env('SAMPLE_EMAIL', $acrhived->userArchive->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            Mail::to(env('SAMPLE_EMAIL', $updated->userArchive->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             $details = null;
-            return redirect()->route('system.reservation.home')->with('success', 'Disaprove of ' . $acrhived->userArchive->first_name . ' ' . $acrhived->userArchive->last_name . ' was Successful');
+            return redirect()->route('system.reservation.home')->with('success', 'Disaprove of ' . $updated->userArchive->first_name . ' ' . $updated->userArchive->last_name . ' was Successful');
         }
         else{
             return back()->with('error', 'Something Wrong on database, Try Again')->withInput($validated);

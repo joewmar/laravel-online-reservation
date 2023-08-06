@@ -30,13 +30,13 @@
             </div>
         </div>
         <div class="flex justify-end space-x-1">
-            @if($r_list->status() === 'Confirmed' )
+            @if($r_list->status >= 1 && $r_list->status < 2)
                 <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}" class="btn btn-info btn-sm">
                     <i class="fa-solid fa-credit-card"></i>
                     Online Payment
                 </a>
             @endif
-            @if($r_list->status > 1)
+            @if($r_list->status >= 1 && $r_list->status < 3)
                 <a href="{{route('system.reservation.show.extend', encrypt($r_list->id))}}" class="btn btn-accent btn-sm">
                     <i class="fa-solid fa-circle-plus"></i>                   
                     Extend Room Stay
@@ -53,13 +53,9 @@
             @endif
         </div>
         <div class="divider"></div>
-        @if($r_list->accommodation_type !== 'Room Only')
+       
             <div class="block md:flex items-center justify-around">
             <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
-        @else
-            <div class="block w-full">
-            <article class="text-md tracking-tight text-neutral my-5 px-24 w-auto">
-        @endif
                 <h2 class="text-2xl mb-5 font-bold">Details</h2>
                 <p class="my-1"><strong>Number of Guest: </strong>{{$r_list->pax . ' guest' ?? 'None'}}</p>
                 @if(!empty($r_list->tour_pax))
@@ -72,61 +68,62 @@
                 <p class="my-1"><strong>Payment Method: </strong>{{ $r_list->payment_method ?? 'None'}}</p>
                 <p class="my-1"><strong>Status: </strong>{{ $r_list->status() ?? 'None'}}</p>
             </article>
-            @if($r_list->accommodation_type !== 'Room Only')
-                <div class="w-auto">
-                    <div class="overflow-x-auto">
-                        <table class="table table-zebra">
-                        <!-- head -->
-                        <thead>
-                            <tr>
-                                <th>Tour</th>
-                                <th>Type</th>
-                                <th>Price</th>
-                                <th>Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($menu as $key => $item)
+            <article>
+                @if($r_list->accommodation_type !== 'Room Only')
+                    <div class="w-auto">
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra">
+                            <!-- head -->
+                            <thead>
                                 <tr>
-                                    <td>{{$item['title']}}</td> 
-                                    <td>{{$item['type']}} - {{$item['pax']}} pax</td> 
-                                    <td>₱ {{number_format($item['price'], 2)}}</td> 
-                                    <td>₱ {{number_format($item['amount'], 2)}}</td> 
+                                    <th>Tour</th>
+                                    <th>Type</th>
+                                    <th>Price</th>
+                                    <th>Amount</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                                @foreach ($menu as $key => $item)
+                                    <tr>
+                                        <td>{{$item['title']}}</td> 
+                                        <td>{{$item['type']}} - {{$item['pax']}} pax</td> 
+                                        <td>₱ {{number_format($item['price'], 2)}}</td> 
+                                        <td>₱ {{number_format($item['amount'], 2)}}</td> 
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div>
-                        @if($r_list->status() === 'Confirmed')
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">Room Rate: </span>{{$rates['name']}} - ₱ {{ number_format((double)$rates['amount'], 2) }}
-                            </p>
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">No. of days: </span>{{$rates['no_days'] > 1 ? $rates['no_days'] . ' days' : $rates['no_days'] . ' day'}}
-                            </p>
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">Total of Room Rate: </span>₱ {{ number_format($rates['amount'], 2) }}
-                            </p>
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->total, 2) }}
-                            </p>
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment ?? 0, 2) }}
-                            </p>
-                            <p class="text-md tracking-tight text-neutral my-5">
-                                @php $balance = abs($r_list->total - $r_list->downpayment); @endphp
-                                <span class="font-medium">Balance due: </span>₱ {{ number_format($balance ?? 0, 2) }}
-                            </p>
-                        @else
-                            <p class="text-md tracking-tight text-neutral my-5">
-                                <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->total, 2) }}
-                            </p>
-                        @endif
-                    </div>
-
+                @endif
+                <div>
+                    @if($r_list->status() === 'Confirmed')
+                        <p class="text-md tracking-tight text-neutral">
+                            <span class="font-medium">Room Rate: </span>{{$rates['name']}} - ₱ {{ number_format((double)$rates['amount'], 2) }}
+                        </p>
+                        <p class="text-md tracking-tight text-neutral">
+                            <span class="font-medium">No. of days: </span>{{$rates['no_days'] > 1 ? $rates['no_days'] . ' days' : $rates['no_days'] . ' day'}}
+                        </p>
+                        <p class="text-md tracking-tight text-neutral">
+                            <span class="font-medium">Total of Room Rate: </span>₱ {{ number_format($rates['amount'], 2) }}
+                        </p>
+                        <p class="text-md tracking-tight text-neutral">
+                            <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->total, 2) }}
+                        </p>
+                        <p class="text-md tracking-tight text-neutral">
+                            <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment ?? 0, 2) }}
+                        </p>
+                        <p class="text-md tracking-tight text-neutral my-5">
+                            @php $balance = abs($r_list->total - $r_list->downpayment); @endphp
+                            <span class="font-medium">Balance due: </span>₱ {{ number_format($balance ?? 0, 2) }}
+                        </p>
+                    @else
+                        <p class="text-md tracking-tight text-neutral my-5">
+                            <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->total, 2) }}
+                        </p>
+                    @endif
                 </div>
-            @endif
+            </article>
         </div>
         <div class="divider"></div>
         <div class="flex flex-wrap justify-center w-full">
@@ -143,61 +140,63 @@
             </div>
         </div>
         <div class="divider"></div>
-        <article class="text-md tracking-tight text-neutral my-5 px-0 md:px-24 w-auto">
-            <h2 class="text-2xl mb-5 font-bold">Conflict Schedule of {{$r_list->userReservation->name()}}</h2>
-            <div class="overflow-x-auto w-full">
-                <table class="table w-full">
-                    <!-- head -->
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Name</th>
-                            <th>Check-in</th>
-                            <th>Check-out</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    <!-- row 1 -->
-                        @forelse ($conflict as $list)
+        @if($r_list->status >= 1 && $r_list->status < 3)
+            <article class="text-md tracking-tight text-neutral my-5 px-0 md:px-24 w-auto">
+                <h2 class="text-2xl mb-5 font-bold">Conflict Schedule of {{$r_list->userReservation->name()}}</h2>
+                <div class="overflow-x-auto w-full">
+                    <table class="table w-full">
+                        <!-- head -->
+                        <thead>
                             <tr>
-                                <td>
-                                    <div class="flex items-center space-x-3">
-                                        <div class="avatar">
-                                            <div class="mask mask-squircle w-12 h-12">
-                                                <img src="{{$list->userReservation->avatar ? asset('storage/'.$list->userReservation->avatar) : asset('images/avatars/no-avatar.png')}}" />
+                                <th></th>
+                                <th>Name</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <!-- row 1 -->
+                            @forelse ($conflict as $list)
+                                <tr>
+                                    <td>
+                                        <div class="flex items-center space-x-3">
+                                            <div class="avatar">
+                                                <div class="mask mask-squircle w-12 h-12">
+                                                    <img src="{{$list->userReservation->avatar ? asset('storage/'.$list->userReservation->avatar) : asset('images/avatars/no-avatar.png')}}" />
+                                                </div>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td>
+                                    <div>
+                                        <div class="font-bold">{{$list->userReservation->name() ?? ''}}</div>
+                                        <div class="text-sm opacity-50">{{$list->userReservation->country}}</div>
                                     </div>
-                                </td>
-                                <td>
-                                <div>
-                                    <div class="font-bold">{{$list->userReservation->name() ?? ''}}</div>
-                                    <div class="text-sm opacity-50">{{$list->userReservation->country}}</div>
-                                </div>
-                                </td>
-                                <td class="font-bold">{{ \Carbon\Carbon::parse($list->check_in)->format('F j, Y')}}</td>
-                                <td class="font-bold">{{ \Carbon\Carbon::parse($list->check_out)->format('F j, Y')}}</td>
-                                <td>{{$list->status()}}</td>
-                                <td>{{ \Carbon\Carbon::parse($list->created_at)->format('M j, Y g:i A')}}</td>
+                                    </td>
+                                    <td class="font-bold">{{ \Carbon\Carbon::parse($list->check_in)->format('F j, Y')}}</td>
+                                    <td class="font-bold">{{ \Carbon\Carbon::parse($list->check_out)->format('F j, Y')}}</td>
+                                    <td>{{$list->status()}}</td>
+                                    <td>{{ \Carbon\Carbon::parse($list->created_at)->format('M j, Y g:i A')}}</td>
 
-                                <th class="w-auto">
-                                    <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs" >View</a>
-                                </th>
-                            
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center font-bold">No Conflict</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                    <th class="w-auto">
+                                        <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs" >View</a>
+                                    </th>
+                                
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center font-bold">No Conflict</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
 
-            </div>
-        </article>
+                </div>
+            </article>
+        @endif
         <div class="flex justify-end space-x-1">
             <x-reservation-action :data="$r_list" />
         </div>

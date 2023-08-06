@@ -28,7 +28,7 @@ return new class extends Migration
             $table->date('check_in');
             // $table->date('check_out');
             $table->tinyInteger('status')->default(0); /* 0 => done, 1 => disaprove, 2 => cancellation, 3 => ? */
-            // $table->json('additional_menu')->nullable();
+            // $table->json('additional')->nullable();
             // $table->json('amount')->nullable();
             $table->decimal('total')->nullable();
             // $table->string('message')->nullable();

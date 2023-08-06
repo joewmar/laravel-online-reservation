@@ -32,7 +32,7 @@ class ReservationController extends Controller
         $this->user = auth('web');
         $this->middleware(function ($request, $next) {
 
-            $existingReservation = Reservation::where('user_id', $this->user->user()->id)->first();
+            $existingReservation = Reservation::where('user_id', $this->user->user()->id)->where('status', '<', 3)->first();
 
             if ($existingReservation) {
                 session(['ck' => false]);
@@ -558,7 +558,7 @@ class ReservationController extends Controller
             'max' => 'The image size must not exceed 5 MB',
         ]);
         if($request->hasFile('valid_id')){  
-            $validated['valid_id'] = $request->file('valid_id')->store('valid_id', 'private');
+            $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
         }
 
         $reserve_info = null;
@@ -637,7 +637,7 @@ class ReservationController extends Controller
     public function storeMessage(Request $request){
         $reservation = Reservation::findOrFail($request->id);
         $validate = $request->validate([
-            'request_message' => 'required',
+            'message' => 'required',
         ]);
         $reservation->update($validate);
         return redirect()->route('home')->with('success', 'Thank you for your request');
