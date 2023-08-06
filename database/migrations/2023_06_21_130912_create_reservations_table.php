@@ -21,11 +21,11 @@ return new class extends Migration
             $table->tinyText('accommodation_type');
             $table->tinyText('payment_method');
             $table->integer('age')->nullable();
-            $table->json('menu')->nullable();;
+            // $table->json('menu')->nullable();;
             $table->date('check_in');
             $table->date('check_out');
             $table->tinyInteger('status')->default(0); /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-            $table->json('additional_menu')->nullable();
+            // $table->json('additional_menu')->nullable();
             $table->json('amount')->nullable();
             $table->decimal('total')->nullable();
             $table->decimal('downpayment')->nullable();

@@ -78,7 +78,7 @@ class DatabaseSeeder extends Seeder
             // 'roomrateid' => 1,
             'pax' => 2,
             'tour_pax' => 2,
-            'menu' => [2],
+            // 'menu' => [2],
             'accommodation_type' => 'Day Tour',
             'payment_method' => 'Gcash',
             'age' => User::findOrfail(1)->age(),

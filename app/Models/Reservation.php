@@ -21,11 +21,9 @@ class Reservation extends Model
         'age',
         'accommodation_type',
         'payment_method',
-        'menu',
         'check_in',
         'check_out',
         'status',
-        'additional_menu',
         'amount',
         'downpayment',
         'total',
@@ -54,20 +52,6 @@ class Reservation extends Model
         return $this->hasMany(OnlinePayment::class, 'reservation_id');
     }
     protected function roomid(): Attribute
-    {
-        return Attribute::make(
-            get: fn ($value) => json_decode($value, true),
-            set: fn ($value) => json_encode($value),
-        );
-    } 
-    protected function menu(): Attribute
-    {
-        return Attribute::make(
-            get: fn ($value) => json_decode($value, true),
-            set: fn ($value) => json_encode($value),
-        );
-    } 
-    protected function additional_menu(): Attribute
     {
         return Attribute::make(
             get: fn ($value) => json_decode($value, true),

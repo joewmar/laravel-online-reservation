@@ -97,17 +97,34 @@
                         </tbody>
                         </table>
                     </div>
-                    @if($r_list->status() === 'Confirmed')
-                        <p class="text-md tracking-tight text-neutral">
-                            <span class="font-medium">Room Rate: </span>₱ {{ number_format( \App\Models\RoomRate::find($r_list->roomrateid)->price, 2) }}
-                        </p>
-                        <p class="text-md tracking-tight text-neutral">
-                            <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment ?? 0, 2) }}
-                        </p>
-                    @endif
-                    <p class="text-md tracking-tight text-neutral my-5">
-                        <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->total, 2) }}
-                    </p>
+                    <div>
+                        @if($r_list->status() === 'Confirmed')
+                            <p class="text-md tracking-tight text-neutral">
+                                <span class="font-medium">Room Rate: </span>{{$rates['name']}} - ₱ {{ number_format((double)$rates['amount'], 2) }}
+                            </p>
+                            <p class="text-md tracking-tight text-neutral">
+                                <span class="font-medium">No. of days: </span>{{$rates['no_days'] > 1 ? $rates['no_days'] . ' days' : $rates['no_days'] . ' day'}}
+                            </p>
+                            <p class="text-md tracking-tight text-neutral">
+                                <span class="font-medium">Total of Room Rate: </span>₱ {{ number_format($rates['amount'], 2) }}
+                            </p>
+                            <p class="text-md tracking-tight text-neutral">
+                                <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->total, 2) }}
+                            </p>
+                            <p class="text-md tracking-tight text-neutral">
+                                <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment ?? 0, 2) }}
+                            </p>
+                            <p class="text-md tracking-tight text-neutral my-5">
+                                @php $balance = abs($r_list->total - $r_list->downpayment); @endphp
+                                <span class="font-medium">Balance due: </span>₱ {{ number_format($balance ?? 0, 2) }}
+                            </p>
+                        @else
+                            <p class="text-md tracking-tight text-neutral my-5">
+                                <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->total, 2) }}
+                            </p>
+                        @endif
+                    </div>
+
                 </div>
             @endif
         </div>
