@@ -224,3 +224,9 @@ function saveImageWithJPG(Request $request, $fieldName, $folderName, $option)
 
     return null;
 }
+function getAllAmount($id){
+    $reservation = Reservation::findOrFail($id);
+    foreach($reservation->amount as $key => $item) $replaceAmount[$key] = $item;
+    if(!empty($replaceAmount)) return $replaceAmount;
+    else return null;
+}

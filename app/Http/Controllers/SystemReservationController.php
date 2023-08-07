@@ -697,18 +697,85 @@ class SystemReservationController extends Controller
         ];
         Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
     }
-    public function showAddons($id){
+    public function showAddons(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
         $noOfday = checkDiffDates(Carbon::now('Asia/Manila')->format('Y-m-d'), $reservation->check_out);
+        if($request->has('tab') && $request['tab'] === 'TA'){
+            $tour_list = TourMenuList::all();
+            $tour_menu = TourMenuList::all();
+            $tour_category = TourMenuList::distinct()->get('category');
+            if(old('tour_menu')){
+                $temp = [];
+                foreach(old('tour_menu') as $key => $item){
+                    $temp[$key]['id'] = TourMenu::find($item)->id;
+                    $temp[$key]['title'] = TourMenu::find($item)->tourMenu->title;
+                    $temp[$key]['type'] =  TourMenu::find($item)->type . '('.TourMenu::find($item)->pax .' guest)';
+                    $temp[$key]['price'] = number_format(TourMenu::find($item)->price, 2);
+                }
+            }
+        }
+
         return view('system.reservation.addons.index',  [
             'activeSb' => 'Reservation', 
             'r_list' => $reservation,
-            'tour_lists' => TourMenuList::all(), 
-            'tour_category' => TourMenuList::distinct()->get('category'), 
-            'tour_menus' => TourMenu::all(),
+            'tour_lists' => $tour_list ?? [], 
+            'tour_category' =>  $tour_category ?? [], 
+            'tour_menus' => $tour_menu ?? [],
+            'temp_tour' => $temp ?? [],
             'addons_list' => Addons::all(),
             'user_days' => $noOfday,
         ]);
+    }
+    public function updateAddons(Request $request, $id){
+        $reservation = Reservation::findOrFail(decrypt($id));
+
+        if($request->has('tab') && $request['tab'] == 'TA'){
+            $validate = Validator::make($request->all(), [
+                'tour_menu' => ['required'],
+                'new_pax' => ['required', 'numeric'],
+                'passcode' => ['required', 'numeric', 'digits:4'],
+            ], [
+                'tour_menu.required' => 'Your Cart is empty',
+                'new_pax.required' => 'Required to fill up number of guest ',
+                'new_pax.numeric' => 'Number of guest should be number only',
+            ]);     
+            if($validate->fails()){
+                return back()->with('error', $validate->errors()->all())->withInput();
+            }
+            $validated = $validate->validate();
+            if(!Hash::check($validated['passcode'], $this->system_user->user()->passcode)) return back()->with('error', 'Invalid passcode')->withInput($validated);
+            $replaceAmount = getAllAmount($reservation->id);
+            $total = $reservation->total;
+            foreach($validated['tour_menu'] as $item){
+                $replaceAmount['TA'.$item] = [
+                    'price' => TourMenu::find($item)->price ?? 0,
+                    'amounts' => ((double)TourMenu::find($item)->price ?? 0) * (int)$validated['new_pax'],
+                ];
+                $total += (double)$reservation->total + ((double)TourMenu::find($item)->price ?? 0) * (int)$validated['new_pax'];
+            }
+            $updated = $reservation->update([
+                'amount' => $replaceAmount,
+                'total' => $total,
+            ]);
+            if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Tour Addons for '.$reservation->userReservation->name().' was successful');
+        }
+        else{
+            $validated = $request->validate([
+                'addons' => ['required'],
+                'pcs' => ['required', 'numeric'],
+                'passcode' => ['required', 'numeric', 'digits:4'],
+            ]);
+            if(!Hash::check($validated['passcode'], $this->system_user->user()->passcode)) return back()->with('error', 'Invalid passcode')->withInput($validated);
+            $id = decrypt($validated['addons']);
+            $adddon = Addons::find($id);
+            $getAllAmount = getAllAmount($reservation->id);
+            $getAllAmount['OA'.$id] = $adddon->price * (int)$validated['pcs'];
+            $updated = $reservation->update([
+                'amount' => $getAllAmount,
+                'total' => (double)$reservation->total + ($adddon->price * (int)$validated['pcs']),
+            ]);
+            if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Other Add-ons for '.$reservation->userReservation->name().' was successful');
+        }
     }
     public function showExtend($id){
         $reservation = Reservation::findOrFail(decrypt($id));
