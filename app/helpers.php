@@ -47,7 +47,7 @@ function checkDiffDates($dt1, $dt2)
     $date1 = Carbon::parse($dt1); // Convert $date1 to Carbon object
     $date2 = Carbon::parse($dt2); // Convert $date2 to Carbon object
 
-    return $date1->diffInDays($date2); // Calculate the number of days between the two dates
+    return (int)$date1->diffInDays($date2); // Calculate the number of days between the two dates
 }
 function getAllArraySpecificKey($array, $context) : Array
 {
@@ -201,7 +201,7 @@ function telegramSendMessageWithPhoto($chatID, $message, $photoPath, $keyboard =
         ]);
     }
 }
-function saveImageWithJPG(Request $request, $fieldName, $folderName, $option)
+function saveImageWithJPG(Request $request, $fieldName, $folderName, $option = 'public')
 {
     if($request->hasFile($fieldName)) {
         $imageFile = $request->file($fieldName);
@@ -210,23 +210,31 @@ function saveImageWithJPG(Request $request, $fieldName, $folderName, $option)
         $imageName = uniqid() . '.jpg';
 
         // Generate the full path where you want to save the image in the storage folder
-        $destinationPath = 'private/' . $folderName;
+        $destinationPath =  $option. '/' . $folderName . '/' . $imageName;
 
         // Save the image using Intervention Image
         $image = Image::make($imageFile)->encode('jpg', 65);
 
         // Store the image in the storage folder
-        Storage::put($destinationPath . '/' . $imageName, (string)$image, $option);
+        Storage::put($destinationPath, (string)$image, $option);
 
         // Return the folder name and filename
-        return $destinationPath . '/' . $imageName;
+        return $folderName . '/' . $imageName;
     }
 
     return null;
 }
-function getAllAmount($id){
+function getAllTransaction($id)
+{
     $reservation = Reservation::findOrFail($id);
-    foreach($reservation->amount as $key => $item) $replaceAmount[$key] = $item;
+    foreach($reservation->transaction as $key => $item) $replaceAmount[$key] = $item;
+    if(!empty($replaceAmount)) return $replaceAmount;
+    else return null;
+}
+function getAllMessage($id)
+{
+    $reservation = Reservation::findOrFail($id);
+    foreach($reservation->message as $key => $item) $replaceAmount[$key] = $item;
     if(!empty($replaceAmount)) return $replaceAmount;
     else return null;
 }

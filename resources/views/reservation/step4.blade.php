@@ -84,7 +84,7 @@
                                           <td>{{$item['type']}}</td>
                                           {{-- <td>{{$item['pax']}}</td> --}}
                                           <td>
-                                              <input type="hidden" name="amount[]" value="tm{{$item['id']}}Price-{{$item['orig_price']}}">
+                                              <input type="hidden" name="amount[]" value="{{encrypt($item['id'])}}">
                                               {{$currencies[request('cur')] ?? '₱'}} {{ number_format($item['price'], 2) }}
                                           </td>
                                           <td>

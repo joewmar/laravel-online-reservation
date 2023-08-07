@@ -29,7 +29,25 @@
                 </div>
             </div>
         </div>
-        <h1 class="font-bold text-xl">Payment: <span class="font-normal text-xl">{{$r_list->payment_method}}</span></h1>
+        <div class="flex justify-between">
+            <h1 class="font-bold text-xl">Payment: <span class="font-normal text-xl">{{$r_list->payment_method}}</span></h1>
+            <label for="forcePayment_modal" class="btn btn-warning btn-sm">
+                Force Payment
+            </label>
+            <x-modal id="forcePayment_modal" title="Force payment for {{$r_list->userReservation->name()}}">
+                <form method="POST" action="{{route('system.reservation.online.payment.forcepayment.update', encrypt($r_list->id))}}" >
+                    @csrf
+                    @method('PUT')
+                    <x-input type="number" name="amount" id="amount" placeholder="Amount" value="{{old('amount') ?? ''}}" />
+                    <div class="modal-action">
+                        <button @click="loader = true" class="btn btn-primary">
+                            Force Payment
+                        </button>
+                    </div>
+                </form>
+            </x-modal >
+
+        </div>
         <div class="divider"></div>
         <div class="block">
             <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
@@ -72,7 +90,7 @@
                                                 <x-input type="number" name="amount" id="amount" placeholder="Total Amount" value="{{$total}}" />
                                             </form>
                                         </x-modal>
-                                        <x-modal id="disaprove{{$item->id}}" title="Why disapprove of Payment Name: {{$item->payment_name}}?" type="YesNo">
+                                        <x-modal id="disaprove{{$item->id}}" title="Why disapprove of Payment Name: {{$item->payment_name}}?" type="YesNo" loader=true>
                                             <form id="approve-form{{$item->id}}" action="{{route('system.reservation.online.payment.store', encrypt($item->id))}}" method="POST">
                                                 @csrf
                                                 <x-textarea type="text" name="reason" id="reason" placeholder="Reason" />

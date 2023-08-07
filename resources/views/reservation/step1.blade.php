@@ -42,11 +42,12 @@
                                 </ul>
                             </p>
                             <div class="modal-action">
-                                <button type="submit" class="btn btn-primary">Continue</button>
+                                <button @click="loader = true" type="submit" class="btn btn-primary">Continue</button>
                             </div>
                         </x-modal>
                     @else
-                        <button class="btn btn-primary">
+                        <button @click="loader = true" class="btn btn-primary">
+                            <x-loader />
                             <span class="hidden md:inline">Check</span>
                         </button>
                     @endif

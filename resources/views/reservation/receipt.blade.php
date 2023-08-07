@@ -231,10 +231,10 @@ tr:hover .cut { opacity: 1; }
 					</tr>
 				</thead>
 				<tbody>
-					<td><span>{{$rate->name}}</span></td> 
+					<td><span>{{$rate['name']}}</span></td> 
 					<td><span>{{checkDiffDates($r_list->check_in, $r_list->check_out) > 1 ? checkDiffDates($r_list->check_in, $r_list->check_out) . ' days' : checkDiffDates($r_list->check_in, $r_list->check_out) . ' day'}}</span></td> 
-					<td><span data-prefix>₱ </span><span>{{ number_format($rate->price, 2)}}</span></td>
-					<td><span data-prefix>₱ </span><span>{{ number_format(($rate->price * (int) checkDiffDates($r_list->check_in, $r_list->check_out)), 2)}}</span></td>
+					<td><span data-prefix>₱ </span><span>{{ number_format($rate['price'], 2)}}</span></td>
+					<td><span data-prefix>₱ </span><span>{{ number_format($rate['amount'], 2)}}</span></td>
 				</tbody>
 			</table>
 			@if($r_list->accommodation_type != 'Room Only')
@@ -253,8 +253,7 @@ tr:hover .cut { opacity: 1; }
 							<td><span >{{$item['title']}}</span></td>
 							<td><span>{{$item['type']}} - {{$item['pax']}} guest</span></td> 
 							<td><span data-prefix>₱ </span><span>{{ number_format($item['price'], 2)}}</span></td>
-							@php $amount = (double)$item['price'] * (int)$item['pax']; @endphp
-							<td><span data-prefix>₱ </span><span>{{ number_format($amount, 2)}}</span></td>
+							<td><span data-prefix>₱ </span><span>{{ number_format($item['amount'], 2)}}</span></td>
 						</tr>
 					@endforeach
 				</tbody>

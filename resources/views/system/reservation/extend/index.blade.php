@@ -30,7 +30,7 @@
             </div>
         </div>
         <div class="divider"></div>
-        <form id="extend-form" action="" method="POST" class="w-full">
+        <form id="extend-form" action="{{route('system.reservation.extend.update', encrypt($r_list->id))}}" method="POST" class="w-full">
             @csrf
             @method('PUT')
             <article class="w-full flex justify-center">

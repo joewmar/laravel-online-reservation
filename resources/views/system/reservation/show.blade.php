@@ -36,7 +36,7 @@
                     Online Payment
                 </a>
             @endif
-            @if($r_list->status >= 1 && $r_list->status < 3)
+            @if($r_list->status > 1 && $r_list->status < 3)
                 <a href="{{route('system.reservation.show.extend', encrypt($r_list->id))}}" class="btn btn-accent btn-sm">
                     <i class="fa-solid fa-circle-plus"></i>                   
                     Extend Room Stay

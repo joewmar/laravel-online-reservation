@@ -83,15 +83,14 @@ class ReservationController extends Controller
     }
     public function dateCheck(Request $request){
         // session()->forget('rinfo');
-
         // Check in (startDate to endDate) trim convertion
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
             $request['check_in'] = trim($dateSeperate[0]);
             $request['check_out'] = trim ($dateSeperate[1]);
         }
-        $request['check_in'] = Carbon::createFromFormat('Y-m-d', $request['check_in'] , 'Asia/Manila')->format('Y-m-d');
-        $request['check_out'] = Carbon::createFromFormat('Y-m-d', $request['check_out'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_in'] = Carbon::parse($request['check_in'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::parse($request['check_out'] , 'Asia/Manila')->format('Y-m-d');
         // Check out convertion word to date format
         if(str_contains($request['check_out'], ', ')){
             $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
@@ -177,8 +176,8 @@ class ReservationController extends Controller
             $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
             $request['check_out'] = $date->format('Y-m-d');
         }
-        $request['check_in'] = Carbon::createFromFormat('Y-m-d', $request['check_in'] , 'Asia/Manila')->format('Y-m-d');
-        $request['check_out'] = Carbon::createFromFormat('Y-m-d', $request['check_out'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_in'] = Carbon::parse($request['check_in'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::parse($request['check_out'] , 'Asia/Manila')->format('Y-m-d');
         
         if(checkAvailRooms($request['pax'], $request['check_in'])){
             return redirect()->route('reservation.date')->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
@@ -316,8 +315,8 @@ class ReservationController extends Controller
             $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
             $request['check_out'] = $date->format('Y-m-d');
         }
-        $request['check_in'] = Carbon::createFromFormat('Y-m-d', $request['check_in'] , 'Asia/Manila')->format('Y-m-d');
-        $request['check_out'] = Carbon::createFromFormat('Y-m-d', $request['check_out'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_in'] = Carbon::parse($request['check_in'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::parse($request['check_out'] , 'Asia/Manila')->format('Y-m-d');
         
         $validated = null;
         if($request['accommodation_type'] === 'Day Tour'){
@@ -560,13 +559,16 @@ class ReservationController extends Controller
         if($request->hasFile('valid_id')){  
             $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
         }
-
         $reserve_info = null;
         if($uinfo['at'] !== 'Room Only'){
             $total = 0;
-            foreach($validated['amount'] as $amount) {
-                $amounts[explode('-', $amount)[0]] = (double)explode('-', $amount)[1] * (int)$uinfo['px'];
-                $total += (double)explode('-', $amount)[1];
+            foreach(decryptedArray($validated['amount']) as $key => $menu_id) {
+                $tour_menu = TourMenu::find($menu_id);
+                $amounts['tm'. $menu_id] = [
+                    'price' => (double)$tour_menu->price,
+                    'amount' => (double)$tour_menu->price * (int)$uinfo['tpx']
+                ];
+                $total += $amounts['tm'. $menu_id]['amount'];
             }
             if($validated){
                 $reserve_info = Reservation::create([
@@ -621,7 +623,7 @@ class ReservationController extends Controller
         Mail::to(env('SAMPLE_EMAIL', $reserve_info->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
         foreach($systemUser as $user){
             if(!empty($user->telegram_chatID)){
-                telegramSendMessage($user->telegram_chatID, $text, $keyboard, 'bot1');
+                telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
             }
         }
         session()->forget('rinfo');
@@ -639,7 +641,8 @@ class ReservationController extends Controller
         $validate = $request->validate([
             'message' => 'required',
         ]);
-        $reservation->update($validate);
+        $reservation->message['request'] = $validate['message'];
+        $reservation->save();
         return redirect()->route('home')->with('success', 'Thank you for your request');
     }
     public function gcash($id){

@@ -6,7 +6,10 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>{{ str_replace('_', ' ', env('APP_NAME')) }}</title>
   <style>
-    
+    body {
+      background: #409122;
+      color: #ffffff;
+    }
   </style>
 </head>
 <body>
@@ -30,12 +33,12 @@
         @if($details['menu'] != null)
           <ul>
               @foreach ($details['menu'] as $item)
-                  <li>{{ $item['title'] }} ({{ $item['type'] }} {{ $item['pax'] }} pax) - {{ $item['price'] }}</li>
+                  <li>{{ $item['title'] }} ({{ $item['type'] }} {{ $item['pax'] }} pax) - {{ $item['price'] }} = {{$item['price']}}</li>
               @endforeach
           </ul>
         @else
           <ul>
-              <li>No Tour menu</li>
+              <li>No Tour Services</li>
           </ul>
         @endif
         <p><strong>Room Rate: </strong>  {{ $details['room_rate'] }}</p>

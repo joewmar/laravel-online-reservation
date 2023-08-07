@@ -24,9 +24,7 @@ class Reservation extends Model
         'check_in',
         'check_out',
         'status',
-        'amount',
-        'downpayment',
-        'total',
+        'transaction',
         'valid_id',
         'message',
     ];
@@ -58,7 +56,7 @@ class Reservation extends Model
             set: fn ($value) => json_encode($value),
         );
     } 
-    protected function amount(): Attribute
+    protected function transaction(): Attribute
     {
         return Attribute::make(
             get: fn ($value) => json_decode($value, true),
