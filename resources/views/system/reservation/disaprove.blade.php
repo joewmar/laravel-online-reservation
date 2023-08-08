@@ -56,14 +56,14 @@
                             @foreach ($menu as $key => $item)
                                 <tr>
                                     <td>{{$item['title']}}</td> 
-                                    <td>{{number_format(explode(',', $r_list->amount)[$key], 2)}}</td> 
+                                    <td>{{number_format($item['amount'], 2)}}</td> 
                                 </tr>
                             @endforeach
                         </tbody>
                         </table>
                     </div>
                     <p class="text-md tracking-tight text-neutral my-5">
-                        <span class="font-medium">Total Cost: </span>P {{ number_format($r_list->total, 2) }}
+                        <span class="font-medium">Total Cost: </span>P {{ number_format($r_list->getTotal(), 2) }}
                     </p>
                 </div>
             @endif

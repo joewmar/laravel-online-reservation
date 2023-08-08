@@ -1,12 +1,24 @@
+@php
+    $total = 0;
+    $downpayment = 0;
+
+    foreach ($r_list->transaction as $outerKey => $outerItem) {
+        if ($outerKey == 'payment' && is_array($outerItem)) {
+            $downpayment = $outerItem['downpayment'] ?? 0;
+            continue;
+        }
+    }
+@endphp
+
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="" back=true>
         {{-- User Details --}}
         <div class="w-full p-8 sm:flex sm:space-x-6">
             <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
-                @if(filter_var(auth('web')->user()->avatar ?? '', FILTER_VALIDATE_URL))
-                    <img src="{{auth('web')->user()->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @elseif(auth('web')->user()->avatar ?? false)
-                    <img src="{{asset('storage/'. auth('web')->user()->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
+                @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
+                    <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
+                @elseif($r_list->userReservation->avatar ?? false)
+                    <img src="{{asset('storage/'. $r_list->userReservation->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
                 @else
                     <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
                 @endif
@@ -29,7 +41,47 @@
                 </div>
             </div>
         </div>
-        <div class="flex justify-end space-x-1">
+        <div class="flex md:hidden justify-end">
+            <div class="dropdown dropdown-top dropdown-end">
+                <label tabindex="0" class="btn btn-ghost btn-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
+                </label>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                    @if($r_list->status >= 1 && $r_list->status < 2)
+                        <li>
+                            <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                                Online Payment
+                            </a>
+                        </li>
+                    @endif
+                    @if($r_list->status > 1 && $r_list->status < 3)
+                        <li>
+                            <a href="{{route('system.reservation.show.extend', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                                Extend Room Stay
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{route('system.reservation.show.addons', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                                Add-ons
+                            </a>
+                        </li>
+                    @endif
+                    @if($r_list->status >= 1)
+                        <li>
+                            <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                                Reciept
+                            </a>
+                        </li>
+                    @endif
+                        <li>
+                            <a href="{{route('system.reservation.edit', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                                Edit Information
+                            </a>
+                        </li>
+                    </ul>
+              </div>
+        </div>
+        <div class="w-full hidden md:flex justify-end space-x-1">
             @if($r_list->status >= 1 && $r_list->status < 2)
                 <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}" class="btn btn-info btn-sm">
                     <i class="fa-solid fa-credit-card"></i>
@@ -51,9 +103,11 @@
                     Reciept
                 </a>
             @endif
+            <a href="{{route('system.reservation.edit', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                Edit Information
+            </a>
         </div>
         <div class="divider"></div>
-       
             <div class="block md:flex items-center justify-around">
             <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
                 <h2 class="text-2xl mb-5 font-bold">Details</h2>
@@ -72,12 +126,11 @@
                 @if($r_list->accommodation_type !== 'Room Only')
                     <div class="w-auto">
                         <div class="overflow-x-auto">
-                            <table class="table table-zebra">
+                            <table class="table table-zebra table-xs">
                             <!-- head -->
                             <thead>
                                 <tr>
                                     <th>Tour</th>
-                                    <th>Type</th>
                                     <th>Price</th>
                                     <th>Amount</th>
                                 </tr>
@@ -86,7 +139,6 @@
                                 @foreach ($menu as $key => $item)
                                     <tr>
                                         <td>{{$item['title']}}</td> 
-                                        <td>{{$item['type']}} - {{$item['pax']}} pax</td> 
                                         <td>₱ {{number_format($item['price'], 2)}}</td> 
                                         <td>₱ {{number_format($item['amount'], 2)}}</td> 
                                     </tr>
@@ -96,35 +148,109 @@
                         </div>
                     </div>
                 @endif
-                <div>
-                    @if($r_list->status() === 'Confirmed')
+                @if($r_list->status > 4 && $r_list->status < 7)
+                    <article class="mt-3">
                         <p class="text-md tracking-tight text-neutral">
-                            <span class="font-medium">Room Rate: </span>{{$rates['name']}} - ₱ {{ number_format((double)$rates['amount'], 2) }}
+                            <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->getTotal(), 2) }}
                         </p>
                         <p class="text-md tracking-tight text-neutral">
-                            <span class="font-medium">No. of days: </span>{{$rates['no_days'] > 1 ? $rates['no_days'] . ' days' : $rates['no_days'] . ' day'}}
-                        </p>
-                        <p class="text-md tracking-tight text-neutral">
-                            <span class="font-medium">Total of Room Rate: </span>₱ {{ number_format($rates['amount'], 2) }}
-                        </p>
-                        <p class="text-md tracking-tight text-neutral">
-                            <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->total, 2) }}
-                        </p>
-                        <p class="text-md tracking-tight text-neutral">
-                            <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment ?? 0, 2) }}
+                            <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment() ?? 0, 2) }}
                         </p>
                         <p class="text-md tracking-tight text-neutral my-5">
-                            @php $balance = abs($r_list->total - $r_list->downpayment); @endphp
-                            <span class="font-medium">Balance due: </span>₱ {{ number_format($balance ?? 0, 2) }}
+                            @php $balance = abs($total - $downpayment); @endphp
+                            <span class="font-medium">Balance due: </span>₱ {{ number_format($r_list->balance() ?? 0, 2) }}
                         </p>
-                    @else
-                        <p class="text-md tracking-tight text-neutral my-5">
-                            <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->total, 2) }}
-                        </p>
-                    @endif
-                </div>
+                    </article>
+                @endif
             </article>
         </div>
+        @if(!empty($tour_addons) || !empty($other_addons))
+            <div class="divider"></div>
+            <article class="px-0 md:px-16">
+                <h1 class="my-1 text-xl "><strong>Additional Request: </strong></h1>
+                @if(!empty($tour_addons))
+                    <div class="my-5 w-96">
+                        <p class="my-1 font-medium">Additional Tour: </p>
+                        <div class="w-auto">
+                            <div class="overflow-x-auto">
+                                <table class="table table-zebra table-xs">
+                                <!-- head -->
+                                <thead>
+                                    <tr>
+                                        <th>Tour</th>
+                                        <th>Price</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($tour_addons as $key => $tour)
+                                        <tr>
+                                            <td>{{$tour['title']}}</td> 
+                                            <td>₱ {{number_format($tour['price'], 2)}}</td> 
+                                            <td>₱ {{number_format($tour['amount'], 2)}}</td> 
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+                @if(!empty($other_addons))
+                    <div class="my-5 w-96">
+                        <p class="my-1 font-medium">Other:</p>
+                        <div class="w-auto">
+                            <div class="overflow-x-auto">
+                                <table class="table table-zebra table-xs">
+                                <!-- head -->
+                                <thead>
+                                    <tr>
+                                        <th>Addons</th>
+                                        <th>Pcs</th>
+                                        <th>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($other_addons as $key => $addon)
+                                        <tr>
+                                            <td>{{$addon['title']}}</td> 
+                                            <td>{{$addon['pcs'] ?? 0}} pcs</td> 
+                                            <td>₱ {{number_format($addon['price'], 2)}}</td> 
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </article>
+        @endif
+                @if($r_list->status > 0 && $r_list->status < 4)
+                <div class="divider"></div>
+                    <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
+
+                    <p class="text-md tracking-tight text-neutral">
+                        <span class="font-medium">Room Rate: </span>{{$rate['title'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}
+                    </p>
+                    <p class="text-md tracking-tight text-neutral">
+                        <span class="font-medium">No. of days: </span>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}
+                    </p>
+                    <p class="text-md tracking-tight text-neutral">
+                        <span class="font-medium">Total of Room Rate: </span>₱ {{ number_format($rate['amount'], 2) }}
+                    </p>
+                    <p class="text-md tracking-tight text-neutral">
+                        <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->getTotal(), 2) }}
+                    </p>
+                    <p class="text-md tracking-tight text-neutral">
+                        <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment() ?? 0, 2) }}
+                    </p>
+                    <p class="text-md tracking-tight text-neutral my-5">
+                        @php $balance = abs($total - $downpayment); @endphp
+                        <span class="font-medium">Balance due: </span>₱ {{ number_format($r_list->balance() ?? 0, 2) }}
+                    </p>
+                </article>
+                @endif
         <div class="divider"></div>
         <div class="flex flex-wrap justify-center w-full">
             <div class="w-96 rounded">

@@ -134,6 +134,8 @@ Route::prefix('system')->name('system.')->group(function(){
 
             
             Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [SystemReservationController::class, 'edit'])->name('edit');
+            Route::put('/{id}/update', [SystemReservationController::class, 'updateRInfo'])->name('update');
             Route::get('/{id}/show/extend', [SystemReservationController::class, 'showExtend'])->name('show.extend');
             Route::get('/{id}/show/addons', [SystemReservationController::class, 'showAddons'])->name('show.addons');
             Route::put('/{id}/show/addons/update', [SystemReservationController::class, 'updateAddons'])->name('addons.update');

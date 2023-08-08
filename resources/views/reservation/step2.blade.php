@@ -135,11 +135,11 @@
                 {{-- Number of Guest --}}
                 <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$TourInfo['px']}}"/>
                 @if($TourInfo['at'] !== "Room Only")
-                  <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$TourInfo['tpx']}}" />
+                  <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$TourInfo['tpx'] < $TourInfo['px'] ? $TourInfo['px'] : $TourInfo['tpx']}}" />
                 @endif
                 {{-- Payment Method  --}}
                 <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$TourInfo['py']}}"/>
-                @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']) && $at != 'Room Type' || request()->has(['cin', 'cout', 'px', 'py', 'tpx','at', 'cf']) && $at != 'Room Type')
+                @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']) && $TourInfo['at'] != 'Room Type' || request()->has(['cin', 'cout', 'px', 'py', 'tpx','at', 'cf']) && $TourInfo['at'] != 'Room Type')
                     <div class="hidden">
                 @else
                     <div class="lg:flex justify-start gap-5">
@@ -155,7 +155,7 @@
         </div>
       </form>
         <div class="divider"></div>
-        @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']) && $at != 'Room Type' || request()->has(['cin', 'cout', 'px', 'py', 'tpx','at', 'cf']) && $at != 'Room Type')
+        @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']) && $TourInfo['at'] != 'Room Type' || request()->has(['cin', 'cout', 'px', 'py', 'tpx','at', 'cf']) && $TourInfo['at'] != 'Room Type')
           <div id="tourmenu" class="w-full">
             <header>
               <p class="mt-4 max-w-md font-bold text-2xl">
@@ -251,16 +251,16 @@
                             @php $list_count = $loop->index + 1 ?? 1; @endphp
 
                             @if ($category->category === $list->category)
-                              @if($user_days <= $list->no_day)
+                              @if($user_days < $list->no_day)
                                   <div class="h-auto opacity-70" id="disabledAll">   
                               @else
                                 <div class="h-auto">
                               @endif
                                   <div class="card my-3 w-96 bg-base-100 shadow-xl border border-primary hover:border-primary hover:bg-primary hover:text-base-100">
-                                    <label for="{{$user_days <= $list->no_day ? 'disabledAll' : Str::camel($list->title)}}" tabindex="0">
+                                    <label for="{{$user_days < $list->no_day ? 'disabledAll' : Str::camel($list->title)}}" tabindex="0">
                                         <div class="card-body">
                                           <h2 x-ref="titleRef{{$list_count}}" class="card-title">{{$list->title}} </h2> 
-                                          @if($user_days <= $list->no_day)
+                                          @if($user_days < $list->no_day)
                                             <p class="text-error">You are not allowed to select this menu if the chosen date is not exact</p>
                                             <p class="text-error">Your days: {{$user_days}} day/s</p>
                                             <p class="text-error">Tour duration: {{$list->no_day}} day/s only</p>
@@ -268,7 +268,7 @@
                                         </div>
                                     </label>
                                     {{-- Modal Tour Details --}}                                  
-                                    <x-modal id="{{$user_days <= $list->no_day ? 'disabledAll' : Str::camel($list->title)}}" title="{{$list->title}}" alpinevar="price">
+                                    <x-modal id="{{$user_days < $list->no_day ? 'disabledAll' : Str::camel($list->title)}}" title="{{$list->title}}" alpinevar="price">
                                       <article>
                                         <ul role="list" class="marker:text-primary list-disc pl-5 space-y-3 text-neutral">
                                           <li><strong>Number of days: </strong> {{$list->no_day <= 1 ? $list->no_day . ' day' : $list->no_day . ' days' }}</li>
@@ -305,7 +305,7 @@
                                             @endforeach
                                       </div>
                                       <div x-show="price" x-transition.duration.500ms>
-                                        <label for="{{$user_days <= $list->no_day ? '' : Str::camel($list->title)}}"
+                                        <label for="{{$user_days < $list->no_day ? '' : Str::camel($list->title)}}"
                                         @click=" addToCart(price, $refs.titleRef{{$list_count}}.innerText, $refs.refType{{$list_count}}.innerText, $refs.priceRef{{$list_count}}.innerText)" 
                                         class="btn btn-primary float-right">Add to Cart</label>
                                       </div>

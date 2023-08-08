@@ -262,7 +262,7 @@ class ReservationController extends Controller
     public function choose(){
         if(session()->has('rinfo')){
             $dateList = decryptedArray(session('rinfo'));
-            $noOfday = checkDiffDates($dateList['cin'], $dateList['cout']);
+            $noOfday = getNoDays($dateList['cin'], $dateList['cout']);
             $chooseMenu = [];
             if(isset($dateList['tm'])){
                 foreach($dateList['tm'] as $key => $item){
@@ -280,22 +280,16 @@ class ReservationController extends Controller
                     "at" => $dateList['at'],
                     "py" =>  $dateList['py'],
                     'cmenu' => $chooseMenu ?? '',
-                    "user_days" => isset($noOfday) ? $noOfday : '',
+                    "user_days" => isset($noOfday) ? $noOfday : 1,
                 ]); 
             }
         }
-        $noOfday = checkDiffDates(decrypt(request('cin')), decrypt(request('cout')));
         if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at'])){
             return view('reservation.step2', [
                 'tour_lists' => TourMenuList::all(), 
                 'tour_category' => TourMenuList::distinct()->get('category'), 
                 'tour_menus' => TourMenu::all(), 
-                "cin" =>  decrypt(request('cin')) ?? '',
-                "cout" =>  decrypt(request('cout')) ?? '',
-                "at" =>  decrypt(request('at')) ?? '',
-                "px" => decrypt(request('px')) ?? '',
-                "py" =>   decrypt(request('py')) ?? '',
-                "user_days" => $noOfday ?? '',
+                "user_days" => $noOfday ?? 1,
             ]); 
         }
         if(request()->has(['cin', 'cout', 'px', 'at'])){
@@ -487,21 +481,22 @@ class ReservationController extends Controller
             return redirect()->route('reservation.choose', Arr::query(['cin' => session()->get('rinfo')['cin'], 'cout' => session()->get('rinfo')['cout'], 'px' => session()->get('rinfo')['px'], 'tpx' => session()->get('rinfo')['tpx'], 'py' => session()->get('rinfo')['py'], 'at' => session()->get('rinfo')['at'], 'cf' => encrypt(true)], '#tourMenu'))->with('info', 'Your Tour Menu was empty');
         }
         $user_menu = [];
-        if($uinfo['at'] !== 'Room Only' && $uinfo['tm'] != null){
+        if($uinfo['at'] !== 'Room Only' && !empty($uinfo['tm'])){
             foreach($uinfo['tm'] as $key => $item){
-                $user_menu[$key]['id'] = TourMenu::findOrFail($item)->id;
+                $tour = TourMenu::findOrFail($item);
+                $user_menu[$key]['id'] = $tour->id;
                 if($request->has('cur') && !empty($request['cur'])){
-                    $converted = Currency::convert()->from('PHP')->to($request['cur'])->amount(TourMenu::findOrFail($item)->price)->get();
+                    $converted = Currency::convert()->from('PHP')->to($request['cur'])->amount($tour($item)->price)->get();
                     $user_menu[$key]['price'] = $converted;
-                    $user_menu[$key]['orig_price'] = TourMenu::findOrFail($item)->price;
+                    $user_menu[$key]['orig_price'] = $tour->price;
                 }
                 else{
-                    $user_menu[$key]['price'] = TourMenu::findOrFail($item)->price;
-                    $user_menu[$key]['orig_price'] = TourMenu::findOrFail($item)->price;
+                    $user_menu[$key]['price'] = $tour->price;
+                    $user_menu[$key]['orig_price'] = $tour->price;
                 }
-                $user_menu[$key]['title'] = TourMenu::findOrFail($item)->tourMenu->title;
-                $user_menu[$key]['type'] = TourMenu::findOrFail($item)->type;
-                $user_menu[$key]['pax'] = TourMenu::findOrFail($item)->pax . ' guest';
+                $user_menu[$key]['title'] = $tour->tourMenu->title;
+                $user_menu[$key]['type'] = $tour->type;
+                $user_menu[$key]['pax'] = $tour->pax . ' guest';
                 $user_menu[$key]['tour_pax'] = $uinfo['tpx'] . ' guest';
                 $user_menu[$key]['amount'] = (int)$uinfo['tpx'] * (double)$user_menu[$key]['orig_price'];
             }
@@ -549,7 +544,7 @@ class ReservationController extends Controller
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $validated = $request->validate([
             'valid_id' => ['required' ,'image', 'mimes:jpeg,png,jpg', 'max:5024'], 
-            'amount' => Rule::when(!empty($request['amount']), ['required', 'array'], ['nullable']), 
+            'tour' => Rule::when(!empty($request['tour']), ['required', 'array'], ['nullable']), 
         ], [
             'required' => 'The image is required',
             'image' => 'The file must be an image of type: jpeg, png, jpg',
@@ -561,31 +556,27 @@ class ReservationController extends Controller
         }
         $reserve_info = null;
         if($uinfo['at'] !== 'Room Only'){
-            $total = 0;
-            foreach(decryptedArray($validated['amount']) as $key => $menu_id) {
-                $tour_menu = TourMenu::find($menu_id);
-                $amounts['tm'. $menu_id] = [
+            foreach(decryptedArray($validated['tour']) as $key => $tour_id) {
+                $tour_menu = TourMenu::find($tour_id);
+                $tours['tm'. $tour_id] = [
+                    'title' => $tour_menu->tourMenu->title . ' ' . $tour_menu->type,
                     'price' => (double)$tour_menu->price,
                     'amount' => (double)$tour_menu->price * (int)$uinfo['tpx']
                 ];
-                $total += $amounts['tm'. $menu_id]['amount'];
             }
-            if($validated){
-                $reserve_info = Reservation::create([
-                    'user_id' => auth('web')->user()->id,
-                    'pax' => $uinfo['px'] ?? '',
-                    'tour_pax' => $uinfo['tpx'],
-                    'age' => $uinfo['age'] ?? '',
-                    'menu' => $uinfo['tm'] ?? '',
-                    'payment_method' => $uinfo['py'] ?? '',
-                    'accommodation_type' => $uinfo['at'] ?? '',
-                    'check_in' => $uinfo['cin'] ?? '',
-                    'check_out' => $uinfo['cout'] ?? '',
-                    'amount' => $amounts ?? '',
-                    'total' => $total ?? '',
-                    'valid_id' => $validated['valid_id'],
-                ]);
-            }
+            $reserve_info = Reservation::create([
+                'user_id' => auth('web')->user()->id,
+                'pax' => $uinfo['px'] ?? '',
+                'tour_pax' => $uinfo['tpx'],
+                'age' => $uinfo['age'] ?? '',
+                'payment_method' => $uinfo['py'] ?? '',
+                'accommodation_type' => $uinfo['at'] ?? '',
+                'check_in' => $uinfo['cin'] ?? '',
+                'check_out' => $uinfo['cout'] ?? '',
+                'transaction' => $tours,
+                'valid_id' => $validated['valid_id'],
+            ]);
+            
         }
         else{
             $reserve_info = Reservation::create([
@@ -641,8 +632,9 @@ class ReservationController extends Controller
         $validate = $request->validate([
             'message' => 'required',
         ]);
-        $reservation->message['request'] = $validate['message'];
-        $reservation->save();
+        $message = $reservation->getAllArray('message');
+        $message['request'] = $validate['message'];
+        $reservation->update(['message' => $message]);
         return redirect()->route('home')->with('success', 'Thank you for your request');
     }
     public function gcash($id){

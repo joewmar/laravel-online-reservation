@@ -232,7 +232,7 @@ tr:hover .cut { opacity: 1; }
 				</thead>
 				<tbody>
 					<td><span>{{$rate['name']}}</span></td> 
-					<td><span>{{checkDiffDates($r_list->check_in, $r_list->check_out) > 1 ? checkDiffDates($r_list->check_in, $r_list->check_out) . ' days' : checkDiffDates($r_list->check_in, $r_list->check_out) . ' day'}}</span></td> 
+					<td><span>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</span></td> 
 					<td><span data-prefix>₱ </span><span>{{ number_format($rate['price'], 2)}}</span></td>
 					<td><span data-prefix>₱ </span><span>{{ number_format($rate['amount'], 2)}}</span></td>
 				</tbody>
@@ -259,44 +259,65 @@ tr:hover .cut { opacity: 1; }
 				</tbody>
 			</table>
 		@endif
-
-			@if(!empty($add_menu))
-				{{-- <table class="inventory">
+		<div class="details">
+			<h5>Additional</h5>
+		</div>
+			@if(!empty($tour_addons))
+				<table class="inventory">
 					<thead>
 						<tr>
-							<th><span >Room</span></th>
-							<th><span >Room Type</span></th>
-							<th><span >Rate</span></th>
+							<th><span >Tour</span></th>
+							<th><span >Price</span></th>
+							<th><span >Amount</span></th>
 						</tr>
 					</thead>
 					<tbody>
-						@foreach ($rooms as $key => $item)
+						@foreach ($tour_addons as $key => $tour)
 							<tr>
-								<td><span >Room No. {{$item->room_no}} ({{$item->room->name}})</span></td>
-								<td><span>{{$rate->name}}</span></td> 
-								<td><span data-prefix>₱ </span><span>{{ number_format($rate->price, 2)}}</span></td>
+								<td><span >{{$tour['title']}}</span></td>
+								<td><span data-prefix>₱ </span><span>{{ number_format($tour['price'], 2)}}</span></td>
+								<td><span data-prefix>₱ </span><span>{{ number_format($tour['amount'], 2)}}</span></td>
 							</tr>
 						@endforeach
 					</tbody>
-				</table> --}}
+				</table>
+			@endif
+			@if(!empty($other_addons))
+				<table class="inventory">
+					<thead>
+						<tr>
+							<th><span >Addons</span></th>
+							<th><span >Quantity</span></th>
+							<th><span >Price</span></th>
+							<th><span >Amount</span></th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach ($other_addons as $key => $tour)
+							<tr>
+								<td><span >{{$tour['title']}}</span></td>
+								<td><span data-prefix></span><span>{{$tour['pcs'] ?? 0}} pcs</span></td>
+								<td><span data-prefix>₱ </span><span>{{ number_format($tour['price'], 2)}}</span></td>
+								<td><span data-prefix>₱ </span><span>{{ number_format($tour['amount'], 2)}}</span></td>
+							</tr>
+						@endforeach
+					</tbody>
+				</table>
 			@endif
 			
 			<table class="balance">
 				<tr>
 					<th><span >{{$r_list->status < 3 ? 'Total' : 'Amount Paid'}}</span></th>
-					<td><span data-prefix>₱ </span><span>{{number_format($r_list->total, 2)}}</span></td>
+					<td><span data-prefix>₱ </span><span>{{number_format($r_list->getTotal(), 2)}}</span></td>
 				</tr>
 				@if($r_list->status < 3)
 					<tr>
 						<th><span >Downpayment</span></th>
-						<td><span data-prefix>₱ </span><span>{{number_format($r_list->downpayment ?? 0, 2)}}</span></td>
+						<td><span data-prefix>₱ </span><span>{{number_format($r_list->downpayment() ?? 0, 2)}}</span></td>
 					</tr>
 					<tr>
 						<th><span >Balance Due</span></th>
-						@php
-							$balance = (double) abs($r_list->total - $r_list->downpayment);
-						@endphp
-						<td><span data-prefix>₱ </span><span>{{number_format($balance ?? 0, 2)}}</span></td>
+						<td><span data-prefix>₱ </span><span>{{number_format($r_list->balance() ?? 0, 2)}}</span></td>
 					</tr>
 				@endif
 			</table>

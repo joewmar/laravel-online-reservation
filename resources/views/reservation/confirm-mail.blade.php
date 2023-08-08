@@ -33,7 +33,7 @@
         @if($details['menu'] != null)
           <ul>
               @foreach ($details['menu'] as $item)
-                  <li>{{ $item['title'] }} ({{ $item['type'] }} {{ $item['pax'] }} pax) - {{ $item['price'] }} = {{$item['price']}}</li>
+                  <li>{{ $item['title'] }} : {{ $item['price'] }} = {{$item['amount']}}</li>
               @endforeach
           </ul>
         @else

@@ -193,8 +193,13 @@ class SystemReservationController extends Controller
             if($reservation->status() == 'Confirmed') $color = '#22c55e';
             if($reservation->status() == 'Check-in') $color = '#eab308';
             if($reservation->status() == 'Check-out') $color = '#64748b';
+            if($reservation->status() == 'Previous') $color = '#64748b';
+            if($reservation->status() == 'Cancel') $color = '#fb7185';
+            if($reservation->status() == 'Disaprove') $color = '#C70039';
+            if($reservation->status() == 'Reshedule') $color = '#f7e488';
+            /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => done, 4 => canceled, 5 => disaprove, 6 => reshedule*/
             $arrEvent[] = [
-                'title' =>  $reservation->userReservation->name() . ' (' . $reservation->status() . ')', 
+                'title' =>  $reservation->userReservation->name() . ' from '. $reservation->userReservation->country . ' (' . $reservation->status() . ')', 
                 'start' => $reservation->check_in,
                 'end' => $reservation->check_out,        
                 'url' => route('system.reservation.show', encrypt($reservation->id)), // URL na ipapunta kapag na-click ang event
@@ -209,61 +214,68 @@ class SystemReservationController extends Controller
         $reservation = Reservation::findOrFail($id);
         $rooms = [];
         $tour_menu = [];
-        $rates = [];
+        $other_addons = [];
+        $tour_addons = [];
+        $rate = [];
+        $total = 0;
         if($reservation->roomid){
             foreach($reservation->roomid as $item){
                 $rooms[] = 'Room No.' . Room::find($item)->room_no . ' ('.Room::find($item)->room->name.')';
             }
         }
-
         $conflict = Reservation::all()->where('check_in', $reservation->check_in)->where('status', 0)->except($reservation->id);;
-        // dd($reservation->amount);
-
-            $count = 0;
-            foreach($reservation->transaction as $key => $item){
-                if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
-                    $tour_menuID = (int)str_replace('tm','', $key);
-                    $tour_menu[$count]['title'] = TourMenu::find($tour_menuID)->tourMenu->title;
-                    $tour_menu[$count]['type'] = TourMenu::find($tour_menuID)->type;
-                    $tour_menu[$count]['pax'] = TourMenu::find($tour_menuID)->pax;
-                    $tour_menu[$count]['price'] = $reservation->amount['tm'.$tour_menuID]['price'];
-                    $tour_menu[$count]['amount'] = $reservation->amount['tm'.$tour_menuID]['amount'];
-                }
-                // Rate
-                if (strpos($key, 'rid') !== false) {
-                    $rateID = (int)str_replace('rid','', $key);
-                    $rate['name'] = RoomRate::find($rateID)->name;
-                    $rate['price'] = $reservation->amount['rid'.$rateID]['price'];
-                    $rate['amount'] = $reservation->amount['rid'.$rateID]['amount'];
-                }
-                if (strpos($key, 'OA') !== false) {
-                    $OAID = (int)str_replace('OA','', $key);
-                    $other_addons[$count]['title'] = Addons::find($OAID)->title;
-                    $other_addons[$count]['price'] = $reservation->amount['OA'.$OAID]['price'];
-                    $other_addons[$count]['amount'] = $reservation->amount['OA'.$OAID]['amount'];
-                }
-                if (strpos($key, 'TA') !== false) {
-                    $TAID = (int)str_replace('TA','', $key);
-                    $tour_addons[$count]['title'] = TourMenu::find($TAID)->tourMenu->title;
-                    $tour_addons[$count]['type'] = TourMenu::find($TAID)->type;
-                    $tour_addons[$count]['pax'] = TourMenu::find($TAID)->pax;
-                    $tour_addons[$count]['price'] = $reservation->amount['tm'.$TAID]['price'];
-                    $tour_addons[$count]['amount'] = $reservation->amount['tm'.$TAID]['amount'];
-                }
-                $count++;
+        $count = 0;
+        foreach($reservation->transaction ?? [] as $key => $item){
+            if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
+                $tour_menuID = (int)str_replace('tm','', $key);
+                $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
+                $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'];
+                $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
+                $total += (double)$tour_menu[$count]['amount'];
             }
-            unset($count);
-    
-        return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict, 'rooms' => implode(',', $rooms), 'rates' => $rates]);
+            // Rate
+            if (strpos($key, 'rid') !== false) {
+                $rateID = (int)str_replace('rid','', $key);
+                $rate['name'] = $reservation->transaction['rid'.$rateID]['title'];;
+                $rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
+                $rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
+            }
+            if (strpos($key, 'OA') !== false && is_array($item)) {
+                $OAID = (int)str_replace('OA','', $key);
+                foreach($item as $key => $dataAddons){
+                    $other_addons[$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
+                    $other_addons[$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
+                    $other_addons[$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
+                }
+            }
+            if (strpos($key, 'TA') !== false && is_array($item)) {
+                $TAID = (int)str_replace('TA','', $key);
+                foreach($item as $key => $tourAddons){
+                    $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
+                    $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
+                    $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
+                }
+            }
+            $count++;
+        }
+        unset($count);
+        return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict, 'rooms' => implode(',', $rooms), 'rate' => $rate, 'total' => $total, 'other_addons' => $other_addons, 'tour_addons' => $tour_addons]);
+    }
+    public function edit($id){
+        $reservation = Reservation::findOrFail(decrypt($id));
+        $rooms = Room::all();
+        $rate = RoomRate::all();
+        return view('system.reservation.edit',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate]);
+
+    }
+    public function updateRInfo(){
+
     }
     public function receipt($id){
         $reservation = Reservation::findOrFail(decrypt($id));
         $tour_menu = [];
         $addtional_menu = [];
-        
-        $rates = RoomRate::findOrFail($reservation->roomrateid);
         $rooms = [];
-
         // Rooms
         foreach($reservation->roomid as $item){
             $rooms[$item]['no'] = Room::findOrFail($item)->room_no;
@@ -277,35 +289,37 @@ class SystemReservationController extends Controller
                 $tour_menu[$count]['title'] = TourMenu::find($tour_menuID)->tourMenu->title;
                 $tour_menu[$count]['type'] = TourMenu::find($tour_menuID)->type;
                 $tour_menu[$count]['pax'] = TourMenu::find($tour_menuID)->pax;
-                $tour_menu[$count]['price'] = $reservation->amount['tm'.$tour_menuID]['price'];
-                $tour_menu[$count]['amount'] = $reservation->amount['tm'.$tour_menuID]['amount'];
+                $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'];
+                $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
             }
             // Rate
             if (strpos($key, 'rid') !== false) {
                 $rateID = (int)str_replace('rid','', $key);
                 $rate['name'] = RoomRate::find($rateID)->name;
-                $rate['price'] = $reservation->amount['rid'.$rateID]['price'];
-                $rate['amount'] = $reservation->amount['rid'.$rateID]['amount'];
+                $rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
+                $rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
             }
-            if (strpos($key, 'OA') !== false) {
+            if (strpos($key, 'OA') !== false && is_array($item)) {
                 $OAID = (int)str_replace('OA','', $key);
-                $other_addons['title'] = Addons::find($OAID)->title;
-                $other_addons['price'] = $reservation->amount['OA'.$OAID]['price'];
-                $other_addons['amount'] = $reservation->amount['OA'.$OAID]['amount'];
+                foreach($item as $key => $dataAddons){
+                    $other_addons[$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
+                    $other_addons[$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
+                    $other_addons[$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
+                }
             }
-            if (strpos($key, 'TA') !== false) {
+            if (strpos($key, 'TA') !== false && is_array($item)) {
                 $TAID = (int)str_replace('TA','', $key);
-                $tour_addons[$count]['title'] = TourMenu::find($TAID)->tourMenu->title;
-                $tour_addons[$count]['type'] = TourMenu::find($TAID)->type;
-                $tour_addons[$count]['pax'] = TourMenu::find($TAID)->pax;
-                $tour_addons[$count]['price'] = $reservation->amount['tm'.$TAID]['price'];
-                $tour_addons[$count]['amount'] = $reservation->amount['tm'.$TAID]['amount'];
+                foreach($item as $key => $tourAddons){
+                    $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
+                    $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
+                    $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
+                }
             }
             $count++;
         }
         unset($count);
         
-        return view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'add_menu' => $addtional_menu, 'rate' => $rate, 'rooms' => $rooms]);
+        return view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'tour_addons' => $tour_addons, 'other_addons' => $other_addons, 'rate' => $rate, 'rooms' => $rooms]);
     }
     public function showRooms($id){
         $id = decrypt($id);
@@ -313,7 +327,7 @@ class SystemReservationController extends Controller
         if($reservation->status >= 1) abort(404);
         $rooms = Room::all();
         $rate = RoomRate::all();
-        return view('system.reservation.show-room',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rates]);
+        return view('system.reservation.show-room',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate]);
     }
     public function updateReservation(Request $request){
         $system_user = $this->system_user->user();
@@ -335,8 +349,8 @@ class SystemReservationController extends Controller
             $totalRoomPax = 0;
             $count = 0;
             foreach($request['room_pax'] as $key => $item){
-                $room = Room::find($key);
-                if($room->room->availability === true ){
+                $room = Room::find(decrypt($key));
+                if($room->room->availability === true && $room->checkAvailability()){
                     $error[$key] = 'Room No.' . $room->room_no . ' (' . $room->room->name . ') was not available';
                     break;
                 }
@@ -374,68 +388,50 @@ class SystemReservationController extends Controller
                 if($rate->occupancy != $reservation->pax){
                     return back()->withErrors(['room_rate' => 'Not equal to your pax in the rate you selected'])->withInput();
                 }
-                $total = 0;
                 $transaction = $reservation->transaction;
+                $transaction['rid'.$rate->id]['title'] = $rate->name;
                 $transaction['rid'.$rate->id]['price'] = $rate->price;
-                $transaction['rid'.$rate->id]['amount'] = $rate->price * (int)checkDiffDates($reservation->check_in, $reservation->check_out);
+                $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
+                $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
                 // Update Reservation
                 $reserved = $reservation->update([
                     'roomid' => array_keys($roomReservation),
                     'roomrateid' => $rate->id,
-                    'amount' => $transaction,
+                    'transaction' => $transaction,
                     'status' => 1,
                 ]);
                 $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
                 $reservation->save();
 
+                $rooms = Room::all();
+                foreach($rooms as $room){
+                    if ($room->checkAvailability()) continue;
+                }
+                
                 // Update Room Availability
                 if($reserved){
                     foreach($roomReservation as $key => $item){
                         $room = Room::find($key);
-                        if(empty($room->customer)){
-                            $room->update([
-                                'customer' => $item,
-                            ]);
-                        }
-                        else{
-                            $newCus = [];
-                            foreach($room->customer as $key => $item) $newCus[$key] = $item;
-                            $newCus[$reservation->id] = $room->id;
-                            $room->update([
-                                'customer' => $newCus,
-                            ]);
-                            unset($newCus);
-                        }
-                        $countOccupancy = 0;
-                        // Check if Availability All
-                        foreach ($room->customer as $key => $item) {
-                            $arrPreCus[$key] = $item;
-                            if($room->room->max_occupancy ==  $countOccupancy ){
-                                $room->update(['availability' => true]);
-                            }
-                            else{
-                                $room->update(['availability' => false]);
-                                $countOccupancy += (int)$arrPreCus[$key];
-                            }
-                        }
+                        $customer = $room->customer;
+                        $customer[$reservation->id] = $item;
+                        $room->update([
+                            'customer' => $customer,
+                        ]);
                     }
-                    unset($roomReservation, $countOccupancy);
+                    unset($roomReservation);
                     $tour_menu = [];
                     // Get Tour Menu for Mail
-                    if($reservation->accommodation_type != 'Room Only'){
-                        $count = 0;
-                        foreach($reservation->transaction as $key => $item){
-                            if (strpos($key, 'tm') !== false) {
-                                $tour_menuID = (int)str_replace('tm','', $key);
-                                $tour_menu[$count]['title'] = TourMenu::find($tour_menuID)->tourMenu->title;
-                                $tour_menu[$count]['type'] = TourMenu::find($tour_menuID)->type;
-                                $tour_menu[$count]['pax'] = TourMenu::find($tour_menuID)->pax;
-                                $tour_menu[$count]['price'] = $reservation->amount['tm'.$tour_menuID]['price'] . ' philippnine peso';
-                                $tour_menu[$count]['amount'] = $reservation->amount['tm'.$tour_menuID]['amount'] * (int)$reservation->tour_pax . ' philippnine peso';
-                            }
+                    $count = 0;
+                    foreach($reservation->transaction ?? [] as $key => $item){
+                        if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
+                            $tour_menuID = (int)str_replace('tm','', $key);
+                            $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
+                            $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'] . ' philippnine peso';
+                            $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'] * (int)$reservation->tour_pax . ' philippnine peso';
                         }
                         $count++;
                     }
+                    
                     $roomDetails = [];
                     foreach($reservation->roomid as $item){
                         $roomDetails[] = 'Room No' . Room::find($item)->room_no . '('.Room::find($item)->room->name.')';
@@ -486,7 +482,7 @@ class SystemReservationController extends Controller
                         'total' => $reservation->total,
                         'receipt_link' => route('reservation.receipt', encrypt($reservation->id)),
                         'payment_link' => $url,
-                        'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
+                        'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('F j Y \a\t g:iA'),
                     ];
                     unset($roomDetails);
                     // Notification::send($reservation->userReservation, new EmailNotification($project));
@@ -501,16 +497,33 @@ class SystemReservationController extends Controller
         $system_user = $this->system_user->user();
         $admins = System::all()->where('type', 0)->where('type', 1);
         $reservation = Reservation::findOrFail(decrypt($request->id));
-        $validated = $request->validate([
-            'payments' => ['required'],
-            'another_payment' => Rule::when(($request['$request'] == 'partial'), ['required', 'numeric'], ['nullable']),
-        ]);
-        $transaction = getAllTransaction($reservation->id);
-        if($validated['payments'] == 'partial'){
-            $transaction['downpayment'] = (double)$validated['downpayment'];
+        $transaction = $reservation->transaction;
+        $downpayment = $transaction['payment']['downpayment'] ?? 0;
+        $balance = abs($reservation->getTotal() - $downpayment);
+        if($request['payments'] == 'partial'){
+            $validated = $request->validate([
+                'payments' => ['required'],
+                'another_payment' =>['required', 'numeric', 'max:'.(int)$balance],
+            ], [
+                'required' => 'Required to choose',
+                'max' => 'Fill the amount up to ₱' . number_format($balance, 2),
+            ]);
+            $transaction['payment']['cinpay'] = (double)$validated['another_payment'];
+            $message = 'Partial Payment (₱ '.number_format($validated ['another_payment'], 2).')';
+
+        }
+        else if($request['payments'] == 'fullpayment'){
+            $validated = $request->validate([
+                'payments' => ['required'],
+            ], [
+                'required' => 'Required to choose',
+                'max' => 'Fill the amount up to ₱' . number_format($balance, 2),
+            ]);
+            $transaction['payment']['cinpay'] = $balance;
+            $message = 'Full Payment (₱ '.number_format($balance, 2).')';
         }
         else{
-            $transaction['downpayment'] = $reservation->total;
+            return back();
         }
         $updated = $reservation->update([
             'transaction' => $transaction,
@@ -522,6 +535,7 @@ class SystemReservationController extends Controller
         "Name: ". $reservation->userReservation->name() ."\n" . 
         "Age: " . $reservation->age ."\n" .  
         "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+        "Payment: " . $message  ."\n" . 
         "Who Approve: " . $system_user->name() ;
         $details = [
             'name' => $reservation->userReservation->name(),
@@ -529,8 +543,8 @@ class SystemReservationController extends Controller
             'body' => 'You now checked in at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
         ];
         if($updated){
-            // foreach($admins as $admin) if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
-            telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');
+            foreach($admins as $admin) if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
+            telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', ), $text, null, 'bot2');
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             unset($text, $details);
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked in');
@@ -548,8 +562,8 @@ class SystemReservationController extends Controller
         ]);
         if($validated) {
             $reservation->update(['status' => 3]);
+            $reservation->checkedOut();
         }
-        // unset($downpayment);
         $text = 
         "Employee Action: Check-out !\n" .
         "Name: ". $reservation->userReservation->name() ."\n" . 
@@ -558,8 +572,8 @@ class SystemReservationController extends Controller
         "Who Approve: " . $system_user->name() ;
         $details = [
             'name' => $reservation->userReservation->name(),
-            'title' => 'Reservation Check-in',
-            'body' => 'You now checked in at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
+            'title' => 'Reservation Check-out',
+            'body' => 'You now checked out at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
         ];   
         // foreach($admins as $admin) if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
         telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');
@@ -578,14 +592,14 @@ class SystemReservationController extends Controller
                 $tour_menu[$count]['title'] = TourMenu::find($tour_menuID)->tourMenu->title;
                 $tour_menu[$count]['type'] = TourMenu::find($tour_menuID)->type;
                 $tour_menu[$count]['pax'] = TourMenu::find($tour_menuID)->pax;
-                $tour_menu[$count]['price'] = $reservation->amount['tm'.$tour_menuID];
-                $tour_menu[$count]['amount'] = $reservation->amount['tm'.$tour_menuID] * (int)$reservation->tour_pax;
+                $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID];
+                $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
             }
             if (strpos($key, 'rid') !== false) {
                 $rateID = (int)str_replace('rid','', $key);
                 $rates['name'] = RoomRate::find($rateID)->name;
                 $rates['amount'] = RoomRate::find($rateID)->price;
-                $rates['price'] = $reservation->amount['rid'.$rateID];
+                $rates['price'] = $reservation->transaction['rid'.$rateID];
             }
             $count++;
         }
@@ -616,38 +630,37 @@ class SystemReservationController extends Controller
             $validated['message'] =  $validated['reason'];
         }
         if(!Hash::check($validated['passcode'], $system_user->passcode))  return back()->with('error', 'Invalid Passcode, Try Again')->withInput($validated);
-        $allMessage = getAllMessage($reservation->id);
-        $allMessage['disaprove'] = $validated['message'];
-        $updated = $reservation->update(['status' => 5, 'message' => $allMessage ]); // delete on reservation
+        $messages = $reservation->message;
+        $messages['disaprove'] = $validated['message'];
+        $updated = $reservation->update(['status' => 6, 'message' => $messages ]); // delete on reservation
         if($updated){
             $text = 
             "Employee Action: Disaprove Reservation !\n" .
-            "Name: ". $updated->userArchive->first_name . " " . $reservation->userArchive->last_name ."\n" . 
-            "Age: " . $updated->age ."\n" .  
-            "Nationality: " . $reservation->userArchive->nationality  ."\n" . 
-            "Country: " . $reservation->userArchive->country ."\n" . 
+            "Name: ". $reservation->userReservation->name() ."\n" . 
+            "Age: " . $reservation->age ."\n" .  
+            "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+            "Country: " . $reservation->userReservation->country ."\n" . 
             "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y') ."\n" . 
             "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y') ."\n" . 
             "Type: " . $reservation->accommodation_type ."\n" . 
-            "Who Disaprove?: " . $system_user->name . ' (' . $system_user->role . ')' ;
-            "Reason to Disaprove: " . $reservation->message;
+            "Who Disaprove?: " . $system_user->name() . ' (' . $system_user->role() . ')' ;
+            "Reason to Disaprove: " . $messages['disaprove'];
             // Send Notification to 
             // $keyboard = [
             //     [
             //         ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reserve_info->id))],
             //     ],
             // ];
-            if(!auth('system')->user()->type === 0){
-                telegramSendMessage($system_user->telegram_chatID, $text, 'bot2');
-            }
+            telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system_user->telegram_chatID), $text, null, 'bot2');
+    
             $text = null;
             $details = [
-                'name' => $updated->userArchive->first_name . ' ' . $updated->userArchive->last_name,
+                'name' => $reservation->userReservation->name(),
                 'title' => 'Reservation Disaprove',
-                'body' => 'Your Reservation are disapprove due of ' . $updated->message. 'Sorry for waiting. Please try again to make reservation in another dates',
+                'body' => 'Your Reservation are disapprove due of ' . $messages['disaprove']. 'Sorry for waiting. Please try again to make reservation in another dates',
             ];
-            Mail::to(env('SAMPLE_EMAIL', $updated->userArchive->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
-            $details = null;
+            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            unset($details);
             return redirect()->route('system.reservation.home')->with('success', 'Disaprove of ' . $updated->userArchive->first_name . ' ' . $updated->userArchive->last_name . ' was Successful');
         }
         else{
@@ -659,38 +672,50 @@ class SystemReservationController extends Controller
         return view('system.reservation.onlinepayment.index', ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
     public function storeOnlinePayment(Request $request, $id){
+        $system_user = $this->system_user->user();
         $validated = $request->validate(['amount' => ['required', 'numeric']]);
         $online_payment = OnlinePayment::findOrFail(decrypt($id));
+        $admins = System::all()->where('type', 0)->where('type', 1);
         $reservation = Reservation::findOrFail($online_payment->reservation_id);
-        if(!empty($reservation->downpayment))  (double)$reservation->downpayment += (double)$validated['amount'];
-        else $reservation->downpayment = (double)$validated['amount'];
-        $reservation->save();
+        $downpayment = $reservation->transaction;
+        if(isset($downpayment['payment']['downpayment'])) $downpayment['payment']['downpayment'] += (double)$validated['amount'];
+        else $downpayment['payment']['downpayment'] = (double)$validated['amount'];
+        $reservation->update(['transaction' => $downpayment]);
         $online_payment->approval = true;
         $online_payment->save();
         if($reservation->downpayment >= 1000){
-            $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
             $details = [
                 'name' => $reservation->userReservation->name(),
                 'title' => 'Your online payment was approved',
                 'body' => 'Downpayment: ' .  $reservation->downpayement,
-
             ];
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
         }
         else{
-            if($reservation->payment_method == "Gcash"){
-                $url = route('reservation.gcash', encrypt($reservation->id));
-            }
+            $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
+            if($reservation->payment_method == "Gcash") $url = route('reservation.gcash', encrypt($reservation->id));
+            
             $details = [
                 'name' => $reservation->userReservation->name(),
                 'title' => 'Your online payment was approved, but the amount you paid was insufficient. There is a chance for you to make another payment',
-                'body' => 'Downpayment: ' .  $reservation->downpayment .' but minimuim payment is 1000 philippine pesos' ,            
+                'body' => 'Downpayment: ' .  $downpayment['payment']['downpayment'] .' but minimuim payment is 1000 philippine pesos' ,            
                 'link' => $url,
                 'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
             ];
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
         }
-
+        $text = 
+        "Employee Action: Online Payment !\n" .
+        "Name: ". $reservation->userReservation->name() ."\n" . 
+        "Age: " . $reservation->age ."\n" .  
+        "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+        "Amount: " . $reservation->userReservation->nationality  ."\n" . 
+        "Who Approve: " . $system_user->name() ;
+        foreach($admins as $user){
+            if(isset($user->telegram_chatID))
+                telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
+        }
+        unset($downpayment);
         return redirect()->route('system.reservation.show.online.payment', encrypt($reservation->id))->with('success', 'Approved payment successful');
     }
     public function disaproveOnlinePayment(Request $request, $id){
@@ -715,8 +740,9 @@ class SystemReservationController extends Controller
         Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
     }
     public function storeForcePayment(Request $request, $id){
-        dd($request->all());
+        $system_user = $this->system_user->user();
         $reservation = Reservation::findOrFail(decrypt($id));
+        $admins = System::all()->where('type', 0)->where('type', 1);
         $validated = Validator::make($request->all('amount'), [
             'amount' => ['required', 'numeric'],
         ], ['required' => 'Required to fill up', 'numeric' => 'Number only']);
@@ -724,12 +750,25 @@ class SystemReservationController extends Controller
             return back()->with('error', $validated->errors()->all());
         }
         $validated = $validated->validate();
-        $updated = $reservation->update(['downpayment' => $validated['amount']]);
-        if($updated) return redirect()->route('system.reservation.show', encrypt($id))->with('success', $reservation->userReservation->name() . 'was now paid on ₱ ' . number_format($validated['amount'], 2));
+        $downpayment = $reservation->transaction;
+        $downpayment['payment']['downpayment'] = (double)$validated['amount'];
+        $updated = $reservation->update(['transaction' => $downpayment]);
+        if($updated){
+            $text = 
+            "Employee Action: Force Payment !\n" .
+            "Name: ". $reservation->userReservation->name() ."\n" . 
+            "Age: " . $reservation->age ."\n" .  
+            "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+            "Who Approve: " . $system_user->name() ;
+            foreach($admins as $user){
+                if(isset($user->telegram_chatID))
+                    telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
+            }
+            return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . 'was now paid on ₱ ' . number_format($validated['amount'], 2));
+        } 
     }
     public function showAddons(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
-        $noOfday = checkDiffDates(Carbon::now('Asia/Manila')->format('Y-m-d'), $reservation->check_out);
         if($request->has('tab') && $request['tab'] === 'TA'){
             $tour_list = TourMenuList::all();
             $tour_menu = TourMenuList::all();
@@ -753,12 +792,12 @@ class SystemReservationController extends Controller
             'tour_menus' => $tour_menu ?? [],
             'temp_tour' => $temp ?? [],
             'addons_list' => Addons::all(),
-            'user_days' => $noOfday,
+            'user_days' => $reservation->getNoDays(),
         ]);
     }
     public function updateAddons(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
-
+        $transaction = $reservation->transaction;
         if($request->has('tab') && $request['tab'] == 'TA'){
             $validate = Validator::make($request->all(), [
                 'tour_menu' => ['required'],
@@ -774,20 +813,13 @@ class SystemReservationController extends Controller
             }
             $validated = $validate->validate();
             if(!Hash::check($validated['passcode'], $this->system_user->user()->passcode)) return back()->with('error', 'Invalid passcode')->withInput($validated);
-            $replaceAmount = getAllTransaction($reservation->id);
-            $total = $reservation->total;
             foreach($validated['tour_menu'] as $item){
-                $replaceAmount['TA'.$item] = [
+                $transaction['TA'.$item][] = [
+                    'title' => TourMenu::find($item)->tourMenu->title ?? '',
                     'price' => TourMenu::find($item)->price ?? 0,
                     'amount' => ((double)TourMenu::find($item)->price ?? 0) * (int)$validated['new_pax'],
                 ];
-                $total += (double)$reservation->total + ((double)TourMenu::find($item)->price ?? 0) * (int)$validated['new_pax'];
             }
-            $updated = $reservation->update([
-                'amount' => $replaceAmount,
-                'total' => $total,
-            ]);
-            if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Tour Addons for '.$reservation->userReservation->name().' was successful');
         }
         else{
             $validated = $request->validate([
@@ -798,17 +830,19 @@ class SystemReservationController extends Controller
             if(!Hash::check($validated['passcode'], $this->system_user->user()->passcode)) return back()->with('error', 'Invalid passcode')->withInput($validated);
             $id = decrypt($validated['addons']);
             $adddon = Addons::find($id);
-            $getAllTransaction = getAllTransaction($reservation->id);
-            $getAllTransaction['OA'.$id] = [
+            $transaction = $reservation->transaction;
+            $transaction['OA'.$id][] = [
+                'title' => $adddon->title,
                 'amount' => $adddon->price * (int)$validated['pcs'],
+                'pcs' => $validated['pcs'],
                 'price' => $adddon->price ,
-            ];
-            $updated = $reservation->update([
-                'amount' => $getAllTransaction,
-                'total' => (double)$reservation->total + ($adddon->price * (int)$validated['pcs']),
-            ]);
-            if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Other Add-ons for '.$reservation->userReservation->name().' was successful');
+            ];  
         }
+        $updated = $reservation->update([
+            'transaction' => $transaction,
+        ]);
+        if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Other Add-ons for '.$reservation->userReservation->name().' was successful');
+
     }
     public function showExtend($id){
         $reservation = Reservation::findOrFail(decrypt($id));
@@ -820,9 +854,13 @@ class SystemReservationController extends Controller
             'no_days' => ['required', 'numeric', 'min:1'],
         ]);
         $extended = Carbon::now('Asian/Manila')->addDays((int)$validated['no_days'])->format('Y-m-d');
-        $updated = $reservation->update(['check_out' => $extended, 'status' => 3]);
-        $rate = getAllTransaction($reservation->id);
-        $rate['rid'.$reservation->roomRate->id]['amount'] = $rate['rid'.$reservation->roomRate->id]['price'] * checkDiffDates($reservation->check_in, $reservation->check_out);
+        $rate = $reservation->transaction;
+        $rate['rid'.$reservation->roomRate->id]['amount'] = $rate['rid'.$reservation->roomRate->id]['price'] * $reservation->getNoDays();
+        $updated = $reservation->update([
+            'check_out' => $extended, 
+            'status' => 2, 
+            'transaction' => $rate
+        ]);
         if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->useReservation()->name() . ' was extend in ' . ($validated['no_days'] > 1 ? $validated['no_days'] . ' days' : $validated['no_days'] . ' day'));
     }
 }

@@ -27,4 +27,28 @@ class Room extends Model
             set: fn ($value) => json_encode($value),
         );
     } 
+    public function checkAvailability()
+    {
+        $countOccupancy = 0;
+        // Check if Availability All
+        if(isset($this->attributes['customer'])){
+            foreach (json_decode($this->attributes['customer']) as $key => $item) {
+                $room = Room::find($this->attributes['roomid']);
+                if($room->room->max_occupancy >= $countOccupancy ){
+                    $this->update(['availability' => true]);
+                    return false;
+                    break;
+                }
+                else{
+                    $this->update(['availability' => false]);
+                    $countOccupancy += (int)$item;
+                }
+            }
+        }
+        else{
+            return true;
+        } 
+        return false;
+    }
+
 }

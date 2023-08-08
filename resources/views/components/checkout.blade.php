@@ -32,6 +32,9 @@
                         <div class="py-3 space-x-2">
                             <input x-model="isFullPay" type="checkbox" id="isFullPaid" name="fullpay" class="checkbox checkbox-sm checkbox-primary" value="true" /> 
                             <label for="isFullPaid">Full Paid</label>
+                            @error('fullpay')
+                                 <label class="text-error text-lg">{{$message}}</label>
+                            @enderror
                         </div>
                         <div x-show ="isFullPay" class="modal-action" x-transition >
                             <button @click="loader = true" class="btn btn-primary">Check-out</button>

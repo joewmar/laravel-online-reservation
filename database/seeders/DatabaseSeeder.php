@@ -72,25 +72,21 @@ class DatabaseSeeder extends Seeder
         //     // 'amount' => ['room1' => 3150.00],
         //     // 'total' => 3150.00,
         // ]);
-        // \App\Models\Reservation::factory()->create([
-        //     'user_id' => 2,
-        //     // 'roomid' => 1,
-        //     // 'roomrateid' => 1,
-        //     'pax' => 2,
-        //     'tour_pax' => 2,
-        //     // 'menu' => [2],
-        //     'accommodation_type' => 'Day Tour',
-        //     'payment_method' => 'Gcash',
-        //     'age' => User::findOrfail(1)->age(),
-        //     'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
-        //     'check_out' => Carbon::now()->addDays(20)->toDateTimeString(),
-        //     'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-        //     'downpayment' => 1000.00,
-        //     'valid_id' => 'valid_id/Valid_ID-sample.jpg',
-        //     'amount' => ['tm2' => 2100.00],
-        //     // 'amount' => ['tm2' => ['price' => 2100.00, 'amount' => 2100.00 * 2]],
-        //     'total' => 4200.00,
-        // ]);
+        \App\Models\Reservation::factory()->create([
+            'user_id' => 2,
+            // 'roomid' => 1,
+            // 'roomrateid' => 1,
+            'pax' => 2,
+            'tour_pax' => 2,
+            'accommodation_type' => 'Day Tour',
+            'payment_method' => 'Gcash',
+            'age' => User::findOrfail(1)->age(),
+            'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
+            'check_out' => Carbon::now()->addDays(17)->toDateTimeString(),
+            'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
+            'valid_id' => 'valid_id/Valid_ID-sample.jpg',
+            'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider', 'price' => 2100.00, 'amount' => 2100.00 * 2]],
+        ]);
 
         \App\Models\System::factory()->create([
             'first_name' => 'Hello',

@@ -46,7 +46,7 @@
                       </div>
                   </div>
                 </div>
-                <div class="space-y-3">
+                <div class="space-y-1 md:space-y-3">
                   <p class="text-md font-medium tracking-tight text-neutral">
                     <strong>Number of Guest: </strong> {{$uinfo['px'] > 1 ? $uinfo['px'] . ' guests' : $uinfo['px'] . ' guest' }}
                   </p>            
@@ -63,7 +63,7 @@
                 <div>
                     <div class="flow-root">
                           @if($uinfo['at'] !== 'Room Only')
-                          <div class="overflow-x-auto ">
+                          <div class="overflow-x-auto mt-5">
                             <table class="table table-zebra table-xs">
                               <!-- head -->
                               <thead>
@@ -84,7 +84,7 @@
                                           <td>{{$item['type']}}</td>
                                           {{-- <td>{{$item['pax']}}</td> --}}
                                           <td>
-                                              <input type="hidden" name="amount[]" value="{{encrypt($item['id'])}}">
+                                              <input type="hidden" name="tour[]" value="{{encrypt($item['id'])}}">
                                               {{$currencies[request('cur')] ?? '₱'}} {{ number_format($item['price'], 2) }}
                                           </td>
                                           <td>
@@ -120,7 +120,7 @@
                             </p>
                           </div>
                           @endif
-                      <div>
+                      <div class="my-10">
                         <p class="text-md font-medium tracking-tight text-error">
                           Note: The availability of the room depends on the number of guests, so please wait for the approval to process your reservation.
                         </p>

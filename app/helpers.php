@@ -35,29 +35,12 @@ function refreshRoomNumber()
         }
     }
 }
-function checkAllArrayValue($array)
-{
-    $check = collect($array)->every(function ($value) {
-        return $value === null || empty($value);
-    });
-    return $check;
-}
-function checkDiffDates($dt1, $dt2)
+function getNoDays($dt1, $dt2)
 {
     $date1 = Carbon::parse($dt1); // Convert $date1 to Carbon object
     $date2 = Carbon::parse($dt2); // Convert $date2 to Carbon object
 
     return (int)$date1->diffInDays($date2); // Calculate the number of days between the two dates
-}
-function getAllArraySpecificKey($array, $context) : Array
-{
-    $paxParameters = [];
-    foreach ($array as $key => $value) {
-        if (strpos($key, $context) === 0) {
-            $paxParameters[$key] = $value;
-        }
-    }
-    return $paxParameters;
 }
 function encryptedArray($array)
 {
@@ -223,18 +206,4 @@ function saveImageWithJPG(Request $request, $fieldName, $folderName, $option = '
     }
 
     return null;
-}
-function getAllTransaction($id)
-{
-    $reservation = Reservation::findOrFail($id);
-    foreach($reservation->transaction as $key => $item) $replaceAmount[$key] = $item;
-    if(!empty($replaceAmount)) return $replaceAmount;
-    else return null;
-}
-function getAllMessage($id)
-{
-    $reservation = Reservation::findOrFail($id);
-    foreach($reservation->message as $key => $item) $replaceAmount[$key] = $item;
-    if(!empty($replaceAmount)) return $replaceAmount;
-    else return null;
 }
