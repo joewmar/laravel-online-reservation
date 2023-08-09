@@ -14,6 +14,7 @@ use App\Http\Controllers\SystemHomeController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\RoomSettingController;
 use App\Http\Controllers\TourSettingController;
+use App\Http\Controllers\CreateReservationController;
 use App\Http\Controllers\SystemReservationController;
 
 /*
@@ -129,8 +130,12 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::get('/', [SystemReservationController::class, 'index'])->name('home');
             Route::post('/search', [SystemReservationController::class, 'search'])->name('search');
             Route::get('/calendar', [SystemReservationController::class, 'event'])->name('event');
-            Route::get('/create', [SystemReservationController::class, 'create'])->name('create');
-            Route::post('/create', [SystemReservationController::class, 'storeStep1'])->name('store.step.one');
+            Route::get('/create/step1', [CreateReservationController::class, 'create'])->name('create');
+            Route::post('/create/step1', [CreateReservationController::class, 'storeStep1'])->name('store.step.one');
+            Route::get('/create/step2', [CreateReservationController::class, 'step2'])->name('create.step.two');
+            Route::post('/create/step2', [CreateReservationController::class, 'storeStep2'])->name('store.step.two');
+            Route::get('/create/step3', [CreateReservationController::class, 'step3'])->name('create.step.three');
+            Route::get('/create/step4', [CreateReservationController::class, 'step4'])->name('create.step.four');
 
             
             Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');

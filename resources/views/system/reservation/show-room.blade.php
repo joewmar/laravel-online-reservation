@@ -58,19 +58,19 @@
                     <div id="{{$item->availability == 1 ? 'disabledAll' : 'none'}}">
                         @if($item->availability == 1)
                             <input x-model="rooms" type="checkbox" name="rooms[]" value="{{$item->id}}" id="{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" disabled/>
-                        @elseif(array_key_exists($item->id, old('room_pax')) )
+                        @elseif(array_key_exists($item->id, old('room_pax') ?? []) )
                             <input x-model="rooms" type="checkbox" name="rooms[]" value="{{$item->id}}" id="{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" checked/>
                         @else
                             <input x-model="rooms" type="checkbox" name="rooms[]" value="{{$item->id}}" id="{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" />
                         @endif
                         <label for="{{$item->room_no}}">
-                            <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 {{$item->availability == 1 ? 'opacity-70 bg-red-600' : 'border-primary cursor-pointer'}}">
+                            <div x-init="{{array_key_exists(encrypt($item->id), old('room_pax') ?? []) ?  'rooms.push('.$item->id.')' : ''}}" class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 {{$item->availability == 1 ? 'opacity-70 bg-red-600' : 'border-primary cursor-pointer'}}">
                                 @if($item->availability == 1)
                                     <span class="absolute inset-x-0 bottom-0 h-full  bg-red-500 opacity-80 flex items-center"><h4 class="text-base-100 block font-medium w-full text-center">Reserved</h4></span>
                                 @else
                                     <span class="absolute inset-x-0 bottom-0 h-3 bg-primary flex flex-col items-center justify-center">
                                         <h4 class="text-primary-content hidden font-medium w-full text-center">Room No. {{$item->room_no}} Selected</h4> 
-                                        <div x-data="{count: 1}" class="join hidden">
+                                        <div x-data="{count: {{array_key_exists($item->id, old('room_pax') ?? []) ? $item->customer[$r_list->id] : 1 }}}" class="join hidden">
                                             <button @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
                                             <input x-model="count" type="number" :name="rooms.includes('{{$item->id}}') ? 'room_pax[{{encrypt($item->id)}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$r_list->pax}}" readonly/>
                                             <button @click="count < {{$r_list->pax}} ? count++ : count = {{$r_list->pax}}" type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
