@@ -33,8 +33,7 @@ class Room extends Model
         // Check if Availability All
         if(isset($this->attributes['customer'])){
             foreach (json_decode($this->attributes['customer']) as $key => $item) {
-                $room = Room::find($this->attributes['roomid']);
-                if($room->room->max_occupancy >= $countOccupancy ){
+                if($this->room->max_occupancy <= $countOccupancy ){
                     $this->update(['availability' => true]);
                     return false;
                     break;
@@ -49,6 +48,27 @@ class Room extends Model
             return true;
         } 
         return false;
+    }
+    public function getAllPax()
+    {
+        $countPax = 0;
+        if(isset($this->attributes['customer'])){
+            foreach (json_decode($this->attributes['customer']) as $key => $item) {
+                $countPax += $item;
+            }
+        }
+        return $countPax;
+    }
+    public function getVacantPax()
+    {
+        $countPax = 0;
+        if(isset($this->attributes['customer'])){
+            foreach (json_decode($this->attributes['customer']) as $key => $item) {
+                $countPax += $item;
+            }
+            $vacant = abs($countPax - $this->room->max_occupancy);
+        }
+        return $vacant ?? 0;
     }
 
 }

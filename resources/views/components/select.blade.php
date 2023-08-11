@@ -6,13 +6,12 @@
                 <select name="{{$name}}" id="{{$id}}" {{$attributes->merge(['class' => 'w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'])}} disabled>
             @else
                 <select x-model="{{$xModel}}" name="{{$name}}" id="{{$id}}" {{$attributes->merge(['class' => 'w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'])}} disabled>
-
             @endif
         @else
             @if(empty($xModel))
                 <select name="{{$name}}" id="{{$id}}" {{$attributes->merge(['class' => 'w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'])}}>
             @else
-                <select x-model="{{$xModel}} name="{{$name}}" id="{{$id}}" {{$attributes->merge(['class' => 'w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'])}}>
+                <select x-model="{{$xModel}}" name="{{$name}}" id="{{$id}}" {{$attributes->merge(['class' => 'w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'])}}>
             @endif
         @endif
             <option value="" disabled selected>Please select</option>

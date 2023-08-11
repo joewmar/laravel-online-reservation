@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\Room;
+use App\Models\Addons;
 use App\Models\System;
-use App\Models\Archive;
 // use App\Models\RoomList;
+use App\Models\Archive;
+use App\Models\RoomList;
 use App\Models\RoomRate;
 use App\Models\TourMenu;
 use App\Models\Reservation;
@@ -16,12 +18,12 @@ use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
 use App\Models\OnlinePayment;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+// use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservationConfirmation;
-use App\Models\Addons;
-// use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\Validator;
 
 class SystemReservationController extends Controller
@@ -143,6 +145,7 @@ class SystemReservationController extends Controller
                 $OAID = (int)str_replace('OA','', $key);
                 foreach($item as $key => $dataAddons){
                     $other_addons[$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
+                    $other_addons[$key]['pcs'] = $reservation->transaction['OA'.$OAID][$key]['pcs'];
                     $other_addons[$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
                     $other_addons[$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
                 }
@@ -168,47 +171,236 @@ class SystemReservationController extends Controller
         $other_addons = [];
         $tour_addons = [];
         $count = 0;
-        foreach($reservation->transaction ?? [] as $key => $item){
-            if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
-                $tour_menuID = (int)str_replace('tm','', $key);
-                $tour_menu[$count]['id'] = encrypt($key);
+        foreach($reservation->transaction ?? [] as $transKey => $item){
+            if (strpos($transKey, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
+                $tour_menuID = (int)str_replace('tm','', $transKey);
+                $tour_menu[$count]['id'] = $transKey;
                 $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
                 $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'];
                 $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
             }
             // Rate
-            if (strpos($key, 'rid') !== false) {
-                $rateID = (int)str_replace('rid','', $key);
+            if (strpos($transKey, 'rid') !== false) {
+                $rateID = (int)str_replace('rid','', $transKey);
                 $your_rate['name'] = $reservation->transaction['rid'.$rateID]['title'];;
                 $your_rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
                 $your_rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
             }
-            if (strpos($key, 'TA') !== false && is_array($item)) {
-                $TAID = (int)str_replace('TA','', $key);
+            if (strpos($transKey, 'TA') !== false && is_array($item)) {
+                $TAID = (int)str_replace('TA','', $transKey);
                 foreach($item as $key => $tourAddons){
-                    $tour_addons[$count]['id'] = encrypt($key);
+                    $tour_addons[$count]['id'] = $key;
                     $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
                     $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
                     $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
                 }
             }
-            if (strpos($key, 'OA') !== false && is_array($item)) {
-                $OAID = (int)str_replace('OA','', $key);
+            if (strpos($transKey, 'OA') !== false && is_array($item)) {
+                $OAID = (int)str_replace('OA','', $transKey);
                 foreach($item as $key => $tourAddons){
-                    $other_addons[$count]['id'] = encrypt($key);
+                    $other_addons[$count]['id'] = $transKey;
                     $other_addons[$count]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
+                    $other_addons[$count]['pcs'] = $reservation->transaction['OA'.$OAID][$key]['pcs'];
                     $other_addons[$count]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
-                    $other_addons[$count]['amount'] = $reservation->transaction['OA'.$TAID][$key]['amount'];
+                    $other_addons[$count]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
                 }
             }
             $count++;
         }
         unset($count);
-        return view('system.reservation.edit',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate, 'tour_addons' => $tour_addons, 'tour_menu' => $tour_menu, 'other_addons']);
+        return view('system.reservation.edit',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate, 'tour_addons' => $tour_addons, 'tour_menu' => $tour_menu, 'other_addons' => $other_addons]);
 
     }
-    public function updateRInfo(Request $request){
-        dd($request->all());
+    public function updateRInfo(Request $request, $id){ 
+        $reservation = Reservation::findOrFail(decrypt($id));
+        $rooms = Room::all();
+        if(str_contains($request['check_in'], 'to')){
+            $dateSeperate = explode('to', $request['check_in']);
+            $request['check_in'] = trim($dateSeperate[0]);
+            $request['check_out'] = trim ($dateSeperate[1]);
+        }
+        if(str_contains($request['check_out'], ', ')){
+            $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
+            $request['check_out'] = $date->format('Y-m-d');
+        }
+        $request['check_in'] = Carbon::parse($request['check_in'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::parse($request['check_out'] , 'Asia/Manila')->format('Y-m-d');
+        // Check out convertion word to date format
+
+        if(checkAvailRooms($request['pax'], $request['check_in'])){
+            return back()->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
+        }
+
+        $validator = null;
+        if($request['accommodation_type'] == 'Day Tour'){
+            $validator = Validator::make($request->all(), [
+                'age' => ['required', 'numeric', 'min:8'],
+                'room_rate' => ['required', 'numeric'],
+                'status' => ['required', 'numeric'],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after:'.Carbon::now()->addDays(2)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
+                'accommodation_type' => ['required'],
+                'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
+                'pax' => ['required', 'numeric', 'min:1'],
+                'room_pax' => ['required', 'array'],
+                'payment_method' => ['required'],
+                'tour_menu' => Rule::when(!empty($request['tour_menu']), ['array']),
+                'other_addons' => Rule::when(!empty($request['other_addons']), ['array']),
+                'tour_addons' => Rule::when(!empty($request['tour_addons']), ['array']),
+                'valid_id' => Rule::when(!empty($request['valid_id']), ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024']),
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Choose date with 2 to 3 days',
+                'required' => 'Need fill up first',
+                'date_equals' => 'Choose only one day (Day Tour)',
+                'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',
+                'image' => 'The file must be an image of type: jpeg, png, jpg',
+                'mimes' => 'The image must be of type: jpeg, png, jpg',
+                'max' => 'The image size must not exceed 5 MB',
+            ]);
+        }
+        elseif($request['accommodation_type'] == 'Overnight'){
+            $validator = Validator::make($request->all(), [
+                'age' => ['required', 'numeric', 'min:8'],
+                'room_rate' => ['required', 'numeric'],
+                'status' => ['required', 'numeric'],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(2)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
+                'accommodation_type' => ['required'],
+                'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
+                'pax' => ['required', 'numeric', 'min:1'],
+                'room_pax' => ['required', 'array'],
+                'payment_method' => ['required'],
+                'tour_menu' => Rule::when(!empty($request['tour_menu']), ['array']),
+                'other_addons' => Rule::when(!empty($request['other_addons']), ['array']),
+                'tour_addons' => Rule::when(!empty($request['tour_addons']), ['array']),
+                'valid_id' => Rule::when(!empty($request['valid_id']), ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024']),
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_out.unique' => 'Sorry, this date is not available',
+                'required' => 'Need fill up first',
+                'check_out.after_or_equal' => 'Choose within 2 day and above (Overnight)',
+                'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',
+                'image' => 'The file must be an image of type: jpeg, png, jpg',
+                'mimes' => 'The image must be of type: jpeg, png, jpg',
+                'max' => 'The image size must not exceed 5 MB',
+            ]);
+        }
+        elseif($request['accommodation_type'] == 'Room Only'){
+            $validator = Validator::make($request->all(), [
+                'age' => ['required', 'numeric', 'min:8'],
+                'room_rate' => ['required', 'numeric'],
+                'status' => ['required', 'numeric'],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(2)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
+                'accommodation_type' => 'required',
+                'pax' => ['required', 'numeric', 'min:1', 'max:'.(string)RoomList::max('max_occupancy')],
+                'room_pax' => ['required', 'array'],
+                'payment_method' => ['required'],
+                'other_addons' => Rule::when(!empty($request['other_addons']), ['array']),
+                'tour_addons' => Rule::when(!empty($request['tour_addons']), ['array']),
+                'valid_id' => Rule::when(!empty($request['valid_id']), ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024']),
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_out.unique' => 'Sorry, this date is not available',
+                'required' => 'Need fill up first',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     
+                'after' => 'The :attribute was already chose from (Check-in)',
+                'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',
+                'image' => 'The file must be an image of type: jpeg, png, jpg',
+                'mimes' => 'The image must be of type: jpeg, png, jpg',
+                'max' => 'The image size must not exceed 5 MB',
+            ]);
+        }
+        else{
+            return back()->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput();
+        }
+        if(empty($validator->getData()['room_pax'])) return back()->with('error', 'Required to choose room')->withInput($validator->getData());
+        if ($validator->fails()) {   
+            // $validator->         
+            return back()->with('error', $validator->errors())->withInput();
+            // return back()->withErrors($validator)->withInput();
+        }
+        $validated = $validator->validated();
+
+        $roomCustomer = [];
+        $roomReservation = [];
+        // Room Update and Verification
+        $reservationPax = 0;
+        foreach($rooms as $room){
+            $customer = $room->customer;
+            if (isset($customer[$reservation->id])) {
+                unset($customer[$reservation->id]);
+                $room->update(['customer' => $customer]);
+            }
+        }
+        $rate = RoomRate::find($validated['room_rate']);
+        foreach($validated['room_pax'] as $room_id => $newPax){
+            $room = Room::find($room_id);
+            if($reservationPax > $rate->occupancy || $newPax > $rate->occupancy) return back()->with('error', 'Guest you choose does not match on room rate')->withInput($validated);
+            if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
+            if($newPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$newPax.' pax)')->withInput($validated);
+            if($reservationPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
+            if($newPax < $room->getVacantPax() && $newPax > $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' can only use ' . $room->getVacantPax() . ' guest')->withInput($validated);
+            $reservationPax += (int)$newPax;
+
+            $roomCustomer[$room_id] = $newPax;
+        }
+        if($request->hasFile('valid_id')){  
+            if($reservation->valid_id) deleteFile($reservation->valid_id, 'private');
+            $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
+        }
+        $reservation->update([
+            'age' => $validated['age'],
+            'check_in' => $validated['check_in'],
+            'check_out' => $validated['check_out'],
+            'accommodation_type' => $validated['accommodation_type'],
+            'pax' => $validated['pax'],
+            'tour_pax' => $validated['tour_pax'],
+            'payment_method' => $validated['payment_method'],
+            'status' => $validated['status'],
+            'roomrateid' => $validated['room_rate'],
+            'roomid' => array_keys($roomCustomer),
+            'valid_id' => $validated['valid_id'] ?? $reservation->valid_id,
+        ]);
+        foreach($roomCustomer as $key => $newCustomer){
+            $room = Room::find($key);
+            $room->update(['customer' => $newCustomer]);
+            $room->checkAvailability();
+        }
+
+        if(!empty($validated['tour_menu'])){
+            foreach($validated['tour_menu'] as $item){
+                $transaction = $reservation->transaction;
+                if (isset($transaction[decrypt($item)])) {
+                    unset($transaction[decrypt($item)]);
+                    $reservation->update(['transaction' => $transaction]);
+                }
+            }
+        }
+        if(!empty($validated['tour_addons'])){
+            foreach($validated['tour_addons'] as $item){
+                $transaction = $reservation->transaction;
+                if (isset($transaction[decrypt($item)])) {
+                    unset($transaction[decrypt($item)]);
+                    $reservation->update(['transaction' => $transaction]);
+                }
+            }
+        }
+        if(!empty($validated['other_addons'])){
+            foreach($validated['other_addons'] as $item){
+                $transaction = $reservation->transaction;
+                if (isset($transaction[decrypt($item)])) {
+                    unset($transaction[decrypt($item)]);
+                    $reservation->update(['transaction' => $transaction]);
+                }
+            }
+        }
+        return redirect()->route('system.reservation.edit', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' information was updated');
+
+        
     }
     public function receipt($id){
         $reservation = Reservation::findOrFail(decrypt($id));
@@ -269,170 +461,140 @@ class SystemReservationController extends Controller
         return view('system.reservation.show-room',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate]);
     }
     public function updateReservation(Request $request){
+        if($request->has('room_rate')) $request['room_rate'] = decrypt($request['room_rate']);
+        $validated = $request->validate([
+            'room_rate' => ['required', Rule::when($request->has('room_rate'), ['numeric'])],
+            'passcode' =>  ['required', 'numeric', 'digits:4'],
+        ]);
         $system_user = $this->system_user->user();
         $admins = System::all()->where('type', 0)->where('type', 1);
         $reservation = Reservation::findOrFail(decrypt($request->id));
         if($reservation->status >= 1) abort(404);
-        $validator = Validator::make($request->all(), [
-            'passcode' =>  ['required', 'numeric', 'digits:4'],
-            'room_rate' =>  ['required', 'numeric'],
-            'room_pax.*' => ['required', 'numeric'],
-        ]);
         $error = [];
         $roomReservation = [];
-        if(!Hash::check($request['passcode'], $system_user->passcode)) $error[] = 'Invalid Passcode';
-        if(!empty($request['room_pax'])){
+        if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($validated);
+        else $validated['room_pax'] = $request['room_pax'];
+        $rate = RoomRate::find($validated['room_rate']);
+        $roomCustomer = [];
             // $arrCus = array();
-            $room_no = [];
-            $room_pax = [];
-            $totalRoomPax = 0;
-            $count = 0;
-            foreach($request['room_pax'] as $key => $item){
-                $room = Room::find(decrypt($key));
-                if($room->room->availability === true && $room->checkAvailability()){
-                    $error[$key] = 'Room No.' . $room->room_no . ' (' . $room->room->name . ') was not available';
-                }
-                if(array_key_exists($reservation->id, $item->customer ?? [])){
-                    $error[$key] = $reservation->userReservation->name() . 'was already avail on Room No.' . $room->room_no . ' (' . $room->room->name . ')';
-                }
-                if((int)$item == $room->room->max_occupancy) {
-                    $error[$key] = 'Sorry, you cannot choose Room No.' . $room->room_no . ' (' . $room->room->name . ') due customer guest was '. $reservation->pax . 'pax and your choose Room No. ' . $room_no[$count-1] . ' with '.$room_pax[$count-1] .' pax ';
-                    break;
-                }
-                if($totalRoomPax == $reservation->pax ) {
-                    $error[$key] = 'Sorry, you cannot choose Room No.' . $room->room_no . ' (' . $room->room->name . ')  due avail '. $item .' pax on ' . implode(', ', $room_no);
-                    break;
-                } 
-                $roomReservation[$room->id] =  $item;
-                $totalRoomPax += (int)$item;
-                $room_no[] = 'Room No.' . $room->room_no;
-                $room_pax[] = $item;
-                $count ++;
+            // $room_no = [];
+            // $room_pax = [];
+            // $totalRoomPax = 0;
+            // $count = 0;
+        $reservationPax = 0;
 
+        foreach($validated['room_pax'] as $room_id => $newPax){
+            $room = Room::find($room_id);
+            if($reservationPax > $rate->occupancy || $newPax > $rate->occupancy) return back()->with('error', 'Guest you choose does not match on room rate')->withInput($validated);
+            if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
+            if($newPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$newPax.' pax)')->withInput($validated);
+            if($reservationPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
+            if($newPax < $room->getVacantPax() && $newPax > $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' can only use ' . $room->getVacantPax() . ' guest')->withInput($validated);
+            $reservationPax += (int)$newPax;
+
+            $roomCustomer[$room_id] = $newPax;
+
+        }
+
+        $transaction = $reservation->transaction;
+        $transaction['rid'.$rate->id]['title'] = $rate->name;
+        $transaction['rid'.$rate->id]['price'] = $rate->price;
+        $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
+        $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
+        // Update Reservation
+        $reserved = $reservation->update([
+            'roomid' => array_keys($roomCustomer),
+            'roomrateid' => $rate->id,
+            'transaction' => $transaction,
+            'status' => 1,
+        ]);
+        $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
+        $reservation->save();
+
+
+        // Update Room Availability
+        if($reserved){
+            $rooms = Room::all();
+            foreach($rooms as $room){
+                if ($room->checkAvailability()) continue;
             }
-            unset($room_details, $totalRoomPax, $room_pax ,$room_no);
-        }
-        else{
-            return back()->with('error', 'Required to choose rooms');
-        }
-
-        if($validator->fails()){
-            return back()->withErrors($validator)->withInput();
-        }
-        if(!empty($error)){
-            return back()->with('error', $error)->withInput();
-        }
-        
-        if($validator->valid() && empty($error)){
-                $validated = $validator->validate();
-                $rate = RoomRate::find($validated['room_rate']);
-                if($rate->occupancy != $reservation->pax){
-                    return back()->withErrors(['room_rate' => 'Not equal to your pax in the rate you selected'])->withInput();
+            foreach($roomCustomer as $key => $pax){
+                $room = Room::find($key);
+                $customer = $room->customer ?? [];
+                $customer[$reservation->id] = $pax;
+                $room->update(['customer' => $customer]);
+            }
+            $tour_menu = [];
+            // Get Tour Menu for Mail
+            $count = 0;
+            foreach($reservation->transaction ?? [] as $key => $item){
+                if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
+                    $tour_menuID = (int)str_replace('tm','', $key);
+                    $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
+                    $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'] . ' philippnine peso';
+                    $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'] * (int)$reservation->tour_pax . ' philippnine peso';
                 }
-                $transaction = $reservation->transaction;
-                $transaction['rid'.$rate->id]['title'] = $rate->name;
-                $transaction['rid'.$rate->id]['price'] = $rate->price;
-                $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
-                $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
-                // Update Reservation
-                $reserved = $reservation->update([
-                    'roomid' => array_keys($roomReservation),
-                    'roomrateid' => $rate->id,
-                    'transaction' => $transaction,
-                    'status' => 1,
-                ]);
-                $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
-                $reservation->save();
+                $count++;
+            }
+            
+            $roomDetails = [];
+            foreach($reservation->roomid as $item){
+                $roomDetails[] = 'Room No' . Room::find($item)->room_no . '('.Room::find($item)->room->name.')';
+            }
+            $text = 
+            "Employee Action: Approved Reservation !\n" .
+            "Name: ". $reservation->userReservation->name() ."\n" . 
+            "Age: " . $reservation->age ."\n" .  
+            "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+            "Country: " . $reservation->userReservation->country ."\n" . 
+            "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y') ."\n" . 
+            "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y') ."\n" . 
+            "Type: " . $reservation->accommodation_type ."\n" . 
+            "Rooms: " . implode(',', $roomDetails) ."\n" . 
+            "Who Approve: " . $system_user->name();
 
-                $rooms = Room::all();
-                foreach($rooms as $room){
-                    if ($room->checkAvailability()) continue;
-                }
-                
-                // Update Room Availability
-                if($reserved){
-                    foreach($roomReservation as $key => $item){
-                        $room = Room::find($key);
-                        $customer = $room->customer;
-                        $customer[$reservation->id] = $item;
-                        $room->update([
-                            'customer' => $customer,
-                        ]);
-                    }
-                    unset($roomReservation);
-                    $tour_menu = [];
-                    // Get Tour Menu for Mail
-                    $count = 0;
-                    foreach($reservation->transaction ?? [] as $key => $item){
-                        if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
-                            $tour_menuID = (int)str_replace('tm','', $key);
-                            $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
-                            $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'] . ' philippnine peso';
-                            $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'] * (int)$reservation->tour_pax . ' philippnine peso';
-                        }
-                        $count++;
-                    }
-                    
-                    $roomDetails = [];
-                    foreach($reservation->roomid as $item){
-                        $roomDetails[] = 'Room No' . Room::find($item)->room_no . '('.Room::find($item)->room->name.')';
-                    }
-                    $text = 
-                    "Employee Action: Approved Reservation !\n" .
-                    "Name: ". $reservation->userReservation->name() ."\n" . 
-                    "Age: " . $reservation->age ."\n" .  
-                    "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
-                    "Country: " . $reservation->userReservation->country ."\n" . 
-                    "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y') ."\n" . 
-                    "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y') ."\n" . 
-                    "Type: " . $reservation->accommodation_type ."\n" . 
-                    "Rooms: " . implode(',', $roomDetails) ."\n" . 
-                    "Who Approve: " . $system_user->name();
-        
-                    // foreach($admins as $admin){
-                    //     if(!empty($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
-                    // }
-                    telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');
+            // foreach($admins as $admin){
+            //     if(!empty($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
+            // }
+            telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');
 
-                    $text = null;
-                    $url = null;
-                    if($reservation->payment_method == "Gcash"){
-                        $url = route('reservation.gcash', encrypt($reservation->id));
-                    }
-                    // if($reservation->payment_method == "PayPal"){
-                    //     $url = route('reservation.paypal', encrypt($reservation->id));
-                    // }
+            $text = null;
+            $url = null;
+            if($reservation->payment_method == "Gcash"){
+                $url = route('reservation.gcash', encrypt($reservation->id));
+            }
+            // if($reservation->payment_method == "PayPal"){
+            //     $url = route('reservation.paypal', encrypt($reservation->id));
+            // }
 
-                    $details = [
-                        'name' => $reservation->userReservation->name(),
-                        'title' => 'Reservation has Confirmed',
-                        'body' => 'Your Reservation has Confirmed, Be on time at ' . Carbon::createFromFormat('Y-m-d', $reservation->check_in, Carbon::now()->timezone->getName())->format('F j, Y') . ' to ' . Carbon::createFromFormat('Y-m-d', $reservation->check_in, Carbon::now()->timezone)->addDays(3)->format('F j, Y'),
-                        "age" => $reservation->age,  
-                        "nationality" =>  $reservation->userReservation->nationality , 
-                        "country" =>  $reservation->userReservation->country, 
-                        "check_in" =>  Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'), 
-                        "check_out" =>  Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y'), 
-                        "accommodation_type" =>  $reservation->accommodation_type,
-                        "payment_method" =>  $reservation->payment_method,
-                        "pax" =>  $reservation->pax,
-                        "tour_pax" =>  $reservation->tour_pax,
-                        'menu' => $tour_menu,
-                        "room_no" =>  implode(',', $roomDetails),
-                        "room_type" => $rate->name,
-                        'room_rate' => $rate->price,
-                        'total' => $reservation->total,
-                        'receipt_link' => route('reservation.receipt', encrypt($reservation->id)),
-                        'payment_link' => $url,
-                        'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('F j Y \a\t g:iA'),
-                    ];
-                    unset($roomDetails);
-                    // Notification::send($reservation->userReservation, new EmailNotification($project));
-                    Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationConfirmation($details['title'], $details, 'reservation.confirm-mail'));
-                    return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Confirmed');
-                    unset($details, $text, $url);
-                }
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => 'Reservation has Confirmed',
+                'body' => 'Your Reservation has Confirmed, Be on time at ' . Carbon::createFromFormat('Y-m-d', $reservation->check_in, Carbon::now()->timezone->getName())->format('F j, Y') . ' to ' . Carbon::createFromFormat('Y-m-d', $reservation->check_in, Carbon::now()->timezone)->addDays(3)->format('F j, Y'),
+                "age" => $reservation->age,  
+                "nationality" =>  $reservation->userReservation->nationality , 
+                "country" =>  $reservation->userReservation->country, 
+                "check_in" =>  Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'), 
+                "check_out" =>  Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y'), 
+                "accommodation_type" =>  $reservation->accommodation_type,
+                "payment_method" =>  $reservation->payment_method,
+                "pax" =>  $reservation->pax,
+                "tour_pax" =>  $reservation->tour_pax,
+                'menu' => $tour_menu,
+                "room_no" =>  implode(',', $roomDetails),
+                "room_type" => $rate->name,
+                'room_rate' => $rate->price,
+                'total' => $reservation->total,
+                'receipt_link' => route('reservation.receipt', encrypt($reservation->id)),
+                'payment_link' => $url,
+                'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('F j Y \a\t g:iA'),
+            ];
+            unset($roomDetails);
+            // Notification::send($reservation->userReservation, new EmailNotification($project));
+            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationConfirmation($details['title'], $details, 'reservation.confirm-mail'));
+            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Confirmed');
+            unset($details, $text, $url);
         }
-
     }
     public function updateCheckin(Request $request){
         $system_user = $this->system_user->user();
@@ -625,10 +787,12 @@ class SystemReservationController extends Controller
         $online_payment->approval = true;
         $online_payment->save();
         if($reservation->downpayment >= 1000){
+            $reservation->payment_cutoff = null;
+            $reservation->save();
             $details = [
                 'name' => $reservation->userReservation->name(),
                 'title' => 'Your online payment was approved',
-                'body' => 'Downpayment: ' .  $reservation->downpayement,
+                'body' => 'Downpayment: ' .  $downpayment,
             ];
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
         }
@@ -694,6 +858,9 @@ class SystemReservationController extends Controller
         $downpayment = $reservation->transaction;
         $downpayment['payment']['downpayment'] = (double)$validated['amount'];
         $updated = $reservation->update(['transaction' => $downpayment]);
+        $reservation->payment_cutoff = null;
+        $reservation->save();
+
         if($updated){
             $text = 
             "Employee Action: Force Payment !\n" .

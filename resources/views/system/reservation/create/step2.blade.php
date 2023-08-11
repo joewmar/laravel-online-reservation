@@ -1,33 +1,46 @@
 @php
-    $TourInfo = [];
-    $tourListCart = [];
-    $TourInfo = [
-        "cin" => request()->has('cin') ? old('check_in') ?? decrypt(request('cin')) : old('check_in'),
-        "cout" => request()->has('cout') ? old('check_out') ?? decrypt(request('cout')) : old('check_out'),
-        "px" => request()->has('px') ? old('pax') ?? decrypt(request('px')) : old('pax'),
-        "tpx" => request()->has('tpx') ? old('tour_pax') ?? decrypt(request('tpx')) : old('tour_pax'),
-        "at" => request()->has('at') ? old('accommodation_type') ?? decrypt(request('at')) : old('accommodation_type'),
-        "py" => request()->has('py') ? old('payment_method') ?? decrypt(request('py')) : old('payment_method'),
-        "ck" => request()->has('ck') ? decrypt(request('ck')) : '',
-      ];
-    if(session()->has('rinfo')){
-      $decrypted = decryptedArray(session('rinfo'));
-      if(isset($decrypted['tm'])){
-        $tourListCart = $decrypted['tm'];
-      }
-      $TourInfo = [
-        "cin" => old('check_in') ?? $decrypted['cin'],
-        "cout" => old('check_out') ?? $decrypted['cout'],
-        "px" => old('pax') ?? $decrypted['px'],
-        "tpx" => old('tour_pax')?? $decrypted['tpx'],
-        "at" => old('accommodation_type') ?? $decrypted['at'],
-        "py" =>  old('payment_method') ?? $decrypted['py'],
-        "ck" => request()->has('ck') ?? '',
-      ];
-    }
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
     $arrPayment = ['Walk-in', 'Other Online Booking', 'Gcash', 'Paypal'];
     $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Previous', 'Previous', 'Reshedule', 'Cancel', 'Disaprove'];
+    $TourInfo = [
+        "rt" => request()->has('rt') ? request('rt') : null,
+        "rm" => request()->has('rm') ? request('rm') : null,
+        "cin" => request()->has('cin') ? decrypt(request('cin')) : old('check_in'),
+        "cout" => request()->has('cout') ? decrypt(request('cout')) : old('check_out'),
+        "px" => request()->has('px') ? decrypt(request('px')) : old('pax'),
+        "tpx" => request()->has('tpx') ? decrypt(request('tpx')) : old('tour_pax'),
+        "at" => request()->has('at') ? decrypt(request('at')) : old('accommodation_type'),
+        "py" => request()->has('py') ? decrypt(request('py')) : old('payment_method'),
+        "st" => request()->has('st') ? decrypt(request('st')) :  old('status'),
+      ];
+    $TourInfoEncrypted = [
+        "rt" => request()->has('rt') ? request('rt') : null,
+        "rm" => request()->has('rm') ? request('rm') : null,
+        "cin" => request()->has('cin') ? request('cin') : old('check_in'),
+        "cout" => request()->has('cout') ? request('cout') : old('check_out'),
+        "px" => request()->has('px') ? request('px') : old('pax'),
+        "tpx" => request()->has('tpx') ? request('tpx') : old('tour_pax'),
+        "at" => request()->has('at') ? request('at') : old('accommodation_type'),
+        "py" => request()->has('py') ? request('py') : old('payment_method'),
+        "st" => request()->has('st') ? request('st') :  old('status'),
+      ];
+      
+
+    if(session()->has('rinfo')){
+      $decrypted = decryptedArray(session('rinfo'));
+      $TourInfo = [
+        "rt" => request()->has('rt') ? request('rt') : null,
+        "rm" => request()->has('rm') ? request('rm') : null,
+        "cin" => $decrypted['cin'] ?? old('check_in'),
+        "cout" => $decrypted['cout'] ?? old('check_out'),
+        "px" => $decrypted['px'] ?? old('pax'),
+        "tpx" => $decrypted['tpx'] ?? old('tour_pax'),
+        "at" => $decrypted['at'] ?? old('accommodation_type'),
+        "py" => $decrypted['py'] ?? old('payment_method'),
+        "st" => $decrypted['st'] ??  old('status'),
+      ];
+    }
+
 @endphp
 
 <x-system-layout :activeSb="$activeSb">
@@ -36,16 +49,15 @@
       x-data="{
         filterOpen: false, 
         alert: false,
-        loader: false
         alertType: '',
         loader: false,
-        @if(session()->has('rinfo') && !empty(session()->get('rinfo')['tm']))
+         @if(session()->has('rinfo') && !empty(session()->get('rinfo')['tm']))
           carts: [
-            @foreach($tourListCart as $key => $item)
-              { id: '{{ $tourListCart[$key] ?? '' }}', 
-                title: '{{ $cmenu[$key]['title'] ?? '' }}',
-                type: '{{ $cmenu[$key]['type'] ?? '' }} ({{$cmenu[$key]['pax']}} guest)',
-                price: 'P {{ number_format($cmenu[$key]['price'], 2) ?? '' }}',
+            @foreach($cmenu as $key => $item)
+              { id: '{{ $item['id'] ?? '' }}', 
+                title: '{{ $item['title'] ?? '' }}',
+                type: '{{ $item['type'] ?? '' }} ({{$item['pax']}} guest)',
+                price: '₱ {{ number_format($item['price'], 2) ?? '' }}',
               },
             @endforeach
           ],
@@ -115,29 +127,31 @@
             <i :class="filterOpen ? 'fa-solid fa-chevron-down' : 'fa-solid fa-greater-than'"></i>          
           </button>
         </div>
-          <form action="{{route('reservation.choose.check.one')}}" method="post">
+          <form x-data="{at: '{{$TourInfo['at']}}'}" action="{{route('system.reservation.store.step.two-one', Arr::query(['rt' => $TourInfo['rt'], 'rm' => $TourInfo['rm']]))}}" method="post">
           @csrf
           <div class="mt-4 ">
             <div :class="filterOpen ? 'transition-all duration-1000 ease-in-out' : 'hidden' " class="space-y-4 lg:block">
-              @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']))
+              @if(request()->has(['cin', 'cout', 'px', 'py', 'at', 'st', 'rm', 'rt']))
                 <div class="opacity-50" id="disabledAll">
               @else
                 <div>
               @endif
-                  <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{\Carbon\Carbon::now('Asia/Manila')->format('Y-m-d')}}"/>
-                  <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="" />
-                  <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{old('accommodation_type')}}" />
-                  <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$TourInfo['px']}}"/>
-                  <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{old('tour_pax')}}" />
-                  <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{old('payment_method')}}}"/>
-                  <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{old('payment_method')}}"/>
-                  @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']) && $TourInfo['at'] != 'Room Type' || request()->has(['cin', 'cout', 'px', 'py', 'tpx','at', 'cf']) && $TourInfo['at'] != 'Room Type')
+                  <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$TourInfo['cin'] ?? \Carbon\Carbon::now('Asia/Manila')->format('Y-m-d')}}"/>
+                  <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$TourInfo['cout']}}"/>
+                  <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" />
+                  <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$TourInfo['px']}}" />
+                  <template x-if="at === 'Day Tour' || at === 'Overnight'">
+                    <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$TourInfo['tpx']}}" />
+                  </template>
+                  <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$TourInfo['py']}}"/>
+                  <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[$TourInfo['st']] ?? ''}}"/>
+                  @if(request()->has(['cin', 'cout', 'px', 'py', 'at', 'st', 'rm', 'rt']) && $TourInfo['at'] != 'Room Type' || request()->has(['cin', 'cout', 'px', 'py', 'at', 'st', 'rm', 'rt', 'cf']) && $TourInfo['at'] != 'Room Type')
                       <div class="hidden">
                   @else
                       <div class="lg:flex justify-start gap-5">
                   @endif
                       <div class="mt-8 flex gap-4">
-                        <a href="{{route('reservation.date', Arr::query(['cin' => $TourInfo['cin'], 'cout' => $TourInfo['cout'], 'at' => $TourInfo['at'], 'px' => $TourInfo['px']]))}}" class="btn btn-ghost">Back</a>
+                        <a @click="loader = true" href="{{route('system.reservation.create')}}" class="btn btn-ghost">Back</a>
                         <button @click="loader = true" type="submit" class="btn btn-primary">Continue</button>
                       </div>
                     </div>
@@ -147,7 +161,7 @@
           </div>
         </form>
           <div class="divider"></div>
-          @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']) && $TourInfo['at'] != 'Room Type' || request()->has(['cin', 'cout', 'px', 'py', 'tpx','at', 'cf']) && $TourInfo['at'] != 'Room Type')
+          @if(request()->has(['cin', 'cout', 'px', 'py', 'at', 'st', 'rm', 'rt']) && $TourInfo['at'] != 'Room Type' || request()->has(['cin', 'cout', 'px', 'py', 'at', 'st', 'rm', 'rt', 'cf']) && $TourInfo['at'] != 'Room Type')
             <div id="tourmenu" class="w-full">
               <header>
                 <p class="mt-4 max-w-md font-bold text-2xl">
@@ -155,7 +169,7 @@
                 </p>
               </header>
               <div class="gap-10">
-                <form id="tour-form" action="{{route('reservation.choose.check.all', Arr::query($TourInfo))}}" method="post">
+                <form id="tour-form" action="{{route('system.reservation.store.step.two-two', Arr::query($TourInfoEncrypted))}}" method="post">
                   @csrf
                 <div class="flex justify-between mt-6">
                   <h3 class="font-bold text-xl">Category</h3>
@@ -308,7 +322,7 @@
             </div>
             <div class="hidden lg:flex justify-start gap-5">
               <div class="mt-8 flex gap-4">
-                <a href="{{route('reservation.choose', Arr::query(["cin" =>  request('cin'), "cout" =>  request('cout'), "px" =>  request('px'), "at" =>  request('at')]) ) }}" class="btn btn-ghost">Back</a>
+                <a @click="loader = true" href="{{route('system.reservation.create.step.two', Arr::query(["rt" =>  request('rt'), "rm" =>  request('rm')]) ) }}" class="btn btn-ghost">Back</a>
                 <button @click="loader = true" onclick="event.preventDefault(); document.getElementById('tour-form').submit();" class="btn btn-primary">Next</button>
               </div>
             </div>

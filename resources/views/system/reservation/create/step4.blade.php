@@ -1,5 +1,6 @@
 @php
   $totalPrice = 0;
+  $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Previous', 'Previous', 'Reshedule', 'Cancel', 'Disaprove'];
 @endphp
 <x-system-layout :activeSb="$activeSb">
   <x-system-content title="Add Book" back=true>
@@ -7,7 +8,7 @@
       <x-loader />
       <div>
         <h1 class="sr-only">Checkout</h1>
-        <form id="reservation-form" action="{{ route('reservation.store')}}" method="POST" enctype="multipart/form-data">
+        <form id="reservation-form" action="{{ route('system.reservation.store.step.four')}}" method="POST" enctype="multipart/form-data">
           @csrf
           <div class="mx-auto grid max-w-screen-xl grid-cols-1 md:grid-cols-2 grid-">
               <div class="order-last md:order-first bg-base-100 py-12 md:py-24">
@@ -20,83 +21,120 @@
                   </div>
                   <div class="space-y-1 md:space-y-3">
                     <p class="text-md font-medium tracking-tight text-neutral">
-                      <strong>Number of Guest: </strong> {{-- {{$uinfo['px'] > 1 ? $uinfo['px'] . ' guests' : $uinfo['px'] . ' guest' }} --}}
+                      <strong>Check-in: </strong> {{ \Carbon\Carbon::createFromFormat('Y-m-d', $other_info['cin'])->format('l F j, Y')}}
+                    </p>                      
+                    <p class="text-md font-medium tracking-tight text-neutral">
+                      <strong>Check-out: </strong> {{ \Carbon\Carbon::createFromFormat('Y-m-d', $other_info['cout'])->format('l F j, Y')}}
+                    </p>                      
+                    <p class="text-md font-medium tracking-tight text-neutral">
+                      <strong>Number of Guest: </strong> {{$other_info['px'] > 1 ? $other_info['px'] . ' guests' : $other_info['px'] . ' guest' }}
                     </p>            
                     <p class="text-md font-medium tracking-tight text-neutral">
-                      <strong>Number of guest going on a tour: {{-- </strong> {{$uinfo['tpx'] > 1 ? $uinfo['tpx'] . ' guests' : $uinfo['tpx'] . ' guest' }} --}}
+                      <strong>Number of guest going on a tour: </strong> {{$other_info['tpx'] > 1 ? $other_info['tpx'] . ' guests' : $other_info['tpx'] . ' guest' }}
                     </p>            
                     <p class="text-md font-medium tracking-tight text-neutral">
-                      <strong>Type: </strong> {{-- {{$uinfo['at'] ?? ''}} --}}
+                      <strong>Type: </strong> {{$other_info['at'] ?? ''}}
                     </p>            
                     <p class="text-md font-medium tracking-tight text-neutral">
-                      <strong>Payment Method: </strong> {{-- {{$uinfo['py'] ?? ''}}--}}
+                      <strong>Payment Method: </strong> {{$other_info['py'] ?? ''}}
+                    </p>            
+                    <p class="text-md font-medium tracking-tight text-neutral">
+                      <strong>Status: </strong> {{$arrStatus[$other_info['st']] ?? ''}}
+                    </p>            
+                    <p class="text-md font-medium tracking-tight text-neutral">
+                      <strong>Room Assign: </strong> {{$rooms ?? 'None'}}
+                    </p>            
+                    <p class="text-md font-medium tracking-tight text-neutral">
+                      <strong>Room Type: </strong> {{$rate->name ?? 'None'}}
                     </p>            
                   </div>
                   <div>
                       <div class="flow-root">
-                            @if(false)
-                              <div class="overflow-x-auto mt-5">
+                            @if(!empty($tour_menus))
+                            <h1 class="text-md font-semibold mt-5">Tour Services</h1>
+                              <div class="overflow-x-auto ">
                                 <table class="table table-zebra table-xs">
                                   <!-- head -->
                                   <thead>
                                     <tr>
                                       <th>Tour</th>
-                                      <th>Type</th>
                                       <th>Price</th>
                                       <th>Amount</th>
-                                      <th></th>
+                                      {{-- <th></th> --}}
                                     </tr>
                                   </thead>
                                   <tbody>
                                     <!-- rowS -->
-                                    @if(session()->has('rinfo'))
-                                        @foreach ($user_menu as $key => $item)
-                                            <tr>
-                                              <td>{{$item['title']}}</td>
-                                              <td>{{$item['type']}}</td>
-                                              {{-- <td>{{$item['pax']}}</td> --}}
-                                              <td>
-                                                  <input type="hidden" name="tour[]" value="{{encrypt($item['id'])}}">
-                                                  {{$currencies[request('cur')] ?? '₱'}} {{ number_format($item['price'], 2) }}
-                                              </td>
-                                              <td>
-                                                {{$currencies[request('cur')] ?? '₱'}} {{ number_format($item['amount'], 2) }}
-                                              </td>
-                                              <td>
-                                                <label for="remove-tour" class="btn btn-ghost btn-circle btn-sm text-error">
-                                                  <i class="fa-solid fa-trash"></i>                                              
-                                                </label>
-                                                <x-modal id="remove-tour" title="Do you want delete this: {{ $item['title']}}" loader=true>
-                                                  <div class="modal-action">
-                                                    <a href="{{route('reservation.tour.destroy', encrypt($item['id']) )}}" class="btn btn-primary">Yes</a>
-                                                    <label for="remove-tour" class="btn btn-ghost">No</label>
-                                                  </div>
-                                                </x-modal>
-                                              </td>
-                                              @php $totalPrice += (double)$item['price']  @endphp
-                                            </tr>
+                                    @foreach ($tour_menus as $key => $item)
+                                        <tr>
+                                          <td>{{$item['title']}}</td>
+                                          <td>{{$item['price']}}</td>
+                                          <td>₱ {{number_format($item['amount'], 2)}} </td>
+                                          @php $totalPrice += (double)$item['amount']  @endphp
+                                        </tr>
 
-                                        @endforeach
-                                    @else
-                                      <tr colspan="2">
-                                        <td>No Cart</td>
-                                      </tr>
-                                    @endif
+                                    @endforeach
                                   </tbody>
                                 </table>
-                              
-                              </div>
-                              <div class="flex justify-end mb-5">
-                                <p class="text-md font-medium tracking-tight text-neutral">
-                                  Total Cost: {{$currencies[request('cur')] ?? '₱'}} {{ number_format($totalPrice, 2) }}
-                                </p>
                               </div>
                             @endif
+                            @if(!empty($addons))
+                              <h1 class="text-md font-semibold mt-5">Addtional Request</h1>
+                              <div class="overflow-x-auto ">
+                                <table class="table table-zebra table-xs">
+                                  <!-- head -->
+                                  <thead>
+                                    <tr>
+                                      <th>Addons</th>
+                                      <th>Quantity</th>
+                                      <th>Price</th>
+                                      <th>Amount</th>
+                                      {{-- <th></th> --}}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <!-- rowS -->
+                                    @foreach ($addons as $key => $item)
+                                        <tr>
+                                          <td>{{$item['title']}}</td>
+                                          <td>{{$item['pcs']}}</td>
+                                          <td>{{$item['price']}}</td>
+                                          <td>₱ {{number_format($item['amount'], 2)}} </td>
+                                          @php $totalPrice += (double)$item['amount']  @endphp
+                                        </tr>
+
+                                    @endforeach
+                                  </tbody>
+                                </table>
+                              </div>
+                            @endif
+                            <div class="flex flex-wrap w-full justify-start md:justify-between my-5">
+                              <div class="w-full md:w-52">
+                                <x-input type="number" name="payment_amount" id="payment_amount" min="1000" placeholder="Payment Amount" />
+                              </div>
+                              <div class="flex flex-col md:items-end ">
+                                <p class="text-md font-medium tracking-tight text-neutral">
+                                  Room Rate: ₱ {{ number_format($rate->price, 2) }}
+                                </p>
+                                <p class="text-md font-medium tracking-tight text-neutral">
+                                  No. of days: {{$user_days > 0 ? $user_days . ' days' : $user_days . ' day'  }}
+                                </p>
+                                <p class="text-md font-medium tracking-tight text-neutral">
+                                  Total Rate: ₱ {{number_format($rate->price * $user_days, 2)}}
+                                  @php $totalPrice += ($rate->price * $user_days) @endphp
+                                </p>
+                                <p class="text-md font-medium tracking-tight text-neutral mt-5">
+                                  Total Cost: ₱ {{ number_format($totalPrice, 2) }}
+                                </p>
+                              </div>
+                            </div>
+
                       </div>
+
                   </div>
                 </div>
                 <div class="col-span-6 grid md:hidden grid-cols-2 gap-4 ">
-                  <a href="{{route('reservation.date')}}" class="btn btn-ghost w-full">
+                  <a href="{{route('system.reservation.create')}}" class="btn btn-ghost w-full">
                     Change
                   </a>
                   <label for="reservation_confirm" class="btn btn-primary w-full">
@@ -147,7 +185,7 @@
                     </div>
       
                     <div class="col-span-6 hidden md:grid grid-cols-2 gap-4 ">
-                      <a href="{{route('reservation.date')}}" class="btn btn-ghost w-full">
+                      <a href="{{route('system.reservation.create')}}" class="btn btn-ghost w-full">
                         Change
                       </a>
                       <label for="reservation_confirm2" class="btn btn-primary w-full">

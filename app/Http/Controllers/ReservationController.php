@@ -319,15 +319,14 @@ class ReservationController extends Controller
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
-                'tour_pax' => ['required', 'numeric', 'max:'.$request['pax']],
+                'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
                 'required' => 'Need fill up first',
                 'date_equals' => 'Choose only one day (Day Tour)',
-                'tour_pax.max' => 'Sorry, this guest you choose is not available for Tour Services',
-    
+                'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',    
             ]);
         }
         elseif($request['accommodation_type'] === 'Overnight'){
@@ -336,15 +335,14 @@ class ReservationController extends Controller
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
-                'tour_pax' => ['required', 'numeric', 'max:'.$request['pax']],
+                'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
-                'tour_pax.max' => 'Sorry, this guest you choose is not available for Tour Services',
-                'check_out.after_or_equal' => 'Choose within 2 day and above (Overnight)',
+                'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',                'check_out.after_or_equal' => 'Choose within 2 day and above (Overnight)',
     
             ]);
         }
@@ -445,10 +443,10 @@ class ReservationController extends Controller
     public function detailsUpdate(Request $request){
         $user = User::find(decrypt($request->id));
         $validated = $request->validate([
-            'first_name' => ['required', 'min:3'],
-            'last_name' => ['required', 'min:3'],
+            'first_name' => ['required', 'min:1'],
+            'last_name' => ['required', 'min:1'],
             'birthday' => ['required'],
-            'country' => ['required', 'min:3'],
+            'country' => ['required', 'min:1'],
             'nationality' => ['required'],
             'contact' => ['required', 'numeric', 'min:7'],
             'email' => Rule::when($user->email === $request['email'], ['required', 'email'] ,['required', 'email',  Rule::unique('users', 'email')]),

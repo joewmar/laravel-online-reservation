@@ -78,11 +78,11 @@ class DatabaseSeeder extends Seeder
             // 'roomrateid' => 1,
             'pax' => 2,
             'tour_pax' => 2,
-            'accommodation_type' => 'Day Tour',
+            'accommodation_type' => 'Overnight',
             'payment_method' => 'Gcash',
             'age' => User::findOrfail(1)->age(),
             'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
-            'check_out' => Carbon::now()->addDays(17)->toDateTimeString(),
+            'check_out' => Carbon::now()->addDays(12)->toDateTimeString(),
             'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
             'valid_id' => 'valid_id/Valid_ID-sample.jpg',
             'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider', 'price' => 2100.00, 'amount' => 2100.00 * 2]],

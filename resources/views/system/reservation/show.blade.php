@@ -208,6 +208,7 @@
                                         <th>Addons</th>
                                         <th>Pcs</th>
                                         <th>Price</th>
+                                        <th>Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -216,6 +217,7 @@
                                             <td>{{$addon['title']}}</td> 
                                             <td>{{$addon['pcs'] ?? 0}} pcs</td> 
                                             <td>₱ {{number_format($addon['price'], 2)}}</td> 
+                                            <td>₱ {{number_format($addon['amount'], 2)}}</td> 
                                         </tr>
                                     @endforeach
                                 </tbody>

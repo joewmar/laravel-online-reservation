@@ -5,19 +5,20 @@
 @endphp
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Edit {{$r_list->userReservation->name()}}" back=true>
-        <form id="edit-form" method="POST" action="{{route('system.reservation.update', encrypt($r_list->update))}}" enctype="multipart/form-data">
+        <form id="edit-form" method="POST" action="{{route('system.reservation.update', encrypt($r_list->id))}}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <section class="w-full flex justify-center">
                 <div class="w-96">
                     <h2 class="text-lg my-5">Reservation Information</h2>
+                    <x-input type="number" name="age" id="age" placeholder="{{$r_list->userReservation->name()}} Age" value="{{old('age') ?? $r_list->age}}"/>
                     <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{old('check_in') ?? $r_list->check_in}}"/>
                     <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{old('check_out') ?? $r_list->check_out}}" />
-                    <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{old('pax') ?? $r_list->pax}}"/>
                     <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{old('accommodation_type') ?? $r_list->accommodation_type}}" />
+                    <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{old('pax') ?? $r_list->pax}}"/>
                     <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{old('tour_pax') ?? $r_list->tour_pax}}" />
                     <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{old('payment_method') ?? $r_list->payment_method}}"/>
-                    <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{old('payment_method') ?? $r_list->status()}}" />
+                    <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[old('payment_method')] ?? $r_list->status()}}" />
                 </div>
             </section>
             <div class="divider"></div>
@@ -53,11 +54,11 @@
                     @forelse ($rooms as $key => $item)
                         <div x-init="{{array_key_exists($r_list->id, $item->customer ?? []) ? 'rooms.push('.$item->id.')' : ''}}" id="{{$item->availability == 1 ? 'disabledAll' : ''}}">
                             @if($item->availability == 1)
-                                <input type="checkbox" x-model="rooms" name="rooms[]" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" disabled/>
+                                <input type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" disabled/>
                             @elseif(isset($item->customer[$r_list->id]) && $item->customer[$r_list->id] > 0)
-                                <input type="checkbox" x-model="rooms" name="rooms[]" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" checked />
+                                <input type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" checked />
                             @else
-                                <input type="checkbox" x-model="rooms" name="rooms[]" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block"/>
+                                <input type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block"/>
                             @endif
                             <label for="RoomNo{{$item->room_no}}">
                                 <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 {{$item->availability == 1 ? 'opacity-70 bg-red-600' : 'border-primary cursor-pointer'}}">
@@ -68,7 +69,7 @@
                                             <h4 class="text-primary-content hidden font-medium w-full text-center">Room No. {{$item->room_no}} Selected</h4> 
                                             <div x-data="{count: {{array_key_exists($r_list->id, $item->customer ?? []) ? $item->customer[$r_list->id] : 1 }}}" class="join hidden">
                                                 <button @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
-                                                <input x-model="count" type="number" :name="rooms.includes('{{$item->id}}') ? 'room_pax[{{encrypt($item->id)}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$r_list->pax}}" readonly/>
+                                                <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$r_list->pax}}" readonly/>
                                                 <button @click="count < {{$r_list->pax}} ? count++ : count = {{$r_list->pax}}" type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
                                             </div>
                                         </span>
@@ -78,6 +79,11 @@
                                             <h3 class="text-lg font-bold text-neutral sm:text-xl">Room No. {{$item->room_no}}</h3>
                                             <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->name}}</p>
                                             <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->min_occupancy}} up to {{$item->room->max_occupancy}} capacity</p>
+                                            @if($item->getAllPax() === (int)$item->room->max_occupancy - 1)
+                                                <p class="mt-1 text-xs font-bold text-red-400">There is only {{$item->getAllPax()}} guest</p>
+                                            @else
+                                                <p class="mt-1 text-sm font-medium ">{{$item->getAllPax() > 0 ? $item->getAllPax() . ' guest availed' : 'No guest'}} </p>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -91,31 +97,27 @@
                     <div class="divider"></div>
                     <h2 class="text-lg my-5">Tour Information: Remove List</h2>
                     <div class="overflow-x-auto">
-                        <table x-data="AlpineSelect()" class="table">
+                        <table class="table">
                         <!-- head -->
                         <thead>
                             <tr>
-                            <th>
-                                <label>
-                                <input x-bind:checked="selectall"  type="checkbox" class="checkbox checkbox-error" @click="selectall=!selectall" />
-                                </label>
-                            </th>
+                            <th></th>
                             <th>Tour</th>
                             <th>Price</th>
                             <th>Amount</th>
                             </tr>
                         </thead>
-                        <tbody x-data="{remove: []}">
+                        <tbody x-data="{tourMenu: []}">
                             @forelse ($tour_menu as $key => $item)
                                 <tr>
                                     <th>
                                     <label>
-                                        <input x-bind:checked="selectall" x-model="remove" type="checkbox" name="tour_menu" class="checkbox checkbox-error" value="{{$item['id']}}" />
+                                        <input x-model="tourMenu" type="checkbox" name="tour_menu[]" class="checkbox checkbox-error" value="{{encrypt($item['id'])}}" />
                                     </label>
                                     </th>
                                     <td>{{$item['title']}}</td>
-                                    <td>{{$item['price']}}</td>
-                                    <td>{{$item['amount']}}</td>
+                                    <td>₱ {{number_format($item['price'], 2)}}</td>
+                                    <td>₱ {{number_format($item['amount'], 2)}}</td>
                                 </tr>
                             @empty
                                 <tr colspan="4">
@@ -133,31 +135,29 @@
                     <div class="divider"></div>
                         <h2 class="text-lg my-5">Addtional Request Information: Tour Service</h2>
                         <div class="overflow-x-auto">
-                        <table x-data="AlpineSelect()" class="table">
+                        <table class="table">
                     <!-- head -->
                             <thead>
                                 <tr>
                                     <th>
-                                        <label>
-                                        <input x-bind:checked="selectall"  type="checkbox"  class="checkbox checkbox-error" @click="selectall=!selectall" />
-                                        </label>
+        
                                     </th>
                                     <th>Tour</th>
                                     <th>Price</th>
                                     <th>Amount</th>
                                 </tr>
                             </thead>
-                            <tbody x-data="{remove: []}">
+                            <tbody x-data="{tourAddons: []}">
                                 @forelse ($tour_addons as $key => $item)
                                     <tr>
                                         <th>
                                         <label>
-                                            <input x-bind:checked="selectall" x-model="remove" name="tour_addons" type="checkbox" class="checkbox checkbox-error" value="{{$item['id']}}" />
+                                            <input x-model="tourAddons" name="tour_addons[]" type="checkbox" class="checkbox checkbox-error" value="{{encrypt($item['id'])}}" />
                                         </label>
                                         </th>
                                         <td>{{$item['title']}}</td>
-                                        <td>{{$item['price']}}</td>
-                                        <td>{{$item['amount']}}</td>
+                                        <td>₱ {{number_format($item['price'], 2)}}</td>
+                                        <td>₱ {{number_format($item['amount'], 2)}}</td>
                                     </tr>
                                 @empty
                                     <tr colspan="4">
@@ -172,31 +172,30 @@
                     <div class="divider"></div>
                         <h2 class="text-lg my-5">Addtional Request Information: Other Service</h2>
                         <div class="overflow-x-auto">
-                        <table x-data="AlpineSelect()" class="table">
+                        <table class="table">
                     <!-- head -->
                             <thead>
                                 <tr>
                                     <th>
-                                        <label>
-                                        <input x-bind:checked="selectall"  type="checkbox" class="checkbox checkbox-error" @click="selectall=!selectall" />
-                                        </label>
                                     </th>
                                     <th>Addons</th>
+                                    <th>Quantity</th>
                                     <th>Price</th>
                                     <th>Amount</th>
                                 </tr>
                             </thead>
-                            <tbody x-data="{remove: []}">
+                            <tbody x-data="{otherAddons: []}">
                                 @forelse ($other_addons as $key => $item)
                                     <tr>
                                         <th>
-                                        <label>
-                                            <input x-bind:checked="selectall" x-model="remove" name="other_addons" type="checkbox" class="checkbox checkbox-error" value="{{$item['id']}}" />
-                                        </label>
+                                            <label>
+                                                <input type="checkbox" name="other_addons[]" class="checkbox checkbox-error" value="{{encrypt($item['id'])}}" />
+                                            </label>
                                         </th>
                                         <td>{{$item['title']}}</td>
-                                        <td>{{$item['price']}}</td>
-                                        <td>{{$item['amount']}}</td>
+                                        <td>{{$item['pcs']}}</td>
+                                        <td>₱ {{number_format($item['price'], 2)}}</td>
+                                        <td>₱ {{number_format($item['amount'], 2)}}</td>
                                     </tr>
                                 @empty
                                     <tr colspan="4">
@@ -219,20 +218,11 @@
                 </div>
                 <div class="flex justify-end space-x-3">
                     <label for="save_reservation" class="btn btn-primary">Save</label>
-                    <x-modal formID="edit-form" id="save_reservation" title="Do you want change information of {{$r_list->userReservation->name()}}" type="YesNo" >
+                    <x-modal formID="edit-form" id="save_reservation" title="Do you want change information of {{$r_list->userReservation->name()}}" type="YesNo" loader=true >
                     </x-modal>
                     {{-- <button class="btn btn-error">Remove</button> --}}
                 </div>
             </section>
         </form>
     </x-system-content>
-    @push('scripts')
-        <script>
-            function AlpineSelect(){
-                return {
-                    selectall: false,
-                };  
-            }
-        </script>
-    @endpush
 </x-system-layout>

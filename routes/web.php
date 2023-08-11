@@ -133,9 +133,12 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::get('/create/step1', [CreateReservationController::class, 'create'])->name('create');
             Route::post('/create/step1', [CreateReservationController::class, 'storeStep1'])->name('store.step.one');
             Route::get('/create/step2', [CreateReservationController::class, 'step2'])->name('create.step.two');
-            Route::post('/create/step2', [CreateReservationController::class, 'storeStep2'])->name('store.step.two');
+            Route::post('/create/step2-1', [CreateReservationController::class, 'storeStep21'])->name('store.step.two-one');
+            Route::post('/create/step2-2', [CreateReservationController::class, 'storeStep22'])->name('store.step.two-two');
             Route::get('/create/step3', [CreateReservationController::class, 'step3'])->name('create.step.three');
+            Route::post('/create/step3', [CreateReservationController::class, 'storeStep3'])->name('store.step.three');
             Route::get('/create/step4', [CreateReservationController::class, 'step4'])->name('create.step.four');
+            Route::post('/create/step4', [CreateReservationController::class, 'storeStep4'])->name('store.step.four');
 
             
             Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');

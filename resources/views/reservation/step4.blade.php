@@ -48,6 +48,12 @@
                 </div>
                 <div class="space-y-1 md:space-y-3">
                   <p class="text-md font-medium tracking-tight text-neutral">
+                    <strong>Check-in: </strong> {{ \Carbon\Carbon::createFromFormat('Y-m-d', $uinfo['cin'])->format('l F j, Y')}}
+                  </p>                      
+                  <p class="text-md font-medium tracking-tight text-neutral">
+                    <strong>Check-out: </strong> {{ \Carbon\Carbon::createFromFormat('Y-m-d', $uinfo['cout'])->format('l F j, Y')}}
+                  </p>       
+                  <p class="text-md font-medium tracking-tight text-neutral">
                     <strong>Number of Guest: </strong> {{$uinfo['px'] > 1 ? $uinfo['px'] . ' guests' : $uinfo['px'] . ' guest' }}
                   </p>            
                   <p class="text-md font-medium tracking-tight text-neutral">
@@ -101,7 +107,7 @@
                                               </div>
                                             </x-modal>
                                           </td>
-                                          @php $totalPrice += (double)$item['price']  @endphp
+                                          @php $totalPrice += (double)$item['amount']  @endphp
                                         </tr>
 
                                     @endforeach
