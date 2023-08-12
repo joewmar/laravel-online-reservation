@@ -19,7 +19,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth:web'])->except('check');
+        $this->middleware(['auth:web'])->except(['check', 'create', 'verify', 'verifyStore', 'fillupGoogleUpdate']);
     }
     public function create(Request $request){
         // Validate input
@@ -47,8 +47,6 @@ class UserController extends Controller
             session(['uinfo' => $validated]);
 
             // // Create User
-
-            
             return redirect()->route('register.verify');
 
         }
@@ -56,12 +54,13 @@ class UserController extends Controller
     public function verify(Request $request){
         if(! session()->has('uinfo')) return redirect()->route('register');
         $otp = mt_rand(1111,9999);
+        $user_info = session('uinfo');
         $details = [
+            'name' => $user_info['first_name'] . ' ' . $user_info['last_name'],
             'title' => "Let's Verify your Email",
             'body' => 'Verification Code: ' . $otp,
         ];
-        Mail::to(env('SAMPLE_EMAIL', session('uinfo')['email']))->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
-        $user_info = session('uinfo');
+        Mail::to(session('uinfo')['email'])->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
         $user_info['otp'] = $otp;
         session(['uinfo' => $user_info]);
         return view('users.register.verify', ['email' => session('uinfo')['email']]);

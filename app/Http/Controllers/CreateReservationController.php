@@ -41,11 +41,11 @@ class CreateReservationController extends Controller
 
         foreach($validated['room_pax'] as $room_id => $newPax){
             $room = Room::find($room_id);
-            if($reservationPax > $rate->occupancy || $newPax > $rate->occupancy) return back()->with('error', 'Guest you choose does not match on room rate')->withInput($validated);
+            if($reservationPax > $rate->occupancy) return back()->with('error', 'Guest you choose does not match on room rate')->withInput($validated);
             if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
-            if($newPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$newPax.' pax)')->withInput($validated);
-            if($reservationPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
-            if($newPax < $room->getVacantPax() && $newPax > $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' can only use ' . $room->getVacantPax() . ' guest')->withInput($validated);
+            if($newPax > $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$newPax.' pax)')->withInput($validated);
+            if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
+            
             $reservationPax += (int)$newPax;
 
             $roomCustomer[$room_id] = $newPax;

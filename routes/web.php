@@ -65,9 +65,9 @@ Route::prefix('reservation')->name('reservation.')->group(function (){
 Route::middleware(['guest:web'])->group(function(){
     Route::view('/login', 'users.login')->name('login');
     Route::view('/register', 'users.register')->name('register');
+    Route::post('/register', [UserController::class, 'create'])->name('create');
     Route::get('/register/verify', [UserController::class, 'verify'])->name('register.verify');
     Route::post('/register/verify', [UserController::class, 'verifyStore'])->name('register.verify.store');
-    Route::post('/create', [UserController::class, 'create'])->name('create');
     Route::post('/check', [UserController::class, 'check'])->name('check');
     Route::view('/forgot-password','auth.passwords.email')->name('forgot.password');
     

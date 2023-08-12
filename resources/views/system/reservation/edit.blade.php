@@ -50,15 +50,14 @@
                         </span>
                     </label>
                 </div>                    
-                <div x-data="{rooms: []}"class="flex flex-wrap justify-center md:justify-normal flex-grow m-5 gap-5 w-full">
+                <div x-data="{rooms: {{$r_list->roomid ? '[' . implode(',', $r_list->roomid) .']' : '[]'}}}" class="flex flex-wrap justify-center md:justify-normal flex-grow m-5 gap-5 w-full">
                     @forelse ($rooms as $key => $item)
-                        <div x-init="{{array_key_exists($r_list->id, $item->customer ?? []) ? 'rooms.push('.$item->id.')' : ''}}" id="{{$item->availability == 1 ? 'disabledAll' : ''}}">
+
+                        <div id="{{$item->availability == 1 ? 'disabledAll' : ''}}">
                             @if($item->availability == 1)
-                                <input type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" disabled/>
-                            @elseif(isset($item->customer[$r_list->id]) && $item->customer[$r_list->id] > 0)
-                                <input type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" checked />
+                                <input x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" disabled/>
                             @else
-                                <input type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block"/>
+                                <input x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" x-on:checked="rooms.includes({{$item->id}})" />
                             @endif
                             <label for="RoomNo{{$item->room_no}}">
                                 <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 {{$item->availability == 1 ? 'opacity-70 bg-red-600' : 'border-primary cursor-pointer'}}">
@@ -67,10 +66,12 @@
                                     @else
                                         <span class="absolute inset-x-0 bottom-0 h-3 bg-primary flex flex-col items-center justify-center">
                                             <h4 class="text-primary-content hidden font-medium w-full text-center">Room No. {{$item->room_no}} Selected</h4> 
-                                            <div x-data="{count: {{array_key_exists($r_list->id, $item->customer ?? []) ? $item->customer[$r_list->id] : 1 }}}" class="join hidden">
+                                            @php $roomKey = 0; @endphp
+                                            <div x-data="{count: {{array_key_exists($r_list->id, $item->customer ?? []) ? (int)$item->customer[$r_list->id] : 1}}}" class="join hidden">
+                                                @php $roomKey++; @endphp
                                                 <button @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
-                                                <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$r_list->pax}}" readonly/>
-                                                <button @click="count < {{$r_list->pax}} ? count++ : count = {{$r_list->pax}}" type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
+                                                <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" readonly/>
+                                                <button @click="count++" type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
                                             </div>
                                         </span>
                                     @endif
@@ -90,7 +91,7 @@
                             </label>
                         </div>
                     @empty
-                        <p class="text-2xl font-semibold">No Record Found</p>
+                        <p class="text-2xl font-semibold">No Room Found</p>
                     @endforelse
                 </div>
                 @if (!empty($tour_menu))

@@ -18,8 +18,9 @@ class RoomSettingController extends Controller
     public function __construct()
     {
         $this->middleware(['auth:system']);
-        $this->system_user = auth()->guard('system')->user();
-        if(!$this->system_user->type === 0) abort(404);
+        $this->system_user = auth()->guard('system');
+        $system_user = $this->system_user->user();
+        if(!$system_user->type === 0) abort(404);
     }
     // Show All Rooms View
     public function index(Request $request){
@@ -32,10 +33,8 @@ class RoomSettingController extends Controller
     }
     // Show Single View
     public function show(Request $request){
-        
             $id = decrypt($request->id);
             return view('system.setting.rooms.show',  ['activeSb' => 'Rooms', 'room_list' =>  RoomList::findOrFail($id)]);
-       
     }
     // Show Edit Form
     public function edit(Request $request){
@@ -57,7 +56,7 @@ class RoomSettingController extends Controller
                 'passcode' =>  ['required', 'numeric', 'digits:4'],
             ]);
 
-            if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
+            if (Hash::check($validated['passcode'], $this->system_user->user()->passcode)) {
 
                 if($validated){
 
@@ -116,7 +115,7 @@ class RoomSettingController extends Controller
         }
 
         //Get the code if it match on system
-        if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
+        if (Hash::check($validated['passcode'], $this->system_user->user()->passcode)) {
             // Check if updated many_room greater than previous many_room the add in room table
             if($validated['many_room'] >= $room_list->many_room){
                 $length =  abs((int)$validated['many_room'] - (int)$room_list->many_room);
@@ -150,7 +149,7 @@ class RoomSettingController extends Controller
         $validated = $request->validate([
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
-        if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
+        if (Hash::check($validated['passcode'], $this->system_user->user()->passcode)) {
             $id = decrypt($request->id);
             $room_list =  RoomList::find($id);
             
@@ -177,7 +176,7 @@ class RoomSettingController extends Controller
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
 
-        if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
+        if (Hash::check($validated['passcode'], $this->system_user->user()->passcode)) {
 
             // Save to database and get value
             RoomRate::create($validated);  
@@ -205,7 +204,7 @@ class RoomSettingController extends Controller
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
 
-        if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
+        if (Hash::check($validated['passcode'], $this->system_user->user()->passcode)) {
             // Update Data Process
             $room_rate->update($validated) ;
         
@@ -219,7 +218,7 @@ class RoomSettingController extends Controller
         $validated = $request->validate([
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
-        if (Hash::check($validated['passcode'], $this->system_user->passcode)) {
+        if (Hash::check($validated['passcode'], $this->system_user->user()->passcode)) {
 
             $room_rate = RoomRate::findOrFail(decrypt($request->id));
             $room_rate_name = $room_rate->name;

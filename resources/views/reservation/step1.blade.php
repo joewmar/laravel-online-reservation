@@ -33,7 +33,7 @@
                             <i class="fa-solid fa-arrow-right"></i>
                         </label>
                         <x-modal id="step2" title="Before to proceed" >
-                            <p class="py-4 text-error"><strong>Note:</strong> When making an online reservation, it is required to pay for downpayment.</p>
+                            <p class="py-4 text-error"><strong>Note:</strong> When making an online reservation, make sure to pay for downpayment after confirmation.</p>
                             <p class="py-4"><strong>Allow To Pay for Online Reservation</strong></p>
                             <p>
                                 <ul class="marker:text-primary">

@@ -326,7 +326,7 @@ class ReservationController extends Controller
                 'check_in.after' => 'Choose date with 2 to 3 days',
                 'required' => 'Need fill up first',
                 'date_equals' => 'Choose only one day (Day Tour)',
-                'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',    
+                'tour_pax.exists' => 'Sorry, This number of guest are invalid for choose tour services',    
             ]);
         }
         elseif($request['accommodation_type'] === 'Overnight'){
@@ -342,7 +342,7 @@ class ReservationController extends Controller
                 'check_in.after' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
-                'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',                'check_out.after_or_equal' => 'Choose within 2 day and above (Overnight)',
+                'tour_pax.exists' => 'Sorry, This number of guest are invalid for choose tour services',                'check_out.after_or_equal' => 'Choose within 2 day and above (Overnight)',
     
             ]);
         }
@@ -395,20 +395,20 @@ class ReservationController extends Controller
 
     }
     public function chooseCheckAll(Request $request){
-
         $validate = Validator::make($request->all('tour_menu'), [
             'tour_menu.*' => 'required',
         ]);
         
-        if(!$request->has('tour_menu') || $validate->fails()){
+        if(empty($request['tour_menu']) || $validate->fails()){
             $getParam = [
-                "cin" =>  $request->has('cin') != null ? request('cin') : '',
-                "cout" => $request->has('cout') != null ? request('cout') : '',
-                "at" => $request->has('at') != null ? request('at') : '',
-                "tpx" =>  $request['tpx'] ?? '',
-                "px" => $request->has('px') != null ? request('px'): '',
-                "py" =>  $request->has('py') != null ? request('py') : '',
+                "cin" =>   $request['cin'] ?? '',
+                "cout" => $request['cout'] ?? '',
+                "at" =>  $request['at'] ?? '',
+                "tpx" => $request['tpx'] ?? '',
+                "px" =>  $request['px']?? '',
+                "py" =>   $request['py'] ?? '',
             ];
+            $getParam = encryptedArray($getParam);
             return redirect()->route('reservation.choose', [Arr::query($getParam), '#tour-menu'])
             ->with('error', 'You have not selected anything in the cart yet. Please make a selection first.');
         }
@@ -455,7 +455,8 @@ class ReservationController extends Controller
         if($user) return redirect()->route('reservation.details')->with('success', $user->name() . ' was updated!');
     }
     public function detailsStore(){
-        $user = User::findOrFail(auth('web')->user()->id);
+        $user = User::find(auth('web')->user()->id);
+        if(empty($user)) return back()->wtih('error', 'Sorry, you are not register the account');
         $unfo = [
             'first_name' => $user->first_name,
             'last_name' => $user->last_name,
@@ -475,28 +476,29 @@ class ReservationController extends Controller
     }
     public function confirmation(Request $request){
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
-        if(empty($uinfo['tm'])) {
-            return redirect()->route('reservation.choose', Arr::query(['cin' => session()->get('rinfo')['cin'], 'cout' => session()->get('rinfo')['cout'], 'px' => session()->get('rinfo')['px'], 'tpx' => session()->get('rinfo')['tpx'], 'py' => session()->get('rinfo')['py'], 'at' => session()->get('rinfo')['at'], 'cf' => encrypt(true)], '#tourMenu'))->with('info', 'Your Tour Menu was empty');
-        }
+        if(empty($uinfo['tm']) && $uinfo['at'] !== 'Room Only') return redirect()->route('reservation.choose', Arr::query(['cin' => session()->get('rinfo')['cin'], 'cout' => session()->get('rinfo')['cout'], 'px' => session()->get('rinfo')['px'], 'tpx' => session()->get('rinfo')['tpx'], 'py' => session()->get('rinfo')['py'], 'at' => session()->get('rinfo')['at']], '#tourMenu'))->with('info', 'Your Tour Menu was empty');
         $user_menu = [];
         if($uinfo['at'] !== 'Room Only' && !empty($uinfo['tm'])){
             foreach($uinfo['tm'] as $key => $item){
                 $tour = TourMenu::findOrFail($item);
                 $user_menu[$key]['id'] = $tour->id;
                 if($request->has('cur') && !empty($request['cur'])){
-                    $converted = Currency::convert()->from('PHP')->to($request['cur'])->amount($tour($item)->price)->get();
+                    $converted = Currency::convert()->from('PHP')->to($request['cur'])->amount($tour->price)->get();
                     $user_menu[$key]['price'] = $converted;
                     $user_menu[$key]['orig_price'] = $tour->price;
+                    $user_menu[$key]['amount'] = (int)$uinfo['tpx'] * (double)$user_menu[$key]['price'];
+
                 }
                 else{
                     $user_menu[$key]['price'] = $tour->price;
                     $user_menu[$key]['orig_price'] = $tour->price;
+                    $user_menu[$key]['amount'] = (int)$uinfo['tpx'] * $tour->price;
+
                 }
                 $user_menu[$key]['title'] = $tour->tourMenu->title;
                 $user_menu[$key]['type'] = $tour->type;
                 $user_menu[$key]['pax'] = $tour->pax . ' guest';
                 $user_menu[$key]['tour_pax'] = $uinfo['tpx'] . ' guest';
-                $user_menu[$key]['amount'] = (int)$uinfo['tpx'] * (double)$user_menu[$key]['orig_price'];
             }
         }
         return view('reservation.step4', [
@@ -611,9 +613,7 @@ class ReservationController extends Controller
         ];
         Mail::to(env('SAMPLE_EMAIL', $reserve_info->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
         foreach($systemUser as $user){
-            if(!empty($user->telegram_chatID)){
-                telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
-            }
+            if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
         }
         session()->forget('rinfo');
         session()->forget('ck');

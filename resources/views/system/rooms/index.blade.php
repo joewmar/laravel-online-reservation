@@ -25,10 +25,11 @@
               @endif
                 <h2 class="mt-4 text-xl font-bold text-neutral">Room No. {{$room->room_no}}</h2>
                 <h5 class="text-md font-medium text-neutral">{{$room->room->name}} Room ({{$room->room->min_occupancy}} to {{$room->room->max_occupancy}} Capacity)</h5>
+                <h5 class="text-md font-bold text-neutral">{{$room->getAllPax() > 0 ? $room->getAllPax() . ' guest reserved' : 'No Guest'}} </h5>
               </label>
               <x-modal id="room_modal{{$room->id}}" title="Who guest on Room No. {{$room->room_no}}">
                 @forelse((array)$room->customer as $key => $item)
-                  <h5 class="text-md font-medium text-neutral">{{ \App\Models\Reservation::find($key)->userReservation->name()}} - {{$item}} guest</h5>
+                  <h5 class="text-md font-medium text-neutral">{{ \App\Models\Reservation::find($key)->userReservation->name()}} ({{\App\Models\Reservation::find($key)->status()}}) - {{$item}} guest</h5>
                 @empty
                   <h5 class="text-md font-medium text-neutral">No guest</h5>
                 @endforelse
