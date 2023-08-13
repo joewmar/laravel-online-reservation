@@ -107,7 +107,7 @@ function getChatIdByGroup()
 function checkAvailRooms($pax, $dates)
 {
     $isFull = false;
-    $countPax = 0;
+    $countPaxes = 0;
     $rooms = Room::all();
     $reservation = Reservation::where('status', '>', 1);
     $maxOccAll = 0;
@@ -123,11 +123,11 @@ function checkAvailRooms($pax, $dates)
                     }
                 }
             }
-            $countPax += (int)$countOccupancy;
+            $countPaxes += (int)$countOccupancy;
         }
     }
-    $compute = $maxOccAll - $countPax ; // Get All Available Room
-    if($compute >= $pax){
+    $vacantAll = abs($maxOccAll - $countPaxes) ; // Get All Available Room
+    if($vacantAll >= $pax && $maxOccAll !== $countPaxes){
         foreach($reservation as $item){
             if(Carbon::parse($item->check_out)->timestamp < Carbon::parse($dates)->timestamp){
                 $isFull = true;
@@ -142,7 +142,7 @@ function checkAvailRooms($pax, $dates)
     else{
         $isFull = true;
     }
-    unset($compute, $countPax, $arrPreCus, $countOccupancy, $maxOccAll, $rooms, $reservation, $countPax);
+    unset($vacantAll, $countPaxes, $arrPreCus, $countOccupancy, $maxOccAll, $rooms, $reservation, $countPaxes);
     return $isFull;
 }
 function telegramSendMessage($chatID, $message, $keyboard = null, $bot = 'bot1')

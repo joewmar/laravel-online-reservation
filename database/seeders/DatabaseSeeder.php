@@ -82,7 +82,7 @@ class DatabaseSeeder extends Seeder
             'payment_method' => 'Gcash',
             'age' => User::findOrfail(1)->age(),
             'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
-            'check_out' => Carbon::now()->addDays(12)->toDateTimeString(),
+            'check_out' => Carbon::now()->addDays(18)->toDateTimeString(),
             'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
             'valid_id' => 'valid_id/Valid_ID-sample.jpg',
             'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider', 'price' => 2100.00, 'amount' => 2100.00 * 2]],

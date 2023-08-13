@@ -212,6 +212,7 @@ class SystemReservationController extends Controller
 
     }
     public function updateRInfo(Request $request, $id){ 
+        dd($request->input());
         $reservation = Reservation::findOrFail(decrypt($id));
         $rooms = Room::all();
         if(str_contains($request['check_in'], 'to')){
@@ -326,7 +327,6 @@ class SystemReservationController extends Controller
         $validated = $validator->validated();
 
         $roomCustomer = [];
-        $roomReservation = [];
         // Room Update and Verification
         $reservationPax = 0;
         foreach($rooms as $room){
@@ -339,14 +339,15 @@ class SystemReservationController extends Controller
         $rate = RoomRate::find($validated['room_rate']);
         foreach($validated['room_pax'] as $room_id => $newPax){
             $room = Room::find($room_id);
-            if($reservationPax > $rate->occupancy) return back()->with('error', 'Guest you choose does not match on room rate')->withInput($validated);
-            if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
-            if($newPax > $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$newPax.' pax)')->withInput($validated);
-            if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
-            
             $reservationPax += (int)$newPax;
+            if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
+            if($reservationPax > $rate->occupancy || $reservationPax < $rate->occupancy) return back()->with('error', 'Room No. '.$room->room_no.' Guest you choose does not match on room rate')->withInput($validated);
+            if($reservationPax > $reservation->pax && $reservationPax < $reservation->pax) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
+            if($reservationPax > $room->getVacantPax() && $reservationPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
+            if($reservationPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
 
             $roomCustomer[$room_id] = $newPax;
+
         }
         if($request->hasFile('valid_id')){  
             if($reservation->valid_id) deleteFile($reservation->valid_id, 'private');
@@ -467,37 +468,27 @@ class SystemReservationController extends Controller
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
         $system_user = $this->system_user->user();
-        $systemUsers = System::all()->where('type','>=', 0)->where('type','<=',1);
+        $admins = System::all()->where('type','<',1);
         $reservation = Reservation::findOrFail(decrypt($request->id));
         if($reservation->status >= 1) abort(404);
-        $error = [];
-        $roomReservation = [];
         if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($validated);
         else $validated['room_pax'] = $request['room_pax'];
-        $rate = RoomRate::find($validated['room_rate']);
-        if($rate->occupancy !== $reservation->pax || $rate->occupancy > $reservation->pax ) return back()->with('error', 'Choose the Room Rate Exact or more than number of guest you choose')->withInput($validated);
-        $roomCustomer = [];
-            // $arrCus = array();
-            // $room_no = [];
-            // $room_pax = [];
-            // $totalRoomPax = 0;
-            // $count = 0;
-        $reservationPax = 0;
 
+        $rate = RoomRate::find($validated['room_rate']);
+        $roomCustomer = [];
+        $reservationPax = 0;
         foreach($validated['room_pax'] as $room_id => $newPax){
             $room = Room::find($room_id);
             if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
-            if($newPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$newPax.' pax)')->withInput($validated);
-            if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
-            if($rate->occupancy !== $newPax || $rate->occupancy < $newPax ) return back()->with('error', 'Choose the Room Rate Exact or more than number of guest you choose')->withInput($validated);
-            if($newPax > $reservation->pax) return back()->with('error', 'Guest you choose does not match on the customer guest')->withInput($validated);
+            if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
+            if($newPax > $room->getVacantPax() && $reservationPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
+            if($newPax > $rate->occupancy) return back()->with('error', 'Room No. '.$room->room_no.' Guest you choose does not match on room rate')->withInput($validated);
             $reservationPax += (int)$newPax;
-            if($rate->occupancy !== $reservationPax || $rate->occupancy > $reservationPax) return back()->with('error', 'Choose the Room with Exact or more than number of guest you choose')->withInput($validated);
-
             $roomCustomer[$room_id] = $newPax;
 
         }
-        dd($roomCustomer);
+        if($reservationPax > $rate->occupancy || $reservationPax < $rate->occupancy) return back()->with('error', 'All Room Guest you choose does not match on room rate')->withInput($validated);
+        if($reservationPax > $reservation->pax || $reservationPax < $reservation->pax) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
 
         $transaction = $reservation->transaction;
         $transaction['rid'.$rate->id]['title'] = $rate->name;
@@ -514,7 +505,6 @@ class SystemReservationController extends Controller
         $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
         $reservation->save();
 
-
         // Update Room Availability
         if($reserved){
             $rooms = Room::all();
@@ -523,9 +513,7 @@ class SystemReservationController extends Controller
             }
             foreach($roomCustomer as $key => $pax){
                 $room = Room::find($key);
-                $customer = $room->customer ?? [];
-                $customer[$reservation->id] = $pax;
-                $room->update(['customer' => $customer]);
+                $room->addCustomer($reservation->id, $pax);
             }
             $tour_menu = [];
             // Get Tour Menu for Mail
@@ -541,9 +529,7 @@ class SystemReservationController extends Controller
             }
             
             $roomDetails = [];
-            foreach($reservation->roomid as $item){
-                $roomDetails[] = 'Room No' . Room::find($item)->room_no . '('.Room::find($item)->room->name.')';
-            }
+            foreach($reservation->roomid as $item)$roomDetails[] = 'Room No ' . Room::find($item)->room_no . ' ('.Room::find($item)->room->name.')';
             $text = 
             "Employee Action: Approved Reservation !\n" .
             "Name: ". $reservation->userReservation->name() ."\n" . 
@@ -556,11 +542,11 @@ class SystemReservationController extends Controller
             "Rooms: " . implode(',', $roomDetails) ."\n" . 
             "Who Approve: " . $system_user->name();
 
-            // foreach($admins as $admin){
-            //     if(!empty($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
-            // }
-            telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');
-
+            if($system_user->role() === "Manager"){
+                foreach($admins as $admin){
+                    if(!empty($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');;
+                }
+            }
             $text = null;
             $url = null;
             if($reservation->payment_method == "Gcash"){
@@ -850,7 +836,7 @@ class SystemReservationController extends Controller
     public function storeForcePayment(Request $request, $id){
         $system_user = $this->system_user->user();
         $reservation = Reservation::findOrFail(decrypt($id));
-        $admins = System::all()->where('type', 0)->where('type', 1);
+        $admins = System::all()->where('type', 0);
         $validated = Validator::make($request->all('amount'), [
             'amount' => ['required', 'numeric'],
         ], ['required' => 'Required to fill up', 'numeric' => 'Number only']);

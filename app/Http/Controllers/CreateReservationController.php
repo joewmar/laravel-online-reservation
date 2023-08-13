@@ -35,20 +35,19 @@ class CreateReservationController extends Controller
         else $validated['room_pax'] = $request['room_pax'];
         $rate = RoomRate::find($validated['room_rate']);
         $roomCustomer = [];
-        $roomReservation = [];
         // Room Update and Verification
         $reservationPax = 0;
 
         foreach($validated['room_pax'] as $room_id => $newPax){
             $room = Room::find($room_id);
-            if($reservationPax > $rate->occupancy) return back()->with('error', 'Guest you choose does not match on room rate')->withInput($validated);
-            if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
-            if($newPax > $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$newPax.' pax)')->withInput($validated);
-            if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
-            
             $reservationPax += (int)$newPax;
+            if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
+            if($reservationPax > $rate->occupancy || $reservationPax < $rate->occupancy) return back()->with('error', 'Room No. '.$room->room_no.' Guest you choose does not match on room rate')->withInput($validated);
+            if($reservationPax > $room->getVacantPax() && $reservationPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
+            if($reservationPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
 
             $roomCustomer[$room_id] = $newPax;
+
         }
         $param = [
             'rt' => $rate->id,

@@ -70,5 +70,25 @@ class Room extends Model
         }
         return $vacant ?? 0;
     }
+    public function removeCustomer($id){
+        $customer = json_decode($this->attributes['customer']);
+        if(isset($customer)){
+            unset($customer[$id]);
+        }
+        $this->update(['customer' => $customer]);
+    }
+    public function addCustomer($id, $pax){
+        $customer = [];
+        if(isset($this->attributes['customer'])){
+            $customer = json_decode($this->attributes['customer']);
+            $customer[$id] = $pax;
+        }
+        else{
+            $customer[$id] = $pax;
+        }
+        if(!empty($customer)){
+            $this->update(['customer' => $customer]);
+        }
+    }
 
 }

@@ -50,7 +50,8 @@
                         </span>
                     </label>
                 </div>                    
-                <div x-data="{rooms: {{$r_list->roomid ? '[' . implode(',', $r_list->roomid) .']' : '[]'}}}" class="flex flex-wrap justify-center md:justify-normal flex-grow m-5 gap-5 w-full">
+                <div x-data="{rooms: {{$r_list->roomid ? '[' . implode(',', $r_list->roomid) .']' : '[]'}}, allCount: 0}" class="flex flex-wrap justify-center md:justify-normal flex-grow m-5 gap-5 w-full">
+                    <h2 class="text-lg font-semibold">Room Guest choosen: <span x-text="allCount"></span> guest</h2>
                     @forelse ($rooms as $key => $item)
 
                         <div id="{{$item->availability == 1 ? 'disabledAll' : ''}}">
@@ -70,7 +71,7 @@
                                             <div x-data="{count: {{array_key_exists($r_list->id, $item->customer ?? []) ? (int)$item->customer[$r_list->id] : 1}}}" class="join hidden">
                                                 @php $roomKey++; @endphp
                                                 <button @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
-                                                <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" readonly/>
+                                                <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" @input="allCount = count" readonly/>
                                                 <button @click="count++" type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
                                             </div>
                                         </span>
