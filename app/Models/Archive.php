@@ -10,28 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Archive extends Model
 {
     use HasFactory;
-    use HasUuids;
 
     protected $fillable = [
-        'name' ,
-        'age',
-        'country',
-        'nationality' ,
-        'contact',
-        'email' ,
-        'user_id' ,
-        'pax',
-        'roomid',
-        'accommodation_type' ,
-        'payment_method' ,
-        'menu',
-        'check_in',
-        'check_out' ,
-        'status',
-        'additional',
-        'amount',
-        'total' ,
-        'message',
+        'reservation_id',
+        'nationality',
+        'total',
     ];
     public function userArchive(){
         return $this->belongsTo(User::class, 'user_id');

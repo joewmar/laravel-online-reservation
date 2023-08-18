@@ -15,6 +15,7 @@ class Reservation extends Model
     use HasUuids;
     protected $fillable = [
         'user_id',
+        'offline_user_id',
         'roomid',
         'roomrateid',
         'pax',
@@ -30,7 +31,8 @@ class Reservation extends Model
         'message',
     ];
     public function userReservation(){
-        return $this->belongsTo(User::class, 'user_id');
+        if(!empty($this->attributes['offline_user_id'])) return $this->belongsTo(UserOffline::class, 'offline_user_id');
+        else return $this->belongsTo(User::class, 'user_id');
     }
     public function room(){
         return $this->hasMany(Room::class, 'roomid');
@@ -76,7 +78,7 @@ class Reservation extends Model
     public function getAllArray($attribute)
     {
         if(!empty($replace)) {
-            foreach(json_decode($this->attributes[$attribute]) as $key => $item) $replace[$key] = $item;
+            foreach(json_decode($this->attributes[$attribute], true) as $key => $item) $replace[$key] = $item;
             return $replace;
         }
         else return [];
@@ -137,6 +139,11 @@ class Reservation extends Model
                     break;
                 }
             }
+            Archive::create([
+                'reservation_id' => $this->attributes['id'],
+                'nationality'=> $this->userReservation->nationality,
+                'total'=> (double)$this->getTotal(),
+            ]);
         }
         else {
             return false;

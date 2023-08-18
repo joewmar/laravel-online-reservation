@@ -32,7 +32,7 @@ class Room extends Model
         $countOccupancy = 0;
         // Check if Availability All
         if(isset($this->attributes['customer'])){
-            foreach (json_decode($this->attributes['customer']) as $key => $item) {
+            foreach (json_decode($this->attributes['customer'], true) as $key => $item) {
                 if($this->room->max_occupancy <= $countOccupancy ){
                     $this->update(['availability' => true]);
                     return false;
@@ -47,13 +47,14 @@ class Room extends Model
         else{
             return true;
         } 
+        unset($countOccupancy);
         return false;
     }
     public function getAllPax()
     {
         $countPax = 0;
         if(isset($this->attributes['customer'])){
-            foreach (json_decode($this->attributes['customer']) as $key => $item) {
+            foreach (json_decode($this->attributes['customer'], true) as $key => $item) {
                 $countPax += $item;
             }
         }
@@ -63,7 +64,7 @@ class Room extends Model
     {
         $countPax = 0;
         if(isset($this->attributes['customer'])){
-            foreach (json_decode($this->attributes['customer']) as $key => $item) {
+            foreach (json_decode($this->attributes['customer'], true) as $key => $item) {
                 $countPax += $item;
             }
             $vacant = abs($countPax - $this->room->max_occupancy);
@@ -71,16 +72,18 @@ class Room extends Model
         return $vacant ?? 0;
     }
     public function removeCustomer($id){
-        $customer = json_decode($this->attributes['customer']);
-        if(isset($customer)){
+        $customer = json_decode($this->attributes['customer'], true);
+        if(isset($customer) && isset($customer[$id])){
             unset($customer[$id]);
+            $this->update(['customer' => $customer]);
         }
-        $this->update(['customer' => $customer]);
+        $this->checkAvailability();
+
     }
     public function addCustomer($id, $pax){
         $customer = [];
         if(isset($this->attributes['customer'])){
-            $customer = json_decode($this->attributes['customer']);
+            $customer = json_decode($this->attributes['customer'], true);
             $customer[$id] = $pax;
         }
         else{
@@ -89,6 +92,8 @@ class Room extends Model
         if(!empty($customer)){
             $this->update(['customer' => $customer]);
         }
+        $this->checkAvailability();
+
     }
 
 }

@@ -199,7 +199,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
         refreshRoomNumber();
-        \App\Models\Archive::factory(10)->create();
+        // \App\Models\Archive::factory(50)->create();
         \App\Models\Addons::create([
             'title' => 'Coca Cola',
             'price' => 70.00,
@@ -208,6 +208,7 @@ class DatabaseSeeder extends Seeder
             'title' => 'Foam',
             'price' => 100,
         ]);
+        // \App\Models\Feedback::factory(50)->create();
 
     }
 }

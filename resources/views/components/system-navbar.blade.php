@@ -1,4 +1,4 @@
-<div class="fixed z-[90] top-0 left-0 w-full">
+<div class="fixed z-50 top-0 left-0 w-full">
   <div class="navbar bg-base-100">
     <div class="flex-1">
       <div class="flex md:hidden btn btn-ghost btn-circle avatar">
@@ -46,7 +46,9 @@
               Profile
             </a>
           </li>
-          <li><a href="{{route('system.setting.home')}}">Settings</a></li>
+          @can('admin')
+            <li><a href="{{route('system.setting.home')}}">Settings</a></li>
+          @endcan
           <form action="{{route('system.logout')}}" class="w-full" method="POST" id="logout-form" style="display: none;">
             @csrf
           </form>

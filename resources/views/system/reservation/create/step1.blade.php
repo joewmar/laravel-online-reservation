@@ -1,7 +1,7 @@
 @php
     $roomInfo = [
-        'rm' => session()->has('rinfo') ? decrypt(session('rinfo')['rm']) : old('room_pax'),
-        'rt' => session()->has('rinfo') ? decrypt(session('rinfo')['rt']) : old('room_rate'),
+        'rm' => isset(session()->has('rinfo')['rm']) ? decrypt(session('rinfo')['rm']) : old('room_pax'),
+        'rt' => isset(session()->has('rinfo')['rt']) ? decrypt(session('rinfo')['rt']) : old('room_rate'),
     ];
 @endphp
 
@@ -12,7 +12,7 @@
             @csrf
             <x-loader />
             <h2 class="text-2xl font-semibold my-5">Choose the room</h2>
-            <div  class="form-control w-full">
+            <div class="form-control w-full">
                 <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
                         <select name="room_rate" id="room_rate" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
                         <option value="" disabled selected>Please select</option>
@@ -42,10 +42,11 @@
                         @enderror
                     </span>
                 </label>
-            </div>                    
-            {{-- <div x-data="{rooms: [1, 2]}" class="flex flex-wrap justify-center md:justify-normal flex-grow m-5 gap-5 w-full"> --}}
+            </div> 
+            <div class="w-52">
+                <x-input id="pax" name="pax" placeholder="Number of Guest" />
+            </div> 
             <div x-data="{rooms: {{$roomInfo['rm'] ? '[' . implode(',', array_keys($roomInfo['rm'])) .']' : '[]'}}, allCount: 0}" class="flex flex-wrap justify-center md:justify-normal flex-grow m-5 gap-5 w-full">
-                <h2 class="text-lg font-semibold">Room Guest choosen: <span x-text="allCount"></span> guest</h2>
                 @forelse ($rooms as $key => $item)
                     <div id="{{$item->availability == 1 ? 'disabledAll' : ''}}">
                         @if($item->availability == 1)
@@ -62,7 +63,7 @@
                                         <h4 class="text-primary-content hidden font-medium w-full text-center">Room No. {{$item->room_no}} Selected</h4> 
                                         <div x-data="{count: {{isset($roomInfo['rm'][$item->id]) ? (int)$roomInfo['rm'][$item->id] : 1}}}" class="join hidden">
                                             <button @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
-                                            <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$item->room->max_occupancy}}" @input="allCount = count" readonly/>
+                                            <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$item->room->max_occupancy}}" readonly/>
                                             <button @click="count < {{$item->room->max_occupancy}} ? count++ : count = {{$item->room->max_occupancy}}" type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
                                         </div>
                                     </span>

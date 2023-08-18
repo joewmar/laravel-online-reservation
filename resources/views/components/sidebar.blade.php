@@ -1,7 +1,8 @@
 <!-- Sidebar  -->
 @props(['active' => ''])
 @php
-    $arrSideBarItems = 
+   if(auth('system')->user()->type === 0){
+        $arrSideBarItems = 
         [
             "Home" => [
                 "icon" => "fa-solid fa-gauge",
@@ -21,11 +22,11 @@
             ],
             "Analytics" => [
                 "icon" => "fa-solid fa-chart-simple",
-                "link" => "/system/analytics"
+                "link" => route('system.analytics.home'),
             ],
             "News" => [
                 "icon" => "fa-solid fa-newspaper",
-                "link" => "/system/news",
+                "link" => route('system.news.home'),
             ],
             "Feedback" => [
                 "icon" => "fa-solid fa-comments",
@@ -36,9 +37,99 @@
                 "link" => "/system/webcontent",
             ],
         ];
+   }
+   else{
+        $arrSideBarItems = 
+        [
+            "Home" => [
+                "icon" => "fa-solid fa-gauge",
+                "link" => "/system"
+            ],
+            "Reservation" => [
+                "icon" => "fa-sharp fa-solid fa-book",
+                "link" => route('system.reservation.home'),
+            ],
+            "Rooms" => [
+                "icon" => "fa-solid fa-hotel",
+                "link" => "/system/rooms",
+            ],
+            "Analytics" => [
+                "icon" => "fa-solid fa-chart-simple",
+                "link" => route('system.analytics.home'),
+            ],
+            "Feedback" => [
+                "icon" => "fa-solid fa-comments",
+                "link" => "/system/feedback",
+            ],
+        ];
+   }
 @endphp
 <div id="sidebar" :class="!open ? 'w-56 md:w-[5rem]' : 'w-56'" class="sidebar z-[100] hidden md:block h-full overflow-hidden bg-base-100 menu" x-cloak>
     <div class="flex h-screen flex-col justify-center pt-2 pb-6 w-56 p-0">
+        {{-- <div x-data="dateData()" x-init="initDate()"   :class="!open ? 'opacity-100 md:opacity-0' : 'opacity-100'" class="transition-all flex items-start space-x-2">
+            <h1 class="text-xl font-mono">Date: </h1>
+            <h1 class="text-xl font-mono mb-4" x-text="currentDate"></h1>
+            <script>
+                function dateData() {
+                    return {
+                        currentDate: '',
+                        initDate() {
+                            this.updateDate();
+                        },
+                        updateDate() {
+                            const now = new Date();
+                            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                            this.currentDate = now.toLocaleDateString(undefined, options);
+                        }
+                    };
+                }
+            </script>
+        </div>
+        <div :class="!open ? 'opacity-100 md:opacity-0' : 'opacity-100'" class="transition-all flex items-start space-x-2">
+            <h1 class="text-xl font-mono">Time: </h1>
+            <div x-data="clockData()" x-init="initClock()"  class="flex">
+                <div>
+                  <span class="countdown font-mono text-2xl">
+                    <span :style="'--value:'+hours+';'"></span>
+                  </span>
+                  hours
+                </div> 
+                <div>
+                  <span class="countdown font-mono text-2xl">
+                    <span :style="'--value:'+minutes+';'"></span>
+                  </span>
+                  min
+                </div> 
+                <div>
+                  <span class="countdown font-mono text-2xl">
+                    <span :style="'--value:'+seconds+';'"></span>
+                  </span>
+                  sec
+                </div> 
+              </div>
+              <script>
+                function clockData() {
+                    return {
+                        // currentTime: '',
+                        hours: '',
+                        minutes: '',
+                        seconds: '',
+                        initClock() {
+                            this.updateTime();
+                            setInterval(() => this.updateTime(), 1000);
+                        },
+                        updateTime() {
+                            const now = new Date();
+                            this.hours = String(now.getHours()).padStart(2, '0');
+                            this.minutes = String(now.getMinutes()).padStart(2, '0');
+                            this.seconds = String(now.getSeconds()).padStart(2, '0');
+                            // this.currentTime = `${hours}:${minutes}:${seconds}`;
+                        }
+                    };
+                }
+            </script>
+        </div> --}}
+
         <ul class="sbList mt-6 space-y-2">
             @foreach ($arrSideBarItems as $name => $item)
                 @if ($active == $name)

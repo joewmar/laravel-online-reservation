@@ -17,7 +17,7 @@ class ArchiveFactory extends Factory
      */
     public function definition(): array
     {
-        $arrNationality = array(
+        $arrNationality = [
             "Afghan",
             "Albanian",
             "Algerian",
@@ -163,42 +163,15 @@ class ArchiveFactory extends Factory
             "Qatari",
             "Romanian",
             "Russian",
-            );
-            $arrAmount = [];
-            $arrMenu = [];
-            $arrAddMenu = [];
-            $arrRooms = [];
-        for($count = 0; $count < fake()->numberBetween(1, 10); $count++){
-            $arrAmount[] = (string)fake()->randomElement(['tm', 'rid',]) . (string)fake()->numberBetween(1, 15)  . '-' . (string)fake()->randomFloat(2, 1100, 20000);
-        }
-        for($count = 0; $count <  fake()->numberBetween(1, 10); $count++){
-            $arrMenu[] = (string)fake()->randomDigit();
-        }
-        for($count = 0; $count <  fake()->numberBetween(1, 10); $count++){
-            $arrAddMenu[] = (string) fake()->randomDigit();
-        }
-        for($count = 0; $count < fake()->numberBetween(1, 15); $count++){
-            $arrRooms[] = (string)  fake()->randomDigit();
-        }
+        ];
+        // Generate a random date between now and 1 year from now
+        $startDate = now();
+        $endDate = now()->addYear();
         return [
-        //    'name' => fake()->firstName() . ' ' . fake()->lastName(),
-        //    'age' => Carbon::createFromFormat('Y-m-d', fake()->date('Y-m-d'))->age,
-        //    'country' => fake()->country(),
-        //    'nationality' => fake()->randomElement($arrNationality) ,
-        //    'contact' => fake()->e164PhoneNumber(),
-        //    'email' => fake()->unique()->freeEmail(),
-        //    'pax' => fake()->numberBetween(1, 12),
-        //    'roomid' => implode(',', $arrRooms),
-        //    'accommodation_type' => fake()->randomElement(['Room Only', 'Day Tour', 'Overnight']),
-        //    'payment_method' => fake()->randomElement(['Walk-in', 'Gcash', 'PayPal']),
-        //    'menu' => implode(',', $arrMenu),
-           'check_in' => Carbon::now()->addRealDays(fake()->numberBetween(5, 100))->format('Y-m-d'),
-        //    'check_out' =>  fake()->date(),
-           'status' => fake()->numberBetween(0, 2), /* 0 => done, 1 => disaprove, 2 => cancellation, 3 => ? */
-        // //    'additional' => implode(',', $arrAddMenu),
-        //    'amount' => implode(',', $arrAmount),
-           'total' => fake()->randomFloat(2, 1100, 50000),
-        //    'message' => fake()->sentences(2) ,
+            'nationality' => fake()->randomElement($arrNationality),
+            'total' => fake()->randomFloat(2, 1000, 50000),
+            'created_date' => fake()->dateTimeBetween($startDate, $endDate)->format('Y-m-d'),
+
         ];
     }
 }

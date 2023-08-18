@@ -36,6 +36,9 @@ class SystemController extends Controller
         
         return view ('system.setting.accounts.index',  ['activeSb' => 'Accounts', 'employees' => $employees]);
     }
+    public function create(){
+        return view ('system.setting.create',  ['activeSb' => 'Accounts']);
+    }
     public function show($id){
         $employee = System::findOrFail(decrypt($id));
         return view ('system.setting.accounts.show',  ['activeSb' => 'Accounts', 'employee' => $employee]);
@@ -63,7 +66,7 @@ class SystemController extends Controller
                 'username' => ['required', Rule::unique('systems', 'username')],
                 'password' => ['required', 'min:6'],
                 'passcode' => ['required', 'numeric', 'digits:4'],
-                'telegram_username' => ['nullable'],
+                'telegram_username' => ['nullable', Rule::unique('systems', 'telegram_username')],
         ], [
             'required' => 'Required to fill up this form'
         ]);
@@ -96,11 +99,11 @@ class SystemController extends Controller
                 'first_name' => ['required'],
                 'last_name' => ['required'],
                 'contact' => ['required', 'numeric', 'min:7'],
-                'email' => ['required', 'email'],
-                'username' => ['required'],
+                'email' => ['required', 'email', Rule::when($request['email'] !== $systemUser->email, [Rule::unique('systems', 'email')])],
+                'username' => ['required', Rule::when($request['username'] !== $systemUser->username, [Rule::unique('systems', 'username')])],
                 'password' => ['nullable', 'min:6'],
                 'passcode' => ['nullable', 'numeric', 'digits:4'],
-                'telegram_username' => ['nullable'],
+                'telegram_username' => ['nullable', Rule::when($request['telegram_username'] !== $systemUser->telegram_username, [Rule::unique('systems', 'telegram_username')])],
         ], [
             'required' => 'Required to fill up this form'
         ]);
@@ -110,13 +113,10 @@ class SystemController extends Controller
         if($validated['passcode'] == null) $validated['passcode'] = $systemUser->passcode;
         else $validated['passcode'] = bcrypt($validated['passcode']);
 
-        if($validated['telegram_username'] == null) $validated['telegram_username'] = $systemUser->telegram_username;
-        else{
-            if($validated['telegram_username'] != null){
-                $chat_id = getChatIdByUsername($validated['telegram_username']) ;
-                if($chat_id == null) return back()->withErrors(['telegram_username' => 'Invalid Username or did not do it when typing in chat bots'])->withInput($validated);
-                else $validated['telegram_chatID'] = $chat_id;
-            }
+        if($validated['telegram_username'] != null && $validated['telegram_username'] !== $systemUser->telegram_username){
+            $chat_id = getChatIdByUsername($validated['telegram_username'], 'bot1') ?? getChatIdByUsername($validated['telegram_username'], 'bot2') ;
+            if($chat_id == null) return back()->withErrors(['telegram_username' => 'Invalid Username or did not do it when typing in chat bots'])->withInput($validated);
+            else $validated['telegram_chatID'] = $chat_id;
         }
 
         if($request->hasFile('avatar')){                          // storage/app/logos

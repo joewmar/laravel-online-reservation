@@ -32,6 +32,7 @@ class SystemReservationController extends Controller
     public function __construct()
     {
         $this->system_user = auth()->guard('system');
+
     }
     public function index(Request $request){
         $r_list = Reservation::latest()->paginate(5);
@@ -164,7 +165,9 @@ class SystemReservationController extends Controller
         return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict, 'rooms' => implode(',', $rooms), 'rate' => $rate, 'total' => $total, 'other_addons' => $other_addons, 'tour_addons' => $tour_addons]);
     }
     public function edit($id){
+        if(!$this->system_user->user()->role() === "Admin") abort(404);
         $reservation = Reservation::findOrFail(decrypt($id));
+        if($reservation->status === 3) abort(404);
         $rooms = Room::all();
         $rate = RoomRate::all();
         $tour_menu = [];
@@ -212,7 +215,7 @@ class SystemReservationController extends Controller
 
     }
     public function updateRInfo(Request $request, $id){ 
-        dd($request->input());
+        if(!$this->system_user->user()->role() === "Admin") abort(404);
         $reservation = Reservation::findOrFail(decrypt($id));
         $rooms = Room::all();
         if(str_contains($request['check_in'], 'to')){
@@ -330,25 +333,22 @@ class SystemReservationController extends Controller
         // Room Update and Verification
         $reservationPax = 0;
         foreach($rooms as $room){
-            $customer = $room->customer;
-            if (isset($customer[$reservation->id])) {
-                unset($customer[$reservation->id]);
-                $room->update(['customer' => $customer]);
-            }
+            $room->removeCustomer($reservation->id);
         }
         $rate = RoomRate::find($validated['room_rate']);
         foreach($validated['room_pax'] as $room_id => $newPax){
             $room = Room::find($room_id);
-            $reservationPax += (int)$newPax;
             if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
-            if($reservationPax > $rate->occupancy || $reservationPax < $rate->occupancy) return back()->with('error', 'Room No. '.$room->room_no.' Guest you choose does not match on room rate')->withInput($validated);
-            if($reservationPax > $reservation->pax && $reservationPax < $reservation->pax) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
-            if($reservationPax > $room->getVacantPax() && $reservationPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
-            if($reservationPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
-
+            if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
+            if($newPax > $room->getVacantPax() && $reservationPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
+            if($newPax > $rate->occupancy) return back()->with('error', 'Room No. '.$room->room_no.' Guest you choose does not match on room rate')->withInput($validated);
+            $reservationPax += (int)$newPax;
             $roomCustomer[$room_id] = $newPax;
 
         }
+        if($reservationPax > $rate->occupancy || $reservationPax < $rate->occupancy) return back()->with('error', 'All Room Guest you choose does not match on room rate')->withInput($validated);
+        if($reservationPax > $reservation->pax || $reservationPax < $reservation->pax) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
+
         if($request->hasFile('valid_id')){  
             if($reservation->valid_id) deleteFile($reservation->valid_id, 'private');
             $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
@@ -368,8 +368,7 @@ class SystemReservationController extends Controller
         ]);
         foreach($roomCustomer as $key => $newCustomer){
             $room = Room::find($key);
-            $room->update(['customer' => $newCustomer]);
-            $room->checkAvailability();
+            $room->addCustomer($reservation->id, $newCustomer);
         }
 
         if(!empty($validated['tour_menu'])){
@@ -406,7 +405,8 @@ class SystemReservationController extends Controller
     public function receipt($id){
         $reservation = Reservation::findOrFail(decrypt($id));
         $tour_menu = [];
-        $addtional_menu = [];
+        $other_addons = [];
+        $tour_addons = [];
         $rooms = [];
         // Rooms
         foreach($reservation->roomid as $item){
@@ -468,7 +468,7 @@ class SystemReservationController extends Controller
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
         $system_user = $this->system_user->user();
-        $admins = System::all()->where('type','<',1);
+        $admins = System::all()->where('type', 0);
         $reservation = Reservation::findOrFail(decrypt($request->id));
         if($reservation->status >= 1) abort(404);
         if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($validated);
@@ -544,7 +544,7 @@ class SystemReservationController extends Controller
 
             if($system_user->role() === "Manager"){
                 foreach($admins as $admin){
-                    if(!empty($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');;
+                    if(isset($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');;
                 }
             }
             $text = null;
@@ -573,7 +573,7 @@ class SystemReservationController extends Controller
                 "room_no" =>  implode(',', $roomDetails),
                 "room_type" => $rate->name,
                 'room_rate' => $rate->price,
-                'total' => $reservation->total,
+                'total' => $reservation->getTotal(),
                 'receipt_link' => route('reservation.receipt', encrypt($reservation->id)),
                 'payment_link' => $url,
                 'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('F j Y \a\t g:iA'),
@@ -587,7 +587,7 @@ class SystemReservationController extends Controller
     }
     public function updateCheckin(Request $request){
         $system_user = $this->system_user->user();
-        $admins = System::all()->where('type', 0)->where('type', 1);
+        $admins = System::all()->where('type', 0);
         $reservation = Reservation::findOrFail(decrypt($request->id));
         $transaction = $reservation->transaction;
         $downpayment = $transaction['payment']['downpayment'] ?? 0;
@@ -635,17 +635,17 @@ class SystemReservationController extends Controller
             'body' => 'You now checked in at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
         ];
         if($updated){
-            foreach($admins as $admin) if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
-            telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', ), $text, null, 'bot2');
+            foreach($admins as $admin) {
+                if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null, 'bot2');
+            }
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             unset($text, $details);
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked in');
         }
-
     }
     public function updateCheckout(Request $request){
         $system_user = $this->system_user->user();
-        $admins = System::all()->where('type', 0)->where('type', 1);
+        $admins = System::all()->where('type', 0);
         $reservation = Reservation::findOrFail(decrypt($request->id));
         $validated = $request->validate([
             'fullpay' => ['accepted'],
@@ -665,10 +665,14 @@ class SystemReservationController extends Controller
         $details = [
             'name' => $reservation->userReservation->name(),
             'title' => 'Reservation Check-out',
-            'body' => 'You now checked out at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
+            'body' => 'You now checked out at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A') . ' If you have time, you can feedback your experience',
+            'link' => route('reservation.feedback', encrypt($reservation->id)),
         ];   
-        // foreach($admins as $admin) if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, 'bot2');
-        telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');
+        if($system_user->role() === "Manager"){
+            foreach($admins as $admin) {
+                if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
+            }
+        }
         Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
         unset($text, $details);
         return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked out');
@@ -676,6 +680,8 @@ class SystemReservationController extends Controller
     }
     public function disaprove($id){
         $reservation = Reservation::findOrFail(decrypt($id));
+        $admins = System::all()->where('type', 0);
+
         $tour_menu = [];
         $count = 0;
         foreach($reservation->transaction as $key => $item){
@@ -700,6 +706,7 @@ class SystemReservationController extends Controller
     }
     public function disaproveStore(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
+        $admins = System::all()->where('type', 0);
         $system_user = $this->system_user->user();
 
         if($request['reason'] === 'Other'){
@@ -743,16 +750,18 @@ class SystemReservationController extends Controller
             //         ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reserve_info->id))],
             //     ],
             // ];
-            telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system_user->telegram_chatID), $text, null, 'bot2');
-    
-            $text = null;
+            if($system_user->role() === "Manager"){
+                foreach($admins as $admin) {
+                    if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
+                }
+            }    
             $details = [
                 'name' => $reservation->userReservation->name(),
                 'title' => 'Reservation Disaprove',
                 'body' => 'Your Reservation are disapprove due of ' . $messages['disaprove']. 'Sorry for waiting. Please try again to make reservation in another dates',
             ];
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
-            unset($details);
+            unset($details, $text);
             return redirect()->route('system.reservation.home')->with('success', 'Disaprove of ' . $updated->userArchive->first_name . ' ' . $updated->userArchive->last_name . ' was Successful');
         }
         else{
@@ -765,9 +774,10 @@ class SystemReservationController extends Controller
     }
     public function storeOnlinePayment(Request $request, $id){
         $system_user = $this->system_user->user();
+        $admins = System::all()->where('type', 0);
+
         $validated = $request->validate(['amount' => ['required', 'numeric']]);
         $online_payment = OnlinePayment::findOrFail(decrypt($id));
-        $admins = System::all()->where('type', 0)->where('type', 1);
         $reservation = Reservation::findOrFail($online_payment->reservation_id);
         $downpayment = $reservation->transaction;
         if(isset($downpayment['payment']['downpayment'])) $downpayment['payment']['downpayment'] += (double)$validated['amount'];
@@ -799,20 +809,23 @@ class SystemReservationController extends Controller
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
         }
         $text = 
-        "Employee Action: Online Payment !\n" .
+        "Employee Action: Approve Online Payment !\n" .
         "Name: ". $reservation->userReservation->name() ."\n" . 
         "Age: " . $reservation->age ."\n" .  
         "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
         "Amount: " . $reservation->userReservation->nationality  ."\n" . 
-        "Who Approve: " . $system_user->name() ;
-        foreach($admins as $user){
-            if(isset($user->telegram_chatID))
-                telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
-        }
+        "Who Disaprove Payment: " . $system_user->name() ;
+        if($system_user->role() === "Manager"){
+            foreach($admins as $admin) {
+                if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
+            }
+        }   
         unset($downpayment);
         return redirect()->route('system.reservation.show.online.payment', encrypt($reservation->id))->with('success', 'Approved payment successful');
     }
     public function disaproveOnlinePayment(Request $request, $id){
+        $system_user = $this->system_user->user();
+        $admins = System::all()->where('type', 0);
         $validated = $request->validate(['reason' => ['required']]);
         $online_payment = OnlinePayment::findOrFail(decrypt($id));
         $reservation = Reservation::findOrFail($online_payment->reservation_id);
@@ -831,6 +844,18 @@ class SystemReservationController extends Controller
             'link' => $url,
             'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
         ];
+        $text = 
+        "Employee Action: Disaprove Online Payment !\n" .
+        "Name: ". $reservation->userReservation->name() ."\n" . 
+        "Age: " . $reservation->age ."\n" .  
+        "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+        "Amount: " . $reservation->userReservation->nationality  ."\n" . 
+        "Who Disaprove Payment: " . $system_user->name() ;
+        if($system_user->role() === "Manager"){
+            foreach($admins as $admin) {
+                if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
+            }
+        }  
         Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
     }
     public function storeForcePayment(Request $request, $id){
@@ -856,10 +881,9 @@ class SystemReservationController extends Controller
             "Name: ". $reservation->userReservation->name() ."\n" . 
             "Age: " . $reservation->age ."\n" .  
             "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
-            "Who Approve: " . $system_user->name() ;
+            "Who Approve Force Payment: " . $system_user->name() ;
             foreach($admins as $user){
-                if(isset($user->telegram_chatID))
-                    telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
+                if(isset($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
             }
             return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . 'was now paid on ₱ ' . number_format($validated['amount'], 2));
         } 
@@ -893,6 +917,8 @@ class SystemReservationController extends Controller
         ]);
     }
     public function updateAddons(Request $request, $id){
+        $system_user = $this->system_user->user();
+        $admins = System::all()->where('type', 0);
         $reservation = Reservation::findOrFail(decrypt($id));
         $transaction = $reservation->transaction;
         if($request->has('tab') && $request['tab'] == 'TA'){
@@ -917,6 +943,13 @@ class SystemReservationController extends Controller
                     'amount' => ((double)TourMenu::find($item)->price ?? 0) * (int)$validated['new_pax'],
                 ];
             }
+            $text = 
+            "Employee Action: Additional tour !\n" .
+            "Name: ". $reservation->userReservation->name() ."\n" . 
+            "Age: " . $reservation->age ."\n" .  
+            "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+            "What kind of Addons: Tour Services \n" . 
+            "Who Update Addons: " . $system_user->name() ;
         }
         else{
             $validated = $request->validate([
@@ -934,18 +967,32 @@ class SystemReservationController extends Controller
                 'pcs' => $validated['pcs'],
                 'price' => $adddon->price ,
             ];  
+            $text = 
+            "Employee Action: Other Additional !\n" .
+            "Name: ". $reservation->userReservation->name() ."\n" . 
+            "Age: " . $reservation->age ."\n" .  
+            "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+            "What kind of Addons: Other Request Addons \n" . 
+            "Who Update Addons: " . $system_user->name() ;
         }
         $updated = $reservation->update([
             'transaction' => $transaction,
         ]);
+
+        foreach($admins as $user){
+            if(isset($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
+        }
         if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Other Add-ons for '.$reservation->userReservation->name().' was successful');
 
     }
     public function showExtend($id){
+        
         $reservation = Reservation::findOrFail(decrypt($id));
         return view('system.reservation.extend.index',  ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
     public function updateExtend(Request $request, $id){
+        $system_user = $this->system_user->user();
+        $admins = System::all()->where('type', 0);
         $reservation = Reservation::findOrFail(decrypt($id));
         $validated = $request->validate([
             'no_days' => ['required', 'numeric', 'min:1'],
@@ -958,6 +1005,16 @@ class SystemReservationController extends Controller
             'status' => 2, 
             'transaction' => $rate
         ]);
+        $text = 
+        "Employee Action: Extend Days !\n" .
+        "Name: ". $reservation->userReservation->name() ."\n" . 
+        "Age: " . $reservation->age ."\n" .  
+        "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+        "No. of days: " .$validated['no_days'] > 1 ? $validated['no_days'] . " days" : $validated['no_days'] . " day" . "\n" . 
+        "Who Update Addons: " . $system_user->name() ;
+        foreach($admins as $user){
+            if(isset($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
+        }
         if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->useReservation()->name() . ' was extend in ' . ($validated['no_days'] > 1 ? $validated['no_days'] . ' days' : $validated['no_days'] . ' day'));
     }
 }

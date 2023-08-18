@@ -5,7 +5,7 @@
 @endphp
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Edit {{$r_list->userReservation->name()}}" back=true>
-        <form id="edit-form" method="POST" action="{{route('system.reservation.update', encrypt($r_list->id))}}" enctype="multipart/form-data">
+        <form  id="edit-form" method="POST" action="{{route('system.reservation.update', encrypt($r_list->id))}}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <section class="w-full flex justify-center">
@@ -18,11 +18,19 @@
                     <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{old('pax') ?? $r_list->pax}}"/>
                     <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{old('tour_pax') ?? $r_list->tour_pax}}" />
                     <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{old('payment_method') ?? $r_list->payment_method}}"/>
-                    <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[old('payment_method')] ?? $r_list->status()}}" />
+                    @if($r_list->status <= 3)
+                        <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[old('payment_method')] ?? $r_list->status()}}" disabled=true />
+                    @else
+                        <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[old('payment_method')] ?? $r_list->status()}}"  />
+                    @endif
                 </div>
             </section>
             <div class="divider"></div>
-            <section class="w-full">
+            @if($r_list->status >= 3)
+                <section class="w-full" id="disabledAll">
+            @else
+                <section class="w-full">
+            @endif
                 <h2 class="text-lg my-5">Room Information</h2>
                 <div class="form-control w-full">
                     <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
@@ -49,11 +57,9 @@
                             @enderror
                         </span>
                     </label>
-                </div>                    
+                </div>    
                 <div x-data="{rooms: {{$r_list->roomid ? '[' . implode(',', $r_list->roomid) .']' : '[]'}}, allCount: 0}" class="flex flex-wrap justify-center md:justify-normal flex-grow m-5 gap-5 w-full">
-                    <h2 class="text-lg font-semibold">Room Guest choosen: <span x-text="allCount"></span> guest</h2>
                     @forelse ($rooms as $key => $item)
-
                         <div id="{{$item->availability == 1 ? 'disabledAll' : ''}}">
                             @if($item->availability == 1)
                                 <input x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" disabled/>
@@ -71,7 +77,7 @@
                                             <div x-data="{count: {{array_key_exists($r_list->id, $item->customer ?? []) ? (int)$item->customer[$r_list->id] : 1}}}" class="join hidden">
                                                 @php $roomKey++; @endphp
                                                 <button @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
-                                                <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" @input="allCount = count" readonly/>
+                                                <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" readonly/>
                                                 <button @click="count++" type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
                                             </div>
                                         </span>

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('user_offlines', function (Blueprint $table) {
-            $table->string('id')->primary();
+            $table->id();
             $table->string('first_name');
             $table->string('last_name');
             $table->tinyInteger('age');

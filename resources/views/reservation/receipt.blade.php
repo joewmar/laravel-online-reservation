@@ -259,9 +259,11 @@ tr:hover .cut { opacity: 1; }
 				</tbody>
 			</table>
 		@endif
-		<div class="details">
-			<h5>Additional</h5>
-		</div>
+			@if(!empty($tour_addons) || !empty($other_addons))
+				<div class="details">
+					<h5>Additional</h5>
+				</div>
+			@endif
 			@if(!empty($tour_addons))
 				<table class="inventory">
 					<thead>

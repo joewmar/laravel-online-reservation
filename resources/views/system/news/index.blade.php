@@ -1,105 +1,65 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="News">
-        <div class="overflow-x-auto w-full">
-            <table class="table w-full">
-              <!-- head -->
-              <thead>
-              <tr>
-                <th>No</th>
-                <th>Announcement</th>
-                <th>Dates</th>
-                <th></th>
-              </tr>
-              </thead>
-              <tbody>
-              <!-- row 1 -->
-              <tr>
-                <td>
-                <div class="flex items-center space-x-3">
-                  <div>
-                  <div class="font-bold">Hart Hagerty</div>
-                  <div class="text-sm opacity-50">United States</div>
-                  </div>
-                </div>
-                </td>
-                <td>
-                Zemlak, Daniel and Leannon
-                <br/>
-                <span class="badge badge-ghost badge-sm">Desktop Support Technician</span>
-                </td>
-                <td>Purple</td>
-                <th>
-                <button class="btn btn-ghost btn-xs">details</button>
-                </th>
-              </tr>
-              <!-- row 2 -->
-              <tr>
-                <td>
-                <div class="flex items-center space-x-3">
-                  <div>
-                  <div class="font-bold">Brice Swyre</div>
-                  <div class="text-sm opacity-50">China</div>
-                  </div>
-                </div>
-                </td>
-                <td>
-                Carroll Group
-                <br/>
-                <span class="badge badge-ghost badge-sm">Tax Accountant</span>
-                </td>
-                <td>Red</td>
-                <th>
-                <button class="btn btn-ghost btn-xs">details</button>
-                </th>
-              </tr>
-              <!-- row 3 -->
-              <tr>
-                <td>
-                <div class="flex items-center space-x-3">
-                  <div>
-                  <div class="font-bold">Marjy Ferencz</div>
-                  <div class="text-sm opacity-50">Russia</div>
-                  </div>
-                </div>
-                </td>
-                <td>
-                Rowe-Schoen
-                <br/>
-                <span class="badge badge-ghost badge-sm">Office Assistant I</span>
-                </td>
-                <td>Crimson</td>
-                <th>
-                <button class="btn btn-ghost btn-xs">details</button>
-                </th>
-              </tr>
-              <!-- row 4 -->
-              <tr>
-                <td>
-                <div class="flex items-center space-x-3">
-                  <div>
-                  <div class="font-bold">Yancy Tear</div>
-                  <div class="text-sm opacity-50">Brazil</div>
-                  </div>
-                </div>
-                </td>
-                <td>
-                Wyman-Ledner
-                <br/>
-                <span class="badge badge-ghost badge-sm">Community Outreach Specialist</span>
-                </td>
-                <td>Indigo</td>
-                <th>
-                <button class="btn btn-ghost btn-xs">details</button>
-                </th>
-              </tr>
-              </tbody>
-              
-            </table>
+        <section x-data="{loader: false}">
+          <div class="flex justify-between items-center">
+            <div class="tabs tabs-boxed bg-transparent my-5">
+              <a @click="loader = true" href="{{route('system.news.home')}}" class="{{request()->has('tab') && request('tab') === 'announcement' ? 'tab' : 'tab tab-active'}}">News</a> 
+              <a @click="loader = true" href="{{route('system.news.home', 'tab=announcement')}}" class="{{request()->has('tab') && request('tab') == 'announcement' ? 'tab tab-active' : 'tab'}}">Annoucement</a> 
             </div>
-          <div class="flex justify-end space-x-4">
-            <button type="button" class="btn btn-primary">
-                <span class="sr-only sm:not-sr-only">Create Annoucement</span>
-            </button>
+            @if(!request()->has('tab') && !(request('tab') === 'announcement'))
+              <div class="flex justify-end space-x-4">
+                <a href="{{route('system.news.create')}}" class="btn btn-primary">Create News</a>
+              </div>
+            @endif
+            @if(request()->has('tab') && request('tab') === 'announcement')
+              <div class="flex justify-end space-x-4">
+                <a href="{{route('system.news.announcement.create')}}" class="btn btn-primary">Create Announcement</a>
+              </div>
+            @endif
           </div>
+          <x-loader />
+          <div class="overflow-x-auto w-full">
+              <table class="table w-full">
+                <!-- head -->
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Title</th>
+                    <th>Deadline</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                <!-- row 1 -->
+                @forelse ($news as $new)
+                  <tr>
+                    <td>{{$new->id}}</td>
+                    <td>{{$new->title}}</td>
+                    @if(isset($new->from) && isset($new->to))
+                        <td>{{ Carbon\Carbon::createFromFormat('Y-m-d', $new->from)->format('M j, Y')}} - {{ Carbon\Carbon::createFromFormat('Y-m-d', $new->to)->format('M j, Y')}}</td>
+                    @else
+                        <td>Forever</td>
+                    @endif
+                    @if(request()->has('tab') && request('tab') === 'announcement')
+                      <th><a href="{{route('system.news.announcement.show', encrypt($new->id))}}" class="link link-primary">More details</a></th>
+                    @else
+                      <th><a href="{{route('system.news.show', encrypt($new->id))}}" class="link link-primary">More details</a></th>
+                    @endif
+                  </tr>
+                @empty
+                    @if(request()->has('tab') && request('tab') === 'announcement')
+                      <tr>
+                        <td colspan="4" class="font-bold text-center">No Annoucement Record</td>
+                      </tr>
+                    @else
+                      <tr>
+                        <td colspan="4" class="font-bold text-center">No News Record</td>
+                      </tr>
+                    @endif
+                @endforelse
+                </tbody>
+              </table>
+          </div>
+        </section>
     </x-system-content>
 </x-system-layout>

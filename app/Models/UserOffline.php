@@ -10,12 +10,23 @@ class UserOffline extends Model
 {
     use HasFactory;
     protected $primaryKey = 'id'; // Set the custom primary key field name
-
-    protected static function booted()
+    protected $fillable = [
+        "first_name" ,
+        "last_name",
+        "age",
+        "country" ,
+        "email" ,
+        "nationality",
+        "contact",
+    ];
+    public function reservation(){
+        return $this->hasOne(Reservation::class, 'offline_user_id');
+    }
+    public function age()
     {
-        static::creating(function ($model) {
-            // Generate the custom ID
-            $model->custom_id = 'aa' . Str::random(3) . '-' . Str::random(3) . '-' . Str::random(2);
-        });
+        return $this->attributes['age'];
+    }
+    public function name(){
+        return  $this->attributes['first_name'] . ' ' . $this->attributes['last_name'];
     }
 }

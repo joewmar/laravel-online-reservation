@@ -37,11 +37,12 @@ class ReservationConfirmation extends Mailable implements ShouldQueue
     /**
      * Get the message content definition.
      */
-
-    public function build()
+    public function content(): Content
     {
-        return $this->view($this->view, ['details' => $this->details])
-                    ->subject($this->details['title']);
+        return new Content(
+            markdown: $this->view,
+            with: ['details' => $this->details],
+        );
     }
 
 

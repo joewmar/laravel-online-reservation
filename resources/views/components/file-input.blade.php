@@ -1,7 +1,11 @@
-@props(['id' => '', 'name' => '', 'value' => '', 'placeholder', 'imgID' => 'show_img', 'camera' => ''])
+@props(['id' => '', 'name' => '', 'value' => '', 'placeholder', 'imgID' => 'show_img', 'camera' => '', 'sup' => ''])
 <div class="form-control w-full">
     <label class="label">
-        <span class="label-text">{{$placeholder}}</span>
+        @if(isset($sup))
+            <span class="label-text">{{$placeholder}} <sup class="font-medium">{{$sup}}</sup></span>
+        @else
+            <span class="label-text">{{$placeholder}}</span>
+        @endif
     </label>
     @if ($camera == 'image')
         <input type="file" id="{{$id}}" name="{{$name}}" class="file-input file-input-bordered file-input-primary file-input-sm w-full object-fill" value="{{$value ?? old($name)}}" capture="user" accept="image/*" />

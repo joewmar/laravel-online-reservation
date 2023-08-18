@@ -49,6 +49,7 @@
               </table>
           </div>
           <div class="flex justify-end">
+            <a @click="loader = true" href="{{route('system.reservation.create.step.two', Arr::query(["rt" =>  request('rt'), "rm" =>  request('rm'), "px" =>  request('px')]) ) }}" class="btn btn-ghost">Back</a>
             <button class="btn btn-primary" @click="loader = true">Next</button>
         </div>
       </form>

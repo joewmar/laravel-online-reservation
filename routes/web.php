@@ -1,16 +1,24 @@
 <?php
 
+use App\Mail\ReservationMail;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsController;
 use App\Http\Controllers\RideController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\TourMenuController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\SystemHomeController;
+use App\Http\Controllers\WebContentController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\RoomSettingController;
 use App\Http\Controllers\TourSettingController;
@@ -118,12 +126,11 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
 
 //For System Users Auth (System Panel)
 Route::prefix('system')->name('system.')->group(function(){
-
     Route::middleware(['guest:system'])->group(function(){
        Route::view('/login', 'system.login')->name('login');
        Route::post('/check', [SystemController::class, 'check'])->name('check');
     });
-    Route::middleware(['auth:system', 'preventBackhHistory'])->group(function(){
+    Route::middleware(['auth:system', 'can:admin' ,'preventBackhHistory'])->group(function(){
         Route::post('/logout', [SystemController::class, 'logout'])->name('logout');
         Route::get('/', [SystemHomeController::class, 'index'])->name('home');
         Route::prefix('reservation')->name('reservation.')->group(function(){
@@ -159,6 +166,9 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::put('/{id}/show/checkin', [SystemReservationController::class, 'updateCheckin'])->name('show.checkin');
             Route::put('/{id}/show/checkout', [SystemReservationController::class, 'updateCheckout'])->name('show.checkout');
         });
+        Route::prefix('analytics')->name('analytics.')->group(function (){
+            Route::get('/', [AnalyticsController::class, 'index'])->name('home');
+        });
         
         Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
 
@@ -189,24 +199,85 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::delete('/{id}/price/{priceid}', [TourMenuController::class, 'destroyPrice'])->name('destroy.price');
         });
 
-        Route::view('/analytics', 'system.analytics.index',  ['activeSb' => 'Analytics'])->name('analytics');
-        Route::view('/news', 'system.news.index',  ['activeSb' => 'News'])->name('news');
-        Route::view('/feedback', 'system.feedback.index',  ['activeSb' => 'Feedback'])->name('feedback');
-        Route::view('/webcontent', 'system.webcontent.index',  ['activeSb' => 'Web Content'])->name('webcontent');
+        Route::prefix('news')->name('news.')->controller(NewsController::class)->group(function (){
+            Route::get('/', 'index')->name('home');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/create', 'store')->name('store');
 
+            Route::prefix('announcement')->name('announcement.')->group(function (){
+                Route::get('/create', 'createAnnouncement')->name('create');
+                Route::post('/create', 'storeAnnouncement')->name('store');
+
+                Route::get('/{id}/edit', 'editAnnouncement')->name('edit');
+                Route::get('/{id}/show', 'showAnnouncement')->name('show');
+                Route::put('/{id}/update', 'updateAnnouncement')->name('update');
+                Route::delete('/{id}/delete', 'destroyAnnouncement')->name('destroy');
+
+            });
+
+
+            Route::get('/{id}/show', 'show')->name('show');
+            Route::get('/{id}/edit', 'edit')->name('edit');
+            Route::put('/{id}/update', 'update')->name('update');
+            Route::delete('/{id}/delete', 'destroy')->name('destroy');
+
+        });
+        Route::prefix('feedback')->name('feedback.')->group(function (){
+            Route::get('/', [FeedbackController::class, 'index'])->name('home');
+        });
+        Route::prefix('webcontent')->name('webcontent.')->controller(WebContentController::class)->group(function (){
+            Route::get('/', 'index')->name('home');
+
+            Route::post('/image/hero', 'storeHero')->name('image.hero');
+            Route::put('/image/hero/update', 'updateHero')->name('image.hero.update');
+            Route::delete('/image/hero/delete', 'destroyHero')->name('image.hero.destroy.all');
+
+            Route::post('/image/gallery', 'storeGallery')->name('image.gallery');
+            Route::delete('/image/gallery/delete', 'destroyGallery')->name('image.gallery.destroy.all');
+            // Route::put('/reservation/operation', 'storeOperations')->name('reservation.operation');
+
+            Route::get('/image/gallery/{key}/show', 'showGallery')->name('image.gallery.show');
+            Route::put('/image/gallery/{key}/update', 'updateGallery')->name('image.gallery.update');
+            Route::delete('/image/gallery/{key}/delete', 'destroyGalleryOne')->name('image.gallery.destroy.one');
+
+            Route::get('/image/hero/{key}/show', 'showHero')->name('image.hero.show');
+            Route::put('/image/hero/{key}/update', 'updateHero')->name('image.hero.update');
+            Route::delete('/image/hero/{key}/delete', 'destroyHeroOne')->name('image.hero.destroy.one');
+
+            Route::get('/contact/create', 'createContact')->name('contact.create');
+            Route::post('/contact/create', 'storeContact')->name('contact.store');
+            Route::put('/contact', 'updateContact')->name('contact.update');
+            Route::delete('/contact', 'destroyContact')->name('contact.destroy.all');
+
+            Route::get('/contact/{key}/', 'showContact')->name('contact.show');
+            Route::put('/contact/{key}/update', 'updateContact')->name('contact.update');
+            Route::delete('/contact/{key}/delete', 'destroyContactOne')->name('contact.destroy.one');
+
+        });
+        Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function(){
+            Route::view('/', 'system.profile.index',  ['activeSb' => 'Profile'])->name('home');
+            Route::get('/edit', 'edit')->name('edit');
+            Route::put('/{id}/update', 'update')->name('update');
+            // Route::view('/link', 'system.profile.link',  ['activeSb' => 'Link'])->name('link');
+            Route::get('/password', 'password')->name('password');
+            Route::put('/password/{id}', 'updatePassword')->name('password.update');
+            Route::put('/passcode/{id}', 'updatePasscode')->name('passcode.update');
+            // Route::view('/password', 'system.profile.password',  ['activeSb' => 'Password'])->name('password');
+        });
         // System Settings Moudle
         Route::prefix('settings')->name('setting.')->group(function(){
             Route::view('/', 'system.setting.index',  ['activeSb' => 'Setting'])->name('home');
-            Route::get('/accounts', [SystemController::class, 'index'])->name('accounts');
-            Route::post('/accounts/search', [SystemController::class, 'search'])->name('accounts.search');
-            Route::view('/accounts/create', 'system.setting.accounts.create',  ['activeSb' => 'Setting'])->name('accounts.create');
-            Route::post('/accounts/create', [SystemController::class, 'store'])->name('accounts.create.store');
-
-
-            Route::get('/accounts/{id}', [SystemController::class, 'show'])->name('accounts.show');
-            Route::get('/accounts/{id}/edit', [SystemController::class, 'edit'])->name('accounts.edit');
-            Route::put('/accounts/{id}/edit', [SystemController::class, 'update'])->name('accounts.update');
-            Route::delete('/accounts/{id}', [SystemController::class, 'destroy'])->name('accounts.destroy');
+            Route::prefix('accounts')->name('accounts.')->controller(SystemController::class)->group(function (){
+                Route::get('/', 'index')->name('home');
+                Route::post('/search', 'search')->name('search');
+                Route::get('/create', 'create')->name('create');
+                Route::post('/create', 'store')->name('create.store');
+    
+                Route::get('/{id}', 'show')->name('show');
+                Route::get('/{id}/edit', 'edit')->name('edit');
+                Route::put('/{id}/edit', 'update')->name('update');
+                Route::delete('/{id}/delete', 'destroy')->name('destroy');
+            });
 
 
             Route::prefix('rooms')->name('rooms.')->group(function(){
@@ -231,18 +302,6 @@ Route::prefix('system')->name('system.')->group(function(){
                 Route::put('/{id}/edit' , [RoomSettingController::class, 'update'])->name('update');
 
             });
-
-            // Ride Setting
-            Route::prefix('rides')->name('rides.')->group(function(){
-                Route::get('/', [RideController::class, 'index'])->name('home');
-                Route::view('/create', 'system.setting.rides.create',  ['activeSb' => 'Rides'])->name('create');
-                Route::post('/create', [RideController::class, 'store'])->name('store');
-                Route::get('/{id}/edit', [RideController::class, 'edit'])->name('edit');
-                Route::put('/{id}/edit', [RideController::class, 'update'])->name('update');
-                Route::delete('/{id}/edit', [RideController::class, 'destroy'])->name('destroy');
-
-            });
-
                     // Tour Module
             Route::prefix('tour')->name('tour.')->group(function(){
                 Route::get('/', [TourSettingController::class, 'index'])->name('home');
@@ -255,19 +314,70 @@ Route::prefix('system')->name('system.')->group(function(){
 
         });
 
-        // System Profile
-        Route::prefix('profile')->name('system.profile.')->group(function(){
-            Route::view('/', 'system.profile.index',  ['activeSb' => 'Profile'])->name('home');
-            Route::view('/edit', 'system.profile.edit',  ['activeSb' => 'Edit'])->name('edit');
-            Route::view('/link', 'system.profile.link',  ['activeSb' => 'Link'])->name('link');
-            Route::view('/password', 'system.profile.password',  ['activeSb' => 'Password'])->name('password');
-        });
-
-
     });  
+    // Route::middleware(['auth:system', 'preventBackhHistory', 'can:manager'])->group(function(){
+    //     Route::post('/logout', [SystemController::class, 'logout'])->name('logout');
+    //     Route::get('/', [SystemHomeController::class, 'index'])->name('home');
+    //     Route::prefix('reservation')->name('reservation.')->group(function(){
+    //         Route::get('/', [SystemReservationController::class, 'index'])->name('home');
+    //         Route::post('/search', [SystemReservationController::class, 'search'])->name('search');
+    //         Route::get('/calendar', [SystemReservationController::class, 'event'])->name('event');
+    //         Route::get('/create/step1', [CreateReservationController::class, 'create'])->name('create');
+    //         Route::post('/create/step1', [CreateReservationController::class, 'storeStep1'])->name('store.step.one');
+    //         Route::get('/create/step2', [CreateReservationController::class, 'step2'])->name('create.step.two');
+    //         Route::post('/create/step2-1', [CreateReservationController::class, 'storeStep21'])->name('store.step.two-one');
+    //         Route::post('/create/step2-2', [CreateReservationController::class, 'storeStep22'])->name('store.step.two-two');
+    //         Route::get('/create/step3', [CreateReservationController::class, 'step3'])->name('create.step.three');
+    //         Route::post('/create/step3', [CreateReservationController::class, 'storeStep3'])->name('store.step.three');
+    //         Route::get('/create/step4', [CreateReservationController::class, 'step4'])->name('create.step.four');
+    //         Route::post('/create/step4', [CreateReservationController::class, 'storeStep4'])->name('store.step.four');
+
+            
+    //         Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');
+    //         Route::get('/{id}/edit', [SystemReservationController::class, 'edit'])->name('edit');
+    //         Route::put('/{id}/update', [SystemReservationController::class, 'updateRInfo'])->name('update');
+    //         Route::get('/{id}/show/extend', [SystemReservationController::class, 'showExtend'])->name('show.extend');
+    //         Route::get('/{id}/show/addons', [SystemReservationController::class, 'showAddons'])->name('show.addons');
+    //         Route::put('/{id}/show/addons/update', [SystemReservationController::class, 'updateAddons'])->name('addons.update');
+    //         Route::put('/{id}/show/extend/update', [SystemReservationController::class, 'updateExtend'])->name('extend.update');
+    //         Route::get('/{id}/show/online-payment', [SystemReservationController::class, 'showOnlinePayment'])->name('show.online.payment');
+    //         Route::post('/{id}/online-payment/create', [SystemReservationController::class, 'storeOnlinePayment'])->name('online.payment.store');
+    //         Route::post('/{id}/online-payment/disaprove', [SystemReservationController::class, 'disaproveOnlinePayment'])->name('online.payment.disaprove');
+    //         Route::put('/{id}/online-payment/force-payment', [SystemReservationController::class, 'storeForcePayment'])->name('online.payment.forcepayment.update');
+    //         Route::get('/{id}/show/room', [SystemReservationController::class, 'showRooms'])->name('show.rooms');
+    //         Route::get('/{id}/disaprove', [SystemReservationController::class, 'disaprove'])->name('disaprove');
+    //         Route::post('/{id}/disaprove', [SystemReservationController::class, 'disaproveStore'])->name('disaprove.store');
+    //         Route::put('/{id}/show/room', [SystemReservationController::class, 'updateReservation'])->name('show.rooms.update');
+    //         Route::put('/{id}/show/checkin', [SystemReservationController::class, 'updateCheckin'])->name('show.checkin');
+    //         Route::put('/{id}/show/checkout', [SystemReservationController::class, 'updateCheckout'])->name('show.checkout');
+    //     });
+    //     Route::prefix('analytics')->name('analytics.')->group(function (){
+    //         Route::get('/', [AnalyticsController::class, 'index'])->name('home');
+    //     });
+        
+    //     Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
+
+ 
+    //     Route::prefix('feedback')->name('feedback.')->group(function (){
+    //         Route::get('/', [FeedbackController::class, 'index'])->name('home');
+    //     });
+
+    //     Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function(){
+    //         Route::view('/', 'system.profile.index',  ['activeSb' => 'Profile'])->name('home');
+    //         Route::get('/edit', 'edit')->name('edit');
+    //         Route::put('/{id}/update', 'update')->name('update');
+    //         // Route::view('/link', 'system.profile.link',  ['activeSb' => 'Link'])->name('link');
+    //         Route::get('/password', 'password')->name('password');
+    //         Route::put('/password/{id}', 'updatePassword')->name('password.update');
+    //         Route::put('/passcode/{id}', 'updatePasscode')->name('passcode.update');
+    //         // Route::view('/password', 'system.profile.password',  ['activeSb' => 'Password'])->name('password');
+    //     });
+    // });  
 });
 
 Route::get('reservation/{id}/receipt', [SystemReservationController::class, 'receipt'])->name('reservation.receipt');
+Route::get('reservation/{id}/feedback', [ReservationController::class, 'feedback'])->name('reservation.feedback');
+Route::post('reservation/{id}/feedback', [ReservationController::class, 'storeFeedback'])->name('reservation.feedback.store');
 
 Route::middleware(['auth.image'])->group(function () {
     Route::get('/private/{folder}/{filename}', [HomeController::class,'showImage'])->name('private.image');

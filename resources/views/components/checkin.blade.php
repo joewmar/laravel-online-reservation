@@ -47,6 +47,10 @@
                     <form action="{{route('system.reservation.show.checkin', encrypt($datas->id))}}" method="post">
                         @csrf
                         @method('PUT')
+                        <div class="mb-10 mt-3">
+                            <input id="discount" type="checkbox" checked="checked" class="checkbox checkbox-secondary" />
+                            <label for="discount" class="ml-4 font-semibold">Have Senior Citizen?</label>
+                        </div>
                         @if(!empty($downpayment) && $downpayment >= 1000)
                             <h3 class="font-bold text-lg">Pay</h3>
                             <div class="py-3 space-x-2">

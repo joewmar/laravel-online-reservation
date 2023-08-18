@@ -25,13 +25,15 @@
                     </p>                      
                     <p class="text-md font-medium tracking-tight text-neutral">
                       <strong>Check-out: </strong> {{ \Carbon\Carbon::createFromFormat('Y-m-d', $other_info['cout'])->format('l F j, Y')}}
-                    </p>                      
+                    </p>     
                     <p class="text-md font-medium tracking-tight text-neutral">
                       <strong>Number of Guest: </strong> {{$other_info['px'] > 1 ? $other_info['px'] . ' guests' : $other_info['px'] . ' guest' }}
-                    </p>            
-                    <p class="text-md font-medium tracking-tight text-neutral">
-                      <strong>Number of guest going on a tour: </strong> {{$other_info['tpx'] > 1 ? $other_info['tpx'] . ' guests' : $other_info['tpx'] . ' guest' }}
-                    </p>            
+                    </p>                  
+                    @if(isset($other_info['tpx']))
+                      <p class="text-md font-medium tracking-tight text-neutral">
+                        <strong>Number of guest going on a tour: </strong> {{$other_info['tpx'] > 1 ? $other_info['tpx'] . ' guests' : $other_info['tpx'] . ' guest' }}
+                      </p>   
+                    @endif
                     <p class="text-md font-medium tracking-tight text-neutral">
                       <strong>Type: </strong> {{$other_info['at'] ?? ''}}
                     </p>            
@@ -102,24 +104,20 @@
                                           <td>₱ {{number_format($item['amount'], 2)}} </td>
                                           @php $totalPrice += (double)$item['amount']  @endphp
                                         </tr>
-
                                     @endforeach
                                   </tbody>
                                 </table>
                               </div>
                             @endif
-                            <div class="flex flex-wrap w-full justify-start md:justify-between my-5">
-                              <div class="w-full md:w-52">
-                                <x-input type="number" name="payment_amount" id="payment_amount" min="1000" placeholder="Payment Amount" />
-                              </div>
+                            <div class="flex w-full justify-end my-10">
                               <div class="flex flex-col md:items-end ">
-                                <p class="text-md font-medium tracking-tight text-neutral">
+                                <p class="text-md tracking-tight text-neutral">
                                   Room Rate: ₱ {{ number_format($rate->price, 2) }}
                                 </p>
-                                <p class="text-md font-medium tracking-tight text-neutral">
+                                <p class="text-md tracking-tight text-neutral">
                                   No. of days: {{$user_days > 0 ? $user_days . ' days' : $user_days . ' day'  }}
                                 </p>
-                                <p class="text-md font-medium tracking-tight text-neutral">
+                                <p class="text-md tracking-tight text-neutral">
                                   Total Rate: ₱ {{number_format($rate->price * $user_days, 2)}}
                                   @php $totalPrice += ($rate->price * $user_days) @endphp
                                 </p>
@@ -128,9 +126,7 @@
                                 </p>
                               </div>
                             </div>
-
                       </div>
-
                   </div>
                 </div>
                 <div class="col-span-6 grid md:hidden grid-cols-2 gap-4 ">
@@ -174,6 +170,10 @@
                     <div class="col-span-6">
                       <x-input type="number" id="contact" name="contact" placeholder="Phone Number"/>
                     </div>
+                    <div class="col-span-6">
+                      <div class="w-full">
+                        <x-input type="number" name="payment_amount" id="payment_amount" min="1000" placeholder="Payment Amount" />
+                      </div>                    </div>
                     <div class="col-span-6">
                       <div class="mb-5 py-4 w-full flex flex-col justify-center items-center">
                         <div class="rounded">

@@ -335,7 +335,7 @@
             </div>
             <div class="hidden lg:flex justify-start gap-5">
               <div class="mt-8 flex gap-4">
-                <a @click="loader = true" href="{{route('system.reservation.create.step.two', Arr::query(["rt" =>  request('rt'), "rm" =>  request('rm')]) ) }}" class="btn btn-ghost">Back</a>
+                  <a @click="loader = true" href="{{route('system.reservation.create.step.two', Arr::query(["rt" =>  request('rt'), "rm" =>  request('rm'), "px" =>  request('px')]) ) }}" class="btn btn-ghost">Back</a>
                 <button @click="loader = true" onclick="event.preventDefault(); document.getElementById('tour-form').submit();" class="btn btn-primary">Next</button>
               </div>
             </div>

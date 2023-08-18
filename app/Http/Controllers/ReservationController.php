@@ -16,6 +16,7 @@ use App\Models\OnlinePayment;
 use Illuminate\Validation\Rule;
 use AmrShawky\LaravelCurrency\Facade\Currency;
 use App\Models\Archive;
+use App\Models\Feedback;
 use App\Notifications\EmailNotification;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
@@ -31,7 +32,7 @@ class ReservationController extends Controller
     {
         $this->user = auth('web');
         $this->middleware(function ($request, $next) {
-
+            // dd($this->user->user()->id);
             $existingReservation = Reservation::where('user_id', $this->user->user()->id)->where('status', '<', 3)->first();
 
             if ($existingReservation) {
@@ -40,7 +41,7 @@ class ReservationController extends Controller
             }
 
             return $next($request);
-        })->except(['date', 'dateCheck', 'dateStore', 'index', 'done', 'storeMessage', 'gcash', 'doneGcash', 'paymentStore']); // You can specify the specific method where this middleware should be applied.
+        })->except(['date', 'dateCheck', 'dateStore', 'index', 'done', 'storeMessage', 'gcash', 'doneGcash', 'paymentStore', 'feedback', 'storeFeedback']); // You can specify the specific method where this middleware should be applied.
     }
     public function index(Request $request){
         $reservation = Reservation::all()->where('user_id', auth('web')->user()->id) ?? [];
@@ -89,13 +90,14 @@ class ReservationController extends Controller
             $request['check_in'] = trim($dateSeperate[0]);
             $request['check_out'] = trim ($dateSeperate[1]);
         }
-        $request['check_in'] = Carbon::parse($request['check_in'] , 'Asia/Manila')->format('Y-m-d');
-        $request['check_out'] = Carbon::parse($request['check_out'] , 'Asia/Manila')->format('Y-m-d');
         // Check out convertion word to date format
         if(str_contains($request['check_out'], ', ')){
             $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
             $request['check_out'] = $date->format('Y-m-d');
         }
+        $request['check_in'] = Carbon::parse($request['check_in'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::parse($request['check_out'] , 'Asia/Manila')->format('Y-m-d');
+
 
         if(checkAvailRooms($request['pax'], $request['check_in'])){
             return redirect()->route('reservation.date')->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
@@ -478,7 +480,7 @@ class ReservationController extends Controller
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         if(empty($uinfo['tm']) && $uinfo['at'] !== 'Room Only') return redirect()->route('reservation.choose', Arr::query(['cin' => session()->get('rinfo')['cin'], 'cout' => session()->get('rinfo')['cout'], 'px' => session()->get('rinfo')['px'], 'tpx' => session()->get('rinfo')['tpx'], 'py' => session()->get('rinfo')['py'], 'at' => session()->get('rinfo')['at']], '#tourMenu'))->with('info', 'Your Tour Menu was empty');
         $user_menu = [];
-        if($uinfo['at'] !== 'Room Only' && !empty($uinfo['tm'])){
+        if($uinfo['at'] !== 'Room Only' && isset($uinfo['tm'])){
             foreach($uinfo['tm'] as $key => $item){
                 $tour = TourMenu::findOrFail($item);
                 $user_menu[$key]['id'] = $tour->id;
@@ -502,7 +504,7 @@ class ReservationController extends Controller
             }
         }
         return view('reservation.step4', [
-            'user_menu' => $user_menu ?? '',
+            'user_menu' => $user_menu,
             'uinfo' => $uinfo,
         ]);
     }
@@ -709,5 +711,23 @@ class ReservationController extends Controller
             return view('reservation.paypal.index', ['reservation' => $reservation]);
         else
             abort(404);
+    }
+    public function feedback($id){
+        return view('reservation.feedback', ['reservationID' => $id]);
+    }
+    public function storeFeedback(Request $request, $id){
+        $reservation = Reservation::findOrFail(decrypt($id));
+        $validated = $request->validate([
+            'rating' => ['required', 'numeric', 'min:1', 'max:5'],
+            'message' => ['required'],
+        ], [
+            'required' => 'Required',
+        ]);
+        $created = Feedback::create([
+            'reservation_id' => $reservation->id,
+            'rating' => (int)$validated['rating'],
+            'message' => $validated['message'],
+        ]);
+        if($created) return redirect()->route('home')->with('success', 'Thank you for your opinion. Come Again');
     }
 }

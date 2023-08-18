@@ -103,9 +103,15 @@
                     Reciept
                 </a>
             @endif
+            @if ($r_list->status === 3)
+            <a href="{{route('system.reservation.edit', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm" disabled>
+                Edit Information
+            </a>
+            @else
             <a href="{{route('system.reservation.edit', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
                 Edit Information
             </a>
+            @endif
         </div>
         <div class="divider"></div>
             <div class="block md:flex items-center justify-around">
@@ -233,7 +239,7 @@
                     <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
 
                     <p class="text-md tracking-tight text-neutral">
-                        <span class="font-medium">Room Rate: </span>{{$rate['title'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}
+                        <span class="font-medium">Room Rate: </span>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}
                     </p>
                     <p class="text-md tracking-tight text-neutral">
                         <span class="font-medium">No. of days: </span>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}
@@ -247,6 +253,9 @@
                     <p class="text-md tracking-tight text-neutral">
                         <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment() ?? 0, 2) }}
                     </p>
+                    <p class="text-md tracking-tight text-neutral">
+                        <span class="font-medium">Payment after Check-in: </span>₱ {{ number_format($r_list->checkInPayment() ?? 0, 2) }}
+                    </p>
                     <p class="text-md tracking-tight text-neutral my-5">
                         @php $balance = abs($total - $downpayment); @endphp
                         <span class="font-medium">Balance due: </span>₱ {{ number_format($r_list->balance() ?? 0, 2) }}
@@ -259,7 +268,9 @@
                 <h2 class="text-2xl mb-5 font-bold">Verify</h2>
                 <h2 class="text-xl"><span class=" font-semibold">First Name: </span>{{$r_list->userReservation->first_name}}</h2>
                 <h2 class="text-xl"><span class=" font-semibold">Last Name: </span>{{$r_list->userReservation->last_name}}</h2>
-                <h2 class="text-xl"><span class=" font-semibold">Birthday: </span>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->userReservation->birthday)->format('F j, Y')}}</h2>
+                @if($r_list->userReservation->birthday)
+                    <h2 class="text-xl"><span class=" font-semibold">Birthday: </span>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->userReservation->birthday)->format('F j, Y')}}</h2>
+                @endif
                 <h2 class="text-xl"><span class=" font-semibold">Country: </span>{{$r_list->userReservation->country}}</h2>
                 <h2 class="text-xl"><span class=" font-semibold">Nationality: </span>{{$r_list->userReservation->nationality}}</h2>
             </div>
@@ -268,7 +279,7 @@
             </div>
         </div>
         <div class="divider"></div>
-        @if($r_list->status >= 1 && $r_list->status < 3)
+        @if($r_list->status >= 1 && $r_list->status < 3 && $r_list->user_id)
             <article class="text-md tracking-tight text-neutral my-5 px-0 md:px-24 w-auto">
                 <h2 class="text-2xl mb-5 font-bold">Conflict Schedule of {{$r_list->userReservation->name()}}</h2>
                 <div class="overflow-x-auto w-full">

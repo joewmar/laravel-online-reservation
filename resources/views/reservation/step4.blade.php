@@ -83,7 +83,7 @@
                               </thead>
                               <tbody>
                                 <!-- rowS -->
-                                @if(session()->has('rinfo'))
+                                @if(isset($user_menu))
                                     @foreach ($user_menu as $key => $item)
                                         <tr>
                                           <td>{{$item['title']}}</td>

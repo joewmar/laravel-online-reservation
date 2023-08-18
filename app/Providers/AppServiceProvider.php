@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\System;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -395,5 +397,12 @@ class AppServiceProvider extends ServiceProvider
             View::share('currencies', $arrCur);
             View::share('currencyKey', array_keys($arrCur));
 
+        // Should return TRUE or FALSE
+        Gate::define('admin', function(System $system_user) {
+            return $system_user->type === 0;
+        });
+        Gate::define('manager', function(System $system_user) {
+            return $system_user->type === 1;
+        });
     }
 }

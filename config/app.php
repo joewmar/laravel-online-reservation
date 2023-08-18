@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => str_replace('_',' ', env('APP_NAME', 'Laravel')),
 
     /*
     |--------------------------------------------------------------------------

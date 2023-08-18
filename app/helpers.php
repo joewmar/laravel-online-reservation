@@ -57,35 +57,17 @@ function decryptedArray($array)
     return $var;
 }
 // Convert to user to chat_id
-function getChatIdByUsername($username)
+function getChatIdByUsername($username, $bot = 'bot1')
 {
-    $updatesBot1 = Telegram::getUpdates();
-    $updatesBot2 = Telegram::bot('bot2')->getUpdates();
+    $updatesBot = Telegram::bot($bot)->getUpdates();
     $chat_id = null;
-    foreach ($updatesBot1 as $update) {
-        $message = $update->getMessage();
-        $chat = $message->getChat();
-        
-        if ($chat->getUsername() === $username) {
-            $chat_id['bot1'] = $chat->getId();
-        }
-        else{
-            $chat_id['bot1'] = null;
-        }
-    }
-    foreach ($updatesBot2 as $update) {
+    foreach ($updatesBot as $update) {
         $message = $update->getMessage();
         $chat = $message->getChat();
 
         if ($chat->getUsername() === $username) {
-            $chat_id['bot2'] = $chat->getId();
+            $chat_id = $chat->getId();
         }
-        else{
-            $chat_id['bot2'] = null;
-        }
-    }
-    if($chat_id['bot1'] == $chat_id['bot2']){
-        $chat_id = $chat_id['bot1'];
     }
     return $chat_id;
 }
@@ -184,26 +166,25 @@ function telegramSendMessageWithPhoto($chatID, $message, $photoPath, $keyboard =
         ]);
     }
 }
-function saveImageWithJPG(Request $request, $fieldName, $folderName, $option = 'public')
-{
-    if($request->hasFile($fieldName)) {
-        $imageFile = $request->file($fieldName);
+function saveImageWithJPG(Request $request, $fieldName, $folderName,$option = 'public', $specificKey = null)
+{   
+    $savedImagePaths = null; // To store paths of saved images
 
+    if ($request->hasFile($fieldName)) {
+        if(isset($specificKey) && is_array($request->file($fieldName))) $imageFile = $request->file($fieldName)[$specificKey];
+        else $imageFile = $request->file($fieldName);
+        
         // Generate a unique filename for the image
         $imageName = uniqid() . '.jpg';
-
         // Generate the full path where you want to save the image in the storage folder
-        $destinationPath =  $option. '/' . $folderName . '/' . $imageName;
-
+        $destinationPath = $option . '/' . $folderName . '/' . $imageName;
         // Save the image using Intervention Image
         $image = Image::make($imageFile)->encode('jpg', 65);
-
         // Store the image in the storage folder
         Storage::put($destinationPath, (string)$image, $option);
-
-        // Return the folder name and filename
-        return $folderName . '/' . $imageName;
+        // Store the saved image path
+        $savedImagePaths = $folderName . '/' . $imageName;
+        return $savedImagePaths;
     }
-
     return null;
 }
