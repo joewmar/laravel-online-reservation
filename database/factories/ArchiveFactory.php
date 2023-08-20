@@ -168,6 +168,8 @@ class ArchiveFactory extends Factory
         $startDate = now();
         $endDate = now()->addYear();
         return [
+            // 'reservation_id' => fake()->uuid(),
+            'type' => fake()->numberBetween(0, 2),
             'nationality' => fake()->randomElement($arrNationality),
             'total' => fake()->randomFloat(2, 1000, 50000),
             'created_date' => fake()->dateTimeBetween($startDate, $endDate)->format('Y-m-d'),

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->boolean('operation');
             $table->date('from')->nullable();
             $table->date('to')->nullable();
+            $table->text('reason')->nullable();
             $table->timestamps();
         });
     }

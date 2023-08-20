@@ -169,7 +169,7 @@
                         <tr>
                           <th>
                             <label>
-                              <input type="checkbox" x-model="selectGallery" :name="selectGallery.includes('gly{{$loop->index + 1}}') ? 'remove_gallery[{{encrypt($key)}}]' : '' " class="checkbox checkbox-primary" value="gly{{$loop->index + 1}}" />
+                              <input type="checkbox" x-model="selectContact" :name="selectContact.includes('ctnt{{$loop->index + 1}}') ? 'remove_contact[{{encrypt($key)}}]' : '' " class="checkbox checkbox-primary" value="ctnt{{$loop->index + 1}}" />
                             </label>
                           </th>
                           <td>
@@ -178,15 +178,48 @@
                           <td><a href="{{route('system.webcontent.contact.show', encrypt($key) )}}" class="btn btn-warning btn-xs">View</a></td>
                         </tr>  
                     @empty
-                        <tr><td class="text-center font-bold" colspan="2">No Gallery Photo</td></tr>
+                        <tr><td class="text-center font-bold" colspan="2">No Contact Information</td></tr>
                     @endforelse
                   </tbody>
         
                 </table>
-                <x-modal id="rc" title="Do you want to remove gallery images selected?" type="YesNo" formID="remove_contact_form">
+                <x-modal id="rc" title="Do you want to remove contact information selected?" type="YesNo" formID="remove_contact_form">
                 </x-modal>
               </form>
             </div>
+          </section>
+        </template>
+        <template x-if="wbtab === 'reservation' ">
+          <section class="p-6">
+            <div class="flex justify-between">
+              <p class="font-medium text-xl">Reservation Operations</p>
+              {{-- <a href="{{route('system.webcontent.contact.create')}}" class="btn btn-primary">Add Contact</a> --}}
+            </div>
+            <form id="change-form" action="{{route('system.webcontent.reservation.operation')}}" method="post">
+              @csrf
+              @method('PUT')
+              <div x-data="{allow: {{$webcontents->operation ?? true}}}" class="my-5 w-96">
+                <div class="my-3">
+                  <input type="checkbox" x-model="allow" name="operation" class="checkbox checkbox-primary" :checked="allow"/>
+                  <span>Allow to make online reservation</span> 
+                  @error('operation')
+                      <p class="text-error">$message</p>
+                  @enderror
+                </div>
+                <template x-if="!allow" >
+                  <div class="py-5">
+                    <div class="flex space-x-2">
+                      <x-datetime-picker type="date" name="from" id="from" placeholder="Date Stop Operation" value="{{$webcontents->from ?? Carbon\Carbon::now()->format('Y-m-d')}}" />
+                      <x-datetime-picker type="date" name="to" id="to" placeholder="Date Upto Stop Operation" value="{{$webcontents->to ?? ''}}" />
+                    </div>
+                    <x-textarea name="reason" id="reason" placeholder="Reason to Stop Reservation?" value="{{$webcontents->reason ?? ''}}" />
+                  </div>
+                </template>
+                <label for="change_modal" class="btn btn-primary">Save</label>
+
+                <x-passcode-modal title="Change Operation Confirmation" id="change_modal" formId="change-form" />        
+              </div>
+            </form>
           </section>
         </template>
       </div>

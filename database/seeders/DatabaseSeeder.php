@@ -208,7 +208,8 @@ class DatabaseSeeder extends Seeder
             'title' => 'Foam',
             'price' => 100,
         ]);
-        // \App\Models\Feedback::factory(50)->create();
+        \App\Models\Feedback::factory(50)->create();
+        \App\Models\Archive::factory(50)->create();
 
     }
 }

@@ -23,10 +23,9 @@
             <div class="p-5">
                 <p class="text-lg"><strong>Total: </strong>₱ {{number_format($datas->getTotal() ?? 0, 2)}}</p>
                 {{-- <p class="text-lg"><strong>Downpayment: </strong>₱ {{number_format($datas->downpayment ?? 0, 2)}}</p> --}}
-                @php $balance = abs((double)$datas->total ?? 0 - (double)$datas->$downpayment ?? 0); @endphp
-                <p class="text-lg"><strong>Balance: </strong>{{$balance <= $datas->getTotal() ? 'No Balance' : '₱ ' . number_format($balance, 2)}}</p>
+                <p class="text-lg"><strong>Balance: </strong>₱ {{number_format($datas->balance() ?? 0, 2)?? 'No Balance'}}</p>
                 <div class="py-3 space-x-2">
-                    <form action="{{route('system.reservation.show.checkout', encrypt($datas->id))}}" x-data="{isFullPay: {{$balance <= $datas->total ? 'true' : 'false'}} }" action="{{route('system.reservation.show.checkin', encrypt($datas->id))}}" method="post">
+                    <form action="{{route('system.reservation.show.checkout', encrypt($datas->id))}}" x-data="{isFullPay: {{($datas->balance() ?? 0) <= 0 ? 'true' : 'false'}} }" action="{{route('system.reservation.show.checkin', encrypt($datas->id))}}" method="post">
                         @csrf
                         @method('PUT')
                         <div class="py-3 space-x-2">

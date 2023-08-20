@@ -1,18 +1,22 @@
 @php
     $total = 0;
     $downpayment = 0;
+    $dscPerson = null;
 
     foreach ($r_list->transaction as $outerKey => $outerItem) {
         if ($outerKey == 'payment' && is_array($outerItem)) {
             $downpayment = $outerItem['downpayment'] ?? 0;
+            $dscPerson = $outerItem['discountPerson'] ?? 0;
             continue;
         }
     }
+
 @endphp
 
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="" back=true>
         {{-- User Details --}}
+       <div class="px-0 md:px-20">
         <div class="w-full p-8 sm:flex sm:space-x-6">
             <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
                 @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
@@ -114,7 +118,7 @@
             @endif
         </div>
         <div class="divider"></div>
-            <div class="block md:flex items-center justify-around">
+        <div class="block md:flex items-center justify-between">
             <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
                 <h2 class="text-2xl mb-5 font-bold">Details</h2>
                 <p class="my-1"><strong>Number of Guest: </strong>{{$r_list->pax . ' guest' ?? 'None'}}</p>
@@ -172,7 +176,7 @@
         </div>
         @if(!empty($tour_addons) || !empty($other_addons))
             <div class="divider"></div>
-            <article class="px-0 md:px-16">
+            <article>
                 <h1 class="my-1 text-xl "><strong>Additional Request: </strong></h1>
                 @if(!empty($tour_addons))
                     <div class="my-5 w-96">
@@ -234,10 +238,26 @@
                 @endif
             </article>
         @endif
-                @if($r_list->status > 0 && $r_list->status < 4)
-                <div class="divider"></div>
-                    <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
-
+        @if($r_list->status > 0 && $r_list->status < 4)
+            <div class="divider"></div>
+                <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
+                @if (isset($dscPerson))
+                    <p class="text-md tracking-tight text-neutral">
+                        <span class="font-medium">Room Rate (Orginal Price): </span>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}
+                    </p>
+                    <p class="text-md tracking-tight text-neutral">
+                        <span class="font-medium">Total of Room Rate: </span>₱ {{ number_format($rate['orig_amount'] ?? 0, 2) }}
+                    </p>
+                    <p class="text-md tracking-tight text-neutral">
+                        <span class="font-medium">Senior Guest : </span>{{$dscPerson ?? 0}} Guest
+                    </p>
+                    <p class="text-md tracking-tight text-neutral">
+                        <span class="font-medium">Discount : </span>20%
+                    </p>
+                    <p class="text-md tracking-tight text-neutral">
+                        <span class="font-medium">Total of Room Rate Discounted: </span>₱ {{ number_format($rate['amount'], 2) }}
+                    </p>
+                @else          
                     <p class="text-md tracking-tight text-neutral">
                         <span class="font-medium">Room Rate: </span>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}
                     </p>
@@ -247,23 +267,24 @@
                     <p class="text-md tracking-tight text-neutral">
                         <span class="font-medium">Total of Room Rate: </span>₱ {{ number_format($rate['amount'], 2) }}
                     </p>
-                    <p class="text-md tracking-tight text-neutral">
-                        <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->getTotal(), 2) }}
-                    </p>
-                    <p class="text-md tracking-tight text-neutral">
-                        <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment() ?? 0, 2) }}
-                    </p>
-                    <p class="text-md tracking-tight text-neutral">
-                        <span class="font-medium">Payment after Check-in: </span>₱ {{ number_format($r_list->checkInPayment() ?? 0, 2) }}
-                    </p>
-                    <p class="text-md tracking-tight text-neutral my-5">
-                        @php $balance = abs($total - $downpayment); @endphp
-                        <span class="font-medium">Balance due: </span>₱ {{ number_format($r_list->balance() ?? 0, 2) }}
-                    </p>
-                </article>
                 @endif
+                <p class="text-md tracking-tight text-neutral">
+                    <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->getTotal(), 2) }}
+                </p>
+                <p class="text-md tracking-tight text-neutral">
+                    <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment() ?? 0, 2) }}
+                </p>
+                <p class="text-md tracking-tight text-neutral">
+                    <span class="font-medium">Payment after Check-in: </span>₱ {{ number_format($r_list->checkInPayment() ?? 0, 2) }}
+                </p>
+                <p class="text-md tracking-tight text-neutral my-5">
+                    @php $balance = abs($total - $downpayment); @endphp
+                    <span class="font-medium">Balance due: </span>₱ {{ number_format($r_list->balance() ?? 0, 2) }}
+                </p>
+            </article>
+        @endif
         <div class="divider"></div>
-        <div class="flex flex-wrap justify-center w-full">
+        <div class="flex flex-wrap justify-between w-full">
             <div class="w-96 rounded">
                 <h2 class="text-2xl mb-5 font-bold">Verify</h2>
                 <h2 class="text-xl"><span class=" font-semibold">First Name: </span>{{$r_list->userReservation->first_name}}</h2>
@@ -275,12 +296,30 @@
                 <h2 class="text-xl"><span class=" font-semibold">Nationality: </span>{{$r_list->userReservation->nationality}}</h2>
             </div>
             <div class="w-96 rounded">
-                <img src="{{route('private.image', ['folder' => explode('/', $r_list->valid_id)[0], 'filename' => explode('/', $r_list->valid_id)[1]])}}" alt="Valid ID">
+                <img src="{{route('private.image', ['folder' => explode('/', $r_list->valid_id)[0], 'filename' => explode('/', $r_list->valid_id)[1]])}}" alt="Valid ID of {{$r_list->userReservation->name()}}">
             </div>
         </div>
         <div class="divider"></div>
-        @if($r_list->status >= 1 && $r_list->status < 3 && $r_list->user_id)
-            <article class="text-md tracking-tight text-neutral my-5 px-0 md:px-24 w-auto">
+        <div class="w-full">
+            <h2 class="text-2xl mb-5 font-bold">Messages</h2>
+            <div class="grid grid-flow-row md:grid-flow-col">
+                <div>
+                    <h2 class="text-lg font-bold">Request Message</h2>
+                    <p class="text-md">{{$r_list->user_id->message['request'] ?? 'None'}}</p>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold">Reason to Cancel</h2>
+                    <p class="text-md">{{$r_list->user_id->message['cancel'] ?? 'None'}}</p>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold">Reason to Reschedule</h2>
+                    <p class="text-md">{{$r_list->user_id->message['reschedule'] ?? 'None'}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="divider"></div>
+        @if($r_list->status >= 0 && $r_list->status < 1 && $r_list->user_id)
+            <article class="text-md tracking-tight text-neutral my-5 w-auto">
                 <h2 class="text-2xl mb-5 font-bold">Conflict Schedule of {{$r_list->userReservation->name()}}</h2>
                 <div class="overflow-x-auto w-full">
                     <table class="table w-full">
@@ -339,5 +378,6 @@
         <div class="flex justify-end space-x-1">
             <x-reservation-action :data="$r_list" />
         </div>
+       </div>
     </x-system-content>
 </x-system-layout>

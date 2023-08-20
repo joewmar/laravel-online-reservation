@@ -43,15 +43,20 @@
                 @if(!empty($refund))
                     <p class="text-lg"><strong>Refund: </strong>₱ {{number_format($refund, 2)}}</p>
                 @endif
-                <div x-data="{pay: ''}" class="py-3 space-x-2">
+                <div x-data="{pay: '', senior: false}" class="py-3 space-x-2">
                     <form action="{{route('system.reservation.show.checkin', encrypt($datas->id))}}" method="post">
                         @csrf
                         @method('PUT')
-                        <div class="mb-10 mt-3">
-                            <input id="discount" type="checkbox" checked="checked" class="checkbox checkbox-secondary" />
-                            <label for="discount" class="ml-4 font-semibold">Have Senior Citizen?</label>
-                        </div>
                         @if(!empty($downpayment) && $downpayment >= 1000)
+                            <div class="mb-10 mt-3">
+                                <input id="discount" x-model="senior" type="checkbox" class="checkbox checkbox-secondary" />
+                                <label for="discount" class="ml-4 font-semibold">Have Senior Citizen?</label>
+                                <template x-if="senior">
+                                    <div class="my-3">
+                                        <x-input type="number" name="senior_count" id="senior_count" placeholder="Count of Senior Guest" value="{{old('senior_count')}}" />
+                                    </div>
+                                </template>
+                            </div>
                             <h3 class="font-bold text-lg">Pay</h3>
                             <div class="py-3 space-x-2">
                                 <input type="radio" x-model="pay" id="partial" name="payments" class="radio radio-primary" value="partial" />

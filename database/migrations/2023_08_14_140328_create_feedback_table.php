@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('feedback', function (Blueprint $table) {
             $table->id();
-            $table->uuid('reservation_id');
-            $table->foreign('reservation_id')->references('id')->on('reservations')->onDelete('cascade');
+            // $table->uuid('reservation_id');
+            // $table->foreign('reservation_id')->references('id')->on('reservations')->onDelete('cascade');
             $table->tinyInteger('rating');
             $table->text('message');
             $table->timestamps();

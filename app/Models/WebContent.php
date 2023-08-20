@@ -16,6 +16,7 @@ class WebContent extends Model
         'operation',
         'from',
         'to',
+        'reason',
     ];
 
     // public function addNews(array $array){

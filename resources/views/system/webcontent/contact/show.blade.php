@@ -15,7 +15,7 @@
                     @method('PUT')
                     <x-input name="name" id="name" placeholder="Change Name" value="{{old('name') ?? $contact[$key]['name']}}" />
                     <div class="modal-action">
-                        <button @click="event.preventDefault(); document.getElementById('update_name_form').submit();" class="btn btn-primary">Add Contact</button>
+                        <button @click="event.preventDefault(); document.getElementById('update_name_form').submit();" class="btn btn-primary">Change Name</button>
                     </div>
                 </form>
             </x-modal>   

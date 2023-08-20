@@ -116,9 +116,9 @@ class Reservation extends Model
     public function balance()
     {
         $payment = 0;
-        foreach (json_decode($this->attributes['transaction'])->payment ?? [] as $item){
-            $payment += $item;
-        }
+        $allPaid = json_decode($this->attributes['transaction'])->payment; 
+        $payment += $allPaid->cinpay ?? 0;
+        $payment += $allPaid->downpayments ?? 0;
         return abs($this->getTotal() - $payment) ?? 0;
     }
     public function checkedOut()
@@ -139,8 +139,12 @@ class Reservation extends Model
                     break;
                 }
             }
+            $type = 0;
+            if(!empty($this->attributes['offline_user_id'])) $type = 1;
+            if(!empty($this->attributes['offline_user_id']) && $this->attribute['accommodation_type'] === 'Other Online Booking') $type = 2;
             Archive::create([
                 'reservation_id' => $this->attributes['id'],
+                'type'=> $type,
                 'nationality'=> $this->userReservation->nationality,
                 'total'=> (double)$this->getTotal(),
             ]);

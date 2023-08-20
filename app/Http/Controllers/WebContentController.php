@@ -3,12 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\WebContent;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Validator as ValidationValidator;
 
 class WebContentController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function($request, $next) {
+            if(auth('system')->user()->type === 0) return $next($request);
+            else abort(404);
+        });
+    }
     public function index(){
         $webcontents = WebContent::all()->first();
         return view('system.webcontent.index', ['activeSb' => 'Website Content', 'webcontents' => $webcontents]);
@@ -31,7 +42,7 @@ class WebContentController extends Controller
         if(empty($web_content)){
             $created = WebContent::create([
                 'hero' => $main_hero,
-                'operation' => false,
+                'operation' => true,
             ]);
         }
         else{
@@ -69,7 +80,7 @@ class WebContentController extends Controller
         if(empty($web_content)){
             $created = WebContent::create([
                 'hero' => $main_hero,
-                'operation' => false,
+                'operation' => true,
             ]);
         }
         else{
@@ -133,7 +144,7 @@ class WebContentController extends Controller
         if(empty($web_content)){
             $created = WebContent::create([
                 'gallery' => $gallery,
-                'operation' => false,
+                'operation' => true,
             ]);
         }
         else{
@@ -171,7 +182,7 @@ class WebContentController extends Controller
         if(empty($web_content)){
             $created = WebContent::create([
                 'gallery' => $gallery,
-                'operation' => false,
+                'operation' => true,
             ]);
         }
         else{
@@ -203,10 +214,10 @@ class WebContentController extends Controller
         ]);
         $gallery = $webcontents->gallery ?? [];
         foreach($validated['remove_gallery'] as $key => $item){
-            $heroID = decrypt($key);
-            if(array_key_exists($heroID , $gallery)){
-                deleteFile($gallery[$heroID]);
-                unset($gallery[$heroID]);
+            $galleryID = decrypt($key);
+            if(array_key_exists($galleryID , $gallery)){
+                deleteFile($gallery[$galleryID]);
+                unset($gallery[$galleryID]);
             }
             else{
                 return redirect()->route('system.webcontent.home', '#gallery')->with('error', 'Gallery Images does not exist');
@@ -395,5 +406,58 @@ class WebContentController extends Controller
             $message =  $contact[$key]['name'] . ' was remove some WhatsApp Contact No';
         }
         if($webcontents->update(['contact' => $contact])) return redirect()->route('system.webcontent.contact.show', encrypt($key))->with('success', $message);
+    }
+    public function destroyContact(Request $request){
+        $webcontents = WebContent::all()->first();
+        // dd($request->all());
+        $validated = $request->validate([
+            'remove_contact.*' =>  ['required'],
+        ]);
+        $contact = $webcontents->contact ?? [];
+        foreach($validated['remove_contact'] as $key => $item){
+            $contactID = decrypt($key);
+            if(array_key_exists($contactID , $contact)){
+                unset($contact[$contactID]);
+            }
+            else{
+                return redirect()->route('system.webcontent.home', '#contact')->with('error', 'Contact Information  does not exist');
+            }
+        }
+        $removed = $webcontents->update([
+            'contact' => $contact,
+        ]);
+        if($removed) return redirect()->route('system.webcontent.home', '#contact')->with('success', 'Contact Information selected was removed');
+    }
+    public function storeOperations(Request $request){
+        // dd( $request->all());
+        $webcontents = WebContent::all()->first();
+        $passcode = Validator::make($request->all('passcode'), [
+            'passcode' => ['required', 'digits:4', 'numeric'],
+        ]);
+        if($passcode->fails()) return back()->with('error', $passcode->errors()->all());
+        if(!Hash::check($passcode->validate()['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
+        if(!$request->has('operation')){
+            $validated = $request->validate([
+                'from' => ['required', 'date',  'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->format('Y-m-d')],
+                'to' => ['required', 'date',  'date_format:Y-m-d', 'after:'.$request['from']],
+                'reason' => ['required'],
+            ]);
+        }
+        else{
+            $validated['operation'] = true;
+            $validated['from'] = null;
+            $validated['to'] = null;
+            $validated['reason'] = null;
+
+        }
+
+        if(isset($webcontents)){
+            $updated = $webcontents->update($validated);
+        }
+        else{
+            $updated=  WebContent::create($validated);
+        }
+        if($updated) return redirect()->route('system.webcontent.home', '#reservation')->with('success', 'Reservation Operation was updated');
+
     }
 }

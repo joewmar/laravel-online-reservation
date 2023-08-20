@@ -132,6 +132,7 @@ Route::prefix('system')->name('system.')->group(function(){
     });
     Route::middleware(['auth:system', 'can:admin' ,'preventBackhHistory'])->group(function(){
         Route::post('/logout', [SystemController::class, 'logout'])->name('logout');
+
         Route::get('/', [SystemHomeController::class, 'index'])->name('home');
         Route::prefix('reservation')->name('reservation.')->group(function(){
             Route::get('/', [SystemReservationController::class, 'index'])->name('home');
@@ -170,7 +171,7 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::get('/', [AnalyticsController::class, 'index'])->name('home');
         });
         
-        Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
+        Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.home');
 
         Route::prefix('menu')->name('menu.')->group(function (){
             Route::get('/', [TourMenuController::class, 'index'])->name('home');
@@ -234,7 +235,7 @@ Route::prefix('system')->name('system.')->group(function(){
 
             Route::post('/image/gallery', 'storeGallery')->name('image.gallery');
             Route::delete('/image/gallery/delete', 'destroyGallery')->name('image.gallery.destroy.all');
-            // Route::put('/reservation/operation', 'storeOperations')->name('reservation.operation');
+            Route::put('/reservation/operation', 'storeOperations')->name('reservation.operation');
 
             Route::get('/image/gallery/{key}/show', 'showGallery')->name('image.gallery.show');
             Route::put('/image/gallery/{key}/update', 'updateGallery')->name('image.gallery.update');
@@ -280,43 +281,43 @@ Route::prefix('system')->name('system.')->group(function(){
             });
 
 
-            Route::prefix('rooms')->name('rooms.')->group(function(){
-                Route::get('/', [RoomSettingController::class, 'index'])->name('home');
+            Route::prefix('rooms')->name('rooms.')->controller(RoomSettingController::class)->group(function(){
+                Route::get('/','index')->name('home');
 
                 Route::view('/create', 'system.setting.rooms.create',  ['activeSb' => 'Rooms'])->name('create');
-                Route::post('/store', [RoomSettingController::class, 'store'])->name('store');
+                Route::post('/store', 'store')->name('store');
                 
                 // Room Rate Setting
                 Route::view('/rate/create', 'system.setting.rooms.rate.create',  ['activeSb' => 'Rooms'])->name('rate.create');
-                Route::post('/rate', [RoomSettingController::class, 'storeRate'])->name('rate.store');
+                Route::post('/rate', 'storeRate')->name('rate.store');
 
                 // Room rate Setting ID's
-                Route::delete('/rate/{id}' , [RoomSettingController::class, 'destroyRate'])->name('rate.destroy');
-                Route::get('/rate/{id}/edit' , [RoomSettingController::class, 'editRate'])->name('rate.edit');
-                Route::put('/rate/{id}/edit' , [RoomSettingController::class, 'updateRate'])->name('rate.update');
+                Route::delete('/rate/{id}' ,  'destroyRate')->name('rate.destroy');
+                Route::get('/rate/{id}/edit' , 'editRate')->name('rate.edit');
+                Route::put('/rate/{id}/edit' , 'updateRate')->name('rate.update');
 
                 
-                Route::get('/{id}' , [RoomSettingController::class, 'show'])->name('show');
-                Route::delete('/{id}' , [RoomSettingController::class, 'destroy'])->name('destroy');
-                Route::get('/{id}/edit' , [RoomSettingController::class, 'edit'])->name('edit');
-                Route::put('/{id}/edit' , [RoomSettingController::class, 'update'])->name('update');
+                Route::get('/{id}' , 'show')->name('show');
+                Route::delete('/{id}' , 'destroy')->name('destroy');
+                Route::get('/{id}/edit' , 'edit')->name('edit');
+                Route::put('/{id}/edit', 'update')->name('update');
 
             });
-                    // Tour Module
-            Route::prefix('tour')->name('tour.')->group(function(){
-                Route::get('/', [TourSettingController::class, 'index'])->name('home');
-                Route::view('/create', 'system.setting.tour.create',  ['activeSb' => 'Hello'])->name('create');
-                Route::post('/store', [TourSettingController::class, 'store'])->name('store');
-                Route::delete('/{id}', [TourSettingController::class, 'destroy'])->name('destroy');
-                Route::get('/{id}/edit', [TourSettingController::class, 'edit'])->name('edit');
-                Route::put('/{id}/edit', [TourSettingController::class, 'update'])->name('update');
-            });
+            // Route::prefix('tour')->name('tour.')->controller(TourSettingController::class)->group(function(){
+            //     Route::get('/', 'index')->name('home');
+            //     Route::view('/create', 'system.setting.tour.create',  ['activeSb' => 'Hello'])->name('create');
+            //     Route::post('/store', 'store')->name('store');
+            //     Route::delete('/{id}', 'destroy')->name('destroy');
+            //     Route::get('/{id}/edit', 'edit')->name('edit');
+            //     Route::put('/{id}/edit', 'update')->name('update');
+            // });
 
         });
 
     });  
-    // Route::middleware(['auth:system', 'preventBackhHistory', 'can:manager'])->group(function(){
+    // Route::middleware(['auth:system','can:manager', 'preventBackhHistory'])->group(function(){
     //     Route::post('/logout', [SystemController::class, 'logout'])->name('logout');
+
     //     Route::get('/', [SystemHomeController::class, 'index'])->name('home');
     //     Route::prefix('reservation')->name('reservation.')->group(function(){
     //         Route::get('/', [SystemReservationController::class, 'index'])->name('home');
@@ -355,9 +356,9 @@ Route::prefix('system')->name('system.')->group(function(){
     //         Route::get('/', [AnalyticsController::class, 'index'])->name('home');
     //     });
         
-    //     Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
+    //     Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.home');
 
- 
+
     //     Route::prefix('feedback')->name('feedback.')->group(function (){
     //         Route::get('/', [FeedbackController::class, 'index'])->name('home');
     //     });
@@ -372,7 +373,7 @@ Route::prefix('system')->name('system.')->group(function(){
     //         Route::put('/passcode/{id}', 'updatePasscode')->name('passcode.update');
     //         // Route::view('/password', 'system.profile.password',  ['activeSb' => 'Password'])->name('password');
     //     });
-    // });  
+    // });
 });
 
 Route::get('reservation/{id}/receipt', [SystemReservationController::class, 'receipt'])->name('reservation.receipt');

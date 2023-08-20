@@ -6,7 +6,7 @@
         [
             "Home" => [
                 "icon" => "fa-solid fa-gauge",
-                "link" => "/system"
+                "link" => route('system.home')
             ],
             "Reservation" => [
                 "icon" => "fa-sharp fa-solid fa-book",
@@ -14,11 +14,11 @@
             ],
             "Rooms" => [
                 "icon" => "fa-solid fa-hotel",
-                "link" => "/system/rooms",
+                "link" => route('system.rooms.home'),
             ],
             "Tour Menu" => [
                 "icon" => "fa-solid fa-route",
-                "link" => "/system/menu",
+                "link" => route('system.menu.home'),
             ],
             "Analytics" => [
                 "icon" => "fa-solid fa-chart-simple",
@@ -30,20 +30,20 @@
             ],
             "Feedback" => [
                 "icon" => "fa-solid fa-comments",
-                "link" => "/system/feedback",
+                "link" => route('system.feedback.home'),
             ],
             "Website Content" => [
                 "icon" => "fa-solid fa-earth-americas",
-                "link" => "/system/webcontent",
+                "link" => route('system.webcontent.home'),
             ],
         ];
    }
    else{
-        $arrSideBarItems = 
+    $arrSideBarItems = 
         [
             "Home" => [
                 "icon" => "fa-solid fa-gauge",
-                "link" => "/system"
+                "link" => route('system.home')
             ],
             "Reservation" => [
                 "icon" => "fa-sharp fa-solid fa-book",
@@ -51,84 +51,24 @@
             ],
             "Rooms" => [
                 "icon" => "fa-solid fa-hotel",
-                "link" => "/system/rooms",
+                "link" => route('system.rooms.home'),
             ],
             "Analytics" => [
                 "icon" => "fa-solid fa-chart-simple",
                 "link" => route('system.analytics.home'),
             ],
+
             "Feedback" => [
                 "icon" => "fa-solid fa-comments",
-                "link" => "/system/feedback",
+                "link" => route('system.feedback.home'),
             ],
+
         ];
    }
 @endphp
 <div id="sidebar" :class="!open ? 'w-56 md:w-[5rem]' : 'w-56'" class="sidebar z-[100] hidden md:block h-full overflow-hidden bg-base-100 menu" x-cloak>
     <div class="flex h-screen flex-col justify-center pt-2 pb-6 w-56 p-0">
-        {{-- <div x-data="dateData()" x-init="initDate()"   :class="!open ? 'opacity-100 md:opacity-0' : 'opacity-100'" class="transition-all flex items-start space-x-2">
-            <h1 class="text-xl font-mono">Date: </h1>
-            <h1 class="text-xl font-mono mb-4" x-text="currentDate"></h1>
-            <script>
-                function dateData() {
-                    return {
-                        currentDate: '',
-                        initDate() {
-                            this.updateDate();
-                        },
-                        updateDate() {
-                            const now = new Date();
-                            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-                            this.currentDate = now.toLocaleDateString(undefined, options);
-                        }
-                    };
-                }
-            </script>
-        </div>
-        <div :class="!open ? 'opacity-100 md:opacity-0' : 'opacity-100'" class="transition-all flex items-start space-x-2">
-            <h1 class="text-xl font-mono">Time: </h1>
-            <div x-data="clockData()" x-init="initClock()"  class="flex">
-                <div>
-                  <span class="countdown font-mono text-2xl">
-                    <span :style="'--value:'+hours+';'"></span>
-                  </span>
-                  hours
-                </div> 
-                <div>
-                  <span class="countdown font-mono text-2xl">
-                    <span :style="'--value:'+minutes+';'"></span>
-                  </span>
-                  min
-                </div> 
-                <div>
-                  <span class="countdown font-mono text-2xl">
-                    <span :style="'--value:'+seconds+';'"></span>
-                  </span>
-                  sec
-                </div> 
-              </div>
-              <script>
-                function clockData() {
-                    return {
-                        // currentTime: '',
-                        hours: '',
-                        minutes: '',
-                        seconds: '',
-                        initClock() {
-                            this.updateTime();
-                            setInterval(() => this.updateTime(), 1000);
-                        },
-                        updateTime() {
-                            const now = new Date();
-                            this.hours = String(now.getHours()).padStart(2, '0');
-                            this.minutes = String(now.getMinutes()).padStart(2, '0');
-                            this.seconds = String(now.getSeconds()).padStart(2, '0');
-                            // this.currentTime = `${hours}:${minutes}:${seconds}`;
-                        }
-                    };
-                }
-            </script>
-        </div> --}}
+
 
         <ul class="sbList mt-6 space-y-2">
             @foreach ($arrSideBarItems as $name => $item)

@@ -141,6 +141,9 @@ class SystemReservationController extends Controller
                 $rate['name'] = $reservation->transaction['rid'.$rateID]['title'];;
                 $rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
                 $rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
+                if(isset($reservation->transaction['rid'.$rateID]['orig_amount'])){
+                    $rate['orig_amount'] = $reservation->transaction['rid'.$rateID]['orig_amount'];
+                }
             }
             if (strpos($key, 'OA') !== false && is_array($item)) {
                 $OAID = (int)str_replace('OA','', $key);
@@ -590,27 +593,55 @@ class SystemReservationController extends Controller
         $admins = System::all()->where('type', 0);
         $reservation = Reservation::findOrFail(decrypt($request->id));
         $transaction = $reservation->transaction;
+
+        if($request->has('senior_count')){
+            $validate = Validator::make(['senior_count' => $request['senior_count']], [
+                'senior_count' => ['required', 'numeric', 'min:1', 'max:'.$reservation->pax]
+            ], [
+                'senior_count.required' => 'Required Input (Senior Guest Discount)',
+                'senior_count.max' => 'Input based on Room Guest of Customer',
+            ]);
+            if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
+
+            $discounted = $validate->validate();
+            $transaction['payment']['discountPerson'] = $discounted['senior_count'];
+            foreach($transaction ?? [] as $key => $item){
+                if (strpos($key, 'rid') !== false) {
+                    $rateID = (int)str_replace('rid','', $key);
+                    $discounted = (20 / 100) * $discounted['senior_count'];
+                    $discounted = (double)($transaction['rid'.$rateID]['amount'] * $discounted);
+                    $discounted = (double)($transaction['rid'.$rateID]['amount'] - $discounted);
+                    $transaction['rid'.$rateID]['orig_amount'] = $transaction['rid'.$rateID]['amount'];
+                    $transaction['rid'.$rateID]['amount'] = $discounted;
+                    break;
+                }
+            }
+
+        }
         $downpayment = $transaction['payment']['downpayment'] ?? 0;
         $balance = abs($reservation->getTotal() - $downpayment);
         if($request['payments'] == 'partial'){
-            $validated = $request->validate([
+            $validate = Validator::make($request->all(['payments', 'another_payment']), [
                 'payments' => ['required'],
                 'another_payment' =>['required', 'numeric', 'max:'.(int)$balance],
             ], [
                 'required' => 'Required to choose',
                 'max' => 'Fill the amount up to ₱' . number_format($balance, 2),
             ]);
-            $transaction['payment']['cinpay'] = (double)$validated['another_payment'];
-            $message = 'Partial Payment (₱ '.number_format($validated ['another_payment'], 2).')';
+            if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
+            $validate = $validate->validate();
+            
+            $transaction['payment']['cinpay'] = (double)$validate['another_payment'];
+            $message = 'Partial Payment (₱ '.number_format($validate ['another_payment'], 2).')';
 
         }
         else if($request['payments'] == 'fullpayment'){
-            $validated = $request->validate([
+            $validate = Validator::make($request->all(['payments', 'another_payment']), [
                 'payments' => ['required'],
             ], [
                 'required' => 'Required to choose',
-                'max' => 'Fill the amount up to ₱' . number_format($balance, 2),
             ]);
+            if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $transaction['payment']['cinpay'] = $balance;
             $message = 'Full Payment (₱ '.number_format($balance, 2).')';
         }
@@ -621,7 +652,7 @@ class SystemReservationController extends Controller
             'transaction' => $transaction,
             'status' => 2,
         ]);
-        unset($transaction);
+        unset($transaction, $discounted);
         $text = 
         "Employee Action: Check-in !\n" .
         "Name: ". $reservation->userReservation->name() ."\n" . 
