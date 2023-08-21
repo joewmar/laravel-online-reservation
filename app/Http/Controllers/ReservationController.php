@@ -639,15 +639,12 @@ class ReservationController extends Controller
     }
     public function gcash($id){
         $reservation = Reservation::findOrFail(decrypt($id));
-        if($reservation->status() === 'Confirmed' && $reservation->payment_method === 'Gcash'){
-            return view('reservation.gcash.index', ['reservation' => $reservation]);
-        }
-        else{
-            abort(404);
-        }
+        if(!($reservation->status() === 'Confirmed' && $reservation->payment_method === 'Gcash'))  abort(404);
+        return view('reservation.gcash.index', ['reservation' => $reservation]);
     }
     public function paymentStore(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
+        if(!($reservation->status() === 'Confirmed' && $reservation->payment_method === 'Gcash'))  abort(404);
         $systemUser = System::all()->where('type', 0)->where('type', 1);
         if($reservation->status() === 'Confirmed'){
             $validator = Validator::make($request->all(), [
@@ -663,7 +660,7 @@ class ReservationController extends Controller
             }
             if($validator->valid()){
                 $validated =  $validator->validate();
-                $validated['image'] = $request->file('image')->store('online_payment', 'public');
+                $validated['image'] = saveImageWithJPG($request, 'image', 'online_payment', 'private');
                 $validated['reservation_id'] = $reservation->id;
                 $validated['payment_method'] = $reservation->payment_method;
                 $sended = OnlinePayment::create($validated);
@@ -703,6 +700,7 @@ class ReservationController extends Controller
     }
     public function doneGcash($id){
         $online_payement = OnlinePayment::findOrFail(decrypt($id));
+        if(!($online_payement->reserve->status() === 'Confirmed' && $online_payement->reserve->payment_method === 'Gcash'))  abort(404);
         if($online_payement) return view('reservation.gcash.success');
     }
     public function paypal($id){

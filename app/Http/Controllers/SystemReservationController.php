@@ -32,7 +32,6 @@ class SystemReservationController extends Controller
     public function __construct()
     {
         $this->system_user = auth()->guard('system');
-
     }
     public function index(Request $request){
         $r_list = Reservation::latest()->paginate(5);
@@ -816,18 +815,20 @@ class SystemReservationController extends Controller
         $reservation->update(['transaction' => $downpayment]);
         $online_payment->approval = true;
         $online_payment->save();
-        if($reservation->downpayment >= 1000){
+        if($downpayment['payment']['downpayment'] >= 1000){
             $reservation->payment_cutoff = null;
             $reservation->save();
             $details = [
                 'name' => $reservation->userReservation->name(),
                 'title' => 'Your online payment was approved',
-                'body' => 'Downpayment: ' .  $downpayment,
+                'body' => 'Downpayment: ' .  $downpayment['payment']['downpayment'],
             ];
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
         }
         else{
-            $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
+            $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s'); 
+            $reservation->attempt += 1; 
+            $reservation->save(); 
             if($reservation->payment_method == "Gcash") $url = route('reservation.gcash', encrypt($reservation->id));
             
             $details = [
@@ -845,7 +846,7 @@ class SystemReservationController extends Controller
         "Age: " . $reservation->age ."\n" .  
         "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
         "Amount: " . $reservation->userReservation->nationality  ."\n" . 
-        "Who Disaprove Payment: " . $system_user->name() ;
+        "Who Approve Payment: " . $system_user->name() ;
         if($system_user->role() === "Manager"){
             foreach($admins as $admin) {
                 if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
@@ -913,8 +914,10 @@ class SystemReservationController extends Controller
             "Age: " . $reservation->age ."\n" .  
             "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
             "Who Approve Force Payment: " . $system_user->name() ;
-            foreach($admins as $user){
-                if(isset($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
+            if($system_user->role() === "Manager"){
+                foreach($admins as $user){
+                    if(isset($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
+                }
             }
             return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . 'was now paid on ₱ ' . number_format($validated['amount'], 2));
         } 

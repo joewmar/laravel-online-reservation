@@ -99,7 +99,7 @@
                                     </div>
                                 </div>
                                 <div class="w-72 rounded">
-                                    <img src="{{asset('storage/'. $item->image)}}" />
+                                    <img src="{{route('private.image', ['folder' => explode('/', $item->image)[0], 'filename' => explode('/', $item->image)[1]])}}" alt="Payment Receipt of {{$r_list->userReservation->name()}}">
                                 </div>
                             </div>
                             <div class="divider"></div>
