@@ -460,4 +460,263 @@ class WebContentController extends Controller
         if($updated) return redirect()->route('system.webcontent.home', '#reservation')->with('success', 'Reservation Operation was updated');
 
     }
+    public function createPaymentGcash(){
+        return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
+    }
+    public function storePaymentGcash(Request $request){ 
+        $webcontents = WebContent::all()->first();
+        $validate = Validator::make($request->all(), [
+            'passcode' => ['required', 'numeric', 'digits:4'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate = $validate->validate();
+        if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
+        $validate = $request->validate([
+            'gcash_number' => ['required', 'numeric'],
+            'name' => ['required'],
+            'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
+        ]);
+        $payments = $webcontents->payment ?? [];
+        if($request->hasFile('image')){                          // storage/app/logos
+            $validate['image'] = saveImageWithJPG($request, 'image', 'ref_gcash', 'private');
+            $payments['gcash'][] =  [
+                'name' => $validate['name'],
+                'number' => $validate['gcash_number'],
+                'qrcode' => $validate['image'],
+            ];;
+        }
+        else{
+            $payments['gcash'][] =  [
+                'name' => $validate['name'],
+                'number' => $validate['gcash_number'],
+            ];;
+        }
+        if(isset($webcontents)){
+            $updated = $webcontents->update(['payment' => $payments]);
+        }
+        else{
+            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+        }
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference was created');
+
+        // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
+    }
+    public function showPaymentGcash($key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
+        return view('system.webcontent.payment.show-gcash', ['activeSb' => 'Website Content', 'key' => $key, 'gcash' =>  $webcontents->payment['gcash']]);
+    }
+    public function editPaymentGcash($key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
+        return view('system.webcontent.payment.edit-gcash', ['activeSb' => 'Website Content', 'key' => $key, 'gcash' =>  $webcontents->payment['gcash']]);
+    }
+    public function updatePaymentGcash(Request $request, $key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
+        $validate = Validator::make($request->all(), [
+            'passcode' => ['required', 'numeric', 'digits:4'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate = $validate->validate();
+        if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
+        $validate = $request->validate([
+            'gcash_number' => ['required', 'numeric'],
+            'name' => ['required'],
+            'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
+        ]);
+        $payments = $webcontents->payment ?? [];
+        if($request->hasFile('image')){       
+            if(isset($payments['gcash'][$key]['qrcode'])) deleteFile($payments['gcash'][$key]['qrcode']);
+            $validate['image'] = saveImageWithJPG($request, 'image', 'ref_gcash', 'private');
+            $payments['gcash'][$key] =  [
+                'name' => $validate['name'],
+                'number' => $validate['gcash_number'],
+                'qrcode' => $validate['image'],
+            ];;
+        }
+        else{
+            $payments['gcash'][$key] =  [
+                'name' => $validate['name'],
+                'number' => $validate['gcash_number'],
+                'qrcode' => $payments[$key]['qrcode'],
+            ];;
+        }
+        if(isset($webcontents)){
+            $updated = $webcontents->update(['payment' => $payments]);
+        }
+        else{
+            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+        }
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference ('.$validate['name'].') was updated');
+
+        // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
+    }
+    public function destroyPaymentGcash(Request $request, $key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
+        $validate = Validator::make($request->all(), [
+            'passcode' => ['required', 'numeric', 'digits:4'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate = $validate->validate();
+        if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
+        $payments = $webcontents->payment ?? [];
+        foreach($payments['gcash'] as $gcahsKey => $item){
+            if($gcahsKey === $key){
+                $name = $payments['gcash'][$key]['name'];
+                if(isset($payments['gcash'][$key]['qrcode'])) deleteFile($payments['gcash'][$key]['qrcode']);
+                unset($payments['gcash'][$key]);
+            }
+        }
+        if(isset($webcontents)){
+            $updated = $webcontents->update(['payment' => $payments]);
+        }
+        else{
+            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+        }
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Reference of '.$name.' was removed');
+
+        // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
+    }
+    public function createPaymentPayPal(){
+        return view('system.webcontent.payment.paypal', ['activeSb' => 'Website Content']);
+    }
+    public function storePaymentPayPal(Request $request){ 
+        $webcontents = WebContent::all()->first();
+        dd($request->all());
+        $validate = Validator::make($request->all(), [
+            'passcode' => ['required', 'numeric', 'digits:4'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate = $validate->validate();
+        if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
+        $validate = $request->validate([
+            'paypal_number' => ['required', 'numeric'],
+            'name' => ['required'],
+            'email' => ['required', 'email'],
+            'username' => ['required'],
+            'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
+        ]);
+        $payments = $webcontents->payment ?? [];
+        if($request->hasFile('image')){                          // storage/app/logos
+            $validate['image'] = saveImageWithJPG($request, 'image', 'ref_paypal', 'private');
+            $payments['paypal'][] =  [
+                'name' => $validate['name'],
+                'number' => $validate['paypal_number'],
+                'email' => $validate['email'],
+                'username' => $validate['username'],
+                'image' => $validate['image'],
+            ];
+        }
+        else{
+            $payments['paypal'][] =  [
+                'name' => $validate['name'],
+                'number' => $validate['paypal_number'],
+                'email' => $validate['email'],
+                'username' => $validate['username'],
+            ];
+        }
+        if(isset($webcontents)){
+            $updated = $webcontents->update(['payment' => $payments]);
+        }
+        else{
+            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+        }
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference was created');
+
+        // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
+    }
+    public function showPaymentPayPal($key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
+        return view('system.webcontent.payment.show-paypal', ['activeSb' => 'Website Content', 'key' => $key, 'gcash' =>  $webcontents->payment['gcash']]);
+    }
+    public function editPaymentPayPal($key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
+        return view('system.webcontent.payment.edit-paypal', ['activeSb' => 'Website Content', 'key' => $key, 'gcash' =>  $webcontents->payment['gcash']]);
+    }
+    public function updatePaymentPayPal(Request $request, $key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
+        $validate = Validator::make($request->all(), [
+            'passcode' => ['required', 'numeric', 'digits:4'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate = $validate->validate();
+        if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
+        $validate = $request->validate([
+            'gcash_number' => ['required', 'numeric'],
+            'name' => ['required'],
+            'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
+        ]);
+        $payments = $webcontents->payment ?? [];
+        if($request->hasFile('image')){                          // storage/app/logos
+            $validate['image'] = saveImageWithJPG($request, 'image', 'ref_gcash', 'private');
+            if(isset($payments['paypal'][$key]['image'])) deleteFile($payments['paypal'][$key]['image']);
+            $payments['paypal'][$key] =  [
+                'name' => $validate['name'],
+                'number' => $validate['paypal_number'],
+                'email' => $validate['email'],
+                'username' => $validate['username'],
+                'image' => $validate['image'],
+            ];
+        }
+        else{
+            $payments['paypal'][$key] =  [
+                'name' => $validate['name'],
+                'number' => $validate['paypal_number'],
+                'email' => $validate['email'],
+                'username' => $validate['username'],
+                'image' => $payments['paypal'][$key]['image'],
+            ];
+
+        }
+        if(isset($webcontents)){
+            $updated = $webcontents->update(['payment' => $payments]);
+        }
+        else{
+            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+        }
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference ('.$validate['name'].') was updated');
+
+        // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
+    }
+    public function destroyPaymentPayPal(Request $request, $key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
+        $validate = Validator::make($request->all(), [
+            'passcode' => ['required', 'numeric', 'digits:4'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate = $validate->validate();
+        if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
+        $payments = $webcontents->payment ?? [];
+        foreach($payments['paypal'] as $paypalKey => $item){
+            if($paypalKey === $key){
+                $name = $payments['paypal'][$key]['name'];
+                if(isset($payments['paypal'][$key]['image'])) deleteFile($payments['paypal'][$key]['image']);
+                unset($payments['gcash'][$key]);
+            }
+        }
+        if(isset($webcontents)){
+            $updated = $webcontents->update(['payment' => $payments]);
+        }
+        else{
+            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+        }
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Reference of '.$name.' was removed');
+
+        // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
+    }
+
 }

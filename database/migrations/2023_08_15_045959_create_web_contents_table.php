@@ -16,6 +16,7 @@ return new class extends Migration
             $table->json('hero')->nullable();
             $table->json('gallery')->nullable();
             $table->json('contact')->nullable();
+            $table->json('payment')->nullable();
             $table->boolean('operation');
             $table->date('from')->nullable();
             $table->date('to')->nullable();

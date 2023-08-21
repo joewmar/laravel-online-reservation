@@ -115,11 +115,13 @@ class Reservation extends Model
     }
     public function balance()
     {
-        $payment = 0;
-        $allPaid = json_decode($this->attributes['transaction'])->payment; 
-        $payment += $allPaid->cinpay ?? 0;
-        $payment += $allPaid->downpayments ?? 0;
-        return abs($this->getTotal() - $payment) ?? 0;
+        $paymentCustomer = 0;
+        $allPaid = json_decode($this->attributes['transaction']); 
+        if(isset($allPaid->payment)){
+            $paymentCustomer += $allPaid->cinpay ?? 0;
+            $paymentCustomer += $allPaid->downpayments ?? 0;
+        }
+        return abs($this->getTotal() - $paymentCustomer) ?? 0;
     }
     public function checkedOut()
     {

@@ -17,7 +17,7 @@
     <x-system-content title="" back=true>
         {{-- User Details --}}
        <div class="px-0 md:px-20">
-        <div class="w-full p-8 sm:flex sm:space-x-6">
+        <div class="w-full sm:flex sm:space-x-6">
             <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
                 @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
                     <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
@@ -119,7 +119,7 @@
         </div>
         <div class="divider"></div>
         <div class="block md:flex items-center justify-between">
-            <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
+            <article class="text-md tracking-tight text-neutral my-5 w-auto">
                 <h2 class="text-2xl mb-5 font-bold">Details</h2>
                 <p class="my-1"><strong>Number of Guest: </strong>{{$r_list->pax . ' guest' ?? 'None'}}</p>
                 @if(!empty($r_list->tour_pax))
@@ -272,13 +272,12 @@
                     <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->getTotal(), 2) }}
                 </p>
                 <p class="text-md tracking-tight text-neutral">
-                    <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment() ?? 0, 2) }}
+                    <span class="font-medium">Downpayment: </span>{{$r_list->downpayment() !== 0 ? '₱ ' . number_format($r_list->downpayment(), 2) : 'No Downpayment'}}
                 </p>
                 <p class="text-md tracking-tight text-neutral">
-                    <span class="font-medium">Payment after Check-in: </span>₱ {{ number_format($r_list->checkInPayment() ?? 0, 2) }}
+                    <span class="font-medium">Payment after Check-in: </span>{{$r_list->checkInPayment() !== 0 ? '₱ ' . number_format($r_list->checkInPayment(), 2) : 'No Payment' }}
                 </p>
                 <p class="text-md tracking-tight text-neutral my-5">
-                    @php $balance = abs($total - $downpayment); @endphp
                     <span class="font-medium">Balance due: </span>₱ {{ number_format($r_list->balance() ?? 0, 2) }}
                 </p>
             </article>

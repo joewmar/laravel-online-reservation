@@ -5,6 +5,7 @@
           <a @click="wbtab = 'hero' " :class="wbtab == 'hero' ? 'tab md:tab-lg tab-active' : 'tab md:tab-lg' ">Main Hero</a> 
           <a @click="wbtab = 'gallery' " :class="wbtab == 'gallery' ? 'tab md:tab-lg tab-active' : 'tab md:tab-lg' ">Gallery</a> 
           <a @click="wbtab = 'contact' " :class="wbtab == 'contact' ? 'tab md:tab-lg tab-active' : 'tab md:tab-lg' ">Contact Info</a> 
+          <a @click="wbtab = 'payment' " :class="wbtab == 'payment' ? 'tab md:tab-lg tab-active' : 'tab md:tab-lg' ">Online Payment Reference</a> 
           <a @click="wbtab = 'reservation' " :class="wbtab == 'reservation' ? 'tab md:tab-lg tab-active' : 'tab md:tab-lg' ">Reservation</a>
         </div>
         <template x-if="wbtab === 'hero' ">
@@ -187,6 +188,95 @@
                 </x-modal>
               </form>
             </div>
+          </section>
+        </template>
+        <template x-if="wbtab === 'payment' ">
+          <section x-data="{type: 'Gcash'}" class="p-6">
+            <article class="my-5">
+              <div class="flex justify-between">
+                <div class="w-96">
+                  <x-select name="wala" id="" placeholder="Type of Payment" xModel="type" :value="['Gcash', 'PayPal']" :title="['Gcash', 'Paypal']" />
+                </div>
+                <a x-show="type === 'Gcash'" href="{{route('system.webcontent.create.payment.gcash')}}" class="btn btn-primary" x-transition.1000ms>Add Gcash Reference</a>
+                <a x-show="type === 'PayPal'" href="{{route('system.webcontent.create.payment.paypal')}}" class="btn btn-primary" x-transition.1000ms>Add PayPal Reference</a>
+              </div>
+              <div x-show="type === 'Gcash' " x-data="{selectGcash: []}" class="overflow-x-auto" x-transition.1000ms>
+                <form id="remove_gcash_reference" action="{{route('system.webcontent.image.gallery.destroy.all')}}" method="post">
+                  @csrf
+                  @method("DELETE")
+                  <table class="table">
+                    <!-- head -->
+                    <thead>
+                      <tr>
+                        <th><label for="gch" class="btn btn-error btn-sm" :disabled="!(Array.isArray(selectGcash) && selectGcash.length)">Remove</label></th>
+                        <th>Gcash References</th>
+                        <th>Action</th>
+                      </tr>
+                
+                    </thead>
+                    <tbody>
+                      <!-- row 1 -->
+                      @forelse ($webcontents->payment['gcash'] ?? [] as $key => $item)
+                          <tr>
+                            <th>
+                              <label>
+                                <input type="checkbox" x-model="selectGcash" :name="selectGcash.includes('gcash{{$loop->index + 1}}') ? 'remove_gallery[{{encrypt($key)}}]' : '' " class="checkbox checkbox-primary" value="gcash{{$loop->index + 1}}" />
+                              </label>
+                            </th>
+                            <td>
+                              <div class="font-bold">{{$item['name']}}</div>
+                            </td>
+                            <td><a href="{{route('system.webcontent.show.payment.gcash', encrypt($key) )}}" class="btn btn-warning btn-xs">View</a></td>
+                          </tr>  
+                      @empty
+                          <tr><td class="text-center font-bold" colspan="2">No Gcash Reference</td></tr>
+                      @endforelse
+                    </tbody>
+          
+                  </table>
+                  <x-modal id="gch" title="Do you want to remove gcash references selected?" type="YesNo" formID="remove_gcash_reference">
+                  </x-modal>
+                </form>
+              </div>
+              <div x-show="type === 'PayPal' " x-data="{selectPayPal: []}" class="overflow-x-auto" x-transition.1000ms>
+                <form id="remove_gcash_reference" action="{{route('system.webcontent.image.gallery.destroy.all')}}" method="post">
+                  @csrf
+                  @method("DELETE")
+                  <table class="table">
+                    <!-- head -->
+                    <thead>
+                      <tr>
+                        <th><label for="gch" class="btn btn-error btn-sm" :disabled="!(Array.isArray(selectPayPal) && selectPayPal.length)">Remove</label></th>
+                        <th>PayPal References</th>
+                        <th>Action</th>
+                      </tr>
+                
+                    </thead>
+                    <tbody>
+                      <!-- row 1 -->
+                      @forelse ($webcontents->payment['paypal'] ?? [] as $key => $item)
+                          <tr>
+                            <th>
+                              <label>
+                                <input type="checkbox" x-model="selectPayPal" :name="selectPayPal.includes('pp{{$loop->index + 1}}') ? 'remove_gallery[{{encrypt($key)}}]' : '' " class="checkbox checkbox-primary" value="pp{{$loop->index + 1}}" />
+                              </label>
+                            </th>
+                            <td>
+                              <div class="font-bold">{{$item['name']}}</div>
+                            </td>
+                            <td><a href="{{route('system.webcontent.show.payment.paypal', encrypt($key) )}}" class="btn btn-warning btn-xs">View</a></td>
+                          </tr>  
+                      @empty
+                          <tr><td class="text-center font-bold" colspan="2">No PayPal Reference</td></tr>
+                      @endforelse
+                    </tbody>
+          
+                  </table>
+                  <x-modal id="gch" title="Do you want to remove gcash references selected?" type="YesNo" formID="remove_gcash_reference">
+                  </x-modal>
+                </form>
+              </div>
+            </article>
           </section>
         </template>
         <template x-if="wbtab === 'reservation' ">

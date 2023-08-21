@@ -12,6 +12,7 @@ class WebContent extends Model
     protected $fillable = [
         'hero',
         'gallery',
+        'payment',
         'contact',
         'operation',
         'from',
@@ -47,6 +48,13 @@ class WebContent extends Model
         );
     } 
     protected function contact(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => json_decode($value, true),
+            set: fn ($value) => json_encode($value),
+        );
+    } 
+    protected function payment(): Attribute
     {
         return Attribute::make(
             get: fn ($value) => json_decode($value, true),

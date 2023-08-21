@@ -254,6 +254,22 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::put('/contact/{key}/update', 'updateContact')->name('contact.update');
             Route::delete('/contact/{key}/delete', 'destroyContactOne')->name('contact.destroy.one');
 
+            Route::get('/payment/gcash', 'createPaymentGcash')->name('create.payment.gcash');
+            Route::post('/payment/gcash', 'storePaymentGcash')->name('store.payment.gcash');
+
+            Route::get('/payment/gcash/{key}', 'showPaymentGcash')->name('show.payment.gcash');
+            Route::get('/payment/gcash/{key}/edit', 'editPaymentGcash')->name('edit.payment.gcash');
+            Route::put('/payment/gcash/{key}/update', 'updatePaymentGcash')->name('update.payment.gcash');
+            Route::delete('/payment/gcash/{key}/delete', 'destroyPaymentGcash')->name('destroy.payment.gcash');
+
+            Route::get('/payment/paypal', 'createPaymentPayPal')->name('create.payment.paypal');
+            Route::post('/payment/paypal', 'storePaymentPayPal')->name('store.payment.paypal');
+
+            Route::get('/payment/paypal/{key}', 'showPaymentPayPal')->name('show.payment.paypal');
+            Route::get('/payment/paypal/{key}/edit', 'editPaymentPayPal')->name('edit.payment.paypal');
+            Route::put('/payment/paypal/{key}/update', 'updatePaymentPayPal')->name('update.payment.paypal');
+            Route::delete('/payment/paypal/{key}/delete', 'destroyPaymentPayPal')->name('destroy.payment.paypal');
+
         });
         Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function(){
             Route::view('/', 'system.profile.index',  ['activeSb' => 'Profile'])->name('home');
