@@ -21,6 +21,6 @@ class OnlinePayment extends Model
         'reference_no',
     ];
     public function reserve(){
-        $this->belongsTo(Reservation::class, 'reservation_id');
+        return $this->belongsTo(Reservation::class, 'reservation_id');
     }
 }

@@ -554,9 +554,9 @@ class SystemReservationController extends Controller
             if($reservation->payment_method == "Gcash"){
                 $url = route('reservation.gcash', encrypt($reservation->id));
             }
-            // if($reservation->payment_method == "PayPal"){
-            //     $url = route('reservation.paypal', encrypt($reservation->id));
-            // }
+            if($reservation->payment_method == "PayPal"){
+                $url = route('reservation.paypal', encrypt($reservation->id));
+            }
 
             $details = [
                 'name' => $reservation->userReservation->name(),

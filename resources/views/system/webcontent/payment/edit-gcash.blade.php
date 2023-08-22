@@ -10,7 +10,7 @@
                 <div class="w-full md:w-96">
                     <x-input type="text" id="name" name="name" placeholder="Gcash Name" value="{{$gcash[$key]['name']}}"/>
                     <x-input type="number" id="gcash_number" name="gcash_number" placeholder="Gcash Number" value="{{$gcash[$key]['number']}}"/>
-                    <label for="add_modal" class="btn btn-primary w-full" >Edit Gcash Reference</label>
+                    <label for="add_modal" class="btn btn-primary w-full" >Save</label>
                     <x-passcode-modal title="Edit Reference Confirmation" id="add_modal" formId="update_form" />        
                 </div>
             </div>

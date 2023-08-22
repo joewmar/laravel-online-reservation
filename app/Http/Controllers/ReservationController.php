@@ -17,6 +17,7 @@ use Illuminate\Validation\Rule;
 use AmrShawky\LaravelCurrency\Facade\Currency;
 use App\Models\Archive;
 use App\Models\Feedback;
+use App\Models\WebContent;
 use App\Notifications\EmailNotification;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
@@ -41,11 +42,10 @@ class ReservationController extends Controller
             }
 
             return $next($request);
-        })->except(['date', 'dateCheck', 'dateStore', 'index', 'done', 'storeMessage', 'gcash', 'doneGcash', 'paymentStore', 'feedback', 'storeFeedback']); // You can specify the specific method where this middleware should be applied.
+        })->except(['index', 'done', 'storeMessage', 'gcash', 'doneGcash', 'donePayPal', 'paymentStore','paypal', 'feedback', 'storeFeedback', 'date', 'dateCheck', 'dateStore', 'cancel','reschedule']); // You can specify the specific method where this middleware should be applied.
     }
     public function index(Request $request){
         $reservation = Reservation::all()->where('user_id', auth('web')->user()->id) ?? [];
-        $archives = Archive::all()->where('user_id', auth('web')->user()->id) ?? [];
         if($request['tab'] == 'confirmed'){
             $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 1) ?? [];
         }
@@ -55,13 +55,142 @@ class ReservationController extends Controller
         if($request['tab'] == 'cout'){
             $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 3) ?? [];
         }
+        if($request['tab'] == 'reshedule'){
+            $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 4) ?? [];
+        }
         if($request['tab'] == 'canceled'){
-           $archives = Archive::all()->where('user_id', auth('web')->user()->id)->where('status', 2) ?? [];
+            $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 5) ?? [];
         }
-        if($request['tab'] == 'previous'){
-           $archives = Archive::all()->where('user_id', auth('web')->user()->id)->where('status', 0) ?? [];
+        if($request['tab'] == 'disaprove'){
+            $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 6) ?? [];
         }
-        return view('users.reservation.index', ['activeNav' => 'My Reservation', 'reservation' => $reservation, 'archives' => $archives]);
+        return view('users.reservation.index', ['activeNav' => 'My Reservation', 'reservation' => $reservation]);
+    }
+    public function cancel(Request $request, $id) {
+        $validate = Validator::make($request->all('cancel_message'), [
+            'cancel_message' => ['required'],
+        ], ['required' => 'Need to input the reason']);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
+        $validate = $validate->validate();
+        $reservation = Reservation::findOrFail(decrypt($id));
+        $systemUser = System::all()->where('type', '>=', 0)->where('type', '<=', 1);
+        $messages = $reservation->message;
+        $messages['cancel'] = $validate['cancel_message'];
+        $updated = $reservation->update(['message' => $messages, 'status' => 5]);
+        if($updated) {
+            $text = 
+            "Cancel Request Reservation!\n" .
+            "Name: ". $reservation->userReservation->name() ."\n" . 
+            "Age: " . $reservation->age ."\n" .  
+            "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+            "Country: " . $reservation->userReservation->country ."\n" . 
+            "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y') ."\n" . 
+            "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y') ."\n" . 
+            "Type: " . $reservation->accommodation_type ."\n" . 
+            "Pax: " . $reservation->pax ."\n" . 
+            "Why to Cancel: " .$validate['cancel_message']; 
+            $keyboard = [
+                [
+                    ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reservation->id))],
+                ],
+            ];
+            foreach($systemUser as $user) if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
+            return redirect()->route('user.reservation.home')->with('success', 'Cancel Request was succesfull to send. Just Wait Send Email or any Contact for Approval Request');
+        }
+    }
+    public function reschedule(Request $request, $id) {
+        $reservation = Reservation::findOrFail(decrypt( $id));
+        if(str_contains($request['check_in'], 'to')){
+            $dateSeperate = explode('to', $request['check_in']);
+            $request['check_in'] = trim($dateSeperate[0]);
+            $request['check_out'] = trim ($dateSeperate[1]);
+        }
+        // Check out convertion word to date format
+        if(str_contains($request['check_out'], ', ')){
+            $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
+            $request['check_out'] = $date->format('Y-m-d');
+        }
+        $request['check_in'] = Carbon::parse($request['check_in'] , 'Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::parse($request['check_out'] , 'Asia/Manila')->format('Y-m-d');
+
+        if(($request['check_in'] === $reservation->check_in && $request['check_out'] === $reservation->check_out) || $request['check_in'] === $request['check_out']){
+            return back()->with('error', 'Your choose date does not change at all');
+        }
+
+        $validator = null;
+        if($reservation->accommodation_type == 'Day Tour'){
+            $validator = Validator::make($request->all(), [
+                'reschedule_message' => ['required'],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after:'.Carbon::now()->addDays(2)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Choose date with 2 to 3 days',
+                'required' => 'Need fill up first (:attribute)',
+                'date_equals' => 'Choose only one day (Day Tour)',
+            ]);
+        }
+        elseif($reservation->accommodation_type == 'Overnight'){
+            $validator = Validator::make($request->all(), [
+                'reschedule_message' => ['required'],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(2)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Choose date with 2 to 3 days',
+                'required' => 'Need fill up first (:attribute)',
+                'check_out.after_or_equal' => 'Choose within 2 day and above (Overnight)',
+            ]);
+        }
+        elseif($reservation->accommodation_type == 'Room Only'){
+            $validator = Validator::make($request->all(), [
+                'reschedule_message' => ['required'],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(2)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Choose date with 2 to 3 days',
+                'required' => 'Need fill up first',
+                'after' => 'The :attribute was already chose from (Check-in)',
+    
+            ]);
+        }
+        if ($validator->fails()) {            
+            session(['ck' => false]);
+            return back()
+            ->with('error', $validator->errors()->all())
+            ->withInput();
+        }
+        $validator = $validator->validate();
+
+        $systemUser = System::all()->where('type', '>=', 0)->where('type', '<=', 1);
+        $messages = $reservation->message;
+        $messages['reschedule'] = [
+            'message' => $validator['reschedule_message'],
+            'check_in' => $validator['check_in'],
+            'check_out' => $validator['check_out'],
+        ];
+        $updated = $reservation->update(['message' => $messages, 'status' => 4]);
+        if($updated) {
+            $text = 
+            "Reschedule Request Reservation!\n" .
+            "Name: ". $reservation->userReservation->name() ."\n" . 
+            "Age: " . $reservation->age ."\n" .  
+            "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+            "Country: " . $reservation->userReservation->country ."\n" . 
+            "Type: " . $reservation->accommodation_type ."\n" . 
+            "Pax: " . $reservation->pax ."\n" . 
+            "Reschedule Check-in: " . Carbon::createFromFormat('Y-m-d', $validator['check_in'])->format('F j, Y') ."\n" . 
+            "Reschedule Check-out: " . Carbon::createFromFormat('Y-m-d', $validator['check_out'])->format('F j, Y') ."\n" . 
+            "Why: " . $validator['reschedule_message'];
+            $keyboard = [
+                [
+                    ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reservation->id))],
+                ],
+            ];
+            foreach($systemUser as $user) if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
+            return redirect()->route('user.reservation.home')->with('success', 'Reschedule Request was succesfull to send. Just Wait Send Email or any Contact for Approval Request');
+        }
     }
     public function date(Request $request){
         $dateList = [];
@@ -639,12 +768,20 @@ class ReservationController extends Controller
     }
     public function gcash($id){
         $reservation = Reservation::findOrFail(decrypt($id));
+        $reference = WebContent::all()->first()->payment['gcash'];
+        foreach($reference as $key => $item){
+            if($reference[$key]['priority'] === true){
+                $reference = $reference[$key];
+                break;
+            }
+        }
+        // $references = $references->payment['gcash'];
         if(!($reservation->status() === 'Confirmed' && $reservation->payment_method === 'Gcash'))  abort(404);
-        return view('reservation.gcash.index', ['reservation' => $reservation]);
+        return view('reservation.gcash.index', ['reservation' => $reservation, 'reference' => $reference]);
     }
     public function paymentStore(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
-        if(!($reservation->status() === 'Confirmed' && $reservation->payment_method === 'Gcash'))  abort(404);
+        if(!($reservation->status() === 'Confirmed'))  abort(404);
         $systemUser = System::all()->where('type', 0)->where('type', 1);
         if($reservation->status() === 'Confirmed'){
             $validator = Validator::make($request->all(), [
@@ -688,7 +825,8 @@ class ReservationController extends Controller
 
                     $text = null;
                     $keyboard = null;
-                    return redirect()->route('reservation.gcash.done', encrypt($sended->id));
+                    if($reservation->payment_method === 'Gcash') return redirect()->route('reservation.gcash.done', encrypt($sended->id));
+                    if($reservation->payment_method === 'PayPal') return redirect()->route('reservation.paypal.done', encrypt($sended->id));
                 }
             }
         }
@@ -699,16 +837,29 @@ class ReservationController extends Controller
 
     }
     public function doneGcash($id){
-        $online_payement = OnlinePayment::findOrFail(decrypt($id));
-        if(!($online_payement->reserve->status() === 'Confirmed' && $online_payement->reserve->payment_method === 'Gcash'))  abort(404);
-        if($online_payement) return view('reservation.gcash.success');
+        $online_payment = OnlinePayment::findOrFail(decrypt($id));
+        if(!($online_payment->reserve->status() === 'Confirmed' && $online_payment->reserve->payment_method === 'Gcash'))  abort(404);
+        $contacts = WebContent::all()->first()->contact;
+        if($online_payment) return view('reservation.gcash.success', ['contacts' => $contacts]);
+    }
+    public function donePayPal($id){
+        $online_payment = OnlinePayment::findOrFail(decrypt($id));
+        if(!($online_payment->reserve->status() === 'Confirmed' && $online_payment->reserve->payment_method === 'PayPal'))  abort(404);
+        $contacts = WebContent::all()->first()->contact ?? [];
+        if($online_payment) return view('reservation.paypal.success', ['contacts' => $contacts]);
     }
     public function paypal($id){
         $reservation = Reservation::findOrFail(decrypt($id));
-        if($reservation->status() === 'Confirmed' && $reservation->payment_method === 'PayPal')
-            return view('reservation.paypal.index', ['reservation' => $reservation]);
-        else
-            abort(404);
+        $reference = WebContent::all()->first()->payment['paypal'] ?? [];
+        foreach($reference as $key => $item){
+            if($reference[$key]['priority'] === true){
+                $reference = $reference[$key];
+                break;
+            }
+        }    
+        if(!($reservation->status() === 'Confirmed' && $reservation->payment_method === 'PayPal')) abort(404);
+        return view('reservation.paypal.index', ['reservation' => $reservation, 'reference' => $reference]);
+            
     }
     public function feedback($id){
         return view('reservation.feedback', ['reservationID' => $id]);

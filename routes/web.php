@@ -96,30 +96,35 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::view('/profile', 'home')->name('profile');
 
-    Route::prefix('my-reservation')->name('user.reservation.')->group(function (){
-        Route::get('/', [ReservationController::class, 'index'])->name('home');
+    Route::prefix('my-reservation')->name('user.reservation.')->controller(ReservationController::class)->group(function (){
+        Route::get('/','index')->name('home');
+        Route::put('/{id}/cancel', 'cancel')->name('cancel');
+        Route::put('/{id}/reschedule', 'reschedule')->name('reschedule');
     });
     // Reservation Information
-    Route::prefix('reservation')->name('reservation.')->group(function (){
-        Route::get('/choose', [ReservationController::class, 'choose'])->name('choose');
-        Route::post('/choose/check', [ReservationController::class, 'chooseCheckAll'])->name('choose.check.all');
+    Route::prefix('reservation')->name('reservation.')->controller(ReservationController::class)->group(function (){
+        Route::get('/choose', 'choose')->name('choose');
+        Route::post('/choose/check', 'chooseCheckAll')->name('choose.check.all');
 
-        Route::post('/choose/check/one', [ReservationController::class, 'chooseCheck1'])->name('choose.check.one');
-        Route::get('/details', [ReservationController::class, 'details'])->name('details');
-        Route::post('/details', [ReservationController::class, 'detailsStore'])->name('details.store');
-        Route::put('/details/user/{id}/update', [ReservationController::class, 'detailsUpdate'])->name('details.update');
+        Route::post('/choose/check/one', 'chooseCheck1')->name('choose.check.one');
+        Route::get('/details', 'details')->name('details');
+        Route::post('/details', 'detailsStore')->name('details.store');
+        Route::put('/details/user/{id}/update', 'detailsUpdate')->name('details.update');
 
-        Route::get('/confimation', [ReservationController::class, 'confirmation'])->name('confirmation');
-        Route::post('/confimation/convert', [ReservationController::class, 'convert'])->name('convert');
-        Route::get('/confimation/tour/{id}/destroy', [ReservationController::class, 'destroyTour'])->name('tour.destroy');
-        Route::post('/store', [ReservationController::class, 'storeReservation'])->name('store');
-        Route::get('{id}/done', [ReservationController::class, 'done'])->name('done');
-        Route::post('/done/{id}/message/store', [ReservationController::class, 'storeMessage'])->name('done.message.store');
+        Route::get('/confimation', 'confirmation')->name('confirmation');
+        Route::post('/confimation/convert', 'convert')->name('convert');
+        Route::get('/confimation/tour/{id}/destroy', 'destroyTour')->name('tour.destroy');
+        Route::post('/store', 'storeReservation')->name('store');
+        Route::get('{id}/done', 'done')->name('done');
+        Route::post('/done/{id}/message/store', 'storeMessage')->name('done.message.store');
 
-        Route::get('/{id}/gcash', [ReservationController::class, 'gcash'])->name('gcash');
-        Route::get('/{id}/gcash/done', [ReservationController::class, 'doneGcash'])->name('gcash.done');
-        Route::get('/{id}/paypal', [ReservationController::class, 'paypal'])->name('paypal');
-        Route::post('/{id}/payment', [ReservationController::class, 'paymentStore'])->name('payment.store');
+        Route::get('/{id}/gcash', 'gcash')->name('gcash');
+        Route::get('/{id}/gcash/done', 'doneGcash')->name('gcash.done');
+        Route::get('/{id}/paypal', 'paypal')->name('paypal');
+        Route::get('/{id}/paypal/done', 'donePayPal')->name('paypal.done');
+        Route::post('/{id}/payment', 'paymentStore')->name('payment.store');
+
+
 
     });
 });
@@ -256,6 +261,8 @@ Route::prefix('system')->name('system.')->group(function(){
 
             Route::get('/payment/gcash', 'createPaymentGcash')->name('create.payment.gcash');
             Route::post('/payment/gcash', 'storePaymentGcash')->name('store.payment.gcash');
+            Route::put('/payment/gcash/priority', 'priorityPaymentGcash')->name('priority.payment.gcash');
+            Route::put('/payment/paypal/priority', 'priorityPaymentPayPal')->name('priority.payment.paypal');
 
             Route::get('/payment/gcash/{key}', 'showPaymentGcash')->name('show.payment.gcash');
             Route::get('/payment/gcash/{key}/edit', 'editPaymentGcash')->name('edit.payment.gcash');

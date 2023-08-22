@@ -16,6 +16,6 @@ class Archive extends Model
         'nationality',
         'type', /* 0 => online, 1 => physical*/ 
         'total',
-        'created_date',
+        // 'created_date',
     ];
 }

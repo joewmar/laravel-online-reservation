@@ -234,60 +234,34 @@ class WebContentController extends Controller
     }
     public function storeContact(Request $request){
         // dd($request->all());
-        if($request->input('contactPerson') === 'new'){
-            $validated = Validator::make($request->input(), [
-                'person' => ['required'],
-                'contact_no' => ['required'],
-                'email' => ['required', 'email'],
-                'facebook_username' => ['required', 'regex:/^[^\s]+$/'],
-                'whatsapp' => ['required'],
-            ], [
-                'person.required' => 'Required (Name of Person)',
-                'contact_no.required' => 'Required (Contact No.)',
-                'email.required' => 'Required (Email)',
-                'facebook_username.required' => 'Required (Facebook)',
-                'facebook_username.regex' => 'The facebook Username cannot contain spaces.',
-                'whatsapp.required' => 'Required (WhatsApp)',
-            ]);
-        }
-        elseif($request->input('contactPerson') === 'current'){
-            $validated = Validator::make($request->input(), [
-                'person' => ['required'],
-                'contact_no' => ['nullable'],
-                'email' => ['email', 'nullable'],
-                'facebook_username' => ['nullable', 'regex:/^[^\s]+$/'],
-                'whatsapp' => ['required', 'numeric'],
-            ], [
-                'person.required' => 'Required (Name of Person)',
-                'facebook_username.regex' => 'The facebook Username cannot contain spaces.',
-            ]);
-        }
-        else{
-            return back()->with('error', 'Required to choose if new or current person');
-        }
-
+        $validated = Validator::make($request->input(), [
+            'person' => ['required'],
+            'contact_no' => ['required'],
+            'email' => ['required', 'email'],
+            'facebook_username' => ['required', 'regex:/^[^\s]+$/'],
+            'whatsapp' => ['required'],
+        ], [
+            'person.required' => 'Required (Name of Person)',
+            'contact_no.required' => 'Required (Contact No.)',
+            'email.required' => 'Required (Email)',
+            'facebook_username.required' => 'Required (Facebook)',
+            'facebook_username.regex' => 'The facebook Username cannot contain spaces.',
+            'whatsapp.required' => 'Required (WhatsApp)',
+        ]);
         if($validated->fails()){
-            return back()->with('error', $validated->errors()->all());
+            return back()->with('error', $validated->errors()->all())->withInput($validated->getData());
         }
         $validated = $validated->validate();
         $webcontents = WebContent::all()->first();
         $contacts = $webcontents->contact ?? [];
-        if(isset($contacts) && isset($webcontents)){
-            $contacts[Str::camel($validated['person'])]['contactno'][] = $validated['contact_no'];
-            $contacts[Str::camel($validated['person'])]['email'][] = $validated['email'];
-            $contacts[Str::camel($validated['person'])]['fbuser'][] = $validated['facebook_username'];
-            $contacts[Str::camel($validated['person'])]['whatsapp'][] = $validated['whatsapp'];
-            $save = $webcontents->update(['contact' => $contacts]);
-
-        }
-        else{
-            $contacts[Str::camel($validated['person'])]['name'] = $validated['person'];
-            $contacts[Str::camel($validated['person'])]['contactno'][] = $validated['contact_no'];
-            $contacts[Str::camel($validated['person'])]['email'][] = $validated['email'];
-            $contacts[Str::camel($validated['person'])]['fbuser'][] = $validated['facebook_username'];
-            $contacts[Str::camel($validated['person'])]['whatsapp'][] = $validated['whatsapp'];
-            $save = WebContent::create(['contact' => $contacts,  'operation' => false]);
-        }
+        $contacts[Str::camel($validated['person'])]['name'] = $validated['person'];
+        $contacts[Str::camel($validated['person'])]['contactno'][] = $validated['contact_no'];
+        $contacts[Str::camel($validated['person'])]['email'][] = $validated['email'];
+        $contacts[Str::camel($validated['person'])]['fbuser'][] = $validated['facebook_username'];
+        $contacts[Str::camel($validated['person'])]['whatsapp'][] = $validated['whatsapp'];
+        
+        if(isset($webcontents)) $save = $webcontents->update(['contact' => $contacts]);
+        else $save = WebContent::create(['contact' => $contacts,  'operation' => false]);
         if($save) return redirect()->route('system.webcontent.home', '#contact')->with('success', 'Contact of '.$validated['person'].'was added');
     }
     public function showContact($key){
@@ -483,12 +457,14 @@ class WebContentController extends Controller
                 'name' => $validate['name'],
                 'number' => $validate['gcash_number'],
                 'qrcode' => $validate['image'],
+                'priority' => false,
             ];;
         }
         else{
             $payments['gcash'][] =  [
                 'name' => $validate['name'],
                 'number' => $validate['gcash_number'],
+                'priority' => false,
             ];;
         }
         if(isset($webcontents)){
@@ -536,13 +512,16 @@ class WebContentController extends Controller
                 'name' => $validate['name'],
                 'number' => $validate['gcash_number'],
                 'qrcode' => $validate['image'],
+                'priority' => $payments['gcash'][$key]['priority'],
             ];;
         }
         else{
             $payments['gcash'][$key] =  [
                 'name' => $validate['name'],
                 'number' => $validate['gcash_number'],
-                'qrcode' => $payments[$key]['qrcode'],
+                'qrcode' => $payments['gcash'][$key]['qrcode'],
+                'priority' => $payments['gcash'][$key]['priority'],
+
             ];;
         }
         if(isset($webcontents)){
@@ -588,7 +567,6 @@ class WebContentController extends Controller
     }
     public function storePaymentPayPal(Request $request){ 
         $webcontents = WebContent::all()->first();
-        dd($request->all());
         $validate = Validator::make($request->all(), [
             'passcode' => ['required', 'numeric', 'digits:4'],
         ]);
@@ -611,6 +589,7 @@ class WebContentController extends Controller
                 'email' => $validate['email'],
                 'username' => $validate['username'],
                 'image' => $validate['image'],
+                'priority' => false,
             ];
         }
         else{
@@ -619,6 +598,7 @@ class WebContentController extends Controller
                 'number' => $validate['paypal_number'],
                 'email' => $validate['email'],
                 'username' => $validate['username'],
+                'priority' => false,
             ];
         }
         if(isset($webcontents)){
@@ -627,7 +607,7 @@ class WebContentController extends Controller
         else{
             $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference was created');
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference was created');
 
         // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
     }
@@ -635,18 +615,18 @@ class WebContentController extends Controller
         $key = decrypt($key);
         $webcontents = WebContent::all()->first();
         if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
-        return view('system.webcontent.payment.show-paypal', ['activeSb' => 'Website Content', 'key' => $key, 'gcash' =>  $webcontents->payment['gcash']]);
+        return view('system.webcontent.payment.show-paypal', ['activeSb' => 'Website Content', 'key' => $key, 'paypal' =>  $webcontents->payment['paypal']]);
     }
     public function editPaymentPayPal($key){
         $key = decrypt($key);
         $webcontents = WebContent::all()->first();
         if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
-        return view('system.webcontent.payment.edit-paypal', ['activeSb' => 'Website Content', 'key' => $key, 'gcash' =>  $webcontents->payment['gcash']]);
+        return view('system.webcontent.payment.edit-paypal', ['activeSb' => 'Website Content', 'key' => $key, 'paypal' =>  $webcontents->payment['paypal']]);
     }
     public function updatePaymentPayPal(Request $request, $key){
         $key = decrypt($key);
         $webcontents = WebContent::all()->first();
-        if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
+        if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
         $validate = Validator::make($request->all(), [
             'passcode' => ['required', 'numeric', 'digits:4'],
         ]);
@@ -654,13 +634,15 @@ class WebContentController extends Controller
         $validate = $validate->validate();
         if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
         $validate = $request->validate([
-            'gcash_number' => ['required', 'numeric'],
+            'paypal_number' => ['required', 'numeric'],
             'name' => ['required'],
+            'email' => ['required', 'email'],
+            'username' => ['required'],
             'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
         ]);
         $payments = $webcontents->payment ?? [];
         if($request->hasFile('image')){                          // storage/app/logos
-            $validate['image'] = saveImageWithJPG($request, 'image', 'ref_gcash', 'private');
+            $validate['image'] = saveImageWithJPG($request, 'image', 'ref_paypal', 'private');
             if(isset($payments['paypal'][$key]['image'])) deleteFile($payments['paypal'][$key]['image']);
             $payments['paypal'][$key] =  [
                 'name' => $validate['name'],
@@ -668,6 +650,8 @@ class WebContentController extends Controller
                 'email' => $validate['email'],
                 'username' => $validate['username'],
                 'image' => $validate['image'],
+                'priority' => $payments['paypal'][$key]['priority'],
+
             ];
         }
         else{
@@ -677,6 +661,8 @@ class WebContentController extends Controller
                 'email' => $validate['email'],
                 'username' => $validate['username'],
                 'image' => $payments['paypal'][$key]['image'],
+                'priority' => $payments['paypal'][$key]['priority'],
+
             ];
 
         }
@@ -686,14 +672,14 @@ class WebContentController extends Controller
         else{
             $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference ('.$validate['name'].') was updated');
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference ('.$validate['name'].') was updated');
 
         // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
     }
     public function destroyPaymentPayPal(Request $request, $key){
         $key = decrypt($key);
         $webcontents = WebContent::all()->first();
-        if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
+        if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
         $validate = Validator::make($request->all(), [
             'passcode' => ['required', 'numeric', 'digits:4'],
         ]);
@@ -705,7 +691,7 @@ class WebContentController extends Controller
             if($paypalKey === $key){
                 $name = $payments['paypal'][$key]['name'];
                 if(isset($payments['paypal'][$key]['image'])) deleteFile($payments['paypal'][$key]['image']);
-                unset($payments['gcash'][$key]);
+                unset($payments['paypal'][$key]);
             }
         }
         if(isset($webcontents)){
@@ -714,9 +700,57 @@ class WebContentController extends Controller
         else{
             $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Reference of '.$name.' was removed');
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Reference of '.$name.' was removed');
 
         // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
+    }
+    public function priorityPaymentGcash(Request $request){
+        // dd(decrypt($request->all('priority')['priority']));
+        $validate = Validator::make($request->all(), [
+            'priority' => ['required'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate =$validate->validate();
+        $key = decrypt($validate['priority']);
+        $webcontents = WebContent::all()->first();
+        $payments = $webcontents->payment ?? [];
+        if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
+            foreach($payments['gcash'] as $gcashID => $item){
+                if($gcashID === $key){
+                    $payments['gcash'][$gcashID]['priority'] = true;
+                }
+                else{
+                    $payments['gcash'][$gcashID]['priority'] = false;
+                }
+            }
+        
+        if(isset($webcontents)) $updated = $webcontents->update(['payment' => $payments]);
+        else $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference ('.$payments['gcash'][$key]['name'].') was set priority');
+    }
+    public function priorityPaymentPayPal(Request $request){
+        // dd(decrypt($request->all('priority')['priority']));
+        $validate = Validator::make($request->all(), [
+            'priority' => ['required'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate =$validate->validate();
+        $key = decrypt($validate['priority']);
+        $webcontents = WebContent::all()->first();
+        $payments = $webcontents->payment ?? [];
+        if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
+            foreach($payments['paypal'] as $paypalID => $item){
+                if($paypalID === $key){
+                    $payments['paypal'][$paypalID]['priority'] = true;
+                }
+                else{
+                    $payments['paypal'][$paypalID]['priority'] = false;
+                }
+            }
+        
+        if(isset($webcontents)) $updated = $webcontents->update(['payment' => $payments]);
+        else $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference ('.$payments['paypal'][$key]['name'].') was set priority');
     }
 
 }

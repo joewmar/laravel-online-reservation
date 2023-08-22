@@ -25,8 +25,8 @@
                     <div  class="w-96 rounded">
                         <p class="text-neutral text-2xl"><span class="font-bold">Step 1: </span>Pay via QR Scanner</p>
                         <ul class="text-neutral text-lg mt-5">
-                            <li><span class="font-bold">Gcash Name: </span>Juan D.</li>
-                            <li><span class="font-bold">Gcash No: </span>09123456789</li>
+                            <li><span class="font-bold">Gcash Name: </span>{{$reference['name']}}</li>
+                            <li><span class="font-bold">Gcash No: </span>{{$reference['number']}}</li>
                         </ul>
                         <div class="flex justify-end space-x-1">
                             <button type="button" @click="all = true, step1 = false" class="btn btn-ghost btn-primary">Back</button>
@@ -37,7 +37,7 @@
                         <div class="camera"></div> 
                         <div class="display">
                             <div class="artboard artboard-demo phone-1"> 
-                                <img src="{{asset('images/payment/gcash.jpg')}}" />
+                                <img src="{{isset($reference['qrcode']) ? route('private.image', ['folder' => explode('/', $reference['qrcode'])[0], 'filename' => explode('/', $reference['qrcode'])[1]]) : asset('images/payment/gcash-logo.png')}}" />
                             </div>
                         </div>
                     </div>
@@ -64,9 +64,9 @@
                         </div>
                         <div class="flex justify-end space-x-1">
                             <button type="button" @click="step1 = true, step2 = false" class="btn btn-ghost btn-primary">Back</button>
-                            <button id="verify" type="button" class="btn btn-primary">Check</button>
-                            <button id="done" type="button" @click="step2 = false, step3 = true" class="btn btn-primary">Go Step 3</button>
+                            <button type="button" @click="step2 = false, step3 = true" class="btn btn-primary">Go Step 3</button>
                         </div>
+                        
                     </div>
                     <div class="mockup-phone">
                         <div class="camera"></div> 

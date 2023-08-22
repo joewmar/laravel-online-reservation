@@ -79,7 +79,7 @@ class DatabaseSeeder extends Seeder
             'pax' => 2,
             'tour_pax' => 2,
             'accommodation_type' => 'Overnight',
-            'payment_method' => 'Gcash',
+            'payment_method' => 'PayPal',
             'age' => User::findOrfail(1)->age(),
             'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
             'check_out' => Carbon::now()->addDays(18)->toDateTimeString(),
@@ -208,8 +208,8 @@ class DatabaseSeeder extends Seeder
             'title' => 'Foam',
             'price' => 100,
         ]);
-        \App\Models\Feedback::factory(50)->create();
-        \App\Models\Archive::factory(50)->create();
+        // \App\Models\Feedback::factory(50)->create();
+        // \App\Models\Archive::factory(50)->create();
 
     }
 }

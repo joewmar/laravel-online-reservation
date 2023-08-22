@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('archives', function (Blueprint $table) {
             $table->id();
-            // $table->uuid('reservation_id');
-            // $table->foreign('reservation_id')->references('id')->on('reservations')->onDelete('cascade');
+            $table->uuid('reservation_id');
+            $table->foreign('reservation_id')->references('id')->on('reservations')->onDelete('cascade');
             $table->tinyInteger('type');
             $table->string('nationality')->nullable();
-            $table->date('created_date')->nullable();
+            // $table->date('created_at')->nullable();
             $table->decimal('total', 8, 2)->nullable();
             $table->timestamps();
         });

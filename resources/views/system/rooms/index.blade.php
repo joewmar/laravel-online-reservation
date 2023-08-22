@@ -2,13 +2,15 @@
     <x-system-content title="Rooms">
         <fieldset class="w-full space-y-1 text-neutral">
             <label for="search" class="hidden">Search Room</label>
-          <div class="flex justify-between">
-            <div class="relative">
-              <input type="search" name="search" placeholder="Search Room..." class="w-52 text-sm rounded-md sm:w-auto focus:border-primary ">
-              <button class="btn btn-ghost btn-circle">
-                <i class="fa-solid fa-magnifying-glass text-neutral text-xl"></i>
-              </button>
-            </div>
+          <div class="flex justify-end">
+            {{-- <form action="">
+              <div class="relative">
+                <input type="search" name="search" placeholder="Search Room..." class="w-52 text-sm rounded-md sm:w-auto focus:border-primary " value="{{request('search') ?? ''}}">
+                <button class="btn btn-ghost btn-circle">
+                  <i class="fa-solid fa-magnifying-glass text-neutral text-xl"></i>
+                </button>
+              </div>
+            </form> --}}
             <x-tooltip title="Setting">
               <a href="{{ route('system.setting.rooms.home') }}" class="btn btn-ghost btn-circle">
                 <i class="fa-solid fa-gear text-xl"></i>

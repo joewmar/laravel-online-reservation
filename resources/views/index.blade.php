@@ -1,16 +1,51 @@
-@push('styles')
-  <link rel="stylesheet" href="{{Vite::asset("resources/css/users/landing-slider.css")}}" />    
-@endpush
+
 <x-landing-layout>
+  @push('styles')
+  <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-element-bundle.min.js"></script>  
+
+  <style>
+    html,
+    body {
+      position: relative;
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    swiper-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    swiper-slide {
+      text-align: center;
+      font-size: 18px;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    swiper-slide img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+  @endpush
+
   <x-navbar :activeNav="$activeNav"/>
 
 {{-- Banner --}}
 <swiper-container class="landingSlider" pagination="true" pagination-clickable="true" effect="fade" autoplay-delay="2500" autoplay-disable-on-interaction="false">
-    <swiper-slide><img src="{{ asset('./images/main-hero2.jpg')}}" /></swiper-slide>
-    <swiper-slide><img src="{{ asset('./images/main-hero3.jpg')}}" /></swiper-slide>
-    <swiper-slide><img src="{{ asset('./images/main-hero4.jpg')}}" /></swiper-slide>
-    <swiper-slide><img src="{{ asset('./images/main-hero5.jpg')}}" /></swiper-slide>
-    <swiper-slide><img src="{{ asset('./images/main-hero6.jpg')}}" /></swiper-slide>
+    <swiper-slide><img loading="lazy" src="{{ asset('./images/main-hero2.jpg')}}" /></swiper-slide>
+    <swiper-slide><img loading="lazy" src="{{ asset('./images/main-hero3.jpg')}}" /></swiper-slide>
+    <swiper-slide><img loading="lazy" src="{{ asset('./images/main-hero4.jpg')}}" /></swiper-slide>
+    <swiper-slide><img loading="lazy" src="{{ asset('./images/main-hero5.jpg')}}" /></swiper-slide>
+    <swiper-slide><img loading="lazy" src="{{ asset('./images/main-hero6.jpg')}}" /></swiper-slide>
     <section class="hero min-h-screen absolute top-0">
       <div class="hero-overlay bg-opacity-70"></div>
       <div class="hero-content text-center text-white ">

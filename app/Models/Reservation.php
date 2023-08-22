@@ -69,6 +69,13 @@ class Reservation extends Model
             set: fn ($value) => json_encode($value),
         );
     }
+    protected function message(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => json_decode($value, true),
+            set: fn ($value) => json_encode($value),
+        );
+    }
     public function getNoDays()
     {
         $date1 = Carbon::parse($this->attributes['check_in']); // Convert $date1 to Carbon object
