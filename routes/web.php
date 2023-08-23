@@ -98,7 +98,9 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
 
     Route::prefix('my-reservation')->name('user.reservation.')->controller(ReservationController::class)->group(function (){
         Route::get('/','index')->name('home');
+        Route::get('/{id}/edit', 'edit')->name('edit');
         Route::put('/{id}/cancel', 'cancel')->name('cancel');
+        Route::get('/{id}/show', 'show')->name('show');
         Route::put('/{id}/reschedule', 'reschedule')->name('reschedule');
     });
     // Reservation Information
@@ -140,37 +142,45 @@ Route::prefix('system')->name('system.')->group(function(){
 
         Route::get('/', [SystemHomeController::class, 'index'])->name('home');
         Route::prefix('reservation')->name('reservation.')->group(function(){
-            Route::get('/', [SystemReservationController::class, 'index'])->name('home');
-            Route::post('/search', [SystemReservationController::class, 'search'])->name('search');
-            Route::get('/calendar', [SystemReservationController::class, 'event'])->name('event');
-            Route::get('/create/step1', [CreateReservationController::class, 'create'])->name('create');
-            Route::post('/create/step1', [CreateReservationController::class, 'storeStep1'])->name('store.step.one');
-            Route::get('/create/step2', [CreateReservationController::class, 'step2'])->name('create.step.two');
-            Route::post('/create/step2-1', [CreateReservationController::class, 'storeStep21'])->name('store.step.two-one');
-            Route::post('/create/step2-2', [CreateReservationController::class, 'storeStep22'])->name('store.step.two-two');
-            Route::get('/create/step3', [CreateReservationController::class, 'step3'])->name('create.step.three');
-            Route::post('/create/step3', [CreateReservationController::class, 'storeStep3'])->name('store.step.three');
-            Route::get('/create/step4', [CreateReservationController::class, 'step4'])->name('create.step.four');
-            Route::post('/create/step4', [CreateReservationController::class, 'storeStep4'])->name('store.step.four');
 
-            
-            Route::get('/{id}/show', [SystemReservationController::class, 'show'])->name('show');
-            Route::get('/{id}/edit', [SystemReservationController::class, 'edit'])->name('edit');
-            Route::put('/{id}/update', [SystemReservationController::class, 'updateRInfo'])->name('update');
-            Route::get('/{id}/show/extend', [SystemReservationController::class, 'showExtend'])->name('show.extend');
-            Route::get('/{id}/show/addons', [SystemReservationController::class, 'showAddons'])->name('show.addons');
-            Route::put('/{id}/show/addons/update', [SystemReservationController::class, 'updateAddons'])->name('addons.update');
-            Route::put('/{id}/show/extend/update', [SystemReservationController::class, 'updateExtend'])->name('extend.update');
-            Route::get('/{id}/show/online-payment', [SystemReservationController::class, 'showOnlinePayment'])->name('show.online.payment');
-            Route::post('/{id}/online-payment/create', [SystemReservationController::class, 'storeOnlinePayment'])->name('online.payment.store');
-            Route::post('/{id}/online-payment/disaprove', [SystemReservationController::class, 'disaproveOnlinePayment'])->name('online.payment.disaprove');
-            Route::put('/{id}/online-payment/force-payment', [SystemReservationController::class, 'storeForcePayment'])->name('online.payment.forcepayment.update');
-            Route::get('/{id}/show/room', [SystemReservationController::class, 'showRooms'])->name('show.rooms');
-            Route::get('/{id}/disaprove', [SystemReservationController::class, 'disaprove'])->name('disaprove');
-            Route::post('/{id}/disaprove', [SystemReservationController::class, 'disaproveStore'])->name('disaprove.store');
-            Route::put('/{id}/show/room', [SystemReservationController::class, 'updateReservation'])->name('show.rooms.update');
-            Route::put('/{id}/show/checkin', [SystemReservationController::class, 'updateCheckin'])->name('show.checkin');
-            Route::put('/{id}/show/checkout', [SystemReservationController::class, 'updateCheckout'])->name('show.checkout');
+            Route::controller(CreateReservationController::class)->group(function (){
+                Route::get('/create/step1', 'create')->name('create');
+                Route::post('/create/step1', 'storeStep1')->name('store.step.one');
+                Route::get('/create/step2', 'step2')->name('create.step.two');
+                Route::post('/create/step2-1', 'storeStep21')->name('store.step.two-one');
+                Route::post('/create/step2-2', 'storeStep22')->name('store.step.two-two');
+                Route::get('/create/step3', 'step3')->name('create.step.three');
+                Route::post('/create/step3', 'storeStep3')->name('store.step.three');
+                Route::get('/create/step4', 'step4')->name('create.step.four');
+                Route::post('/create/step4', 'storeStep4')->name('store.step.four');
+            });
+
+            Route::controller(SystemReservationController::class)->group(function (){
+                Route::get('/', 'index')->name('home');
+                Route::post('/search', 'search')->name('search');
+                Route::get('/calendar', 'event')->name('event');
+                Route::get('/{id}/show', 'show')->name('show');
+                Route::get('/{id}/edit', 'edit')->name('edit');
+                Route::put('/{id}/update', 'updateRInfo')->name('update');
+                Route::get('/{id}/show/extend', 'showExtend')->name('show.extend');
+                Route::get('/{id}/show/addons', 'showAddons')->name('show.addons');
+                Route::put('/{id}/show/addons/update', 'updateAddons')->name('addons.update');
+                Route::put('/{id}/show/extend/update', 'updateExtend')->name('extend.update');
+                Route::get('/{id}/show/online-payment', 'showOnlinePayment')->name('show.online.payment');
+                Route::post('/{id}/online-payment/create', 'storeOnlinePayment')->name('online.payment.store');
+                Route::post('/{id}/online-payment/disaprove', 'disaproveOnlinePayment')->name('online.payment.disaprove');
+                Route::put('/{id}/online-payment/force-payment', 'storeForcePayment')->name('online.payment.forcepayment.update');
+                Route::get('/{id}/show/room', 'showRooms')->name('show.rooms');
+                Route::get('/{id}/disaprove', 'disaprove')->name('disaprove');
+                Route::post('/{id}/disaprove', 'disaproveStore')->name('disaprove.store');
+                Route::put('/{id}/show/room', 'updateReservation')->name('show.rooms.update');
+                Route::put('/{id}/show/checkin', 'updateCheckin')->name('show.checkin');
+                Route::put('/{id}/show/checkout', 'updateCheckout')->name('show.checkout');
+                Route::get('/{id}/show/cancel', 'showCancel')->name('show.cancel');
+                Route::put('/{id}/show/cancel/approve', 'updateCancel')->name('update.cancel');
+                Route::put('/{id}/show/cancel/disaprove', 'updateDisaproveCancel')->name('update.cancel.disaprove');
+            });
+
         });
         Route::prefix('analytics')->name('analytics.')->group(function (){
             Route::get('/', [AnalyticsController::class, 'index'])->name('home');
@@ -406,3 +416,4 @@ Route::post('reservation/{id}/feedback', [ReservationController::class, 'storeFe
 Route::middleware(['auth.image'])->group(function () {
     Route::get('/private/{folder}/{filename}', [HomeController::class,'showImage'])->name('private.image');
 });
+

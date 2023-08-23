@@ -35,14 +35,6 @@ class SystemReservationController extends Controller
     }
     public function index(Request $request){
         $r_list = Reservation::latest()->paginate(5);
-        // if($request->has('search')){
-        //     $r_list  = Reservation::where('first_name', 'like', '%' . $request['search'] . '%')
-        //     ->orWhere('last_name', 'like', '%' . $request['search'] . '%')
-        //     ->orWhere('age', 'like', '%' . $request['search'] . '%')
-        //     ->orWhere('nationality', 'like', '%' . $request['search'] . '%')
-        //     ->orWhere('country', 'like', '%' . $request['search'] . '%')
-        //     ->paginate(5);  
-        // }
         if($request['tab'] === 'pending'){
             $r_list = Reservation::where('status', 0)->latest()->paginate(5);
         }
@@ -55,18 +47,23 @@ class SystemReservationController extends Controller
         if($request['tab'] === 'checkout'){
             $r_list = Reservation::where('status', 3)->latest()->paginate(5);
         }
-        if($request['tab'] === 'Previous'){
-            $r_list = Archive::where('status', 0)->latest()->paginate(5);
+        if($request['tab'] === 'reschedule'){
+            $r_list = Reservation::where('status', 4)->latest()->paginate(5);
         }
-        if($request['tab'] === 'archive'){
-            $r_list = Archive::latest()->paginate(5);
-        }
-        if($request['tab'] === 'cancelation'){
-            $r_list = Archive::where('status', 2)->latest()->paginate(5);
+        if($request['tab'] === 'cancellation'){
+            $r_list = Reservation::where('status', 5)->latest()->paginate(5);
         }
         if($request['tab'] === 'disaprove'){
-            $r_list = Archive::where('status', 1)->latest()->paginate(5);
+            $r_list = Reservation::where('status', 6)->latest()->paginate(5);
         }
+        // if($request->has('search')){
+        //     $search = $request['search'];
+        //     $r_list = Reservation::with(['userReservation' => function($query, $search =) {
+        //         $query->where('first_name', 'like', '%'.$search.'%');
+        //     }])
+        //     ->get();
+        //     dd($r_list); 
+        // }
         return view('system.reservation.index',  ['activeSb' => 'Reservation', 'r_list' => $r_list]);
     }
     public function search(Request $request){
@@ -166,6 +163,67 @@ class SystemReservationController extends Controller
         unset($count);
         return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict, 'rooms' => implode(',', $rooms), 'rate' => $rate, 'total' => $total, 'other_addons' => $other_addons, 'tour_addons' => $tour_addons]);
     }
+    public function showCancel($id){
+        $id = decrypt($id);
+        $reservation = Reservation::findOrFail($id);
+        return view('system.reservation.show-cancel',  ['activeSb' => 'Reservation', 'r_list' => $reservation]);
+    }
+    public function updateCancel(Request $request, $id){
+        $id = decrypt($id);
+        $reservation = Reservation::findOrFail($id);
+        if(!($reservation->status <= 4 || $reservation->status <= 5)) abort(404);
+
+        $validator = Validator::make($request->all('passcode'), [
+            'passcode' => ['required', 'digits:4', 'numeric'],
+        ]);
+        if($validator->fails()) return back ()->with('error', $validator->errors()->all());
+        $validator = $validator->validate();
+        if(!Hash::check($validator['passcode'], $this->system_user->user()->passcode)) return back ()->with('error', 'Invalid Passcode');
+        // Remove reserved rooms
+        if(isset($reservation->roomid)){
+            $rooms = Room::all();
+            foreach($rooms as $room){
+                $customers = $room->customer ?? [];
+                if(array_key_exists($reservation->id, $customers)) unset($customers[$reservation->id]);
+                $room->update(['customer' => $customers]);
+            }
+        }
+        $reservation->status = 5;
+        $updated = $reservation->save();
+        if($updated){
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => 'Reservation Cancellation',
+                'body' => 'Your Reservation Cancel Request are now approved. '
+            ];
+            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Cancel Request of '.$reservation->userReservation->name().'was approved');
+        }
+    }
+    public function updateDisaproveCancel(Request $request, $id){
+        $id = decrypt($id);
+        $reservation = Reservation::findOrFail($id);
+        $validator = Validator::make($request->all('reason'), [
+            'reason' => ['required'],
+        ]);
+        if($validator->fails()) return back ()->with('error', $validator->errors()->all())->withInput($validator->getData());
+        $validator = $validator->validate();
+        $message = $reservation->message;
+        if(isset($message['cancel'])) unset($message['cancel']);
+        $updated = $reservation->update(['message' => $message]);
+        if($updated){
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => 'Reservation Cancellation',
+                'body' => 'Sorry, Your Reservation Cancel Request are now disapproved due to ' . $validator['reason'] . '. If you want concern. Please contact the owner'
+            ];
+            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Cancel Request of '.$reservation->userReservation->name().'was successful disapproved');
+        }
+       
+        
+    }
+    
     public function edit($id){
         if(!$this->system_user->user()->role() === "Admin") abort(404);
         $reservation = Reservation::findOrFail(decrypt($id));

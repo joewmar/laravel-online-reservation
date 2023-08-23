@@ -1,6 +1,5 @@
 <x-landing-layout>
     <x-navbar :activeNav="$activeNav" type="plain"/>
-
     <x-full-content>
         <section class="pt-24 flex flex-col justify-center items-center h-screen">
             <div class="tabs tabs-boxed bg-transparent">
@@ -37,6 +36,7 @@
                             <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $list->check_out )->format('l, F j, Y') ?? 'None'}}</td>
                             <td>{{$list->status()}} </td>
                             <th>
+                              @if ($list->status !== 5)
                               <label for="cancel_modal" class="btn btn-error btn-xs" {{isset($list->message['cancel']) || isset($list->message['reschedule']) ? 'disabled' : ''}}>Cancel</label>
                               <x-modal id="{{isset($list->message['cancel']) ? 'disabledALl' : 'cancel_modal'}}" title="Why do you want to cancel?"> 
                                 <form action="{{route('user.reservation.cancel', encrypt($list->id))}}" method="POST">
@@ -61,6 +61,9 @@
                                   </div>
                                 </form>
                               </x-modal> 
+                              @endif
+                              <a href="{{route('user.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs">More Details</a>
+
                             </th>
                           </tr>
                         @empty

@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\Room;
 use App\Models\User;
 use App\Models\System;
+use App\Models\Archive;
+use App\Models\Feedback;
 use App\Models\RoomList;
 use App\Models\TourMenu;
+use App\Models\WebContent;
 use App\Models\Reservation;
 use Illuminate\Support\Arr;
 use App\Models\TourMenuList;
@@ -14,14 +18,11 @@ use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
 use App\Models\OnlinePayment;
 use Illuminate\Validation\Rule;
-use AmrShawky\LaravelCurrency\Facade\Currency;
-use App\Models\Archive;
-use App\Models\Feedback;
-use App\Models\WebContent;
-use App\Notifications\EmailNotification;
-use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
+use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Notifications\Notification;
+use AmrShawky\LaravelCurrency\Facade\Currency;
 
 
 
@@ -42,10 +43,10 @@ class ReservationController extends Controller
             }
 
             return $next($request);
-        })->except(['index', 'done', 'storeMessage', 'gcash', 'doneGcash', 'donePayPal', 'paymentStore','paypal', 'feedback', 'storeFeedback', 'date', 'dateCheck', 'dateStore', 'cancel','reschedule']); // You can specify the specific method where this middleware should be applied.
+        })->except(['index', 'show', 'done', 'storeMessage', 'gcash', 'doneGcash', 'donePayPal', 'paymentStore','paypal', 'feedback', 'storeFeedback', 'date', 'dateCheck', 'dateStore', 'cancel','reschedule']); // You can specify the specific method where this middleware should be applied.
     }
     public function index(Request $request){
-        $reservation = Reservation::all()->where('user_id', auth('web')->user()->id) ?? [];
+        $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 0) ?? [];
         if($request['tab'] == 'confirmed'){
             $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 1) ?? [];
         }
@@ -66,6 +67,65 @@ class ReservationController extends Controller
         }
         return view('users.reservation.index', ['activeNav' => 'My Reservation', 'reservation' => $reservation]);
     }
+    public function show($id) {
+        $id = decrypt($id);
+        $reservation = Reservation::findOrFail($id);
+        $rooms = [];
+        $tour_menu = [];
+        $other_addons = [];
+        $tour_addons = [];
+        $rate = [];
+        $total = 0;
+        if($reservation->roomid){
+            foreach($reservation->roomid as $item){
+                $rooms[] = 'Room No.' . Room::find($item)->room_no . ' ('.Room::find($item)->room->name.')';
+            }
+        }
+        $conflict = Reservation::all()->where('check_in', $reservation->check_in)->where('status', 0)->except($reservation->id);;
+        $count = 0;
+        foreach($reservation->transaction ?? [] as $key => $item){
+            if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
+                $tour_menuID = (int)str_replace('tm','', $key);
+                $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
+                $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'];
+                $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
+                $total += (double)$tour_menu[$count]['amount'];
+            }
+            // Rate
+            if (strpos($key, 'rid') !== false) {
+                $rateID = (int)str_replace('rid','', $key);
+                $rate['name'] = $reservation->transaction['rid'.$rateID]['title'];;
+                $rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
+                $rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
+                if(isset($reservation->transaction['rid'.$rateID]['orig_amount'])){
+                    $rate['orig_amount'] = $reservation->transaction['rid'.$rateID]['orig_amount'];
+                }
+            }
+            if (strpos($key, 'OA') !== false && is_array($item)) {
+                $OAID = (int)str_replace('OA','', $key);
+                foreach($item as $key => $dataAddons){
+                    $other_addons[$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
+                    $other_addons[$key]['pcs'] = $reservation->transaction['OA'.$OAID][$key]['pcs'];
+                    $other_addons[$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
+                    $other_addons[$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
+                }
+            }
+            if (strpos($key, 'TA') !== false && is_array($item)) {
+                $TAID = (int)str_replace('TA','', $key);
+                foreach($item as $key => $tourAddons){
+                    $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
+                    $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
+                    $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
+                }
+            }
+            $count++;
+        }
+        unset($count);
+        return view('users.reservation.show',  ['activeNav' => 'My Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'rooms' => implode(',', $rooms), 'rate' => $rate, 'total' => $total, 'other_addons' => $other_addons, 'tour_addons' => $tour_addons]);
+    }
+    public function edit($id){
+        dd($id);
+    }
     public function cancel(Request $request, $id) {
         $validate = Validator::make($request->all('cancel_message'), [
             'cancel_message' => ['required'],
@@ -75,8 +135,11 @@ class ReservationController extends Controller
         $reservation = Reservation::findOrFail(decrypt($id));
         $systemUser = System::all()->where('type', '>=', 0)->where('type', '<=', 1);
         $messages = $reservation->message;
-        $messages['cancel'] = $validate['cancel_message'];
-        $updated = $reservation->update(['message' => $messages, 'status' => 5]);
+        $messages['cancel'] = [
+            'message' =>  $validate['cancel_message'],
+            'pre_status' => $reservation->status,
+        ];
+        $updated = $reservation->update(['message' => $messages]);
         if($updated) {
             $text = 
             "Cancel Request Reservation!\n" .
@@ -91,7 +154,7 @@ class ReservationController extends Controller
             "Why to Cancel: " .$validate['cancel_message']; 
             $keyboard = [
                 [
-                    ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reservation->id))],
+                    ['text' => 'View Cancel Request', 'url' => route('system.reservation.show.cancel', encrypt($reservation->id))],
                 ],
             ];
             foreach($systemUser as $user) if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');

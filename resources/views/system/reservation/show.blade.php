@@ -301,18 +301,18 @@
         <div class="divider"></div>
         <div class="w-full">
             <h2 class="text-2xl mb-5 font-bold">Messages</h2>
-            <div class="grid grid-flow-row md:grid-flow-col">
-                <div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5"> 
+                <div class="bg-base-100 shadow-lg p-6 rounded">
                     <h2 class="text-lg font-bold">Request Message</h2>
-                    <p class="text-md">{{$r_list->user_id->message['request'] ?? 'None'}}</p>
+                    <p class="text-md">{{$r_list->message['request'] ?? 'None'}}</p>
                 </div>
-                <div>
+                <div class="bg-base-100 shadow-lg p-6 rounded">
                     <h2 class="text-lg font-bold">Reason to Cancel</h2>
-                    <p class="text-md">{{$r_list->user_id->message['cancel'] ?? 'None'}}</p>
+                    <p class="text-md">{{$r_list->message['cancel']['message'] ?? 'None'}}</p>
                 </div>
-                <div>
+                <div class="bg-base-100 shadow-lg p-6 rounded">
                     <h2 class="text-lg font-bold">Reason to Reschedule</h2>
-                    <p class="text-md">{{$r_list->user_id->message['reschedule'] ?? 'None'}}</p>
+                    <p class="text-md">{{$r_list->message['reschedule'] ?? 'None'}}</p>
                 </div>
             </div>
         </div>
