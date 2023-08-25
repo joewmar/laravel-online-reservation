@@ -51,8 +51,7 @@ class UserController extends Controller
 
         }
     }
-    public function verify(Request $request){
-        if(! session()->has('uinfo')) return redirect()->route('register');
+    public function verify(){
         $otp = mt_rand(1111,9999);
         $user_info = session('uinfo');
         $details = [
@@ -69,18 +68,18 @@ class UserController extends Controller
         $validated = $request->validate([
             'code' => ['required', 'digits:4', 'numeric'],
         ]);
-        if(session()->exists(['uinfo']) && $validated['code'] == session('uinfo')['otp']){
+
+        if(session()->has('uinfo') && $validated['code'] == session('uinfo')['otp']){
             unset(session('uinfo')['otp']);
             $user = User::create(session('uinfo'));
-            $user = Auth::guard('web')->login($user);
-
-            if($user){
-                session()->forget('uinfo');
-                return redirect()->intended(route('home'))->with('success', 'Welcome First timer' . auth()->user()->name());
-            }
+            auth('web')->login($user);
+            session()->forget('uinfo');
+            return redirect()->intended(route('home'))->with('success', 'Welcome First timer' . auth('web')->user()->name());
+            
         }
-        return redirect()->intended(route('home'));
-
+        else{
+            return redirect()->route('register');
+        }
     }
     // Verify login
     public function check(Request $request){

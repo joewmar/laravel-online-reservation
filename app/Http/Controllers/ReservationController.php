@@ -57,10 +57,24 @@ class ReservationController extends Controller
             $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 3) ?? [];
         }
         if($request['tab'] == 'reshedule'){
-            $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 4) ?? [];
+            $reservation = Reservation::where(function ($query) {
+                $query->where('user_id', auth('web')->user()->id)
+                    ->where(function ($subQuery) {
+                        $subQuery->where('status', 4)
+                            ->orWhere('status', 7);
+                    });
+            })->get();            
+
         }
-        if($request['tab'] == 'canceled'){
-            $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 5) ?? [];
+        if($request['tab'] == 'cancel'){
+            $reservation = Reservation::where(function ($query) {
+                $query->where('user_id', auth('web')->user()->id)
+                    ->where(function ($subQuery) {
+                        $subQuery->where('status', 5)
+                            ->orWhere('status', 8);
+                    });
+            })->get();            
+
         }
         if($request['tab'] == 'disaprove'){
             $reservation = Reservation::all()->where('user_id', auth('web')->user()->id)->where('status', 6) ?? [];
@@ -137,9 +151,8 @@ class ReservationController extends Controller
         $messages = $reservation->message;
         $messages['cancel'] = [
             'message' =>  $validate['cancel_message'],
-            'pre_status' => $reservation->status,
         ];
-        $updated = $reservation->update(['message' => $messages]);
+        $updated = $reservation->update(['message' => $messages, 'status' => 8]);
         if($updated) {
             $text = 
             "Cancel Request Reservation!\n" .
@@ -233,7 +246,7 @@ class ReservationController extends Controller
             'check_in' => $validator['check_in'],
             'check_out' => $validator['check_out'],
         ];
-        $updated = $reservation->update(['message' => $messages, 'status' => 4]);
+        $updated = $reservation->update(['message' => $messages, 'status' => 7]);
         if($updated) {
             $text = 
             "Reschedule Request Reservation!\n" .
@@ -831,7 +844,7 @@ class ReservationController extends Controller
     }
     public function gcash($id){
         $reservation = Reservation::findOrFail(decrypt($id));
-        $reference = WebContent::all()->first()->payment['gcash'];
+        $reference = WebContent::all()->first()->payment['gcash'] ?? [];
         foreach($reference as $key => $item){
             if($reference[$key]['priority'] === true){
                 $reference = $reference[$key];
@@ -902,7 +915,7 @@ class ReservationController extends Controller
     public function doneGcash($id){
         $online_payment = OnlinePayment::findOrFail(decrypt($id));
         if(!($online_payment->reserve->status() === 'Confirmed' && $online_payment->reserve->payment_method === 'Gcash'))  abort(404);
-        $contacts = WebContent::all()->first()->contact;
+        $contacts = WebContent::all()->first()->contact ?? [];
         if($online_payment) return view('reservation.gcash.success', ['contacts' => $contacts]);
     }
     public function donePayPal($id){

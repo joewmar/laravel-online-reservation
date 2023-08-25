@@ -1,7 +1,7 @@
 @php
   $totalPrice = 0;
 @endphp
-<x-landing-layout>
+<x-landing-layout noFooter>
   <x-full-content>
     <section x-data="{loader: false}" class="my-10 p-5">
       <x-loader />

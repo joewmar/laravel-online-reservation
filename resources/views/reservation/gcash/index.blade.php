@@ -25,8 +25,8 @@
                     <div  class="w-96 rounded">
                         <p class="text-neutral text-2xl"><span class="font-bold">Step 1: </span>Pay via QR Scanner</p>
                         <ul class="text-neutral text-lg mt-5">
-                            <li><span class="font-bold">Gcash Name: </span>{{$reference['name']}}</li>
-                            <li><span class="font-bold">Gcash No: </span>{{$reference['number']}}</li>
+                            <li><span class="font-bold">Gcash Name: </span>{{$reference['name']  ?? 'None'}}</li>
+                            <li><span class="font-bold">Gcash No: </span>{{$reference['number']  ?? 'None'}}</li>
                         </ul>
                         <div class="flex justify-end space-x-1">
                             <button type="button" @click="all = true, step1 = false" class="btn btn-ghost btn-primary">Back</button>

@@ -168,6 +168,12 @@ class SystemReservationController extends Controller
         $reservation = Reservation::findOrFail($id);
         return view('system.reservation.show-cancel',  ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
+    public function showReschedule($id){
+        $id = decrypt($id);
+        $reservation = Reservation::findOrFail($id);
+        $availed = Reservation::all()->where('check_in', $reservation->check_in)->where('check_out', $reservation->check_out)->except($reservation->id);;
+        return view('system.reservation.show-reschedule',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'availed' => $availed]);
+    }
     public function updateCancel(Request $request, $id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
@@ -201,6 +207,29 @@ class SystemReservationController extends Controller
         }
     }
     public function updateDisaproveCancel(Request $request, $id){
+        $id = decrypt($id);
+        $reservation = Reservation::findOrFail($id);
+        $validator = Validator::make($request->all('reason'), [
+            'reason' => ['required'],
+        ]);
+        if($validator->fails()) return back ()->with('error', $validator->errors()->all())->withInput($validator->getData());
+        $validator = $validator->validate();
+        $message = $reservation->message;
+        if(isset($message['reschedule'])) unset($message['reschedule']);
+        $updated = $reservation->update(['message' => $message]);
+        if($updated){
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => 'Reservation Reschedule',
+                'body' => 'Sorry, Your Reservation Reschedule Request are now disapproved due to ' . $validator['reason'] . '. If you want concern. Please contact the owner'
+            ];
+            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Reschedule Request of '.$reservation->userReservation->name().'was successful disapproved');
+        }
+       
+        
+    }
+    public function updateDisaproveReschedule(Request $request, $id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
         $validator = Validator::make($request->all('reason'), [

@@ -1,7 +1,5 @@
-<section class="text-neutral bg-base-200 ">
-    <div
-      class="mx-auto max-w-screen-xl px-4 py-8 sm:py-12 sm:px-6 lg:py-16 lg:px-8"
-    >
+<section class="text-neutral bg-base-200 " >
+    <div data-aos="fade-down" class="mx-auto max-w-screen-xl px-4 py-8 sm:py-12 sm:px-6 lg:py-16 lg:px-8" >
       <div class="mx-auto max-w-lg text-center">
         <h2 class="text-3xl font-bold sm:text-4xl">What we offer</h2>
   
@@ -16,6 +14,7 @@
         <a
           class="block rounded-xl border border-gray-800 p-8 shadow-xl transition hover:border-pink-500/10 hover:shadow-pink-500/10"
           href="/services/digital-campaigns"
+          data-aos="flip-right"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -36,7 +35,7 @@
             />
           </svg>
   
-          <h2 class="mt-4 text-xl font-bold text-white">Digital campaigns</h2>
+          <h2 class="mt-4 text-xl font-bold text-neutral"></h2>
   
           <p class="mt-1 text-sm">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex ut quo
@@ -47,6 +46,7 @@
         <a
           class="block rounded-xl border border-gray-800 p-8 shadow-xl transition hover:border-pink-500/10 hover:shadow-pink-500/10"
           href="/services/digital-campaigns"
+          data-aos="flip-right"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -67,7 +67,7 @@
             />
           </svg>
   
-          <h2 class="mt-4 text-xl font-bold text-white">Digital campaigns</h2>
+          <h2 class="mt-4 text-xl font-bold text-neutral">Digital campaigns</h2>
   
           <p class="mt-1 text-sm">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex ut quo
@@ -78,6 +78,7 @@
         <a
           class="block rounded-xl border border-gray-800 p-8 shadow-xl transition hover:border-pink-500/10 hover:shadow-pink-500/10"
           href="/services/digital-campaigns"
+          data-aos="flip-right"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -98,7 +99,7 @@
             />
           </svg>
   
-          <h2 class="mt-4 text-xl font-bold text-white">Digital campaigns</h2>
+          <h2 class="mt-4 text-xl font-bold text-neutral">Digital campaigns</h2>
   
           <p class="mt-1 text-sm">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex ut quo
@@ -109,6 +110,7 @@
         <a
           class="block rounded-xl border border-gray-800 p-8 shadow-xl transition hover:border-pink-500/10 hover:shadow-pink-500/10"
           href="/services/digital-campaigns"
+          data-aos="flip-right"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -129,7 +131,7 @@
             />
           </svg>
   
-          <h2 class="mt-4 text-xl font-bold text-white">Digital campaigns</h2>
+          <h2 class="mt-4 text-xl font-bold text-neutral">Digital campaigns</h2>
   
           <p class="mt-1 text-sm">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex ut quo
@@ -140,6 +142,7 @@
         <a
           class="block rounded-xl border border-gray-800 p-8 shadow-xl transition hover:border-pink-500/10 hover:shadow-pink-500/10"
           href="/services/digital-campaigns"
+          data-aos="flip-right"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -160,7 +163,7 @@
             />
           </svg>
   
-          <h2 class="mt-4 text-xl font-bold text-white">Digital campaigns</h2>
+          <h2 class="mt-4 text-xl font-bold text-neutral">Digital campaigns</h2>
   
           <p class="mt-1 text-sm">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex ut quo
@@ -171,6 +174,7 @@
         <a
           class="block rounded-xl border border-gray-800 p-8 shadow-xl transition hover:border-pink-500/10 hover:shadow-pink-500/10"
           href="/services/digital-campaigns"
+          data-aos="flip-right"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -191,7 +195,7 @@
             />
           </svg>
   
-          <h2 class="mt-4 text-xl font-bold text-white">Digital campaigns</h2>
+          <h2 class="mt-4 text-xl font-bold text-neutral">Digital campaigns</h2>
   
           <p class="mt-1 text-sm">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex ut quo

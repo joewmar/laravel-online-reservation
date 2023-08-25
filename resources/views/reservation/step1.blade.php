@@ -1,7 +1,7 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
 @endphp
-<x-landing-layout>
+<x-landing-layout noFooter>
     <x-full-content>
         <div class="flex flex-col justify-center items-center w-full h-screen">
             @if(session()->has('ck') && session('ck') === true)

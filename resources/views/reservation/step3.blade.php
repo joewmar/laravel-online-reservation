@@ -5,7 +5,7 @@
   }
 
 @endphp
-<x-landing-layout>
+<x-landing-layout noFooter>
   <x-full-content>
     <div x-data="{loader: false}" class="my-24 h-auto">
       <div class="flex justify-center item- pb-10 text-center ">

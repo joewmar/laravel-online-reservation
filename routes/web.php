@@ -35,31 +35,19 @@ use App\Http\Controllers\SystemReservationController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-// 
-// Route::get('/', function () {
-//     return view('index', ['activeNav' => 'Home']);
-// });
-// Route::get('/aboutus', function () {
-//     return view('landing.about_us', ['activeNav' => 'About Us']);
-// });
-// Route::get('/login', function () {
-//     return view('users.login', ['activeNav' => 'About Us']);
-// });
-// Route::get('/register', function () {
-//     return view('users.register', ['activeNav' => 'About Us']);
-// });
+
 Auth::routes();
 
 
 // Route::get('/bot/getUpdates',[LandingController::class, 'teleUpdates'])->name('home');
-Route::get('/', function () {
-    return view('index', ['activeNav' => 'Home']);
-})->name('home');
+Route::controller(LandingController::class)->group(function (){
+    Route::get('/', 'index')->name('home');
+    Route::get('/services', 'services')->name('services');
+    Route::get('/aboutus', 'aboutus')->name('about.us');;
+    Route::get('/contact', 'contact')->name('contact');;
+});
 
 
-Route::get('/about', function () {
-    return view('landing.about_us', ['activeNav' => 'About Us']);
-})->name('about.us');
 
 
 Route::prefix('reservation')->name('reservation.')->group(function (){
@@ -177,8 +165,10 @@ Route::prefix('system')->name('system.')->group(function(){
                 Route::put('/{id}/show/checkin', 'updateCheckin')->name('show.checkin');
                 Route::put('/{id}/show/checkout', 'updateCheckout')->name('show.checkout');
                 Route::get('/{id}/show/cancel', 'showCancel')->name('show.cancel');
+                Route::get('/{id}/show/reschedule', 'showReschedule')->name('show.reschedule');
                 Route::put('/{id}/show/cancel/approve', 'updateCancel')->name('update.cancel');
                 Route::put('/{id}/show/cancel/disaprove', 'updateDisaproveCancel')->name('update.cancel.disaprove');
+                Route::put('/{id}/show/reschedule/disaprove', 'updateDisaproveReschedule')->name('.update.reschedule.disaprove');
             });
 
         });

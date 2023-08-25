@@ -1,4 +1,4 @@
-<x-landing-layout>
+<x-landing-layout noFooter>
     <x-full-content>
         <div class="flex items-center justify-center w-full h-screen bg-primary">
             <div class="modal-box">

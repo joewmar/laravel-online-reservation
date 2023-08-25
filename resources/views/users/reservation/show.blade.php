@@ -13,7 +13,7 @@
 
 @endphp
 
-<x-landing-layout>
+<x-landing-layout noFooter>
     <x-navbar :activeNav="$activeNav" type="plain"/>
     <x-full-content>
         <section class="p-6 pt-24">
@@ -265,7 +265,7 @@
                         </div>
                         <div class="bg-base-100 shadow-lg p-6 rounded">
                             <h2 class="text-lg font-bold">Reason to Reschedule</h2>
-                            <p class="text-md">{{$r_list->message['reschedule'] ?? 'None'}}</p>
+                            <p class="text-md">{{$r_list->message['reschedule']['message'] ?? 'None'}}</p>
                         </div>
                     </div>
                 </div>

@@ -49,6 +49,8 @@ class Reservation extends Model
         elseif($this->attributes['status'] == 4) $status = 'Reshedule';
         elseif($this->attributes['status'] == 5) $status = 'Cancel';
         elseif($this->attributes['status'] == 6) $status = 'Disaprove';
+        elseif($this->attributes['status'] == 7) $status = 'Pending Reschedule';
+        elseif($this->attributes['status'] == 8) $status = 'Pending Cancel';
             
         return $status ?? $this->attributes['status'];
     }

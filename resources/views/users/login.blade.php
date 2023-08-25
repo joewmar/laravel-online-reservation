@@ -1,29 +1,14 @@
-@php
-    $reservation = [];
-    if(request()->exists('cin', 'cout', 'at', 'px') ){
-      $reservation = [
-        "cin" => request()->get('cin'),
-        "cout" => request()->get('cout'),
-        "px" => request()->get('px'),
-        "at" => request()->get('at'),
-      ];
-    }
-@endphp
 
-<x-landing-layout>
-  <div class="flex items-center justify-center h-screen bg-base-100">
-    <div class="flex justify-center rounded-box shadow-2xl w-[90%] md:w-[65%] lg:w-[65%] bg-base-100">
+<x-landing-layout noFooter>
+  <div class="flex items-center justify-center h-screen bg-transparent md:bg-base-100">
+    <div class="flex justify-center rounded-box shadow-none md:shadow-2xl w-[90%] md:w-[65%] lg:w-[65%] bg-transparent md:bg-base-100">
       <div class="card hidden md:flex rounded-l-box w-full h-auto">
         <img src="{{asset('images/main-hero3.jpg')}}" class="rounded-l-box object-cover h-full w-full"/>
       </div>
       <div class="card flex rounded-box w-full h-full p-4">
         <div class="card-body">
           <h2 class="font-bold text-3xl text-center mb-10">Let's Login!</h2>
-          @if(request()->exists('cin', 'cout', 'at', 'px', 'ck'))
-            <form action="{{ route('check', $reservation) }}" method="post">
-          @else
             <form action="{{ route('check') }}" method="post">
-          @endif
             @csrf
             <x-input type="email" name="email" placeholder="Email"/>
             <div x-data="{ show: true }" class="form-control w-full">

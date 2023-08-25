@@ -31,7 +31,7 @@
     // dd( $TourInfo);
 @endphp
 
-<x-landing-layout>
+<x-landing-layout noFooter>
   <section
         x-data="{
           @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']) && $TourInfo['at'] != 'Room Type')

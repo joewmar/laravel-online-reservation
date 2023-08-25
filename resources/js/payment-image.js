@@ -9,7 +9,6 @@ let btnDone = document.getElementById('done');
 let lowerTextIMG = null;
 
 contentInfo.style.display = "none";
-btnDone.style.display = "none";
 
 input.addEventListener("change", () => {
 

@@ -261,7 +261,7 @@ class WebContentController extends Controller
         $contacts[Str::camel($validated['person'])]['whatsapp'][] = $validated['whatsapp'];
         
         if(isset($webcontents)) $save = $webcontents->update(['contact' => $contacts]);
-        else $save = WebContent::create(['contact' => $contacts,  'operation' => false]);
+        else $save = WebContent::create(['contact' => $contacts,  'operation' => true]);
         if($save) return redirect()->route('system.webcontent.home', '#contact')->with('success', 'Contact of '.$validated['person'].'was added');
     }
     public function showContact($key){
@@ -471,7 +471,7 @@ class WebContentController extends Controller
             $updated = $webcontents->update(['payment' => $payments]);
         }
         else{
-            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+            $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
         if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference was created');
 
@@ -528,7 +528,7 @@ class WebContentController extends Controller
             $updated = $webcontents->update(['payment' => $payments]);
         }
         else{
-            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+            $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
         if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference ('.$validate['name'].') was updated');
 
@@ -556,7 +556,7 @@ class WebContentController extends Controller
             $updated = $webcontents->update(['payment' => $payments]);
         }
         else{
-            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+            $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
         if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Reference of '.$name.' was removed');
 
@@ -605,7 +605,7 @@ class WebContentController extends Controller
             $updated = $webcontents->update(['payment' => $payments]);
         }
         else{
-            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+            $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
         if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference was created');
 
@@ -670,7 +670,7 @@ class WebContentController extends Controller
             $updated = $webcontents->update(['payment' => $payments]);
         }
         else{
-            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+            $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
         if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference ('.$validate['name'].') was updated');
 
@@ -698,7 +698,7 @@ class WebContentController extends Controller
             $updated = $webcontents->update(['payment' => $payments]);
         }
         else{
-            $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+            $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
         if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Reference of '.$name.' was removed');
 
@@ -725,7 +725,7 @@ class WebContentController extends Controller
             }
         
         if(isset($webcontents)) $updated = $webcontents->update(['payment' => $payments]);
-        else $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+        else $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference ('.$payments['gcash'][$key]['name'].') was set priority');
     }
     public function priorityPaymentPayPal(Request $request){
@@ -749,7 +749,7 @@ class WebContentController extends Controller
             }
         
         if(isset($webcontents)) $updated = $webcontents->update(['payment' => $payments]);
-        else $updated = WebContent::create(['payment' => $payments, 'operation' => false]);
+        else $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference ('.$payments['paypal'][$key]['name'].') was set priority');
     }
 

@@ -27,10 +27,10 @@
                     <div  class="w-96 rounded">
                         <p class="text-neutral text-2xl mb-3"><span class="font-bold">Step 1: </span>Enter your recipient's name, PayPal username, email, or mobile number.</p>
                         <ul class="text-neutral text-lg mt-5">
-                            <li><span class="font-bold">PayPal Name: </span>{{$reference['name']}}</li>
-                            <li><span class="font-bold">PayPal Mobile No.: </span>{{$reference['number']}}</li>
-                            <li><span class="font-bold">PayPal Email: </span>{{$reference['email']}}</li>
-                            <li><span class="font-bold">PayPal Username: </span>{{$reference['username']}}</li>
+                            <li><span class="font-bold">PayPal Name: </span>{{$reference['name'] ?? 'None'}}</li>
+                            <li><span class="font-bold">PayPal Mobile No.: </span>{{$reference['number']  ?? 'None'}}</li>
+                            <li><span class="font-bold">PayPal Email: </span>{{$reference['email']  ?? 'None'}}</li>
+                            <li><span class="font-bold">PayPal Username: </span>{{$reference['username']  ?? 'None'}}</li>
                         </ul>
                         <div class="flex justify-end space-x-1">
                             <button type="button" @click="all = true, step1 = false" class="btn btn-ghost btn-primary">Back</button>

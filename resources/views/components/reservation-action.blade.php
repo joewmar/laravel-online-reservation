@@ -15,4 +15,4 @@
     <x-checkout name="{{$data->userReservation->name() ?? ''}}" :datas="$data" />
 @endif
 <a href="{{route('system.reservation.show.cancel', encrypt($data->id))}}" class="btn btn-error btn-xs">Cancel</a>
-<label for="checkout" class="btn btn-accent btn-xs">Reschedule</label>
+<a href="{{route('system.reservation.show.reschedule', encrypt($data->id))}}" class="btn btn-accent btn-xs">Reschedule</a>
