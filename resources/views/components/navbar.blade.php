@@ -41,17 +41,19 @@
       <div class="dropdown dropdown-end">
         <label tabindex="0" class="btn btn-ghost btn-circle avatar">
           <div class="w-10 rounded-full">
-            @if(auth('web')->user()->google_id != null)
+            @if(filter_var(auth('web')->user()->avatar ?? '', FILTER_VALIDATE_URL))
               <img src="{{asset(auth('web')->user()->avatar) ?? asset('images/avatars/no-avatar.png')}}" />
-            @else
+            @elseif(auth('web')->user()->avatar ?? false)
               <img src="{{auth('web')->user()->avatar ? asset('storage/'. auth('web')->user()->avatar) : asset('images/avatars/no-avatar.png')}}" />
+            @else
+              <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
             @endif
           </div>
         </label>
         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
           <li><span class="text-lg font-bold">{{auth('web')->user()->name()}}</span></li>
           <li>
-            <a class="justify-between" class="{{$activeNav === 'Profile' ? 'text-primary' : ''}}">
+            <a href="{{route('profile.home')}}" class="justify-between" class="{{$activeNav === 'Profile' ? 'text-primary' : ''}}">
               Profile
             </a>
           </li>

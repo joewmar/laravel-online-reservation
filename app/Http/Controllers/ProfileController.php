@@ -25,7 +25,7 @@ class ProfileController extends Controller
             'avatar' =>  ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
             'first_name' => ['required'],
             'last_name' => ['required'],
-            'contact' => ['required', 'numeric', 'min:7'],
+            'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
             'email' => ['required', 'email', Rule::when($request['email'] !== $system_user->email, [Rule::unique('systems', 'email')])],
             'username' => ['required', Rule::when($request['username'] !== $system_user->username, [Rule::unique('systems', 'username')])],
             'telegram_username' => ['nullable', Rule::when($request['telegram_username'] !== $system_user->telegram_username, [Rule::unique('systems', 'telegram_username')])],

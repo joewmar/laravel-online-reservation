@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('country');
             $table->string('contact');
             $table->string('email')->unique();
+            $table->string('valid_id')->nullable();
+            $table->dateTime('active_at')->nullable();
             $table->timestamps();
         });
     }

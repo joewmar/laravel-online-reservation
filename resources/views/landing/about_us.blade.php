@@ -1,4 +1,4 @@
-<x-landing-layout>
+<x-landing-layout noFooter>
   <x-navbar :activeNav="$activeNav"/>
   <div class="hero min-h-screen bg-base-200">
     <div class="hero-content text-center">

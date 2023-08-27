@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             'contact' => '123456897',
             'email'=> 'recelestino90@gmail.com',
             'password' => Hash::make('123456789'),
+            'valid_id' => 'valid_id/Valid_ID-sample.jpg',
         ]);
         \App\Models\RoomRate::create([
             'name' => 'Single Room',
@@ -53,6 +54,11 @@ class DatabaseSeeder extends Seeder
             'name' => 'Triple Bed',
             'occupancy' => 3,
             'price' => 1100.00,
+        ]);
+        \App\Models\RoomRate::create([
+            'name' => 'Multi-Sharing',
+            'occupancy' => 4,
+            'price' => 700.00,
         ]);
 
         // \App\Models\Reservation::factory()->create([
@@ -76,16 +82,15 @@ class DatabaseSeeder extends Seeder
             'user_id' => 2,
             // 'roomid' => 1,
             // 'roomrateid' => 1,
-            'pax' => 2,
-            'tour_pax' => 2,
+            'pax' => 4,
+            'tour_pax' => 4,
             'accommodation_type' => 'Overnight',
             'payment_method' => 'Gcash',
             'age' => User::findOrfail(1)->age(),
             'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
             'check_out' => Carbon::now()->addDays(18)->toDateTimeString(),
             'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-            'valid_id' => 'valid_id/Valid_ID-sample.jpg',
-            'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider', 'price' => 2100.00, 'amount' => 2100.00 * 2]],
+            'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider', 'price' => 2100.00, 'amount' => 2100.00 * 4]],
         ]);
 
         \App\Models\System::factory()->create([
@@ -212,7 +217,7 @@ class DatabaseSeeder extends Seeder
         // \App\Models\Archive::factory(50)->create();
 
         \App\Models\WebContent::create([
-            'operation' => false,
+            'operation' => 1,
         ]);
 
     }

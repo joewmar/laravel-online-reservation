@@ -50,19 +50,20 @@ class LoginController extends Controller
     public function handleGoogleCallback(){
         try {
             $user = Socialite::driver('google')->user();
-            $finduser = User::where('google_id', $user->id)->first();
+            $finduser = User::where('google_id', $user->id)->orWhere('email', $user->email)->first();
             if($finduser){
                 Auth::login($finduser);
                 return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
             }
             else{
-                session('ginfo', [
+                $users = [
                     'google_id' => $user->id,
                     'avatar' => $user->avatar,
                     'first_name' => $user['given_name'],
                     'last_name' => $user['family_name'],
                     'email'=> $user->email,
-                ]);
+                ];
+                session(['ginfo' => $users]);
                 return redirect()->route('google.fillup');
             }
         } 
@@ -78,22 +79,22 @@ class LoginController extends Controller
     public function handleFacebookCallback(){
         try {
             $user = Socialite::driver('facebook')->user();
-            dd($user);
-            // $finduser = User::where('google_id', $user->id)->first();
-            // if($finduser){
-            //     Auth::login($finduser);
-            //     return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
-            // }
-            // else{
-            //     $newUser = User::create([
-            //         'google_id' => $user->id,
-            //         'avatar' => $user->avatar,
-            //         'first_name' => $user['given_name'],
-            //         'last_name' => $user['family_name'],
-            //         'email'=> $user->email,
-            //     ]);
-            //     return redirect()->route('google.fillup', $newUser->google_id);
-            // }
+            $finduser = User::where('facebook_id', $user->id)->orWhere('email', $user->email)->first();
+            if($finduser){
+                Auth::login($finduser);
+                return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
+            }
+            else{
+                $users = [
+                    'facebook_id' => $user->id,
+                    'avatar' => $user->avatar,
+                    'first_name' => explode(' ', $user->name)[0],
+                    'last_name' => explode(' ', $user->name)[1],
+                    'email'=> $user->email,
+                ];
+                session(['fbubser' => $users]);
+                return redirect()->route('facebook.fillup');
+            }
         } 
         catch (Exception $e) {
             return redirect()->route('facebook.redirect');

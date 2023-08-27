@@ -99,7 +99,7 @@ class LiveCommand extends Command
         }
         unset($checkInToday,  $keyboard, $text, $details,  $system_user, $webcontent, $reservations);
 
-        $this->info('Live Run...');
+        $this->info('Live Application Updated');
 
     }
 }

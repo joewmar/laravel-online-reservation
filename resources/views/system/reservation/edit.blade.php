@@ -69,7 +69,7 @@
                             <label for="RoomNo{{$item->room_no}}">
                                 <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 {{$item->availability == 1 ? 'opacity-70 bg-red-600' : 'border-primary cursor-pointer'}}">
                                     @if($item->availability == 1)
-                                        <span class="absolute inset-x-0 bottom-0 h-full  bg-red-500 opacity-80 flex items-center"><h4 class="text-base-100 block font-medium w-full text-center">Reserved</h4></span>
+                                        <span class="absolute inset-x-0 bottom-0 h-full  bg-red-500 opacity-80 flex items-center"><h4 class="text-base-100 block font-medium w-full text-center">Full</h4></span>
                                     @else
                                         <span class="absolute inset-x-0 bottom-0 h-3 bg-primary flex flex-col items-center justify-center">
                                             <h4 class="text-primary-content hidden font-medium w-full text-center">Room No. {{$item->room_no}} Selected</h4> 
@@ -219,9 +219,9 @@
                     <div class="w-96">
                         <h2 class="text-lg my-5">Valid ID Information</h2>
                         <div class="w-96 rounded">
-                            <img src="{{route('private.image', ['folder' => explode('/', $r_list->valid_id)[0], 'filename' => explode('/', $r_list->valid_id)[1]])}}" alt="Valid ID">
+                            <img src="{{route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]])}}" alt="Valid ID">
                         </div>
-                        <x-file-input id="valid_id" name="valid_id" placeholder="Send Valid ID" value="{{ route('private.image', ['folder' => explode('/', $r_list->valid_id)[0], 'filename' => explode('/', $r_list->valid_id)[1]]) }}" />
+                        <x-file-input id="valid_id" name="valid_id" placeholder="Send Valid ID" value="{{ route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]]) }}" />
                     </div>
                 </div>
                 <div class="flex justify-end space-x-3">

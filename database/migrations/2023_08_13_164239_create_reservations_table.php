@@ -27,7 +27,6 @@ return new class extends Migration
             $table->tinyInteger('status')->default(0); /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => done, 4 => reshedule, 5 => cancel, 6 => disaprove*, 7 => pending reschedule, 8 => pending cancel */
             $table->json('transaction')->nullable();
             $table->json('message')->nullable();
-            $table->string('valid_id');
             $table->dateTime('payment_cutoff')->nullable();
             $table->timestamps();
         });

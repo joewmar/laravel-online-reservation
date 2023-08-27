@@ -159,16 +159,16 @@
                     </div>
       
                     <div class="col-span-6">
-                      <x-select id="country" name="country" placeholder="Country" :value="$countries" :title="$countries" selected="{{old('country') ?? ''}}" />
+                      <x-datalist-input id="country" name="country" placeholder="Country" :lists="$countries" value="{{old('country') ?? ''}}" />
                     </div>
                     <div class="col-span-6">
-                      <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" :title="$nationality" selected="{{old('nationality') ?? ''}}" />
+                      <x-datalist-input id="nationality" name="nationality" placeholder="Nationality" :lists="$nationality" value="{{old('nationality') ?? ''}}" />
                     </div>
                     <div class="col-span-6">
                       <x-input type="email" name="email" id="email" placeholder="Contact Email" />
                     </div>
                     <div class="col-span-6">
-                      <x-input type="number" id="contact" name="contact" placeholder="Phone Number"/>
+                    <x-phone-input />
                     </div>
                     <div class="col-span-6">
                       <div class="w-full">

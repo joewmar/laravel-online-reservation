@@ -48,7 +48,7 @@
           @csrf
           @if(request()->has('rpl'))
               <x-input type="text" id="title" placeholder="Title" value="{{$arrTl['title'] ?? ''}}" disabled=true/>
-              <x-input id="category"  placeholder="Category" value="{{$arrTl['category'] ?? ''}}" disabled=true/>
+              <x-datalist-input id="category"  placeholder="Category" :lists="$category" value="{{$arrTl['category'] ?? ''}}" disabled=true/>
               <x-select id="tour_type" name="tour_type"  placeholder="Tour Type" :value="$arrTrType" :title="$arrTrType" selected="{{$arrTl['tour_type'] ?? ''}}" disabled=true/>
               <x-input type="number" id="no_day" placeholder="Number of days" min="0.0" value="{{$arrTl['no_day'] ?? ''}}" disabled=true/>
               <x-textarea id="inclusion"  placeholder="Inclusion (Item 1, Item 2)" value="{{$arrTl['inclusion'] ?? ''}}" disabled=true/>
@@ -56,7 +56,7 @@
               <div x-init="$el.scrollIntoView();" class="border border-primary mb-8 rounded-md shadow-md p-8">
           @else
               <x-input type="text" id="title" name="title" placeholder="Title"  />
-              <x-input id="category" name="category" placeholder="Category" />
+              <x-datalist-input id="category" name="category"  placeholder="Category" :lists="$category" />
               <x-select id="tour_type" name="tour_type" placeholder="Tour Type" :value="$arrTrType" :title="$arrTrType" selected="{{$arrTl['tour_type'] ?? old('tour_type')}}" />
               <x-input type="number" id="no_day" name="no_day" placeholder="Number of days" min="0.0" />
               <x-textarea id="inclusion" name="inclusion" placeholder="Inclusion (Item 1, Item 2)" />

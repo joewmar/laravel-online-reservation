@@ -56,13 +56,12 @@ class CreateReservationController extends Controller
             if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
             if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
             if($newPax > $room->getVacantPax() && $reservationPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
-            if($newPax > $rate->occupancy) return back()->with('error', 'Room No. '.$room->room_no.' Guest you choose does not match on room rate')->withInput($validated);
             $reservationPax += (int)$newPax;
             $roomCustomer[$room_id] = $newPax;
 
         }
-        if($reservationPax > $rate->occupancy || $reservationPax < $rate->occupancy) return back()->with('error', 'All Room Guest you choose does not match on room rate')->withInput($validated);
-        if($reservationPax > $validated['pax'] || $reservationPax < $validated['pax']) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
+        if($reservationPax > $validated['pax'] || $reservationPax <  $validated['pax']) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
+        
         $param = [
             'rt' => $rate->id,
             'rm' => $roomCustomer,
@@ -327,7 +326,7 @@ class CreateReservationController extends Controller
             'payment_amount' => ['required', 'numeric','min:1000'],
             'country' => ['required', 'min:1'],
             'nationality' => ['required'],
-            'contact' => ['required', 'numeric', 'min:7'],
+            'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
             'email' => ['required', 'email', Rule::unique('user_offlines', 'email')],
             'valid_id' => ['image', 'mimes:jpeg,png,jpg', 'max:5024'], 
         ], [
@@ -353,13 +352,7 @@ class CreateReservationController extends Controller
             $transaction = [];
             $roomDetails = [];
             $decrypted = decryptedArray(session('rinfo'));
-            if(isset($decrypted['rm'])){
-                foreach($decrypted['rm'] as $id => $pax){
-                    $room = Room::find($id);
-                    $room->addCustomer($created->id, $pax);
-                    $roomDetails[] = 'Room No. ' . $room->room_no . ' ('.$room->room->name.')';
-                }
-            }
+
             if(isset($decrypted['tm'])){
                 foreach($decrypted['tm'] as $key => $tour_id){
                     $tour_menu = TourMenu::find($tour_id);
@@ -403,6 +396,13 @@ class CreateReservationController extends Controller
                 'transaction' => $transaction,
                 'valid_id' => $validated['valid_id'] ?? null,
             ]);
+            if(isset($decrypted['rm'])){
+                foreach($decrypted['rm'] as $id => $pax){
+                    $room = Room::find($id);
+                    $room->addCustomer($reserved->id, $pax);
+                    $roomDetails[] = 'Room No. ' . $room->room_no . ' ('.$room->room->name.')';
+                }
+            }
         }
             $text = 
             "Employee Action: Create Reservation !\n" .

@@ -24,6 +24,7 @@ use App\Http\Controllers\RoomSettingController;
 use App\Http\Controllers\TourSettingController;
 use App\Http\Controllers\CreateReservationController;
 use App\Http\Controllers\SystemReservationController;
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,7 +39,9 @@ use App\Http\Controllers\SystemReservationController;
 
 Auth::routes();
 
-
+Route::middleware(['auth.image'])->group(function () {
+    Route::get('/private/{folder}/{filename}', [HomeController::class,'showImage'])->name('private.image');
+});
 // Route::get('/bot/getUpdates',[LandingController::class, 'teleUpdates'])->name('home');
 Route::controller(LandingController::class)->group(function (){
     Route::get('/', 'index')->name('home');
@@ -75,14 +78,23 @@ Route::middleware(['guest:web'])->group(function(){
 
     Route::get('/auth/google/fillup', [UserController::class, 'fillupGoogle'])->name('google.fillup');
     Route::post('/auth/google/fillup/update', [UserController::class, 'fillupGoogleUpdate'])->name('google.fillup.store');
+
+    Route::get('/auth/facebook/fillup', [UserController::class, 'fillupFacebook'])->name('facebook.fillup');
+    Route::post('/auth/facebook/fillup/update', [UserController::class, 'fillupFacebookUpdate'])->name('facebook.fillup.store');
     
 
 });
 
 // Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
-Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
+Route::middleware(['auth:web', 'preventBackhHistory'])->controller(UserController::class)->group(function(){
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
-    Route::view('/profile', 'home')->name('profile');
+    Route::prefix('profile')->name('profile.')->group(function (){
+        Route::get('/', 'index')->name('home');
+        Route::put('/{id}/update/avatar', 'updateAvatar')->name('update.avatar');
+        Route::put('/{id}/update/user/info', 'updateUserInfo')->name('update.user.info');
+        Route::put('/{id}/update/password', 'updatePassword')->name('update.password');
+        Route::put('/{id}/update/valid-id', 'updateValidID')->name('update.validid');
+    });
 
     Route::prefix('my-reservation')->name('user.reservation.')->controller(ReservationController::class)->group(function (){
         Route::get('/','index')->name('home');
@@ -402,8 +414,3 @@ Route::prefix('system')->name('system.')->group(function(){
 Route::get('reservation/{id}/receipt', [SystemReservationController::class, 'receipt'])->name('reservation.receipt');
 Route::get('reservation/{id}/feedback', [ReservationController::class, 'feedback'])->name('reservation.feedback');
 Route::post('reservation/{id}/feedback', [ReservationController::class, 'storeFeedback'])->name('reservation.feedback.store');
-
-Route::middleware(['auth.image'])->group(function () {
-    Route::get('/private/{folder}/{filename}', [HomeController::class,'showImage'])->name('private.image');
-});
-

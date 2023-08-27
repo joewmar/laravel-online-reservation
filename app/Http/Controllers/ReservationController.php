@@ -655,7 +655,7 @@ class ReservationController extends Controller
             'birthday' => ['required'],
             'country' => ['required', 'min:1'],
             'nationality' => ['required'],
-            'contact' => ['required', 'numeric', 'min:7'],
+            'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
             'email' => Rule::when($user->email === $request['email'], ['required', 'email'] ,['required', 'email',  Rule::unique('users', 'email')]),
         ]);
         $user->update($validated);

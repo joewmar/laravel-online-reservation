@@ -57,7 +57,7 @@
                   </a>
                 </div>
                 <div>
-                  <a href="https://mail.google.com/mail/?view=cm&fs=1&to=bognothomestay@gmail.com" class="link link-hover">
+                  <a href="mailto:bognothomestay@gmail.com" class="link link-hover">
                     <i class="fa-regular fa-envelope text-xl"></i>
                     bognothomestay@gmail.com
                   </a>

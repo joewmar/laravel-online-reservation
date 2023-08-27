@@ -194,7 +194,4 @@
           </div>    
         </div>   
       </x-system-content>
-      @push('scripts')
-        <script type="module" src='{{Vite::asset("resources/js/analytics-chart.js")}}'></script>
-     @endpush
 </x-system-layout>

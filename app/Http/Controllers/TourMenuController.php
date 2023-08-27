@@ -25,10 +25,11 @@ class TourMenuController extends Controller
         return view('system.service.index', ['activeSb' => 'Tour Menu', 'tour_lists' => TourMenuList::all()]);
     }
     public function create(Request $request){
+        $category = TourMenuList::distinct()->get('category')->pluck('category');
         if($request->has('tl')){
-            return view('system.service.create', ['activeSb' => 'Tour Menu', 'service_menus' => TourMenuList::all(), 'tl' =>  TourMenuList::findOrFail(decrypt($request['tl']))]);
+            return view('system.service.create', ['activeSb' => 'Tour Menu', 'service_menus' => TourMenuList::all(), 'tl' =>  TourMenuList::findOrFail(decrypt($request['tl'])), 'category' => $category]);
         }
-        return view('system.service.create', ['activeSb' => 'Tour Menu', 'service_menus' => TourMenuList::all()]);
+        return view('system.service.create', ['activeSb' => 'Tour Menu', 'service_menus' => TourMenuList::all(), 'category' => $category]);
     }
     public function createAddons(){
         return view('system.service.addons.create', ['activeSb' => 'Tour Menu']);
@@ -105,7 +106,8 @@ class TourMenuController extends Controller
                     'inclusion' => ['nullable'],
                     'no_day' =>  ['required', 'numeric', 'min:1', Rule::when(($request['tour_type'] === 'Day Tour'), ['min:1', 'max:1']), Rule::when(($request['tour_type'] === 'Overnight'), ['min:2'])],
                     'tour_type' =>  ['required'],
-                    'pax' => ['required'],
+                    'pax' => ['required', 'numeric'],
+                    'type' => ['required'],
                     'price' =>  ['required', 'numeric', 'decimal:0,2'],
                     'passcode' =>  ['required', 'numeric', 'digits:4'],
                 ]);
@@ -116,7 +118,7 @@ class TourMenuController extends Controller
                             'category' => $validated['category'],
                             'inclusion' => $validated['inclusion'] ?? null,
                             'tour_type' =>  $validated['tour_type'],
-                            'no_day' =>  ['required', 'numeric', 'min:1', Rule::when(($request['tour_type'] === 'Day Tour'), ['min:1', 'max:1']), Rule::when(($request['tour_type'] === 'Overnight'), ['min:2'])],
+                            'no_day' =>  $validated['no_day'],
 
 
                         ]);

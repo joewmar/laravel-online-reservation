@@ -279,7 +279,7 @@ class WebContentController extends Controller
         $contact = $webcontents->contact;
         if($request->has('contact')){
             $validate = Validator::make($request->input(), [
-                'contact' => ['numeric', 'required'],
+                'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
@@ -446,8 +446,7 @@ class WebContentController extends Controller
         $validate = $validate->validate();
         if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
         $validate = $request->validate([
-            'gcash_number' => ['required', 'numeric'],
-            'name' => ['required'],
+            'gcash_number' => ['required', 'numeric', 'min:10'],            'name' => ['required'],
             'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
         ]);
         $payments = $webcontents->payment ?? [];
@@ -500,8 +499,7 @@ class WebContentController extends Controller
         $validate = $validate->validate();
         if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
         $validate = $request->validate([
-            'gcash_number' => ['required', 'numeric'],
-            'name' => ['required'],
+            'gcash_number' => ['required', 'numeric', 'min:10'],            'name' => ['required'],
             'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
         ]);
         $payments = $webcontents->payment ?? [];
@@ -574,7 +572,7 @@ class WebContentController extends Controller
         $validate = $validate->validate();
         if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
         $validate = $request->validate([
-            'paypal_number' => ['required', 'numeric'],
+            'paypal_number' => ['required', 'numeric', 'min:10'],
             'name' => ['required'],
             'email' => ['required', 'email'],
             'username' => ['required'],
@@ -634,7 +632,7 @@ class WebContentController extends Controller
         $validate = $validate->validate();
         if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
         $validate = $request->validate([
-            'paypal_number' => ['required', 'numeric'],
+            'paypal_number' => ['required', 'numeric', 'min:10'],
             'name' => ['required'],
             'email' => ['required', 'email'],
             'username' => ['required'],

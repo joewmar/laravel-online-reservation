@@ -85,6 +85,7 @@ class AppServiceProvider extends ServiceProvider
             'CHF' => 'CHF',
             'CNY' => '¥',
             'INR' => '₹',
+            'PHP' => '₱',
         ];
 
         View::share('currencies', $arrCur);

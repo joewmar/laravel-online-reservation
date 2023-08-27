@@ -32,18 +32,52 @@
         {{-- Birthday --}}
         <x-datetime-picker name="birthday" id="birthday" placeholder="Birthday" class="flatpickr-bithday" />
         {{-- Nationality--}}
-        <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" :title="$nationality" selected="{{old('nationality') ?? ''}}" />
+        <x-datalist-input id="nationality" name="nationality" placeholder="Nationality" :lists="$nationality" value="{{old('nationality') ?? ''}}" />
         {{-- Country--}}
-        <x-select id="country" name="country" placeholder="Country" :value="$countries" :title="$countries" selected="{{old('country') ?? ''}}" />
+        <x-datalist-input id="country" name="country" placeholder="Country" :lists="$countries" value="{{old('country') ?? ''}}" />
         {{-- Phone Number  --}}
-        <x-input type="tel" name="contact" placeholder="Phone Number"/>
+        <x-phone-input />
         {{-- Email  --}}
         <x-input type="email" name="email" placeholder="Contact Email"/>
 
-        {{-- Password --}}
-        <x-input type="password" name="password" placeholder="Password"/>
-        {{-- Confrim Password --}}
-        <x-input type="password" name="password_confirmation" placeholder="Confirm Password"/>
+        <div x-data="{ show: true }" class="form-control w-full mb-4">
+          <label for="password" class="relative flex rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error('password') ring-1 ring-error border-error @enderror" >
+            <input :type="show ? 'password' : 'text'" name="password" class="input input-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0" placeholder="Password" />
+            <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs" >
+              Password
+            </span>
+            <span class="absolute inset-y-0 end-0 grid w-10 place-content-center">
+              <button type="button" @click="show = !show" class="rounded-full bg-transparent p-0.5 text-neutral hover:text-primary" onclick="visible()" >
+                <span class="sr-only">Password</span>
+                <i :class="show ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'" x-cloak></i>
+              </button>
+            </span>
+          </label>
+          @error('password')
+            <label class="label">
+              <span class="label-text-alt text-error">{{$message}}</span>
+            </label>
+          @enderror
+        </div>
+        <div x-data="{ showConfirm: true }" class="form-control w-full mb-4">
+          <label for="password_confirmation" class="relative flex rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error('password') ring-1 ring-error border-error @enderror" >
+            <input :type="showConfirm ? 'password' : 'text'" id="password_confirmation" name="password_confirmation" class="input input-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0" placeholder="Confirm Password" />
+            <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs" >
+              Confirm Password
+            </span>
+            <span class="absolute inset-y-0 end-0 grid w-10 place-content-center">
+              <button type="button" @click="showConfirm = !showConfirm" class="rounded-full bg-transparent p-0.5 text-neutral hover:text-primary" >
+                <span class="sr-only">Password</span>
+                <i :class="showConfirm ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'" x-cloak></i>
+              </button>
+            </span>
+          </label>
+          @error('password_confirmation')
+            <label class="label">
+              <span class="label-text-alt text-error">{{$message}}</span>
+            </label>
+          @enderror
+        </div>
         <div class="form-control mt-6">
             <button type="submit" class="btn btn-primary w-full">Sign up</button>
         </div>

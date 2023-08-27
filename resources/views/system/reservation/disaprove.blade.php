@@ -79,6 +79,7 @@
                             <option value="" disabled selected>Please select</option>
                             <option value="No Room Available">No Room Available</option>
                             <option value="Unable to pay the downpayment">Unable to pay the downpayment</option>
+                            <option value="Unable to pay the downpayment">Invalid ID</option>
                             <option value="Other">Other</option>
                         </select>        
                         <span id="room_rate" class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-neutral transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">

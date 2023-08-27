@@ -141,7 +141,7 @@
                 {{-- Number of Guest --}}
                 <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$TourInfo['px']}}"/>
                 <template x-if="at === 'Day Tour' || at === 'Overnight'">
-                  <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$TourInfo['tpx'] < $TourInfo['px'] ? $TourInfo['px'] : $TourInfo['tpx']}}" />
+                  <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$TourInfo['tpx'] ?? ''}}" />
                 </template>
                 {{-- Payment Method  --}}
                 <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$TourInfo['py']}}"/>

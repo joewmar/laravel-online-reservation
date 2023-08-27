@@ -27,7 +27,6 @@ class Reservation extends Model
         'check_out',
         'status',
         'transaction',
-        'valid_id',
         'message',
     ];
     public function userReservation(){

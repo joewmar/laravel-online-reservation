@@ -15,7 +15,8 @@ class HomeController extends Controller
      */
     public function showImage($folder, $filename)
     {    
-    $path = $folder . '/' . $filename;
+        $path = $folder . '/' . $filename;
+        
         // Check if the file exists in the private storage
         if (!Storage::disk('private')->exists($path)) {
             abort(404);

@@ -63,9 +63,10 @@
                   @else
                       <x-input type="text" id="age" name="age" placeholder="Your Age" value="{{auth('web')->user()->age()}}" /> 
                   @endif
-                  <x-select id="country" name="country" placeholder="Your Country" :value="$countries" :title="$countries" selected="{{$user->country ?? auth('web')->user()->country}}" />
-                  <x-select id="nationality" name="nationality" placeholder="Your Nationality" :value="$nationality" :title="$nationality" selected="{{$user->nationality ?? auth('web')->user()->nationality}}" />
+                  <x-datalist-input id="country" name="country" placeholder="Your Country" :lists="$countries" value="{{$user->country ?? auth('web')->user()->country}}" />
+                  <x-datalist-input id="nationality" name="nationality" placeholder="Your Nationality" :lists="$nationality" value="{{$user->nationality ?? auth('web')->user()->nationality}}" />
                   <x-input type="number" id="contact" name="contact" placeholder="Your Phone Number" value="{{$user->contact ?? auth('web')->user()->contact}}" /> 
+                  <x-phone-input value="{{$user->contact ?? auth('web')->user()->contact}}" />
                   <div class="col-span-full md:col-span-2">
                     <x-input type="email" id="email" name="email" placeholder="Your Email Address" value="{{$user->email ?? auth('web')->user()->email}}" /> 
                   </div>

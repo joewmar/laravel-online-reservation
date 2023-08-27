@@ -18,6 +18,7 @@ class UserOffline extends Model
         "email" ,
         "nationality",
         "contact",
+        'valid_id',
     ];
     public function reservation(){
         return $this->hasOne(Reservation::class, 'offline_user_id');

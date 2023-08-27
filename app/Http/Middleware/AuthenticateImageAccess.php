@@ -17,11 +17,8 @@ class AuthenticateImageAccess
     {
         // Check if the user is authenticated
 
-        if (!auth('system')->check() && !auth('web')->check()) 
-        {
-            abort(404); // Return unauthorized response
-        }
-
+        if (!auth('system')->check()) abort(404); 
+        if (!auth('web')->check()) abort(404); // Return unauthorized response
         return $next($request);
         
     }

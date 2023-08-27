@@ -16,11 +16,11 @@
         <h2 class="mb-1 font-bold text-xl md:text-3xl text-center">Let's Create Account!</h2>
         <div class="flex justify-center gap-5 w-full">
           <div class="tooltip" data-tip="Sign up with Google">
-            <a class="btn btn-circle btn-outline btn-error">
+            <a href={{route('google.redirect')}} class="btn btn-circle btn-outline btn-error">
               <i class="fa-brands fa-google"></i>
             </a>
           </div>
-          <div class="tooltip" data-tip="Sign up with Facebook">
+          <div href={{route('facebook.redirect')}} class="tooltip" data-tip="Sign up with Facebook">
             <a class="btn btn-circle btn-outline btn-info">
               <i class="fa-brands fa-facebook"></i>
             </a>
@@ -40,18 +40,19 @@
           {{-- Birthday --}}
           <x-datetime-picker name="birthday" id="birthday" placeholder="Birthday" class="flatpickr-bithday" />
           {{-- Nationality--}}
-          <x-select id="nationality" name="nationality" placeholder="Nationality" :value="$nationality" :title="$nationality" selected="{{old('nationality') ?? ''}}" />
+          <x-datalist-input id="nationality" name="nationality" placeholder="Nationality" :lists="$nationality" value="{{old('nationality') ?? ''}}" />
           {{-- Country--}}
-          <x-select id="country" name="country" placeholder="Country" :value="$countries" :title="$countries" selected="{{old('country') ?? ''}}" />
+          <x-datalist-input id="country" name="country" placeholder="Country" :lists="$countries" value="{{old('country') ?? ''}}" />
           {{-- Phone Number  --}}
-          <x-input type="number" name="contact" placeholder="Phone Number"/>
+          <x-phone-input />
           {{-- Email  --}}
           <x-input type="email" name="email" placeholder="Contact Email"/>
 
           {{-- Password --}}
-          <x-input type="password" name="password" placeholder="Password"/>
+          {{-- <x-input type="password" name="password" placeholder="Password"/> --}}
+          <x-password />
+          <x-password name="password_confirmation" id="password_confirmation" placeholder="Confirm Password" />
           {{-- Confrim Password --}}
-          <x-input type="password" name="password_confirmation" placeholder="Confirm Password"/>
           <div class="form-control mt-6">
               <button type="submit" class="btn btn-primary w-full">Sign up</button>
           </div>
@@ -59,7 +60,7 @@
       </div>
       <p class="text-sm text-neutral w-full text-center">
         Already have an account?
-        <a href="/login" class="link link-hover link-primary">Sign in </a>.
+        <a href="{{route('login')}}" class="link link-hover link-primary">Sign in </a>.
       </p>
       </div>
     </div>

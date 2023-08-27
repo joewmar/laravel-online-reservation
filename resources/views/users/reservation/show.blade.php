@@ -248,7 +248,7 @@
                 <div class="divider"></div>
                 <div class="flex flex-wrap justify-center w-full">
                     <div class="w-96 rounded">
-                        <img src="{{route('private.image', ['folder' => explode('/', $r_list->valid_id)[0], 'filename' => explode('/', $r_list->valid_id)[1]])}}" alt="Valid ID of {{$r_list->userReservation->name()}}">
+                        <img src="{{route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]])}}" alt="Valid ID of {{$r_list->userReservation->name()}}">
                     </div>
                 </div>
                 <div class="divider"></div>

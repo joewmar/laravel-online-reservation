@@ -3,6 +3,7 @@
 use Carbon\Carbon;
 use App\Models\Room;
 use App\Models\Reservation;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Intervention\Image\Facades\Image;
 use Telegram\Bot\FileUpload\InputFile;
@@ -175,7 +176,7 @@ function saveImageWithJPG(Request $request, $fieldName, $folderName,$option = 'p
         else $imageFile = $request->file($fieldName);
         
         // Generate a unique filename for the image
-        $imageName = uniqid() . '.jpg';
+        $imageName = Str::random(8) . '.jpg';
         // Generate the full path where you want to save the image in the storage folder
         $destinationPath = $option . '/' . $folderName . '/' . $imageName;
         // Save the image using Intervention Image
