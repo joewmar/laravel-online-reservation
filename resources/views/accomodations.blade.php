@@ -19,7 +19,7 @@
           @foreach ($categories as $category)
             <article class="my-5">
               <h2 class="text-2xl font-bold mb-3">{{$category->category}}</h2>
-              <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:grid-cols-3">
                 @php $menu_id = null @endphp
                 @foreach($tour_menu as $menu)
                   @if($category->category === $menu->tourMenu->category)
