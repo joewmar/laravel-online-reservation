@@ -67,9 +67,7 @@
                   <x-datalist-input id="nationality" name="nationality" placeholder="Your Nationality" :lists="$nationality" value="{{$user->nationality ?? auth('web')->user()->nationality}}" />
                   <x-input type="number" id="contact" name="contact" placeholder="Your Phone Number" value="{{$user->contact ?? auth('web')->user()->contact}}" /> 
                   <x-phone-input value="{{$user->contact ?? auth('web')->user()->contact}}" />
-                  <div class="col-span-full md:col-span-2">
-                    <x-input type="email" id="email" name="email" placeholder="Your Email Address" value="{{$user->email ?? auth('web')->user()->email}}" /> 
-                  </div>
+                  <x-input type="email" id="email" name="email" placeholder="Your Email Address" value="{{$user->email ?? auth('web')->user()->email}}" /> 
                 </div>
               </div>
                 <br>

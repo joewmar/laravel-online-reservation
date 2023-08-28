@@ -92,38 +92,26 @@ function checkAvailRooms($pax, $dates)
     $isFull = false;
     $countPaxes = 0;
     $rooms = Room::all();
-    $reservation = Reservation::where('status', '>', 1);
-    $maxOccAll = 0;
+    $reservation = Reservation::whereIn('status', [1,2,3])->get();
+    $vacantAll = 0; // Get All Vacant
     foreach($rooms as $key => $room){
         if($room->availability == 0){
-            $countOccupancy = 0;
-            $maxOccAll += $room->room->max_occupancy;
-            if($room->customer){
-                foreach ($room->customer as $key => $item) {
-                    $arrPreCus[$key]['pax'] = $item ?? '';
-                    if(!($room->room->max_occupancy >=  $countOccupancy)){
-                        $countOccupancy += (int)$arrPreCus[$key]['pax'];
-                    }
-                }
-            }
-            $countPaxes += (int)$countOccupancy;
+            $vacantAll += $room->getVacantPax();
         }
     }
-    $vacantAll = abs($maxOccAll - $countPaxes) ; // Get All Available Room
-    if($vacantAll >= $pax && $maxOccAll !== $countPaxes){
+    if($vacantAll < $pax){
         foreach($reservation as $item){
-            if(Carbon::parse($item->check_out)->timestamp < Carbon::parse($dates)->timestamp){
+            if(Carbon::parse($item->check_out)->tomorrow()->timestamp < Carbon::parse($dates)->timestamp){
                 $isFull = true;
                 break;
             }
             else{
                 $isFull = false;
-    
             }
         }
     }
     else{
-        $isFull = true;
+        $isFull = false;
     }
     unset($vacantAll, $countPaxes, $arrPreCus, $countOccupancy, $maxOccAll, $rooms, $reservation, $countPaxes);
     return $isFull;

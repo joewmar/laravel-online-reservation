@@ -13,6 +13,7 @@ export default defineConfig({
                 'resources/js/flatpickr.js',
                 'resources/js/navbar.js',
                 'resources/js/passcode.js',
+                'resources/js/reservation-calendar.js',
                 'resources/js/payment-image.js',
             ],
             refresh: true,

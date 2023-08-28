@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
       headerToolbar: {
           left: 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+          right: 'dayGridDay,dayGridWeek,dayGridMonth,listMonth'
       },
       events: window.location + '/calendar',
       eventClick: function(info) {

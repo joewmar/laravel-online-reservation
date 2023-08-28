@@ -747,10 +747,11 @@ class ReservationController extends Controller
         }
     }
     public function storeReservation(Request $request){
+        $user = User::findOrFail(auth('web')->user()->id);
         $systemUser = System::all()->where('type', '>=', 0)->where('type', '<=', 1);
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $validated = $request->validate([
-            'valid_id' => ['required' ,'image', 'mimes:jpeg,png,jpg', 'max:5024'], 
+            'valid_id' => Rule::when($request->hasFile('tour'), ['required' ,'image', 'mimes:jpeg,png,jpg', 'max:5024']), 
             'tour' => Rule::when(!empty($request['tour']), ['required', 'array'], ['nullable']), 
         ], [
             'required' => 'The image is required',
@@ -772,7 +773,7 @@ class ReservationController extends Controller
                 ];
             }
             $reserve_info = Reservation::create([
-                'user_id' => auth('web')->user()->id,
+                'user_id' => $user->id,
                 'pax' => $uinfo['px'] ?? '',
                 'tour_pax' => $uinfo['tpx'],
                 'age' => $uinfo['age'] ?? '',
@@ -781,23 +782,24 @@ class ReservationController extends Controller
                 'check_in' => $uinfo['cin'] ?? '',
                 'check_out' => $uinfo['cout'] ?? '',
                 'transaction' => $tours,
-                'valid_id' => $validated['valid_id'],
+                
             ]);
+            
             
         }
         else{
             $reserve_info = Reservation::create([
-                'user_id' => auth('web')->user()->id,
+                'user_id' => $user->id,
                 'pax' => $uinfo['px'] ?? '',
                 'tour_pax' => $uinfo['tpx'],
                 'age' => $uinfo['age'] ?? '',
                 'check_in' => $uinfo['cin'] ?? '',
                 'check_out' => $uinfo['cout'] ?? '',
                 'accommodation_type' => $uinfo['at'] ?? '',
-                'valid_id' => $validated['valid_id'],
 
             ]);
         }
+        $user->update(['valid_id' => $validated['valid_id']]);
         $text = 
         "New Reservation!\n" .
         "Name: ". $reserve_info->userReservation->name() ."\n" . 

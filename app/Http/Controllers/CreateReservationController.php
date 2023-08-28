@@ -335,6 +335,9 @@ class CreateReservationController extends Controller
             'mimes' => 'The image must be of type: jpeg, png, jpg',
             'max' => 'The image size must not exceed 5 MB',
         ]);
+        if($request->hasFile('valid_id')){  
+            $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
+        }
         $created = UserOffline::create([
             "first_name"  => $validated['first_name'],
             "last_name" => $validated['last_name'],
@@ -343,12 +346,10 @@ class CreateReservationController extends Controller
             "nationality" => $validated['nationality'],
             "email" => $validated['email'],
             "contact" => $validated['contact'],
+            "valid_id" => $validated['valid_id'] ?? null,
         ]);
 
         if($created){
-            if($request->hasFile('valid_id')){  
-                $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
-            }
             $transaction = [];
             $roomDetails = [];
             $decrypted = decryptedArray(session('rinfo'));
@@ -394,7 +395,6 @@ class CreateReservationController extends Controller
                 'check_out' => $decrypted['cout'],
                 'status' => $decrypted['st'],
                 'transaction' => $transaction,
-                'valid_id' => $validated['valid_id'] ?? null,
             ]);
             if(isset($decrypted['rm'])){
                 foreach($decrypted['rm'] as $id => $pax){

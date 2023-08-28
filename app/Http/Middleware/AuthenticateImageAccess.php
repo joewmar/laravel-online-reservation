@@ -13,13 +13,11 @@ class AuthenticateImageAccess
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, ): Response
     {
         // Check if the user is authenticated
-
-        if (!auth('system')->check()) abort(404); 
-        if (!auth('web')->check()) abort(404); // Return unauthorized response
-        return $next($request);
+        if (auth('system')->check() || auth('web')->check()) return $next($request);
+        abort(404); 
         
     }
 }

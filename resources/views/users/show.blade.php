@@ -49,29 +49,35 @@
                             @csrf
                             @method('PUT')
                             <h2 class="text-2xl font-bold mb-5">Password</h2>
-                            <div class="my-5 w-96">
+                            <div x-data="{loader: false}" class="my-5 w-96">
+                                <x-loader />
                                 <x-password name="current_password" id="current_password" placeholder="Current Password" />
                                 <x-password name="new_password" id="new_password" placeholder="New Password" />
                                 <x-input type="password" name="new_password_confirmation" id="new_password_confirmation" placeholder="Confirm New Password" />
-                                <button class="btn btn-warning btn-sm">Change</button>  
+                                <button @click="loader = true" class="btn btn-warning btn-sm">Change</button>  
                             </div>
 
                         </form>
                         <div class="divider"></div>
-                        <form action="{{route('profile.update.validid', encrypt($user->id))}}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            @method('PUT')
                             <h2 class="text-2xl font-bold mb-5">Valid ID</h2>
                             @if(isset($user->valid_id))
                                 <div class="w-96 rounded">
                                     <img src="{{route('private.image', ['folder' => explode('/', $user->valid_id)[0], 'filename' => explode('/', $user->valid_id)[1]])}}" alt="Valid ID of {{$user->name()}}">
                                 </div>
+                            @else
+                                <h3 class="text-2xl font-bold mb-5 text-center">No Valid ID</h3>
                             @endif
-                            <div class="my-5 w-96">
-                                <x-drag-drop name="valid_id" id="valid_id" />
-                            </div>
-                            <button class="btn btn-primary btn-sm">Save</button>  
-                        </form>
+                            <label for="edit_id_modal" class="btn btn-primary btn-sm mt-5">Change</label> 
+                            <x-modal id="edit_id_modal" title="Change Valid ID" loader>
+                                <form action="{{route('profile.update.validid', encrypt($user->id))}}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    @method('PUT')
+                                    <x-drag-drop name="valid_id" id="valid_id" />
+                                    <div class="modal-action">
+                                        <button type="submit" class="btn btn-primary" @click="loader = true">Save</button>
+                                    </div>
+                                </form>
+                            </x-modal>
                     </div>
                 </fieldset>
             </div>

@@ -136,18 +136,34 @@
         </div>
         <div class="divider"></div>
         <div class="flex justify-end space-x-2">
-            <label for="canceled_modal" class="btn btn-sm btn-primary" {{$r_list->status === 5 || !isset($r_list->message['reschedule'])  ? 'disabled' : ''}}>Approve</label>
-            <form id="canceled-form" action="{{route('system.reservation.update.cancel', encrypt($r_list->id))}}" method="post">
+            <a href="{{route('system.reservation.reschedule.approve', encrypt($r_list->id))}}" for="canceled_modal" class="btn btn-sm btn-primary" {{$r_list->status === 5 || !isset($r_list->message['reschedule'])  ? 'disabled' : ''}}>Approve</a>
+            {{-- <form id="canceled-form" action="{{route('system.reservation.update.cancel', encrypt($r_list->id))}}" method="post">
                 @csrf
                 @method('PUT')
                 <x-passcode-modal title="Reschedule Confirmation" id="canceled_modal" formId="canceled-form" loader />        
-            </form>
+            </form> --}}
             <label for="disaprove_modal" class="btn btn-sm btn-error" {{$r_list->status === 5 || !isset($r_list->message['reschedule']) ? 'disabled' : ''}}>Dissaprove</label>
             <x-modal id="disaprove_modal" title="Why Disaprove Reschedule">
-                <form action="{{route('system.reservation.update.reschedule.disaprove', encrypt($r_list->id))}}" method="POST">
+                <form x-data="{resched: ''}" action="{{route('system.reservation.update.reschedule.disaprove', encrypt($r_list->id))}}" method="POST">
                     @csrf
                     @method('PUT')
-                    <x-textarea placeholder="Reason Message" name="reason" id="reason" />
+                    <div class="flex flex-col gap-2 my-3">
+                        <label class="space-x-2" for="reason1">
+                            <input type="radio" x-model="resched" class="radio radio-primary" name="reason" id="reason1" value="No Room Available">
+                            <span>No Room Available</span>
+                        </label>
+                        <label class="space-x-2" for="reason2">
+                            <input type="radio" x-model="resched" class="radio radio-primary" name="reason" id="reason2" value="No Room Available">
+                            <span>Invalid Reason</span>
+                        </label>
+                        <label class="space-x-2" for="reason3">
+                            <input type="radio" x-model="resched" class="radio radio-primary" id="reason3" value="Other">
+                            <span>Other</span>
+                        </label>
+                    </div>
+                    <template x-if="resched === 'Other' ">
+                        <x-textarea placeholder="Reason Message" name="reason" id="reason" />
+                    </template>
                     <div class="modal-action">
                         <button class="btn btn-sm btn-error">Proceed Disaprove</button>
                     </div>

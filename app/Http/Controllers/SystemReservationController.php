@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Hash;
 // use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservationConfirmation;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 class SystemReservationController extends Controller
@@ -252,6 +253,11 @@ class SystemReservationController extends Controller
        
         
     }
+    public function approveReschedule($id){
+        $rooms = Room::all();
+        $reservation = Reservation::findOrFail(decrypt($id));
+        return view('system.reservation.reschedule.approve', ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms]);
+    }
     
     public function edit($id){
         if(!$this->system_user->user()->role() === "Admin") abort(404);
@@ -306,6 +312,7 @@ class SystemReservationController extends Controller
     public function updateRInfo(Request $request, $id){ 
         if(!$this->system_user->user()->role() === "Admin") abort(404);
         $reservation = Reservation::findOrFail(decrypt($id));
+        $user = User::findOrFail($reservation->userReservation->id);
         $rooms = Room::all();
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
@@ -421,9 +428,7 @@ class SystemReservationController extends Controller
         $roomCustomer = [];
         // Room Update and Verification
         $reservationPax = 0;
-        foreach($rooms as $room){
-            $room->removeCustomer($reservation->id);
-        }
+
         $rate = RoomRate::find($validated['room_rate']);
         foreach($validated['room_pax'] as $room_id => $newPax){
             $room = Room::find($room_id);
@@ -451,12 +456,13 @@ class SystemReservationController extends Controller
             'status' => $validated['status'],
             'roomrateid' => $validated['room_rate'],
             'roomid' => array_keys($roomCustomer),
-            'valid_id' => $validated['valid_id'] ?? $reservation->userReservation->valid_id,
         ]);
-        foreach($roomCustomer as $key => $newCustomer){
-            $room = Room::find($key);
-            $room->addCustomer($reservation->id, $newCustomer);
+        $user->update(['valid_id' => $validated['valid_id'] ?? $reservation->userReservation->valid_id,]);
+        foreach($rooms as $room){
+            $room->removeCustomer($reservation->id);
+            if(array_key_exists($room->id, $roomCustomer)) $room->addCustomer($reservation->id, $roomCustomer[$room->id]);
         }
+
 
         if(!empty($validated['tour_menu'])){
             foreach($validated['tour_menu'] as $item){
@@ -875,10 +881,10 @@ class SystemReservationController extends Controller
             ];
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             unset($details, $text);
-            return redirect()->route('system.reservation.home')->with('success', 'Disaprove of ' . $updated->userArchive->first_name . ' ' . $updated->userArchive->last_name . ' was Successful');
+            return redirect()->route('system.reservation.home')->with('success', 'Disaprove of ' . $updated->userReservation->name() . ' was Successful');
         }
         else{
-            return back()->with('error', 'Something Wrong on database, Try Again')->withInput($validated);
+            return back()->with('error', 'Something Wrong, Try Again')->withInput($validated);
         }
     }
     public function showOnlinePayment($id){

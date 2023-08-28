@@ -1,76 +1,86 @@
-<section class="bg-gray-100">
-    <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
-      <div class="gap-x-16 gap-y-8">
-        <div class="lg:col-span-2 lg:py-12">
-            <h1 class="font-bold uppercase text-3xl text-center w-full">
-                Contact Us
-            </h1>
-          <div class="grid gap-1 grid-flow-row md:grid-flow-col mt-8 h-full">
-            <div class="card w-96 glass hover:bg-primary hover:text-white">
-              <div class="card-body">
-                <h2 class="card-title border-l-4 border-primary pl-5">Alvin Bognot</h2>
-                <p>
-                  <div><i class="fa-regular fa-address-book text-xl"></i> 09198614102 / 09075986000</div>
-                  <div>
-                    <a href="https://www.facebook.com/alvin.bognot.9" class="link link-hover">
-                      <i class="fa-brands fa-facebook text-xl"></i>
-                      Facebook
-                    </a>
-                  </div>
-                </p>
-              </div>
-            </div>
-            <div class="card w-96 glass hover:bg-primary hover:text-white">
-              <div class="card-body">
-                <h2 class="card-title border-l-4 border-primary pl-5">Angelita Bognot</h2>
-                <p>
-                  <div>
-                    <i class="fa-regular fa-address-book text-xl"></i> 09498444893
-                  </div>
-                  <div>
-                    <a href="https://www.facebook.com/angie.bognot" class="link link-hover">
-                      <i class="fa-brands fa-facebook text-xl"></i>
-                      Facebook 
-                    </a>
-                  </div>
-                  <div>
-                    <a href="https://mail.google.com/mail/?view=cm&fs=1&to=angelitabognot@gmail.com" class="link link-hover">
-                      <i class="fa-regular fa-envelope text-xl"></i>
-                      angelitabognot@gmail.com
-                    </a>
-                  </div>
-                </p>
-              </div>
-            </div>
-          <div class="card w-96 glass hover:bg-primary hover:text-white">
-            <div class="card-body">
-              <h2 class="card-title border-l-4 border-primary pl-5">Other</h2>
-              <p>
-                <div>
-                  <i class="fa-brands fa-whatsapp text-xl"></i>
-                  09198614102
-                </div>
-                <div>
-                  <a href="https://www.facebook.com/100057519735244" class="link link-hover">
-                    <i class="fa-brands fa-facebook text-xl"></i>
-                    Facebook Page
-                  </a>
-                </div>
-                <div>
-                  <a href="mailto:bognothomestay@gmail.com" class="link link-hover">
-                    <i class="fa-regular fa-envelope text-xl"></i>
-                    bognothomestay@gmail.com
-                  </a>
-                </div>
-              </p>
-          </div>
+<x-landing-layout>
+
+  <x-navbar :activeNav="$activeNav" type="plain" />
+
+  <section class="pt-24 p-6 h-auto w-full">
+    <div class="grid max-w-6xl grid-cols-1 px-6 mx-auto lg:px-8 md:grid-cols-2">
+      <div class="py-6 md:py-0 md:px-6">
+        <h1 class="text-4xl font-bold py-5">Call Me</h1>
+        <div class="space-y-4">
+          <p class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2 sm:mr-6">
+              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+            </svg>
+            <span>{{env('MAIN_ADDRESS')}}</span>
+          </p>
+          <p class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2 sm:mr-6">
+              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+            </svg>
+            <span>{{env('MAIN_CONTACT_NUMBER')}}</span>
+          </p>
+          <p class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2 sm:mr-6">
+              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+            </svg>
+            <span><a href="https://mail.google.com/mail/?view=cm&fs=1&to={{env('MAIN_CONTACT_EMAIL', '#')}}">bognothomestay@gmail.com</a></span>
+          </p>
         </div>
-        </div>
-  
-        <div class="rounded-lg bg-white p-8 mt-8 shadow-lg h-96 lg:p-12">
-            <label class="text-4xl text" for="name">Google map</label>
+      </div>
+
+      <div class="flex flex-col py-6 space-y-6 md:py-0 md:px-6">
+        <div class="w-full">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1923.9581619109745!2d120.42731809197846!3d15.326781878810142!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x339696709fcd03e7%3A0x8ec08060d59d299c!2sALVIN%20and%20ANGIE%20BOGNOT%20mt%20PINATUBO%20(%20Accommodation%20and%20Tours)%20Tripadvisor%20Alvin%20Guesthouse%40%20PINATUBO!5e0!3m2!1sen!2sph!4v1693218928986!5m2!1sen!2sph" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" class="w-full h-96 shadow-md border border-primary"></iframe>
         </div>
       </div>
     </div>
+    <div class="divider"></div>
+    <div class="my-5 grid grid-col-1 md:grid-col-3">
+      @forelse ($contacts as $contact)
+        <div class="shadow-lg rounded-md bg-base-100 border border-neutral text-neutral">
+            <div class="w-full h-full p-6">
+                <h1>{{$contact['name']}}</h1>
+                <div class="flex space-x-3">
+                    <p class="text-sm font-semibold"> Contact Number:</p>
+                    <ul class="text-sm font-normal">
+                        @foreach ($contact['contactno'] as $contactno)
+                            <li>{{$contactno}}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                <div class="flex space-x-3">
+                    <p class="text-sm font-semibold"> Contact Email:</p>
+                    <ul class="text-sm font-normal">
+                        @foreach ($contact['email'] as $email)
+                            <li>{{$email}}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                <div class="flex space-x-3">
+                    <p class="text-sm font-semibold">Facebook:</p>
+                    <ul class="text-sm font-normal">
+                        @foreach ($contact['fbuser'] as $fbuser)
+                            <li>{{$fbuser}}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                <div class="flex space-x-3">
+                    <p class="text-sm font-semibold">WhatsApp:</p>
+                    <ul class="text-sm font-normal">
+                        @foreach ($contact['whatsapp'] as $whatsapp)
+                            <li>{{$whatsapp}}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+      @empty
+          <div class="h-52 text-2xl bg-primary shadow-md text-primary-content flex justify-center items-center">
+            <div>No Contact Information</div>
+          </div>
+      @endforelse
+    </div>
   </section>
-  
+
+</x-landing-layout>

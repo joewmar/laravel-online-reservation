@@ -88,7 +88,7 @@ class UserController extends Controller
             'valid_id' => ['required', 'image', 'mimes:jpeg,png,jpg'],
         ]);
         if(isset($user->valid_id)) deleteFile($user->valid_id);
-        $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id');
+        $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
         $user->update($validated);
         return redirect()->route('profile.home')->with('success', 'Your Valid ID was changed');
     }

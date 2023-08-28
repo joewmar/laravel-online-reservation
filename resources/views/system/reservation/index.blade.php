@@ -82,12 +82,30 @@
                 </div>    
             </div>
         @else
+            @push('styles')
+                <style>
+                    /* Base styles for the calendar */
+                    #calendar {
+                    width: 100%;
+                    margin: 0 auto;
+                    }
+
+                    /* Mobile-specific styles */
+                    @media (max-width: 768px) {
+                        #calendar {
+                            font-size: 10px; /* Adjust font size for mobile */
+                            /* Additional styles to optimize for mobile view */
+                        }
+                    }
+                </style>
+            @endpush
             <div class="my-5 p-5 w-full">
                 <div id='calendar' class=""></div>
             </div> 
+            @push('scripts')
+                <script type="module" src='{{Vite::asset("resources/js/reservation-calendar.js")}}'></script>
+            @endpush
         @endif
     </x-system-content>
-    @push('scripts')
-        <script type="module" src='{{Vite::asset("resources/js/reservation-calendar.js")}}'></script>
-    @endpush
+
 </x-system-layout>
