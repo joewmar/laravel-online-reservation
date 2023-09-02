@@ -12,10 +12,10 @@
         "cin" => old('check_in') ?? $decrypted['cin'],
         "cout" => old('check_out') ?? $decrypted['cout'],
         "px" => old('pax') ?? $decrypted['px'],
-        "tpx" => old('tour_pax')?? $decrypted['tpx'],
+        "tpx" => old('tour_pax') ?? (request()->has('tpx') ? decrypt(request('tpx')) : $decrypted['tpx']  ),
         "at" => old('accommodation_type') ?? $decrypted['at'],
         "py" =>  old('payment_method') ?? $decrypted['py'],
-        "ck" => request('ck')->has('ck') ?? '',
+        "ck" => request('ck') ?? '',
       ];
     }
     else{
@@ -90,8 +90,8 @@
         }"
         x-cloak>
         <x-loader />
-    <div x-show="alert" id="close" class="fixed top-0 flex justify-center z-[100] w-full" x-init="console.log(carts); setTimeout(() => { alert = false }, 5000)">
-      <div :class="alertType == 'error' ? 'alert-error' : 'alert-success'" class="w-96 alert shadow-md">
+    <div x-show="alert" id="close" class="fixed top-0 flex justify-center z-[100] w-full" x-init="setTimeout(() => { alert = false }, 5000)">
+      <div :class="alertType == 'error' ? 'alert-error' : 'alert-success'" class="w-full alert shadow-md">
           <i :class="alertType == 'error' ? 'fa-solid fa-circle-exclamation' : 'fa-solid fa-circle-check'" class="text-xl"></i>        
           <div>
               <span class="text-md font-semibold" x-text="message"></span>
@@ -135,8 +135,8 @@
             @else
               <div>
             @endif
-                <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$TourInfo['cin']}}"/>
-                <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$TourInfo['cout'] }}" />
+                <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one" value="{{$TourInfo['cin']}}"/>
+                <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{$TourInfo['cout'] }}" />
                 <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$TourInfo['at']}}" />
                 {{-- Number of Guest --}}
                 <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$TourInfo['px']}}"/>
@@ -169,7 +169,7 @@
               </p>
             </header>
             <div class="gap-10">
-              <form id="tour-form" action="{{route('reservation.choose.check.all', Arr::query($TourInfo))}}" method="post">
+              <form id="tour-form" action="{{route('reservation.choose.check.all', Arr::query(encryptedArray($TourInfo)))}}" method="post">
                 @csrf
               <div class="flex justify-between mt-6">
                 <h3 class="font-bold text-xl">Category</h3>
@@ -180,7 +180,7 @@
                       <span class="badge badge-sm indicator-item" x-text="carts.length"></span>
                     </div>
                   </label>
-                  <div tabindex="0" class="card p-6 w-96 md:w-[50rem] compact dropdown-content z-[1] shadow-md bg-base-100 rounded-box ">
+                  <div tabindex="0" class="card p-6 w-96 md:w-[50rem] compact dropdown-content z-[1] drop-shadow-lg border bg-base-100 rounded-box ">
                     <div class="card-body">
                       <h2 class="card-title">My Cart</h2> 
                       <div class="overflow-x-auto">
@@ -279,7 +279,6 @@
                                       <article>
                                         <ul role="list" class="marker:text-primary list-disc pl-5 space-y-3 text-neutral">
                                           <li><strong>Number of days: </strong> {{$list->no_day <= 1 ? $list->no_day . ' day' : $list->no_day . ' days' }}</li>
-                                          <li><strong>Number of hour/s: </strong> {{Str::replace('.', ' hour and ', $list->hrs) . ' minutes'}}</li>
                                           <li><strong>Price Plan</strong></li>
                                         </ul>
                                       </article>

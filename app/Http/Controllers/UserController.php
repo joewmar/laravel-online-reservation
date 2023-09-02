@@ -41,7 +41,7 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'first_name' => ['required', 'min:3'],
             'last_name' => ['required', 'min:3'],
-            'birthday' => ['required'],
+            'birthday' => ['required', 'date'],
             'country' => ['required', 'min:3'],
             'nationality' => ['required', 'min:3'],
             'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
@@ -94,10 +94,11 @@ class UserController extends Controller
     }
     public function create(Request $request){
         // Validate input
+        // dd($request->all());
         $validator = Validator::make($request->all(), [
             'first_name' => ['required', 'min:3'],
             'last_name' => ['required', 'min:3'],
-            'birthday' => ['required'],
+            'birthday' => ['required', 'date'],
             'country' => ['required', 'min:3'],
             'nationality' => ['required'],
             'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
@@ -149,7 +150,7 @@ class UserController extends Controller
             $user = User::create(session('uinfo'));
             auth('web')->login($user);
             session()->forget('uinfo');
-            return redirect()->intended(route('home'))->with('success', 'Welcome First timer' . auth('web')->user()->name());
+            return redirect()->intended(route('home'))->with('success', 'Welcome ' . auth('web')->user()->name());
             
         }
         else{

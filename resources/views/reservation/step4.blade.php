@@ -27,24 +27,26 @@
                 <div class="flex justify-between items-center w-full">
                   <div class="flex items-center gap-4">
                     <span class="h-10 w-10 rounded-full bg-primary"></span>
-                    <h2 class="font-medium text-neutral">Your Cart</h2>
+                    <h2 class="font-medium text-neutral">Reservation Information</h2>
                   </div>
-                  <div class="flex items-center gap-4">
-                        <div class="join">
-                          <select x-model="currency" class="select select-bordered select-primary select-sm join-item text-xs">
-                            @foreach ($currencyKey as $item)
-                              @if ((old('cur') ?? 'PHP') === $item || (request('cur') ?? 'PHP') === $item)
-                                <option value="{{$item}}" selected>{{$item}}</option>
-                              @else
-                                <option value="{{$item}}">{{$item}}</option>
-                              @endif
-                            @endforeach
-                          </select>
-                          <div>
-                            <button @click="loader = true; event.preventDefault(); document.getElementById('convertion-from').submit();" class="btn join-item btn-primary btn-sm">Convert</button>
-                          </div>
-                      </div>
-                  </div>
+                  @if($uinfo['at'] !== 'Room Only')
+                    <div class="flex items-center gap-4">
+                          <div class="join">
+                            <select x-model="currency" class="select select-bordered select-primary select-sm join-item text-xs">
+                              @foreach ($currencyKey as $item)
+                                @if ((old('cur') ?? 'PHP') === $item || (request('cur') ?? 'PHP') === $item)
+                                  <option value="{{$item}}" selected>{{$item}}</option>
+                                @else
+                                  <option value="{{$item}}">{{$item}}</option>
+                                @endif
+                              @endforeach
+                            </select>
+                            <div>
+                              <button @click="loader = true; event.preventDefault(); document.getElementById('convertion-from').submit();" class="btn join-item btn-primary btn-sm">Convert</button>
+                            </div>
+                        </div>
+                    </div>
+                  @endif
                 </div>
                 <div class="space-y-1 md:space-y-3">
                   <p class="text-md font-medium tracking-tight text-neutral">
@@ -55,10 +57,12 @@
                   </p>       
                   <p class="text-md font-medium tracking-tight text-neutral">
                     <strong>Number of Guest: </strong> {{$uinfo['px'] > 1 ? $uinfo['px'] . ' guests' : $uinfo['px'] . ' guest' }}
-                  </p>            
-                  <p class="text-md font-medium tracking-tight text-neutral">
-                    <strong>Number of guest going on a tour: </strong> {{$uinfo['tpx'] > 1 ? $uinfo['tpx'] . ' guests' : $uinfo['tpx'] . ' guest' }}
-                  </p>            
+                  </p>         
+                  @if($uinfo['at'] !== 'Room Only')
+                    <p class="text-md font-medium tracking-tight text-neutral">
+                      <strong>Number of guest going on a tour: </strong> {{$uinfo['tpx'] > 1 ? $uinfo['tpx'] . ' guests' : $uinfo['tpx'] . ' guest' }}
+                    </p>     
+                  @endif   
                   <p class="text-md font-medium tracking-tight text-neutral">
                     <strong>Type: </strong> {{$uinfo['at'] ?? ''}}
                   </p>            
@@ -135,8 +139,8 @@
                 </div>
               </div>
               <div class="col-span-6 grid md:hidden grid-cols-2 gap-4 ">
-                <a href="{{route('reservation.date')}}" class="btn btn-ghost w-full">
-                  Change
+                <a href="{{route('reservation.details')}}" class="btn btn-ghost w-full">
+                  Back
                 </a>
                 <label for="reservation_confirm" class="btn btn-primary w-full">
                   Confirm
@@ -201,19 +205,29 @@
     
                     <div class="text-neutral text-xl font-medium">{{$uinfo['contact']}}</div>
                   </div>
-                  <div class="col-span-6">
-                    <div class="mb-5 py-4 w-full flex flex-col justify-center items-center">
-                      <div class="rounded">
-                        <img id="show_img" src="{{asset('images/logo.png')}}" alt="Valid ID"  class="object-center w-80 shadow-lg" />
-                      </div> 
+                  @if(!auth('web')->user()->valid_id)
+                    <div class="col-span-6">
+                      <div class="mb-5 py-4 w-full flex flex-col justify-center items-center">
+                        <div class="rounded">
+                          <img id="show_img" src="{{asset('images/logo.png')}}" alt="Valid ID"  class="object-center w-80 shadow-lg" />
+                        </div> 
+                      </div>
+                      <x-file-input id="valid_id" name="valid_id" placeholder="Send Valid ID" />
                     </div>
-                    <x-file-input id="valid_id" name="valid_id" placeholder="Send Valid ID" />
-
-                  </div>
+                  @else
+                    <div class="col-span-6">
+                      <div class="mb-5 py-4 w-full flex flex-col justify-center items-center">
+                        <div class="rounded">
+                          <img id="show_img" src="{{asset('storage/'. auth('web')->user()->valid_id)}}" alt="Valid ID"  class="object-center w-80 shadow-lg" />
+                        </div> 
+                      </div>
+                      <x-file-input id="valid_id" name="valid_id" placeholder="Optional: Update your Valid ID" />
+                    </div>
+                  @endif
     
                   <div class="col-span-6 hidden md:grid grid-cols-2 gap-4 ">
-                    <a href="{{route('reservation.date')}}" class="btn btn-ghost w-full">
-                      Change
+                    <a href="{{route('reservation.details')}}" class="btn btn-ghost w-full">
+                      Back
                     </a>
                     <label for="reservation_confirm2" class="btn btn-primary w-full">
                       Confirm

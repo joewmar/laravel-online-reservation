@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
             'contact' => '123456897',
             'email'=> 'recelestino90@gmail.com',
             'password' => Hash::make('123456789'),
-            'valid_id' => 'valid_id/Valid_ID-sample.jpg',
+            'valid_id' => 'valid_id/IkYI5uA6.jpg',
         ]);
         \App\Models\RoomRate::create([
             'name' => 'Single Room',
@@ -61,23 +61,23 @@ class DatabaseSeeder extends Seeder
             'price' => 700.00,
         ]);
 
-        // \App\Models\Reservation::factory()->create([
-        //     'user_id' => 1,
-        //     // 'roomid' => 1, (1, 1)
-        //     // 'roomrateid' => 1,
-        //     'pax' => 1,
-        //     // 'menu' => '2_1',
-        //     'accommodation_type' => 'Room Only',
-        //     'payment_method' => 'Gcash',
-        //     'age' => User::findOrfail(1)->age(),
-        //     'check_in' => Carbon::now()->addDays(30)->toDateTimeString(),
-        //     'check_out' => Carbon::now()->addDays(34)->toDateTimeString(),
-        //     'status' => 0,
-        //     'valid_id' => 'valid_id/Valid_ID-sample.jpg',
-        //     // 'additional_menu',
-        //     // 'amount' => ['room1' => 3150.00],
-        //     // 'total' => 3150.00,
-        // ]);
+        \App\Models\Reservation::factory()->create([
+            'user_id' => 1,
+            // 'roomid' => 1, (1, 1)
+            // 'roomrateid' => 1,
+            'pax' => 1,
+            // 'menu' => '2_1',
+            'accommodation_type' => 'Room Only',
+            'payment_method' => 'Gcash',
+            'age' => User::findOrfail(1)->age(),
+            'check_in' => Carbon::now()->addDays(30)->toDateTimeString(),
+            'check_out' => Carbon::now()->addDays(34)->toDateTimeString(),
+            'status' => 0,
+            'valid_id' => 'valid_id/Valid_ID-sample.jpg',
+            // 'additional_menu',
+            // 'amount' => ['room1' => 3150.00],
+            // 'total' => 3150.00,
+        ]);
         \App\Models\Reservation::factory()->create([
             'user_id' => 2,
             // 'roomid' => 1,
@@ -107,12 +107,12 @@ class DatabaseSeeder extends Seeder
 
         ]);
         \App\Models\System::factory()->create([
-            'first_name' => 'Joe',
+            'first_name' => 'Panis',
             'last_name' => 'Doe',
             'contact' => '09987456321',
             'email'=> 'joew@email.com',
             'username'=> 'joewmar',
-            'password' => Hash::make('147852369'),
+            'password' => Hash::make('123456789'),
             'type' => '1',
             'passcode' => Hash::make('5566'),
             'telegram_username' => 'joewmar',
@@ -120,29 +120,14 @@ class DatabaseSeeder extends Seeder
         ]);
         // \App\Models\System::factory(10)->create();
 
+        // Rent ATV //
         \App\Models\TourMenuList::factory()->create([
             'title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
             'inclusion' => 'Duration: 1 hr. to 1.5 hrs.',
-            'tour_type' => 'Day Tour',
+            'tour_type' => 'All',
             'no_day' => '1',
         ]);
-        \App\Models\TourMenuList::factory()->create([
-            'title' => 'Tambo Lake Trail Rate',
-            'category' => 'ATV Trail Rate',
-            'inclusion' => 'Free trek meal and bottled water, 100 add-ons (conservation fees, tourism fees)',
-            'tour_type' => 'Day Tour',
-            'no_day' => '1',
-        ]);
-
-        \App\Models\TourMenuList::factory()->create([
-            'title' => 'ATV Long Trail (going to Pinatubo drop point car)',
-            'category' => 'ATV Trail Rate',
-            'inclusion' => 'Free trek meal and bottled water, 100 add-ons (conservation fees, tourism fees)',
-            'tour_type' => 'Day Tour',
-            'no_day' => '1',
-        ]);
-
         \App\Models\TourMenu::factory()->create([
             'menu_id' => 1,
             'type' => 'Solo Rider',
@@ -157,51 +142,208 @@ class DatabaseSeeder extends Seeder
             'pax' => '2',
         ]);
 
+        \App\Models\TourMenuList::factory()->create([
+            'title' => 'ATV Tambo Lake and San Marcos Lake Trail without Pinatubo Crater Hike',
+            'category' => 'Rent ATV',
+            'inclusion' => 'Duration: 1 hr. to 1.5 hrs.',
+            'tour_type' => 'All',
+            'no_day' => '1',
+        ]);
         \App\Models\TourMenu::factory()->create([
             'menu_id' => 2,
-            'type' => 'Solo',
+            'type' => 'Solo Rider',
             'price' => '3750',
             'pax' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
             'menu_id' => 2,
-            'type' => 'Angkas',
+            'type' => 'Double Rider',
             'price' => '5550',
             'pax' => '2',
         ]);
 
+        \App\Models\TourMenuList::factory()->create([
+            'title' => 'ATV Combo Trail without Pinatubo Crater Hike',
+            'category' => 'Rent ATV',
+            'inclusion' => 'Duration: 5 hrs(..)Destination: Lahar Canyons, Tambo Lake, Aeta Village, Bulacan',
+            'tour_type' => 'All',
+            'no_day' => '1',
+        ]);
         \App\Models\TourMenu::factory()->create([
             'menu_id' => 3,
+            'type' => 'Solo Rider',
+            'price' => '5500',
+            'pax' => '1',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 3,
+            'type' => 'Double Rider',
+            'price' => '9000',
+            'pax' => '2',
+        ]);
+
+
+
+        // ATV Trail Rate //
+        \App\Models\TourMenuList::factory()->create([
+            'title' => 'Tambo Lake Trail',
+            'category' => 'ATV Trail Rate',
+            'inclusion' => '100 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
+            'tour_type' => 'All',
+            'no_day' => '1',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 4,
+            'type' => 'Solo Rider',
+            'price' => '3750',
+            'pax' => '1',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 4,
+            'type' => 'Double Rider',
+            'price' => '5500',
+            'pax' => '2',
+        ]);
+
+        \App\Models\TourMenuList::factory()->create([
+            'title' => 'Combo Trail',
+            'category' => 'ATV Trail Rate',
+            'inclusion' => '100 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
+            'tour_type' => 'All',
+            'no_day' => '1',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 5,
+            'type' => 'Solo Rider',
+            'price' => '5500',
+            'pax' => '1',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 5,
+            'type' => 'Double Rider',
+            'price' => '7000',
+            'pax' => '2',
+        ]);
+
+        \App\Models\TourMenuList::factory()->create([
+            'title' => 'Short trail via ATV',
+            'category' => 'ATV Trail Rate',
+            'inclusion' => '100 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
+            'tour_type' => 'All',
+            'no_day' => '1',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 6,
+            'type' => 'Solo Rider',
+            'price' => '2500',
+            'pax' => '1',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 6,
+            'type' => 'Double Rider',
+            'price' => '1000',
+            'pax' => '2',
+        ]);
+
+        \App\Models\TourMenuList::factory()->create([
+            'title' => 'ATV Long Trail (going to Pinatubo drop point car)',
+            'category' => 'ATV Trail Rate',
+            'inclusion' => '700 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
+            'tour_type' => 'Day Tour',
+            'no_day' => '1',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 7,
             'type' => 'Solo',
             'price' => '13200', /* '13200 + 4,000' */
             'pax' => '1',
         ]);
 
-        /// ROom
+
+
+        // Mt. Pinatubo 4x4 rate day tour //
+        \App\Models\TourMenuList::factory()->create([
+            'title' => 'Mt. Pinatubo 4x4 Ride',
+            'category' => '4x4 Ride Rate',
+            'inclusion' => 'Local guide(..)All mandatory fees (conservation fees, tourism fees)(..)Trek meal (packed lunch)(..)Use of toilet & shower facilities(..)Parking facilities',
+            'tour_type' => 'Day Tour',
+            'no_day' => '1',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 8,
+            'type' => '1 PAX',
+            'price' => '6600',
+            'pax' => '1',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 8,
+            'type' => '2 PAX',
+            'price' => '3750',
+            'pax' => '2',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 8,
+            'type' => '3 PAX',
+            'price' => '2900',
+            'pax' => '3',
+        ]);
+        \App\Models\TourMenu::factory()->create([
+            'menu_id' => 8,
+            'type' => '4 PAX',
+            'price' => '2700',
+            'pax' => '4',
+        ]);
+
+
+        /// Room
         \App\Models\RoomList::create([
             'name' => 'Charlet',
-            'min_occupancy' => 1,
+            // 'min_occupancy' => 1,
             'max_occupancy' => 4,
             'many_room' => 5,
         ]);
-        for($room_count = 0; $room_count < \App\Models\RoomList::findOrFail(1)->many_room; $room_count++){
+        $room = \App\Models\RoomList::findOrFail(1);
+        for($room_count = 0; $room_count < $room->many_room; $room_count++){
             \App\Models\Room::create([
-                'roomid' => \App\Models\RoomList::findOrFail(1)->id,
+                'roomid' => $room->id,
                 'room_no' => 0,
             ]);
         }
-        /// ROom
+
+        /// Room
         \App\Models\RoomList::create([
             'name' => 'Big House',
-            'min_occupancy' => 3,
+            // 'min_occupancy' => 3,
+            'max_occupancy' => 7,
+            'many_room' => 3,
+        ]);
+        \App\Models\RoomList::create([
+            'name' => 'Multi-Sharing Room',
+            // 'min_occupancy' => 3,
             'max_occupancy' => 7,
             'many_room' => 5,
         ]);
-        for($room_count = 0; $room_count < \App\Models\RoomList::findOrFail(2)->many_room; $room_count++){
-            \App\Models\Room::create([
-                'roomid' => \App\Models\RoomList::findOrFail(2)->id,
-                'room_no' => 0,
-            ]);
+        \App\Models\RoomList::create([
+            'name' => 'Kubo House',
+            // 'min_occupancy' => 3,
+            'max_occupancy' => 4,
+            'many_room' => 4,
+        ]);
+
+        \App\Models\RoomList::create([
+            'name' => 'New House',
+            // 'min_occupancy' => 3,
+            'max_occupancy' => 2,
+            'many_room' => 3,
+        ]);
+
+        foreach(\App\Models\RoomList::all() as $room){
+            for($room_count = 0; $room_count < $room->many_room; $room_count++){
+                \App\Models\Room::create([
+                    'roomid' => $room->id,
+                    'room_no' => 0,
+                ]);
+            }
         }
         refreshRoomNumber();
         // \App\Models\Archive::factory(50)->create();

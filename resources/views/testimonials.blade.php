@@ -1,41 +1,116 @@
-<section class="bg-base-200">
-    <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-      <h2 class="text-center text-4xl font-bold tracking-tight sm:text-5xl">
-        Read trusted reviews from our customers
-      </h2>
-  
-      <div class="mt-12 grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-8">
-        <x-testimonial-card />
-        <x-testimonial-card />
-        <x-testimonial-card />
-        <x-testimonial-card />
-        <x-testimonial-card />
-        <x-testimonial-card />
-        <x-testimonial-card />
-        <x-testimonial-card />
-        <x-testimonial-card />
+@if (isset($feedbacks) && count($feedbacks) !== 0)
+  <link href="https://cdn.jsdelivr.net/npm/keen-slider@6.8.6/keen-slider.min.css" rel="stylesheet" />
+
+  <script type="module">
+    import KeenSlider from 'https://cdn.jsdelivr.net/npm/keen-slider@6.8.6/+esm'
+
+    const keenSlider = new KeenSlider(
+      '#keen-slider',
+      {
+        loop: true,
+        slides: {
+          origin: 'center',
+          perView: 1.25,
+          spacing: 16,
+        },
+        breakpoints: {
+          '(min-width: 1024px)': {
+            slides: {
+              origin: 'auto',
+              perView: 2.5,
+              spacing: 32,
+            },
+          },
+        },
+      },
+      []
+    )
+
+    const keenSliderPrevious = document.getElementById('keen-slider-previous')
+    const keenSliderNext = document.getElementById('keen-slider-next')
+
+    keenSliderPrevious.addEventListener('click', () => keenSlider.prev())
+    keenSliderNext.addEventListener('click', () => keenSlider.next())
+  </script>
+
+  <section class="bg-base-200 overflow-x-hidden">
+    <div class="mx-auto max-w-[1340px] px-4 py-12 sm:px-6 lg:me-0 lg:py-16 lg:pe-0 lg:ps-8 xl:py-24" >
+      <div class="max-w-7xl items-end justify-between sm:flex sm:pe-6 lg:pe-8">
+        <h2
+          class="max-w-xl text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl"
+        >
+          Read reviews from our customers
+        </h2>
+
+        <div class="mt-8 flex gap-4 lg:mt-0">
+          <button
+            aria-label="Previous slide"
+            id="keen-slider-previous"
+            class="rounded-full border border-primary p-3 text-primary transition hover:bg-primary hover:text-primary-content"
+          >
+            <i class="fa-solid fa-chevron-left h-5 w-6 rtl:rotate-180"></i>
+          </button>
+
+          <button
+            aria-label="Next slide"
+            id="keen-slider-next"
+            class="rounded-full border border-primary p-3 text-primary transition hover:bg-primary hover:text-primary-content"
+          >
+          <i class="fa-solid fa-chevron-right h-5 w-6 rtl:rotate-180"></i>
+
+          </button>
+        </div>
+      </div>
+
+      <div class="-mx-6 mt-8 lg:col-span-2 lg:mx-0">
+        <div id="keen-slider" class="keen-slider">
+          @foreach ($feedbacks as $feedback)
+            <div class="keen-slider__slide">
+              <blockquote class="flex h-full flex-col justify-between bg-white p-6 shadow-sm sm:p-8 lg:p-12" >
+                <div>
+                  <div class="flex gap-0.5">
+                    @for($count = 1;  $count <= 5; $count++)
+                      @if ($count <= $feedback->rating)
+                          <svg
+                          class="h-5 w-5 text-orange-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                          />
+                        </svg>
+                      @else
+                          <svg
+                          class="h-5 w-5 text-neutral"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                          />
+                        </svg>
+                      @endif
+                    @endfor
+                  </div>
+
+                  <div class="mt-4">
+                    <p class="mt-4 leading-relaxed text-gray-700">{{$feedback->message}}</p>
+                  </div>
+                </div>
+
+                <footer class="mt-4 text-sm font-medium text-gray-700 sm:mt-6">
+                  &mdash; {{$feedback->feedback->userReservation->name()}}
+                </footer>
+              </blockquote>
+            </div>
+          @endforeach
+
+
+        </div>
       </div>
     </div>
   </section>
-  
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const swiper = new Swiper('.swiper-container', {
-        loop: true,
-        slidesPerView: 1,
-        spaceBetween: 32,
-        centeredSlides: true,
-        autoplay: {
-          delay: 8000,
-        },
-        breakpoints: {
-          640: {
-            slidesPerView: 1.5,
-          },
-          1024: {
-            slidesPerView: 3,
-          },
-        },
-      })
-    })
-  </script>
+@endif

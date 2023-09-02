@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Feedback;
 use App\Models\News;
 use App\Models\RoomList;
 use App\Models\RoomRate;
@@ -12,9 +13,11 @@ use App\Models\WebContent;
 class LandingController extends Controller
 {
     public function index(){
-        $news = News::all() ?? [];
+        $news = News::where('type', 0)->get() ?? [];
+        $announcements = News::where('type', 1)->get() ?? [];
         $web_contents = WebContent::all()->first() ?? [];
-        return view('index', ['activeNav' => 'Home', 'news' => $news, 'web_contents' => $web_contents]);
+        $feedbacks = Feedback::whereBetween('rating', [3, 4, 5])->latest()->get() ?? [];
+        return view('index', ['activeNav' => 'Home', 'news' => $news, 'web_contents' => $web_contents, 'announcements' => $announcements, 'feedbacks' => $feedbacks]);
     }
     public function aboutus(){
         return view('landing.about_us', ['activeNav' => 'About Us']);

@@ -13,13 +13,6 @@ use Illuminate\Validation\Validator as ValidationValidator;
 
 class WebContentController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function($request, $next) {
-            if(auth('system')->user()->type === 0) return $next($request);
-            else abort(404);
-        });
-    }
     public function index(){
         $webcontents = WebContent::all()->first();
         return view('system.webcontent.index', ['activeSb' => 'Website Content', 'webcontents' => $webcontents]);

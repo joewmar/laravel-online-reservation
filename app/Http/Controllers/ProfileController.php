@@ -15,6 +15,9 @@ class ProfileController extends Controller
     {
         $this->system_user = auth('system');
     }
+    public function index(){
+        return view('system.profile.index',  ['activeSb' => 'Profile']);
+    }
     public function edit(){
         $system_user = System::findOrFail($this->system_user->user()->id);
         return view('system.profile.edit',  ['activeSb' => 'Edit', 'systemUser' => $system_user]);

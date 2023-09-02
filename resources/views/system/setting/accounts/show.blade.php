@@ -1,6 +1,6 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="">
-        <a href="{{route('system.setting.accounts')}}" class=" btn btn-ghost gap-2">
+        <a href="{{route('system.setting.accounts.home')}}" class=" btn btn-ghost gap-2">
             <i class="fa-solid fa-arrow-left"></i>            
             back
           </a>

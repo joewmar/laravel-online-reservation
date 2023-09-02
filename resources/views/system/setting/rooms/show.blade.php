@@ -13,7 +13,7 @@
             <h1>{{$room_list->name}}</h1>
             <p class="text-lg"><span class="font-bold">Amenities:</span> {{$room_list->amenities === null ? 'None': $room_list->amenities}}</p>
             <p class="text-lg"><span class="font-bold">Description:</span> {{$room_list->description === null ? 'None': $room_list->description}}</p>
-            <p class="text-lg"><span class="font-bold">Occupancy:</span> {{$room_list->min_occupancy}} to {{$room_list->max_occupancy}} Guests</p>
+            <p class="text-lg"><span class="font-bold">Occupancy:</span> 1 to {{$room_list->max_occupancy}} Guests</p>
             <p class="text-lg"><span class="font-bold">Location:</span> {{$room_list->location === null ? 'None': $room_list->location}}</p>
             <p class="text-lg"><span class="font-bold">How Many Rooms:</span> {{$room_list->many_room}}</p>
           </article>

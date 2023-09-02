@@ -43,13 +43,13 @@
                 <a href="{{ route('system.menu.edit', encrypt($tour_list->id)) }}" class="btn btn-primary w-full">Edit</a>
               </div class="w-full">
               <div class="w-full">
-                <label for="delete_modal" class="btn btn-outline btn-error w-full">Delete</label>
+                <label for="delete_menu" class="btn btn-outline btn-error w-full">Delete</label>
               </div>
            </div>
-           <form id="delete-form" method="POST" action=" {{ route('system.menu.destroy', encrypt($tour_list->id)) }}">
+           <form id="delete-menu-form" method="POST" action=" {{ route('system.menu.destroy', encrypt($tour_list->id)) }}">
             @csrf
             @method('DELETE')
-            <x-passcode-modal title="Do you want remove this: {{$tour_list->title}}" id="delete_modal" formId="delete-form"  />
+            <x-passcode-modal title="Do you want remove this: {{$tour_list->title}}" id="delete_menu" formId="delete-menu-form"  />
           </form>
         </div>
       </div>

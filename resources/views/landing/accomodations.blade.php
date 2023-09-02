@@ -29,7 +29,7 @@
                             </span>
                             <h2 class="mt-2 font-bold text-lg">{{$menu->tourMenu->title}}</h2>
                             <ul class="ml-5 sm:mt-1 sm:block sm:text-sm sm:text-gray-600">
-                              @foreach (explode(',', $menu->tourMenu->inclusion) as $item)
+                              @foreach (explode('(..)', $menu->tourMenu->inclusion) as $item)
                                   <li>&#10003; {{$item}}</li>
                               @endforeach
                             </ul>
@@ -72,10 +72,16 @@
         
             <div class="mt-20 grid grid-rows-1 md:grid-cols-3 gap-10">
               @foreach ($rooms as $room)
-                <div class="card bg-base-100 shadow-xl">
-                  <figure><img src="{{$room->image ? asset('storage/'.$room->image) : asset('images/logo.png')}}" alt="{{$room->name}}" /></figure>
-                  <div class="card-body">
-                    <h2 class="card-title">{{$room->name}}</h2>
+                <label for="{{Str::camel($room->name)}}Modal">
+                  <div class="card bg-base-100 shadow-xl hover:border hover:border-primary [&:hover_div_span]:block cursor-pointer">
+                    <figure class="py-2"><img src="{{$room->image ? asset('storage/'.$room->image) : asset('images/logo.png')}}" alt="{{$room->name}}" /></figure>
+                    <div class="card-body flex justify-between">
+                      <h2 class="card-title">{{$room->name}}</h2>
+                      <span class="hidden text-xs">Click to more details</span>
+                    </div>
+                  </div>
+                </label>
+                <x-modal id="{{Str::camel($room->name)}}Modal" title="{{$room->name}} Details">
                     @if($room->description)
                       <p>{{$room->description}}</p>
                     @endif
@@ -89,11 +95,7 @@
                     @if($room->description)
                       <p>Location: {{$room->location}}</p>
                     @endif
-                    <div class="card-actions justify-end">
-                      {{-- <button class="btn btn-primary">Book Now</button> --}}
-                    </div>
-                  </div>
-                </div>
+                </x-modal>
               @endforeach
     
             </div>

@@ -15,7 +15,6 @@
             <x-input type="text" id="name" name="name" placeholder="Room Name"/>
             <x-input type="text" id="amenities" name="amenities" placeholder="Amenities (Always Use Comma)"/>
             <x-textarea id="description" name="description" placeholder="Description"/>
-            <x-input type="number" id="min_occupancy" name="min_occupancy" placeholder="Min Guest" min="1"/>
             <x-input type="number" id="max_occupancy" name="max_occupancy" placeholder="Max Guest" min="1"/>
             <x-input type="text" id="location" name="location" placeholder="Location"/>
             <x-input type="number" id="many_room" name="many_room" placeholder="How Many Room" min="1"/>

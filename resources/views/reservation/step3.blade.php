@@ -65,7 +65,6 @@
                   @endif
                   <x-datalist-input id="country" name="country" placeholder="Your Country" :lists="$countries" value="{{$user->country ?? auth('web')->user()->country}}" />
                   <x-datalist-input id="nationality" name="nationality" placeholder="Your Nationality" :lists="$nationality" value="{{$user->nationality ?? auth('web')->user()->nationality}}" />
-                  <x-input type="number" id="contact" name="contact" placeholder="Your Phone Number" value="{{$user->contact ?? auth('web')->user()->contact}}" /> 
                   <x-phone-input value="{{$user->contact ?? auth('web')->user()->contact}}" />
                   <x-input type="email" id="email" name="email" placeholder="Your Email Address" value="{{$user->email ?? auth('web')->user()->email}}" /> 
                 </div>
@@ -99,6 +98,3 @@
     </div>
 </x-full-content>
 </x-landing-layout>
-@push('scripts')
-  <script type="module" src="{{Vite::asset('resources/js/validID-image.js')}}"></script>
-@endphp

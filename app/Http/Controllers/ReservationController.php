@@ -13,11 +13,13 @@ use App\Models\TourMenu;
 use App\Models\WebContent;
 use App\Models\Reservation;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
 use App\Models\OnlinePayment;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Mail;
 use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\Validator;
@@ -150,6 +152,7 @@ class ReservationController extends Controller
         $systemUser = System::all()->where('type', '>=', 0)->where('type', '<=', 1);
         $messages = $reservation->message;
         $messages['cancel'] = [
+            'prev_status' => $reservation->status,
             'message' =>  $validate['cancel_message'],
         ];
         $updated = $reservation->update(['message' => $messages, 'status' => 8]);
@@ -245,6 +248,7 @@ class ReservationController extends Controller
             'message' => $validator['reschedule_message'],
             'check_in' => $validator['check_in'],
             'check_out' => $validator['check_out'],
+            'prev_status' => $reservation->status,
         ];
         $updated = $reservation->update(['message' => $messages, 'status' => 7]);
         if($updated) {
@@ -274,7 +278,7 @@ class ReservationController extends Controller
             $dateList = decryptedArray(session('rinfo'));
             return view('reservation.step1', ['cin' => $dateList['cin'], 'cout' => $dateList['cout'], 'at' => $dateList['at'], 'px' => $dateList['px']]);
         }
-        if($request->has('cin', 'cout', 'px', 'at', 'tpx', 'py', 'ck')){
+        if($request->has(['cin', 'cout', 'px', 'at', 'tpx', 'py', 'ck'])){
             $reserve = [
               "cin" => request('cin'),
               "cout" => request('cout'),
@@ -288,7 +292,9 @@ class ReservationController extends Controller
         return view('reservation.step1');
     }
     public function dateCheck(Request $request){
-        // session()->forget('rinfo');
+        if(Str::contains(URL::previous(), route('home'))){
+            session()->forget('rinfo');
+        }
         // Check in (startDate to endDate) trim convertion
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
@@ -478,18 +484,19 @@ class ReservationController extends Controller
                     $chooseMenu[$key]['type'] = TourMenu::findOrFail($item)->type;
                     $chooseMenu[$key]['pax'] = TourMenu::findOrFail($item)->pax;
                 }
-                return view('reservation.step2', [
-                    'tour_lists' => TourMenuList::all(), 
-                    'tour_category' => TourMenuList::distinct()->get('category'), 
-                    "cin" =>  $dateList['cin'],
-                    "cout" => $dateList['cout'],
-                    "px" => $dateList['px'],
-                    "at" => $dateList['at'],
-                    "py" =>  $dateList['py'],
-                    'cmenu' => $chooseMenu ?? '',
-                    "user_days" => isset($noOfday) ? $noOfday : 1,
-                ]); 
             }
+            return view('reservation.step2', [
+                'tour_lists' => TourMenuList::all(), 
+                'tour_category' => TourMenuList::distinct()->get('category'), 
+                "cin" =>  $dateList['cin'],
+                "cout" => $dateList['cout'],
+                "px" => $dateList['px'],
+                "at" => $dateList['at'],
+                "py" =>  $dateList['py'],
+                'cmenu' => $chooseMenu ,
+                "user_days" => isset($noOfday) ? $noOfday : 1,
+            ]); 
+            
         }
         if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at'])){
             return view('reservation.step2', [
@@ -578,7 +585,12 @@ class ReservationController extends Controller
                 "py" => $validated['payment_method'] ?? '',
             ];
             $reservationInfo = encryptedArray($reservationInfo);
-            if(session()->has('rinfo')) foreach($reservationInfo as $key => $item) session('rinfo')[$key] = $reservationInfo[$key]; 
+            if(session()->has('rinfo')) {
+                $replaceRInfo = session('rinfo');
+                foreach($reservationInfo as $key => $item) $replaceRInfo[$key] = $reservationInfo[$key];
+                session(['rinfo' => $replaceRInfo]); 
+            }
+
             else session(['rinfo' => $reservationInfo]);
             return redirect()->route('reservation.details');
 
@@ -597,6 +609,11 @@ class ReservationController extends Controller
                 "at" =>  encrypt($validated['accommodation_type']),
                 "py" =>  encrypt($validated['payment_method']),
             ];
+            if(session()->has('rinfo')) {
+                $replaceRInfo = session('rinfo');
+                foreach($getParamStep1 as $key => $item) $replaceRInfo[$key] = $getParamStep1[$key];
+                session(['rinfo' => $replaceRInfo]); 
+            }
             return redirect()->route('reservation.choose', [Arr::query($getParamStep1), '#tourmenu']);
         }
 
@@ -605,7 +622,6 @@ class ReservationController extends Controller
         $validate = Validator::make($request->all('tour_menu'), [
             'tour_menu.*' => 'required',
         ]);
-        
         if(empty($request['tour_menu']) || $validate->fails()){
             $getParam = [
                 "cin" =>   $request['cin'] ?? '',
@@ -621,21 +637,15 @@ class ReservationController extends Controller
         }
         $validated = $validate->validate();
         $reservationInfo = [
-            "cin" =>  encrypt($request['cin']) ?? '',
-            "cout" => encrypt($request['cout']) ?? '',
-            "at" => encrypt($request['at']) ?? '',
-            "px" => encrypt($request['px']) ?? '',
-            "tpx" =>  encrypt($request['tpx']) ?? '',
-            "py" =>  encrypt($request['py']) ?? '',
+            "cin" =>  $request['cin'] ?? '',
+            "cout" => $request['cout'] ?? '',
+            "at" => $request['at'] ?? '',
+            "px" => $request['px'] ?? '',
+            "tpx" =>  $request['tpx'] ?? '',
+            "py" =>  $request['py'] ?? '',
             "tm" =>  encrypt($validated['tour_menu']) ?? '',
         ];
-        if(session()->has('rinfo') && $request['cf'] == true){
-            $r_info = session()->get('rinfo');
-            foreach($reservationInfo as $key => $item) $r_info[$key] = $item;
-            session(['rinfo' => $reservationInfo]);
-            return redirect()->route('reservation.confirmation');
-
-        }
+    
         session(['rinfo' => $reservationInfo]);
         return redirect()->route('reservation.details');
 
@@ -652,7 +662,7 @@ class ReservationController extends Controller
         $validated = $request->validate([
             'first_name' => ['required', 'min:1'],
             'last_name' => ['required', 'min:1'],
-            'birthday' => ['required'],
+            'birthday' => ['required', 'date'],
             'country' => ['required', 'min:1'],
             'nationality' => ['required'],
             'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
@@ -751,7 +761,7 @@ class ReservationController extends Controller
         $systemUser = System::all()->where('type', '>=', 0)->where('type', '<=', 1);
         $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
         $validated = $request->validate([
-            'valid_id' => Rule::when($request->hasFile('tour'), ['required' ,'image', 'mimes:jpeg,png,jpg', 'max:5024']), 
+            'valid_id' => Rule::when(!$user->valid_id, ['required' ,'image', 'mimes:jpeg,png,jpg', 'max:5024']), 
             'tour' => Rule::when(!empty($request['tour']), ['required', 'array'], ['nullable']), 
         ], [
             'required' => 'The image is required',
@@ -759,9 +769,6 @@ class ReservationController extends Controller
             'mimes' => 'The image must be of type: jpeg, png, jpg',
             'max' => 'The image size must not exceed 5 MB',
         ]);
-        if($request->hasFile('valid_id')){  
-            $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
-        }
         $reserve_info = null;
         if($uinfo['at'] !== 'Room Only'){
             foreach(decryptedArray($validated['tour']) as $key => $tour_id) {
@@ -791,15 +798,18 @@ class ReservationController extends Controller
             $reserve_info = Reservation::create([
                 'user_id' => $user->id,
                 'pax' => $uinfo['px'] ?? '',
-                'tour_pax' => $uinfo['tpx'],
+                'tour_pax' => $uinfo['px'],
                 'age' => $uinfo['age'] ?? '',
                 'check_in' => $uinfo['cin'] ?? '',
                 'check_out' => $uinfo['cout'] ?? '',
                 'accommodation_type' => $uinfo['at'] ?? '',
-
+                'payment_method' => $uinfo['py'] ?? '',
             ]);
         }
-        $user->update(['valid_id' => $validated['valid_id']]);
+        if($request->hasFile('valid_id')){  
+            $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
+            $user->update(['valid_id' => $validated['valid_id']]);
+        }
         $text = 
         "New Reservation!\n" .
         "Name: ". $reserve_info->userReservation->name() ."\n" . 

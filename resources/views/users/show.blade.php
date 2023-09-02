@@ -52,7 +52,7 @@
                             <div x-data="{loader: false}" class="my-5 w-96">
                                 <x-loader />
                                 <x-password name="current_password" id="current_password" placeholder="Current Password" />
-                                <x-password name="new_password" id="new_password" placeholder="New Password" />
+                                <x-password name="new_password" id="new_password" placeholder="New Password" validation/>
                                 <x-input type="password" name="new_password_confirmation" id="new_password_confirmation" placeholder="Confirm New Password" />
                                 <button @click="loader = true" class="btn btn-warning btn-sm">Change</button>  
                             </div>

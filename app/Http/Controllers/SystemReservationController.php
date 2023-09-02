@@ -49,10 +49,10 @@ class SystemReservationController extends Controller
             $r_list = Reservation::where('status', 3)->latest()->paginate(5);
         }
         if($request['tab'] === 'reschedule'){
-            $r_list = Reservation::where('status', 4)->latest()->paginate(5);
+            $r_list = Reservation::where('status', 4)->orWhere('status', 7)->latest()->paginate(5);
         }
         if($request['tab'] === 'cancellation'){
-            $r_list = Reservation::where('status', 5)->latest()->paginate(5);
+            $r_list = Reservation::where('status', 5)->orWhere('status', 8)->latest()->paginate(5);
         }
         if($request['tab'] === 'disaprove'){
             $r_list = Reservation::where('status', 6)->latest()->paginate(5);
@@ -178,8 +178,7 @@ class SystemReservationController extends Controller
     public function updateCancel(Request $request, $id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
-        if(!($reservation->status <= 4 || $reservation->status <= 5)) abort(404);
-
+        if(!$reservation->status >= 5) abort(404);
         $validator = Validator::make($request->all('passcode'), [
             'passcode' => ['required', 'digits:4', 'numeric'],
         ]);
@@ -216,19 +215,20 @@ class SystemReservationController extends Controller
         if($validator->fails()) return back ()->with('error', $validator->errors()->all())->withInput($validator->getData());
         $validator = $validator->validate();
         $message = $reservation->message;
-        if(isset($message['reschedule'])) unset($message['reschedule']);
+        $reservation->status = $message['cancel']['prev_status'];
+        $reservation->save();
+        if(isset($message['cancel'])) unset($message['cancel']);
         $updated = $reservation->update(['message' => $message]);
         if($updated){
             $details = [
                 'name' => $reservation->userReservation->name(),
-                'title' => 'Reservation Reschedule',
-                'body' => 'Sorry, Your Reservation Reschedule Request are now disapproved due to ' . $validator['reason'] . '. If you want concern. Please contact the owner'
+                'title' => 'Reservation Cancel',
+                'body' => 'Sorry, Your Cancel Request are now disapproved due to ' . $validator['reason'] . '. If you want concern. Please contact the owner'
             ];
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Reschedule Request of '.$reservation->userReservation->name().'was successful disapproved');
         }
-       
-        
+    
     }
     public function updateDisaproveReschedule(Request $request, $id){
         $id = decrypt($id);
@@ -239,7 +239,9 @@ class SystemReservationController extends Controller
         if($validator->fails()) return back ()->with('error', $validator->errors()->all())->withInput($validator->getData());
         $validator = $validator->validate();
         $message = $reservation->message;
-        if(isset($message['cancel'])) unset($message['cancel']);
+        $reservation->status = $message['reschedule']['prev_status'];
+        $reservation->save();
+        if(isset($message['reschedule'])) unset($message['reschedule']);
         $updated = $reservation->update(['message' => $message]);
         if($updated){
             $details = [
@@ -881,7 +883,7 @@ class SystemReservationController extends Controller
             ];
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             unset($details, $text);
-            return redirect()->route('system.reservation.home')->with('success', 'Disaprove of ' . $updated->userReservation->name() . ' was Successful');
+            return redirect()->route('system.reservation.home')->with('success', 'Disaprove of ' . $reservation->userReservation->name() . ' was Successful');
         }
         else{
             return back()->with('error', 'Something Wrong, Try Again')->withInput($validated);
@@ -958,6 +960,9 @@ class SystemReservationController extends Controller
         if($reservation->payment_method == "Gcash"){
             $url = route('reservation.gcash', encrypt($reservation->id));
         }
+        if($reservation->payment_method == "PayPal"){
+            $url = route('reservation.paypal', encrypt($reservation->id));
+        }
         $details = [
             'name' => $reservation->userReservation->name(),
             'title' => 'Your online payment was approved',
@@ -984,8 +989,11 @@ class SystemReservationController extends Controller
         $reservation = Reservation::findOrFail(decrypt($id));
         $admins = System::all()->where('type', 0);
         $validated = Validator::make($request->all('amount'), [
-            'amount' => ['required', 'numeric'],
-        ], ['required' => 'Required to fill up', 'numeric' => 'Number only']);
+            'amount' => ['required', 'numeric', 'min:1000'],
+        ], [
+            'required' => 'Required to fill up', 'numeric' => 'Number only',
+            'min' => 'The amount must be ₱ 1,000 above',
+        ]);
         if($validated->fails()){
             return back()->with('error', $validated->errors()->all());
         }

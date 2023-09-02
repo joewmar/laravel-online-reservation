@@ -13,11 +13,7 @@ use Laravel\Ui\Presets\React;
 
 class TourMenuController extends Controller
 {
-    public function __construct()
-    {
-        // dd(auth('system')->user());
-        // if(auth('system')->user()->type !== 0) abort(404);
-    } 
+
     public function index(Request $request){
         if($request->has('tab') && $request['tab'] === 'addons'){
             return view('system.service.index', ['activeSb' => 'Tour Menu', 'addons_list' => Addons::all()]);
@@ -156,7 +152,8 @@ class TourMenuController extends Controller
     public function edit (Request $request){
         if(auth('system')->user()->type !== 0) abort(404);
         $id = decrypt($request->id);
-        return view('system.service.edit', ['activeSb' => 'Tour Menu', 'service_menu' => TourMenuList::findOrFail($id)]);
+        $category = TourMenuList::distinct()->get('category')->pluck('category');
+        return view('system.service.edit', ['activeSb' => 'Tour Menu', 'service_menu' => TourMenuList::findOrFail($id), 'category' => $category]);
 
     }
     public function update (Request $request){

@@ -24,7 +24,7 @@
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
               <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
             </svg>
-            <span><a href="https://mail.google.com/mail/?view=cm&fs=1&to={{env('MAIN_CONTACT_EMAIL', '#')}}">bognothomestay@gmail.com</a></span>
+            <span><a href="https://mail.google.com/mail/?view=cm&fs=1&to={{env('MAIN_CONTACT_EMAIL', '#')}}">{{env('MAIN_CONTACT_EMAIL', 'None')}}</a></span>
           </p>
         </div>
       </div>
@@ -35,52 +35,53 @@
         </div>
       </div>
     </div>
-    <div class="divider"></div>
-    <div class="my-5 grid grid-col-1 md:grid-col-3">
-      @forelse ($contacts as $contact)
-        <div class="shadow-lg rounded-md bg-base-100 border border-neutral text-neutral">
-            <div class="w-full h-full p-6">
-                <h1>{{$contact['name']}}</h1>
-                <div class="flex space-x-3">
-                    <p class="text-sm font-semibold"> Contact Number:</p>
+
+      @if(isset($contacts))
+        <div class="divider"></div>
+          <h1 class="text-2xl font-bold pt-5 px-6">Other Contact</h1>
+          <div class="my-5 grid grid-cols-1 md:grid-cols-3 gap-3 px-6">
+            @foreach ($contacts as $contact)
+                <label class="w-96 h-auto shadow-lg rounded-md bg-base-100 text-neutral hover:bg-primary hover:text-primary-content pl-5 p-5" for="contact{{$loop->index}}">
+                  <h1 class="text-xl font-bold">{{$contact['name']}}</h1>
+                  <span class="text-xs">Click to More Details</span>
+                </label>
+                <x-modal id="contact{{$loop->index}}" title="{{$contact['name']}} Contacts">
+                  <div class="flex space-x-3">
+                    <p class="text-sm font-semibold">Contact Number:</p>
                     <ul class="text-sm font-normal">
                         @foreach ($contact['contactno'] as $contactno)
                             <li>{{$contactno}}</li>
                         @endforeach
                     </ul>
-                </div>
-                <div class="flex space-x-3">
-                    <p class="text-sm font-semibold"> Contact Email:</p>
-                    <ul class="text-sm font-normal">
-                        @foreach ($contact['email'] as $email)
-                            <li>{{$email}}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                <div class="flex space-x-3">
-                    <p class="text-sm font-semibold">Facebook:</p>
-                    <ul class="text-sm font-normal">
-                        @foreach ($contact['fbuser'] as $fbuser)
-                            <li>{{$fbuser}}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                <div class="flex space-x-3">
-                    <p class="text-sm font-semibold">WhatsApp:</p>
-                    <ul class="text-sm font-normal">
-                        @foreach ($contact['whatsapp'] as $whatsapp)
-                            <li>{{$whatsapp}}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        </div>
-      @empty
-          <div class="h-52 text-2xl bg-primary shadow-md text-primary-content flex justify-center items-center">
-            <div>No Contact Information</div>
+                  </div>
+                  <div class="flex space-x-3">
+                      <p class="text-sm font-semibold"> Contact Email:</p>
+                      <ul class="text-sm font-normal">
+                          @foreach ($contact['email'] as $email)
+                              <li ><a class="link-hover" href="https://mail.google.com/mail/?view=cm&fs=1&to={{$email}}">{{$email}}</a></li>
+                          @endforeach
+                      </ul>
+                  </div>
+                  {{-- <div class="flex space-x-3">
+                      <p class="text-sm font-semibold">Facebook:</p>
+                      <ul class="text-sm font-normal">
+                          @foreach ($contact['fbuser'] as $fbuser)
+                              <li>{{$fbuser}}</li>
+                          @endforeach
+                      </ul>
+                  </div> --}}
+                  <div class="flex space-x-3">
+                      <p class="text-sm font-semibold">WhatsApp:</p>
+                      <ul class="text-sm font-normal">
+                          @foreach ($contact['whatsapp'] as $whatsapp)
+                              <li>{{$whatsapp}}</li>
+                          @endforeach
+                      </ul>
+                  </div>
+                </x-modal>
+            @endforeach
           </div>
-      @endforelse
-    </div>
+      @endif
   </section>
 
 </x-landing-layout>

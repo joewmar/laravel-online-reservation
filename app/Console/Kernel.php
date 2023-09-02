@@ -13,9 +13,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('app:live')->everyFiveMinutes();
-        $schedule->command('queue:restart')->everyFiveMinutes();
         $schedule->command('queue:retry all')->everyFiveMinutes();
-        $schedule->command('queue:flush')->everyMinute();
+        $schedule->command('queue:flush')->everyFiveMinutes();
         // $schedule->command('job:clean-completed-jobs')->daily();
         
     }

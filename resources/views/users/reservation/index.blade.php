@@ -13,7 +13,7 @@
                 <a href="{{route('user.reservation.home', Arr::query(['tab' => 'previous']))}}" class="tab {{request('tab') == 'previous' ? 'tab-active' : ''}}">Previous</a>
               </div>
             <div class="grid card bg-base-100 rounded-box place-items-center h-full w-5/6 ">
-                <div class="overflow-x-auto w-full">
+                <div class="overflow-x-auto w-full shadow-xl">
                   <table class="table w-full">
                     <!-- head -->
                     <thead>

@@ -2,7 +2,7 @@
 /* Firefox */
 * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--p)) hsl(var(--b2));
+    scrollbar-color: hsl(var(--p)) hsl(var(--b1));
   }
   
   /* Chrome, Edge, and Safari */
@@ -11,12 +11,17 @@
   }
   
   *::-webkit-scrollbar-track {
-    background: hsl(var(--b2));
+    background: hsl(var(--b1));
     
   }
   
   *::-webkit-scrollbar-thumb {
     background-color:hsl(var(--p)) ;
-    border: 3px solid hsl(var(--b2));
+    border: 3px solid hsl(var(--b1));
+  }
+  @media screen and (max-width: 800px) {
+    *::-webkit-scrollbar {
+      width: 10px;
+    }
   }
   

@@ -17,7 +17,7 @@
                             <h2 class="card-title">Change Password</h2>
                             <p>
                                 <x-input type="password" name="current_password" id="current_password" placeholder="Current Password" />
-                                <x-input type="password" name="new_password" id="new_password" placeholder="New Password" />
+                                <x-password name="new_password" id="new_password" placeholder="New Password" validation />
                                 <x-input type="password" name="new_password_confirmation" id="new_password_confirmation" placeholder="Confirm New Password" />
                             </p>
                             <div class="card-actions justify-end">

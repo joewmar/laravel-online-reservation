@@ -7,15 +7,14 @@
                 <div class="join">
                   <div>
                     <div>
-                      <input type="search" name="search" class="input input-bordered join-item" placeholder="Search"/>
+                      <input type="search" name="search" class="input input-bordered join-item" placeholder="Search" value="{{request('search') ?? ''}}"/>
                     </div>
                   </div>
                   <select name="type" class="select select-bordered join-item">
                     <option value="">All</option>
-                    <option value="0">Admin</option>
-                    <option value="1">Manager</option>
-                    <option value="2">Front Desk</option>
-                    <option value="3">Staff</option>
+                    <option value="0" {{request('type') == '0' ? 'selected' : ''}}>Admin</option>
+                    <option value="1" {{request('type') == '1' ? 'selected' : ''}}>Manager</option>
+                    <option value="2" {{request('type') == '2' ? 'selected' : ''}}>Front Desk</option>
                   </select>
                   <button class="btn btn-primary join-item">Search</button>
                 </div>

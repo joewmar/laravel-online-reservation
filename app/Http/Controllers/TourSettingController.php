@@ -13,9 +13,7 @@ class TourSettingController extends Controller
 
     public function __construct()
     {
-        $this->middleware(['auth:system']);
         $this->system_user = auth()->guard('system')->user();
-        if(!$this->system_user->type === 0) abort(404);
     }
     public function index(){
         return view('system.setting.tour.index', ['activeSb' => 'HEllo', 'tours' => Tour::all()]);

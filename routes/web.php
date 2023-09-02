@@ -1,13 +1,9 @@
 <?php
 
-use App\Mail\ReservationMail;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsController;
-use App\Http\Controllers\RideController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SystemController;
@@ -24,7 +20,6 @@ use App\Http\Controllers\RoomSettingController;
 use App\Http\Controllers\TourSettingController;
 use App\Http\Controllers\CreateReservationController;
 use App\Http\Controllers\SystemReservationController;
-use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,7 +40,7 @@ Route::middleware(['auth.image'])->group(function () {
 // Route::get('/bot/getUpdates',[LandingController::class, 'teleUpdates'])->name('home');
 Route::controller(LandingController::class)->group(function (){
     Route::get('/', 'index')->name('home');
-    Route::get('/services', 'services')->name('services');
+    Route::get('/tour', 'services')->name('services');
     Route::get('/aboutus', 'aboutus')->name('about.us');;
     Route::get('/contact', 'contact')->name('contact');;
 });
@@ -134,7 +129,7 @@ Route::prefix('system')->name('system.')->group(function(){
        Route::view('/login', 'system.login')->name('login');
        Route::post('/check', [SystemController::class, 'check'])->name('check');
     });
-    Route::middleware(['auth:system', 'can:admin' ,'preventBackhHistory'])->group(function(){
+    Route::middleware(['auth:system','preventBackhHistory'])->group(function(){
         Route::post('/logout', [SystemController::class, 'logout'])->name('logout');
 
         Route::get('/', [SystemHomeController::class, 'index'])->name('home');
@@ -188,7 +183,7 @@ Route::prefix('system')->name('system.')->group(function(){
         
         Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.home');
 
-        Route::prefix('menu')->name('menu.')->group(function (){
+        Route::prefix('menu')->name('menu.')->middleware('can:admin')->group(function (){
             Route::get('/', [TourMenuController::class, 'index'])->name('home');
 
             Route::prefix('addons')->name('addons.')->group(function (){
@@ -215,7 +210,7 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::delete('/{id}/price/{priceid}', [TourMenuController::class, 'destroyPrice'])->name('destroy.price');
         });
 
-        Route::prefix('news')->name('news.')->controller(NewsController::class)->group(function (){
+        Route::prefix('news')->name('news.')->controller(NewsController::class)->middleware('can:admin')->group(function (){
             Route::get('/', 'index')->name('home');
             Route::get('/create', 'create')->name('create');
             Route::post('/create', 'store')->name('store');
@@ -241,7 +236,7 @@ Route::prefix('system')->name('system.')->group(function(){
         Route::prefix('feedback')->name('feedback.')->group(function (){
             Route::get('/', [FeedbackController::class, 'index'])->name('home');
         });
-        Route::prefix('webcontent')->name('webcontent.')->controller(WebContentController::class)->group(function (){
+        Route::prefix('webcontent')->name('webcontent.')->controller(WebContentController::class)->middleware('can:admin')->group(function (){
             Route::get('/', 'index')->name('home');
 
             Route::post('/image/hero', 'storeHero')->name('image.hero');
@@ -289,7 +284,7 @@ Route::prefix('system')->name('system.')->group(function(){
 
         });
         Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function(){
-            Route::view('/', 'system.profile.index',  ['activeSb' => 'Profile'])->name('home');
+            Route::get('/', 'index')->name('home');
             Route::get('/edit', 'edit')->name('edit');
             Route::put('/{id}/update', 'update')->name('update');
             // Route::view('/link', 'system.profile.link',  ['activeSb' => 'Link'])->name('link');
@@ -300,24 +295,24 @@ Route::prefix('system')->name('system.')->group(function(){
         });
         // System Settings Moudle
         Route::prefix('settings')->name('setting.')->group(function(){
-            Route::view('/', 'system.setting.index',  ['activeSb' => 'Setting'])->name('home');
-            Route::prefix('accounts')->name('accounts.')->controller(SystemController::class)->group(function (){
+            Route::view('/', 'system.setting.index',  ['activeSb' => 'Setting'])->middleware('can:admin')->name('home');
+            Route::prefix('accounts')->name('accounts.')->controller(SystemController::class)->middleware('can:admin')->group(function (){
                 Route::get('/', 'index')->name('home');
                 Route::post('/search', 'search')->name('search');
                 Route::get('/create', 'create')->name('create');
-                Route::post('/create', 'store')->name('create.store');
+                Route::post('/create/store', 'store')->name('create.store');
     
                 Route::get('/{id}', 'show')->name('show');
                 Route::get('/{id}/edit', 'edit')->name('edit');
-                Route::put('/{id}/edit', 'update')->name('update');
+                Route::put('/{id}/update', 'update')->name('update');
                 Route::delete('/{id}/delete', 'destroy')->name('destroy');
             });
 
 
-            Route::prefix('rooms')->name('rooms.')->controller(RoomSettingController::class)->group(function(){
+        Route::prefix('rooms')->name('rooms.')->controller(RoomSettingController::class)->middleware('can:admin')->group(function(){
                 Route::get('/','index')->name('home');
 
-                Route::view('/create', 'system.setting.rooms.create',  ['activeSb' => 'Rooms'])->name('create');
+                Route::get('/create', )->name('create');
                 Route::post('/store', 'store')->name('store');
                 
                 // Room Rate Setting

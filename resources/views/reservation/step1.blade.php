@@ -15,9 +15,9 @@
                 </div>
                 <div class="mt-8">
                     <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$at ?? old('accommodation_type')}}" />
-                    <div class="w-auto text-center flex space-x-4 ">
-                        <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$cin ?? ''}}"/>
-                        <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$cout ?? ''}}" />
+                    <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-3">
+                        <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one md:flatpickr-reservation" value="{{$cin ?? ''}}"/>
+                        <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one md:flatpickr-reservation" value="{{$cout ?? ''}}" />
                         <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$px ?? ''}}"/>
                     </div>
                 </div>
@@ -28,27 +28,15 @@
                         <span class="hidden md:inline">Go Home</span>
                     </a>
                     @if(session()->has('ck') && session('ck')  === true)
-                        <label for="step2" class="btn btn-primary">
+                        <button class="btn btn-primary">
                             <span class="hidden md:inline">Proceed</span>
                             <i class="fa-solid fa-arrow-right"></i>
-                        </label>
-                        <x-modal id="step2" title="Before to proceed" >
-                            <p class="py-4 text-error"><strong>Note:</strong> When making an online reservation, make sure to pay for downpayment after confirmation.</p>
-                            <p class="py-4"><strong>Allow To Pay for Online Reservation</strong></p>
-                            <p>
-                                <ul class="marker:text-primary">
-                                    <li>Gcash</li>
-                                    <li>PayPal</li>
-                                </ul>
-                            </p>
-                            <div class="modal-action">
-                                <button @click="loader = true" type="submit" class="btn btn-primary">Continue</button>
-                            </div>
-                        </x-modal>
+                        </button>
+
                     @else
                         <button @click="loader = true" class="btn btn-primary">
                             <x-loader />
-                            <span class="hidden md:inline">Check</span>
+                            <span class="inline">Check</span>
                         </button>
                     @endif
                 </div>

@@ -30,7 +30,7 @@
         {{-- Last Name --}}
         <x-input type="text" name="last_name" placeholder="Last Name"/>
         {{-- Birthday --}}
-        <x-datetime-picker name="birthday" id="birthday" placeholder="Birthday" class="flatpickr-bithday" />
+        <x-birthday-input />
         {{-- Nationality--}}
         <x-datalist-input id="nationality" name="nationality" placeholder="Nationality" :lists="$nationality" value="{{old('nationality') ?? ''}}" />
         {{-- Country--}}

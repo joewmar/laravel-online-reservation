@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
         $arrNavItems =[
             "Home" => '/', 
             "About Us" => '/aboutus', 
-            "Services" => '/services',
+            "Tour" => '/tour',
             "Contact Us" => 'contact',
         ];
         View::share('landingNavbar', $arrNavItems);

@@ -83,11 +83,9 @@
             <x-system-card icon="fa-solid fa-home" title="Total Room Reserved" description="{{$rooms->where('availability', 1)->count() > 0 ? $rooms->where('availability', 1)->count() . ' Rooms' : $rooms->where('availability', 1)->count() . ' Room'}}" />
             <x-system-card icon="fa-solid fa-spinner" title="Total Customer Pending" description="{{$reservations->where('status', 0)->count()}}" />
             <x-system-card icon="fa-solid fa-calendar-check" title="Total Customer Confirm" description="{{$reservations->where('status', 1)->count()}}" />
-              <x-system-card icon="fa-solid fa-calendar-xmark" title="Total Customer Disapprove" description="{{$reservations->where('status', 6)->count()}}" />
             <x-system-card icon="fa-solid fa-building-circle-check" title="Total Customer Check-in" description="{{$reservations->where('status', 2)->count()}}" />
             <x-system-card icon="fa-solid fa-cash-register" title="Total Customer Check-out" description="{{$reservations->where('status', 3)->count()}}" />
-            <x-system-card icon="fa-solid fa-calendar-days" title="Total Customer Reschedule" description="{{$reservations->where('status', 4)->count()}}" />
-            <x-system-card icon="fa-solid fa-rectangle-xmark" title="Total Customer Cancel" description="{{$reservations->where('status', 5)->count()}}" />
+            {{-- <x-system-card icon="fa-solid fa-calendar-days" title="Total Customer Reschedule" description="{{$reservations->where('status', 4)->count()}}" /> --}}
               <article class="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-6 shadow-md hover:border-primary hover:shadow-primary transition-all duration-300 ease-in-out">
                 <div class="flex items-center gap-4">
                   <span class="hidden rounded-full bg-gray-100 p-2 text-gray-600 sm:block">
