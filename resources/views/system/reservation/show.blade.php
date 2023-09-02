@@ -1,9 +1,9 @@
 @php
     $total = 0;
     $downpayment = 0;
-    $dscPerson = null;
+    $dscPerson = 0;
 
-    foreach ($r_list->transaction as $outerKey => $outerItem) {
+    foreach ($r_list->transaction ?? [] as $outerKey => $outerItem) {
         if ($outerKey == 'payment' && is_array($outerItem)) {
             $downpayment = $outerItem['downpayment'] ?? 0;
             $dscPerson = $outerItem['discountPerson'] ?? 0;
@@ -241,7 +241,7 @@
         @if($r_list->status > 0 && $r_list->status < 4)
             <div class="divider"></div>
                 <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
-                @if (isset($dscPerson))
+                @if ($dscPerson !== 0)
                     <p class="text-md tracking-tight text-neutral">
                         <span class="font-medium">Room Rate (Orginal Price): </span>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}
                     </p>
