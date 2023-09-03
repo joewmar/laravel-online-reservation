@@ -18,9 +18,16 @@
             {{-- Table  --}}
             <div class="mt-20 w-full">
                 <div class="flex justify-end w-full">
-                    <form action="{{route('system.reservation.search')}}" method="POST">
+                    <form action="{{route('system.reservation.search', Arr::query(['tab' => 'list']))}}" method="POST">
                         @csrf
-                        <x-search />
+                        <div class="join">
+                            <div>
+                              <div>
+                                <input class="input input-sm input-primary join-item placeholder:text-sm" name="search" placeholder="Search Full Name..." value="{{request('search') ?? ""}}" />
+                              </div>
+                            </div>
+                            <button class="btn btn-sm join-item btn-primary">Search</button>
+                          </div>
                     </form>
                 </div>
                 <div class="mt-10">
@@ -46,7 +53,7 @@
                                             <div class="flex items-center space-x-3">
                                                 <div class="avatar">
                                                     <div class="mask mask-squircle w-12 h-12">
-                                                        <img src="{{$list->userReservation->avatar ? asset('storage/'.$list->userReservation->avatar) : asset('images/avatars/no-avatar.png')}}" alt="{{$list->userReservation->name() ?? ''}} Photo" />
+                                                        <img src="{{$list->userReservation->avatar !== null ? asset('storage/'.$list->userReservation->avatar) : asset('images/avatars/no-avatar.png')}}" alt="{{$list->userReservation->name() ?? ''}} Photo" />
                                                     </div>
                                                 </div>
                                             </div>

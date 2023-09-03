@@ -347,7 +347,7 @@ class ReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
                 'accommodation_type' => 'required',
-                'pax' => ['required', 'numeric', 'min:1', 'max:'.(string)RoomList::max('max_occupancy')],
+                'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
@@ -432,7 +432,7 @@ class ReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
                 'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1', 'max:'.(string)RoomList::max('max_occupancy')],
+                'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
@@ -565,7 +565,7 @@ class ReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
                 'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1', 'max:'.(string)RoomList::max('max_occupancy')],
+                'pax' => ['required', 'numeric', 'min:1'],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',

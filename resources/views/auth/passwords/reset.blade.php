@@ -1,4 +1,4 @@
-<x-landing-layout>
+<x-landing-layout noFooter>
     <x-full-content>
         <div x-data="{loader: false}" class="bg-primary">
             <div class="flex justify-center items-center h-screen">

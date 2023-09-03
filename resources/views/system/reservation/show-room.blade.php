@@ -84,7 +84,7 @@
                                         <div>
                                             <h3 class="text-lg font-bold text-neutral sm:text-xl">Room No. {{$item->room_no}}</h3>
                                             <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->name}}</p>
-                                            <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->min_occupancy}} up to {{$item->room->max_occupancy}} capacity</p>
+                                            <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->max_occupancy}} capacity</p>
                                             @if($item->getAllPax() === (int)$item->room->max_occupancy - 1)
                                                 <p class="mt-1 text-xs font-bold text-red-400">There is only {{$item->getAllPax()}} guest</p>
                                             @else

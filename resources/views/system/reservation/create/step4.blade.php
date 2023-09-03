@@ -7,7 +7,7 @@
     <section x-data="{loader: false}" class="my-10 p-5">
       <x-loader />
       <div>
-        <h1 class="sr-only">Checkout</h1>
+        <h1 class="sr-only">Reservation Informatio</h1>
         <form id="reservation-form" action="{{ route('system.reservation.store.step.four')}}" method="POST" enctype="multipart/form-data">
           @csrf
           <div class="mx-auto grid max-w-screen-xl grid-cols-1 md:grid-cols-2 grid-">
@@ -16,7 +16,6 @@
                   <div class="flex justify-between items-center w-full">
                     <div class="flex items-center gap-4">
                       <span class="h-10 w-10 rounded-full bg-primary"></span>
-                      <h2 class="font-medium text-neutral">Your Cart</h2>
                     </div>
                   </div>
                   <div class="space-y-1 md:space-y-3">
@@ -185,8 +184,8 @@
                     </div>
       
                     <div class="col-span-6 hidden md:grid grid-cols-2 gap-4 ">
-                      <a href="{{route('system.reservation.create')}}" class="btn btn-ghost w-full">
-                        Change
+                      <a href="{{route('system.reservation.create.step.three')}}" class="btn btn-ghost w-full">
+                        Back
                       </a>
                       <label for="reservation_confirm2" class="btn btn-primary w-full">
                         Confirm

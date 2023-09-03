@@ -136,8 +136,8 @@
               @else
                 <div>
               @endif
-                  <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$TourInfo['cin'] ?? \Carbon\Carbon::now('Asia/Manila')->format('Y-m-d')}}"/>
-                  <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$TourInfo['cout']}}"/>
+                  <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one" value="{{$TourInfo['cin'] ?? \Carbon\Carbon::now('Asia/Manila')->addDays(3)->format('Y-m-d')}}"/>
+                  <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{$TourInfo['cout']}}"/>
                   <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" />
                   <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$TourInfo['px']}}" />
                   <template x-if="at === 'Day Tour' || at === 'Overnight'">
@@ -276,7 +276,6 @@
                                         <article>
                                           <ul role="list" class="marker:text-primary list-disc pl-5 space-y-3 text-neutral">
                                             <li><strong>Number of days: </strong> {{$list->no_day <= 1 ? $list->no_day . ' day' : $list->no_day . ' days' }}</li>
-                                            <li><strong>Number of hour/s: </strong> {{Str::replace('.', ' hour and ', $list->hrs) . ' minutes'}}</li>
                                             <li><strong>Price Plan</strong></li>
                                           </ul>
                                         </article>
@@ -333,7 +332,7 @@
                       </div>
                   @endforeach
             </div>
-            <div class="hidden lg:flex justify-start gap-5">
+            <div class="flex justify-start gap-5">
               <div class="mt-8 flex gap-4">
                   <a @click="loader = true" href="{{route('system.reservation.create.step.two', Arr::query(["rt" =>  request('rt'), "rm" =>  request('rm'), "px" =>  request('px')]) ) }}" class="btn btn-ghost">Back</a>
                 <button @click="loader = true" onclick="event.preventDefault(); document.getElementById('tour-form').submit();" class="btn btn-primary">Next</button>

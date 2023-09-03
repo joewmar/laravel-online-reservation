@@ -27,7 +27,7 @@ class SystemController extends Controller
 
             $firstName = $names[0];
             $lastName = isset($names[1]) ? $names[1] : '';
-            $employees  = System::where('first_name', 'like', '%' .$firstName . '%')
+            $employees  = System::where('id', 'like', '%' .$firstName . '%')
             ->where('last_name', 'like', '%' . $lastName . '%')
             ->orWhere('last_name', 'like', '%' . $firstName . '%')
             ->paginate(5);

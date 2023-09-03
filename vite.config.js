@@ -15,8 +15,10 @@ export default defineConfig({
                 'resources/js/passcode.js',
                 'resources/js/reservation-calendar.js',
                 'resources/js/payment-image.js',
+                'resources/js/camera.js',
             ],
             refresh: true,
         }),
     ],
 });
+

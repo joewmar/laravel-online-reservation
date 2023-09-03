@@ -1,6 +1,6 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
-    $arrPayment = ['Gcash', 'Paypal'];
+    $arrPayment = ['Gcash', 'PayPal'];
     $TourInfo = [];
     $tourListCart = [];
     if(session()->has('rinfo')){
@@ -335,7 +335,7 @@
                     </div>
                 @endforeach
           </div>
-          <div class="hidden lg:flex justify-start gap-5">
+          <div class="flex justify-start gap-5">
             <div class="mt-8 flex gap-4">
               <a href="{{route('reservation.choose', Arr::query(["cin" =>  request('cin'), "cout" =>  request('cout'), "px" =>  request('px'), "at" =>  request('at')]) ) }}" class="btn btn-ghost">Back</a>
               <button @click="loader = true" onclick="event.preventDefault(); document.getElementById('tour-form').submit();" class="btn btn-primary">Next</button>

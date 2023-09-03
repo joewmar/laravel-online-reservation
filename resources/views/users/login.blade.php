@@ -12,6 +12,19 @@
             @csrf
             <x-input type="email" name="email" placeholder="Email"/>
             <x-password />
+            <label class="label">
+              <span class="label-text-alt">
+                  <span class="label-text-alt flex items-center space-x-2 cursor-pointer">
+                    <input name="remember" type="checkbox" class="checkbox checkbox-primary checkbox-sm" value="1" />
+                    <span >Remember Me</span>
+                  </span>
+              </span>
+              <span class="label-text-alt">
+                    <span class="label-text-alt">
+                      <a href="{{route('forgot.password')}}" class="link link-primary">Forgot the password?</a>
+                    </span>
+              </span>
+          </label>
             <div class="form-control mt-6">
               <button type="submit" class="btn btn-primary">Sign in</button>
             </div>
@@ -23,7 +36,7 @@
                 </a>
               </div>
               <div class="tooltip" data-tip="Sign in with Facebook">
-                <a href={{route('facebook.redirect')}} class="btn btn-circle btn-outline btn-info">
+                <a href={{route('facebook.redirect')}} class="btn btn-circle btn-outline btn-neutral">
                   <i class="fa-brands fa-facebook"></i>
                 </a>
               </div>

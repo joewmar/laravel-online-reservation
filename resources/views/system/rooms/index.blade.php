@@ -21,12 +21,12 @@
           <div class="mt-8 grid grid-flow-row md:grid-cols-3 gap-8">
             @forelse ($rooms as $room)
               @if($room->availability)
-                <label for="room_modal{{$room->id}}" class="block rounded-xl border border-neutral-content p-8 shadow-md transition hover:border-error bg-error">
+                <label for="room_modal{{$room->id}}" class="block rounded-xl border border-neutral-content p-8 shadow-md transition hover:border-error bg-error" disabled>
               @else
                 <label for="room_modal{{$room->id}}" class="block rounded-xl border border-neutral-content p-8 shadow-md transition hover:border-primary">
               @endif
                 <h2 class="mt-4 text-xl font-bold text-neutral">Room No. {{$room->room_no}}</h2>
-                <h5 class="text-md font-medium text-neutral">{{$room->room->name}} Room ({{$room->room->min_occupancy}} to {{$room->room->max_occupancy}} Capacity)</h5>
+                <h5 class="text-md font-medium text-neutral">{{$room->room->name}} Room ({{$room->room->max_occupancy}} Capacity)</h5>
                 <h5 class="text-md font-bold text-neutral">{{$room->getAllPax() > 0 ? $room->getAllPax() . ' guest reserved' : 'No Guest'}} </h5>
               </label>
               <x-modal id="room_modal{{$room->id}}" title="Who guest on Room No. {{$room->room_no}}">

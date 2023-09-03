@@ -31,21 +31,19 @@ class Room extends Model
     {
         $countOccupancy = 0;
         // Check if Availability All
+        $isFull = false;
         if(isset($this->attributes['customer'])){
             foreach (json_decode($this->attributes['customer'], true) as $key => $item) {
                 $countOccupancy += (int)$item;
-                if($this->room->max_occupancy <= $countOccupancy){
-                    $this->update(['availability' => true]);
-                    return false;
-                    break;
+                if($this->room->max_occupancy === $countOccupancy){
+                    $isFull = true;
                 }
             }
         }
-        else{
-            return true;
-        } 
+        $this->update(['availability' => $isFull]);
+
         unset($countOccupancy);
-        return false;
+        return $isFull;
     }
     public function getAllPax()
     {

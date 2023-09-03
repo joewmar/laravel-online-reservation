@@ -20,8 +20,8 @@
               <i class="fa-brands fa-google"></i>
             </a>
           </div>
-          <div href={{route('facebook.redirect')}} class="tooltip" data-tip="Sign up with Facebook">
-            <a class="btn btn-circle btn-outline btn-info">
+          <div class="tooltip" data-tip="Sign in with Facebook">
+            <a href={{route('facebook.redirect')}} class="btn btn-circle btn-outline btn-neutral">
               <i class="fa-brands fa-facebook"></i>
             </a>
           </div>

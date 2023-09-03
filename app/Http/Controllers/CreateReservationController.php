@@ -149,7 +149,7 @@ class CreateReservationController extends Controller
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(1)],
                 'accommodation_type' => ['required'],
                 'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
-                'pax' => ['required', 'numeric', 'min:1', 'max:'.(string)RoomList::max('max_occupancy')],
+                'pax' => ['required', 'numeric', 'min:1'],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
@@ -165,7 +165,7 @@ class CreateReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d'],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d'],
                 'accommodation_type' => 'required',
-                'pax' => ['required', 'numeric', 'min:1', 'max:'.(string)RoomList::max('max_occupancy')],
+                'pax' => ['required', 'numeric', 'min:1'],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
@@ -293,7 +293,7 @@ class CreateReservationController extends Controller
             foreach($decrypted['qty'] as $id => $qty){
                 $addon = Addons::find($id);
                 $addons[$count]['title'] =  $addon->title;
-                $addons[$count]['pcs'] =  $addon->title;
+                $addons[$count]['pcs'] =  (int)$qty;;
                 $addons[$count]['price'] =  '₱ ' . number_format($addon->price, 2);
                 $addons[$count]['amount'] =  $addon->price * (int)$qty;
                 $count++;
@@ -370,6 +370,7 @@ class CreateReservationController extends Controller
                     $transaction['OA'. $addons->id] = [
                         'title' => $addons->title,
                         'price' => (double)$addons->price,
+                        'pcs' => (int)$qty,
                         'amount' => (double)$addons->price * (int)$qty
                     ];
                 }
@@ -381,6 +382,9 @@ class CreateReservationController extends Controller
                     'price' => (double)$rate->price,
                     'amount' => (double)$rate->price * (int)$decrypted['px']
                 ];
+            }
+            if($decrypted['st'] >= 2){
+                $transaction['payment']['cinpay'] = $validated['payment_amount'];
             }
             $reserved = Reservation::create([
                 'offline_user_id' => $created->id,

@@ -3,10 +3,10 @@
         {{-- User Details --}}
         <div class="w-full p-8 sm:flex sm:space-x-6">
             <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
-                @if(filter_var(auth('web')->user()->avatar ?? '', FILTER_VALIDATE_URL))
-                    <img src="{{auth('web')->user()->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @elseif(auth('web')->user()->avatar ?? false)
-                    <img src="{{asset('storage/'. auth('web')->user()->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
+                @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
+                    <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
+                @elseif($r_list->userReservation->avatar ?? false)
+                    <img src="{{asset('storage/'. $r_list->userReservation->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
                 @else
                     <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
                 @endif

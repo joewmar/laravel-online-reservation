@@ -60,16 +60,10 @@
                         </form>
                         <div class="divider"></div>
                             <h2 class="text-2xl font-bold mb-5">Valid ID</h2>
-                            @if(isset($user->valid_id))
-                                <div class="w-96 rounded">
-                                    <img src="{{route('private.image', ['folder' => explode('/', $user->valid_id)[0], 'filename' => explode('/', $user->valid_id)[1]])}}" alt="Valid ID of {{$user->name()}}">
-                                </div>
-                            @else
-                                <h3 class="text-2xl font-bold mb-5 text-center">No Valid ID</h3>
-                            @endif
+                            <label for="show_id_modal" class="btn btn-ghost btn-sm mt-5">Show</label> 
                             <label for="edit_id_modal" class="btn btn-primary btn-sm mt-5">Change</label> 
                             <x-modal id="edit_id_modal" title="Change Valid ID" loader>
-                                <form action="{{route('profile.update.validid', encrypt($user->id))}}" method="POST" enctype="multipart/form-data">
+                                <form action="{{route('profile.update.validid', encrypt($user->id))}}" method="POST" enctype="multipart/form-data" >
                                     @csrf
                                     @method('PUT')
                                     <x-drag-drop name="valid_id" id="valid_id" />
@@ -77,6 +71,15 @@
                                         <button type="submit" class="btn btn-primary" @click="loader = true">Save</button>
                                     </div>
                                 </form>
+                            </x-modal>
+                            <x-modal id="show_id_modal" title="Valid ID" loader>
+                                @if(isset($user->valid_id))
+                                    <div class="w-full rounded">
+                                        <img src="{{route('private.image', ['folder' => explode('/', $user->valid_id)[0], 'filename' => explode('/', $user->valid_id)[1]])}}" alt="Valid ID of {{$user->name()}}">
+                                    </div>
+                                @else
+                                    <h3 class="text-2xl font-bold mb-5 text-center">No Valid ID</h3>
+                                @endif
                             </x-modal>
                     </div>
                 </fieldset>

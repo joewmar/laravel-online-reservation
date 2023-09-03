@@ -124,10 +124,10 @@ class Reservation extends Model
     public function balance()
     {
         $paymentCustomer = 0;
-        $allPaid = json_decode($this->attributes['transaction']); 
-        if(isset($allPaid->payment)){
-            $paymentCustomer += $allPaid->cinpay ?? 0;
-            $paymentCustomer += $allPaid->downpayments ?? 0;
+        $allPaid = json_decode($this->attributes['transaction'], true); 
+        if(isset($allPaid['payment'])){
+            $paymentCustomer += $allPaid['payment']['cinpay'] ?? 0;
+            $paymentCustomer += $allPaid['payment']['downpayment'] ?? 0;
         }
         return abs($this->getTotal() - $paymentCustomer) ?? 0;
     }
@@ -141,17 +141,14 @@ class Reservation extends Model
                     if (array_key_exists($this->attributes['id'], $customer)) {
                         unset($customer[$this->attributes['id']]);
                     }
+
                     $room->update(['customer' => $customer]);
                     $room->checkAvailability();
-                }
-                else{
-                    return false;
-                    break;
                 }
             }
             $type = 0;
             if(!empty($this->attributes['offline_user_id'])) $type = 1;
-            if(!empty($this->attributes['offline_user_id']) && $this->attribute['accommodation_type'] === 'Other Online Booking') $type = 2;
+            if(!empty($this->attributes['offline_user_id']) && $this->attributes['accommodation_type'] === 'Other Online Booking') $type = 2;
             Archive::create([
                 'reservation_id' => $this->attributes['id'],
                 'type'=> $type,
@@ -159,9 +156,5 @@ class Reservation extends Model
                 'total'=> (double)$this->getTotal(),
             ]);
         }
-        else {
-            return false;
-        }
-        return true;
     }
 }

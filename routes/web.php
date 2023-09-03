@@ -117,9 +117,9 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->controller(UserControlle
         Route::get('/{id}/paypal', 'paypal')->name('paypal');
         Route::get('/{id}/paypal/done', 'donePayPal')->name('paypal.done');
         Route::post('/{id}/payment', 'paymentStore')->name('payment.store');
-
-
-
+        
+        Route::get('/{id}/feedback', 'feedback')->name('feedback');
+        Route::post('/{id}/feedback', 'storeFeedback')->name('feedback.store');
     });
 });
 
@@ -347,5 +347,3 @@ Route::prefix('system')->name('system.')->group(function(){
 });
 
 Route::get('reservation/{id}/receipt', [SystemReservationController::class, 'receipt'])->name('reservation.receipt');
-Route::get('reservation/{id}/feedback', [ReservationController::class, 'feedback'])->name('reservation.feedback');
-Route::post('reservation/{id}/feedback', [ReservationController::class, 'storeFeedback'])->name('reservation.feedback.store');

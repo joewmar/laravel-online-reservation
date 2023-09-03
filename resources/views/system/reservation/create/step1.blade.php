@@ -12,40 +12,41 @@
             @csrf
             <x-loader />
             <h2 class="text-2xl font-semibold my-5">Choose the room</h2>
-            <div class="form-control w-full">
-                <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
-                        <select name="room_rate" id="room_rate" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
-                        <option value="" disabled selected>Please select</option>
-                        @foreach ($rates as $key => $rate)
-                        @php
-                            try {
-                                $rateID = decrypt($rate->id);
-                            } catch (Exception $e) {
-                                $rateID = $rate->id;
-                            }
-                        @endphp
-                            @if($roomInfo['rt'] == $rateID);
-                                <option value="{{encrypt($rate->id)}}" selected>{{$rate->name}} ({{$rate->occupancy}} pax)</option>
-                            @else
-                                <option value="{{encrypt($rate->id)}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
-                            @endif
-                        @endforeach
-                    </select>        
-                    <span id="room_rate" class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-neutral transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                        Room Type
-                    </span>
-                </label>
-                <label class="label">
-                    <span class="label-text-alt">
-                        @error('room_rate')
-                            <span class="label-text-alt text-error">{{$message}}</span>
-                        @enderror
-                    </span>
-                </label>
-            </div> 
-            <div class="w-52">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-control w-full">
+                    <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
+                            <select name="room_rate" id="room_rate" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
+                            <option value="" disabled selected>Please select</option>
+                            @foreach ($rates as $key => $rate)
+                            @php
+                                try {
+                                    $rateID = decrypt($rate->id);
+                                } catch (Exception $e) {
+                                    $rateID = $rate->id;
+                                }
+                            @endphp
+                                @if($roomInfo['rt'] == $rateID);
+                                    <option value="{{encrypt($rate->id)}}" selected>{{$rate->name}} ({{$rate->occupancy}} pax)</option>
+                                @else
+                                    <option value="{{encrypt($rate->id)}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
+                                @endif
+                            @endforeach
+                        </select>        
+                        <span id="room_rate" class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-neutral transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                            Room Type
+                        </span>
+                    </label>
+                    <label class="label">
+                        <span class="label-text-alt">
+                            @error('room_rate')
+                                <span class="label-text-alt text-error">{{$message}}</span>
+                            @enderror
+                        </span>
+                    </label>
+                </div> 
                 <x-input id="pax" name="pax" placeholder="Number of Guest" />
-            </div> 
+            </div>
+
             <div x-data="{rooms: {{$roomInfo['rm'] ? '[' . implode(',', array_keys($roomInfo['rm'])) .']' : '[]'}}, allCount: 0}" class="flex flex-wrap justify-center md:justify-normal flex-grow m-5 gap-5 w-full">
                 @forelse ($rooms as $key => $item)
                     <div id="{{$item->availability == 1 ? 'disabledAll' : ''}}">
@@ -72,7 +73,7 @@
                                     <div>
                                         <h3 class="text-lg font-bold text-neutral sm:text-xl">Room No. {{$item->room_no}}</h3>
                                         <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->name}}</p>
-                                        <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->min_occupancy}} up to {{$item->room->max_occupancy}} capacity</p>
+                                        <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->max_occupancy}} max capacity</p>
                                         @if($item->getAllPax() === (int)$item->room->max_occupancy - 1)
                                             <p class="mt-1 text-xs font-bold text-red-400">There is only {{$item->getAllPax()}} guest</p>
                                         @else
