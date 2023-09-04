@@ -166,7 +166,7 @@
   @include('procedure')
 
   @include('testimonials', ['feedbacks' => $feedbacks ?? []])
-  <section class="p-6 text-neutral">
+  {{-- <section class="p-6 text-neutral">
     <div class="container p-4 mx-auto text-center">
       <h2 class="text-4xl font-bold">Trusted by the industry leaders</h2>
     </div>
@@ -212,7 +212,7 @@
         </svg>
       </div>
     </div>
-  </section>
+  </section> --}}
   @include('gallery')
 
   

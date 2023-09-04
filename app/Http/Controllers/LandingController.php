@@ -27,7 +27,7 @@ class LandingController extends Controller
         $rates = RoomRate::all() ?? [];
         $tour_menu = TourMenu::all() ?? [];
         $categories = TourMenuList::distinct()->get('category');
-        return view('landing.accomodations', ['activeNav' => 'Services', 'rooms' => $rooms, 'rates' => $rates, 'tour_menu' =>$tour_menu, 'categories' => $categories]);
+        return view('landing.accomodations', ['activeNav' => 'Tour', 'rooms' => $rooms, 'rates' => $rates, 'tour_menu' =>$tour_menu, 'categories' => $categories]);
     }
     public function contact(){
         $contacts = WebContent::all()->first()->contact ?? [];

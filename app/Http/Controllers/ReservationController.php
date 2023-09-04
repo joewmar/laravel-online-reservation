@@ -692,7 +692,7 @@ class ReservationController extends Controller
         
     }
     public function confirmation(Request $request){
-        $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
+        $uinfo = decryptedArray(session('rinfo')) ?? '';
         if(empty($uinfo['tm']) && $uinfo['at'] !== 'Room Only') return redirect()->route('reservation.choose', Arr::query(['cin' => session()->get('rinfo')['cin'], 'cout' => session()->get('rinfo')['cout'], 'px' => session()->get('rinfo')['px'], 'tpx' => session()->get('rinfo')['tpx'], 'py' => session()->get('rinfo')['py'], 'at' => session()->get('rinfo')['at']], '#tourMenu'))->with('info', 'Your Tour Menu was empty');
         $user_menu = [];
         if($uinfo['at'] !== 'Room Only' && isset($uinfo['tm'])){
@@ -728,7 +728,7 @@ class ReservationController extends Controller
         return redirect()->route('reservation.confirmation', ['cur' => $validated['cur']]);
     }
     public function destroyTour(Request $request){
-        $decrypted_uinfo = decryptedArray(session()->get('rinfo')) ?? '';
+        $decrypted_uinfo = decryptedArray(session('rinfo')) ?? '';
         $encrypted_uinfo = session()->get('rinfo') ?? '';
         if($decrypted_uinfo['at'] === 'Room Only' || !session()->has('rinfo')) return back();
         $id = decrypt($request['id']);
@@ -759,7 +759,7 @@ class ReservationController extends Controller
     public function storeReservation(Request $request){
         $user = User::findOrFail(auth('web')->user()->id);
         $systemUser = System::all()->where('type', '>=', 0)->where('type', '<=', 1);
-        $uinfo = decryptedArray(session()->get('rinfo')) ?? '';
+        $uinfo = decryptedArray(session('rinfo')) ?? '';
         $validated = $request->validate([
             'valid_id' => Rule::when(!$user->valid_id, ['required' ,'image', 'mimes:jpeg,png,jpg', 'max:5024']), 
             'tour' => Rule::when(!empty($request['tour']), ['required', 'array'], ['nullable']), 

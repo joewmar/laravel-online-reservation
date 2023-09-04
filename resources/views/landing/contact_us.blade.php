@@ -2,7 +2,7 @@
 
   <x-navbar :activeNav="$activeNav" type="plain" />
 
-  <section class="pt-24 p-6 h-auto w-full">
+  <section class="pt-24 p-6 {{!empty($contacts) ? 'h-auto' : 'h-screen'}} w-full">
     <div class="grid max-w-6xl grid-cols-1 px-6 mx-auto lg:px-8 md:grid-cols-2">
       <div class="py-6 md:py-0 md:px-6">
         <h1 class="text-4xl font-bold py-5">Call Me</h1>
@@ -36,7 +36,7 @@
       </div>
     </div>
 
-      @if(isset($contacts))
+      @if(!empty($contacts))
         <div class="divider"></div>
           <h1 class="text-2xl font-bold pt-5 px-6">Other Contact</h1>
           <div class="my-5 grid grid-cols-1 md:grid-cols-3 gap-3 px-6">
