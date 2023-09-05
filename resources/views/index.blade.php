@@ -54,7 +54,7 @@
       <div class="hero-overlay bg-opacity-70"></div>
       <div class="hero-content text-center text-white ">
         <div class="max-w-md">
-          <h1 class="mb-5 text-3xl font-bold">Alvin and Angie Mt. Pinatubo Accommodation and Tours</h1>
+          <h1 class="mb-5 text-3xl font-bold">Alvin and Angie Mt. Pinatubo Guesthouse and Tours</h1>
           <p class="mb-5 max-w-md">Discover the Perfect Blend of Comfort and Adventure by Reserving Your Ideal Guesthouse Stay and Guided Tour with Us. Every Moment Becomes a Cherished Memory.</p>
           <label for="reservation" class="btn btn-primary">Let's Book</label>
         </div>

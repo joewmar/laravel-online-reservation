@@ -19,9 +19,9 @@
         </style>
     @endpush
     <x-full-content>
-            <div class="flex flex-col-reverse md:flex-row justify-center items-center w-full h-full space-y-2 md:space-x-3">
-                <div  class="w-96 rounded">
-                    <p class="text-neutral text-2xl">Your Payment still verify, Please wait send a email notification for approval</p>
+            <div class="flex flex-col-reverse md:flex-row justify-center items-center w-full h-full space-y-2 md:space-x-3 py-10">
+                <div  class="w-96 rounded mt-5">
+                    <p class="text-neutral text-sm md:text-xl">Your Payment still verify, Please wait send a email notification for approval</p>
                     <div class="my-5">
                         <swiper-container init="false" class="mySwiper">
                             @forelse ($contacts as $contact)
@@ -71,7 +71,7 @@
                             <swiper-slide>Slide 9</swiper-slide> --}}
                         </swiper-container>
                     </div>
-                    <div class="flex justify-end">
+                    <div class="flex justify-start md:justify-end mt-5">
                         <a href="{{route('home')}}" class="btn btn-primary">Go Home</a>
                     </div>
                 </div>

@@ -169,8 +169,8 @@ tr:hover .cut { opacity: 1; }
 			<img src="{{asset('images/logo.png')}}" alt="Logo" style="width: 15%">
 			<address style="margin-top: 17px">
 				<p>{{ str_replace('_', ' ', config('app.name'))}}</p>
-				<p>Sta. Juliana, Capas Tarlac, Philippines.</p>
-				<p>09123456789</p>
+				<p>{{env('MAIN_ADDRESS')}} </p>
+				<p>{{env('MAIN_CONTACT_NUMBER')}} </p>
 			</address>
 			{{-- <span><img alt="" src="{{asset('images/logo.png')}}"></span> --}}
 		</header>
@@ -312,16 +312,14 @@ tr:hover .cut { opacity: 1; }
 					<th><span >{{$r_list->status < 3 ? 'Total' : 'Amount Paid'}}</span></th>
 					<td><span data-prefix>₱ </span><span>{{number_format($r_list->getTotal(), 2)}}</span></td>
 				</tr>
-				@if($r_list->status < 3)
-					<tr>
-						<th><span >Downpayment</span></th>
-						<td><span data-prefix>₱ </span><span>{{number_format($r_list->downpayment() ?? 0, 2)}}</span></td>
-					</tr>
-					<tr>
-						<th><span >Balance Due</span></th>
-						<td><span data-prefix>₱ </span><span>{{number_format($r_list->balance() ?? 0, 2)}}</span></td>
-					</tr>
-				@endif
+				<tr>
+					<th><span >Downpayment</span></th>
+					<td><span data-prefix>₱ </span><span>{{number_format($r_list->downpayment() ?? 0, 2)}}</span></td>
+				</tr>
+				<tr>
+					<th><span >Check-in Paid</span></th>
+					<td><span data-prefix>₱ </span><span>{{number_format($r_list->checkInPayment() ?? 0, 2)}}</span></td>
+				</tr>
 			</table>
 		</article>
 		@if($r_list->status < 3)
@@ -332,7 +330,7 @@ tr:hover .cut { opacity: 1; }
 		<aside>
 			<h1><span >Contact us</span></h1>
 			<div >
-				<p align="center">Email :- info@sunrise.com || Web :- www.sunrise.com || Phone :- +94 65 222 44 55 </p>
+				<p align="center">Email :- {{env('MAIN_CONTACT_EMAIL')}} || Web :- www.bognotlodge.com || Phone :- {{env('MAIN_CONTACT_NUMBER')}} </p>
 			</div>
 		</aside>
 	</body>

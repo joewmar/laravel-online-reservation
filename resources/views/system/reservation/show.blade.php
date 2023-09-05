@@ -180,13 +180,12 @@
                         </tr>
                       </tbody>
                     </table>
-                  </div>
+                </div>
                 
             </article>
             <article>
                 @if($r_list->accommodation_type !== 'Room Only')
                 <h2 class="text-lg mt-5 font-bold">Tours</h2>
-
                     <div class="w-auto">
                         <div class="overflow-x-auto">
                             <table class="table table-zebra">
@@ -357,20 +356,16 @@
             </article>
         @endif
         <div class="divider"></div>
-        <div class="flex flex-wrap justify-between w-full">
-            <div class="w-96 rounded">
-                <h2 class="text-2xl mb-5 font-bold">Verify</h2>
-                <h2 class="text-xl"><span class=" font-semibold">First Name: </span>{{$r_list->userReservation->first_name}}</h2>
-                <h2 class="text-xl"><span class=" font-semibold">Last Name: </span>{{$r_list->userReservation->last_name}}</h2>
-                @if($r_list->userReservation->birthday)
-                    <h2 class="text-xl"><span class=" font-semibold">Birthday: </span>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->userReservation->birthday)->format('F j, Y')}}</h2>
-                @endif
-                <h2 class="text-xl"><span class=" font-semibold">Country: </span>{{$r_list->userReservation->country}}</h2>
-                <h2 class="text-xl"><span class=" font-semibold">Nationality: </span>{{$r_list->userReservation->nationality}}</h2>
+        <div x-data="{show: false}" class=" w-full">
+            <div class="flex items-start space-x-2">
+                <h2 class="text-2xl mb-5 font-bold">Valid ID</h2> 
+                <button @click="show = !show" type="button" x-text="show ? 'Hide' : 'Show' " class="btn btn-primary btn-sm"></button>
             </div>
-            <div class="w-96 rounded">
-                <img src="{{route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]])}}" alt="Valid ID of {{$r_list->userReservation->name()}}">
-            </div>
+            <template x-if="show">
+                <div class="w-full rounded flex justify-center">
+                    <img src="{{route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]])}}" alt="Valid ID of {{$r_list->userReservation->name()}}">
+                </div>
+            </template>
         </div>
         <div class="divider"></div>
         <div class="w-full">

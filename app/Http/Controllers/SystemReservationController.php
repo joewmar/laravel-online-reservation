@@ -670,7 +670,6 @@ class SystemReservationController extends Controller
                 "room_type" => $rate->name,
                 'room_rate' => $rate->price,
                 'total' => $reservation->getTotal(),
-                'receipt_link' => route('reservation.receipt', encrypt($reservation->id)),
                 'payment_link' => $url,
                 'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('F j Y \a\t g:iA'),
             ];
@@ -765,6 +764,7 @@ class SystemReservationController extends Controller
             Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             unset($text, $details);
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked in');
+            
         }
     }
     public function updateCheckout(Request $request){
@@ -789,15 +789,16 @@ class SystemReservationController extends Controller
         $details = [
             'name' => $reservation->userReservation->name(),
             'title' => 'Reservation Check-out',
-            'body' => 'You now checked out at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A') . ' If you have time, you can feedback your experience',
-            'link' => route('reservation.feedback', encrypt($reservation->id)),
+            'body' => 'You now checked out at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
+            'receipt_link' => route('reservation.receipt', encrypt($reservation->id)),
+            'feedback_link' => route('reservation.feedback', encrypt($reservation->id)),
         ];   
         if($system_user->role() === "Manager"){
             foreach($admins as $admin) {
                 if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
             }
         }
-        Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+        Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.checkout-mail', $details['title']));
         unset($text, $details);
         return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked out');
         

@@ -41,7 +41,7 @@ class ReservationMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'reservation.mail',
+            markdown: $this->view,
             with: ['details' => $this->details],
         );
     }

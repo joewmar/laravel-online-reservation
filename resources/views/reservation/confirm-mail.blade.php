@@ -24,14 +24,7 @@
   @else
     No Tour Services<br>
   @endif
-
-  If you want a receipt: 
-  @if(isset($details['receipt_link']))
-    <x-mail::button :url="$details['receipt_link']">
-        View Receipt
-    </x-mail::button>
-  @endif
-  If you want downpayment:
+  Pay Downpayment:
   @if(isset($details['payment_link']))
     <x-mail::button :url="$details['payment_link']">
         Pay Now

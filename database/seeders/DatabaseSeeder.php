@@ -85,7 +85,7 @@ class DatabaseSeeder extends Seeder
             'pax' => 4,
             'tour_pax' => 4,
             'accommodation_type' => 'Overnight',
-            'payment_method' => 'Gcash',
+            'payment_method' => 'PayPal',
             'age' => User::findOrfail(1)->age(),
             'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
             'check_out' => Carbon::now()->addDays(18)->toDateTimeString(),
