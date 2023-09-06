@@ -33,4 +33,5 @@ class LandingController extends Controller
         $contacts = WebContent::all()->first()->contact ?? [];
         return view('landing.contact_us', ['activeNav' => 'Contact Us', 'contacts' => $contacts]);
     }
+
 }

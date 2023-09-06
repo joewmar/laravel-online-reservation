@@ -58,7 +58,7 @@
             </div>
           </swiper-slide>
         </swiper-container>
-          <div data-aos="zoom-in" class="w-full px-4 py-8 sm:py-12 sm:px-6 lg:py-16 lg:px-8">
+          <div  class="w-full px-4 py-8 sm:py-12 sm:px-6 lg:py-16 lg:px-8">
 
             {{-- <div class="text-neutral" >
               <div data-aos="fade-down" class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8" >
@@ -78,14 +78,14 @@
         
               </div>
               @foreach ($categories as $category)
-                <article  class="my-5">
-                  <h2 data-aos="fade-right" data-aos-offset="100" data-aos-easing="ease-in-sine" class="text-2xl font-bold mb-3">{{$category->category}}</h2>
+                <article class="my-5">
+                  <h2 class="text-2xl font-bold mb-3">{{$category->category}}</h2>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:grid-cols-3">
                     @php $menu_id = null @endphp
                     @foreach($tour_menu as $menu)
                       @if($category->category === $menu->tourMenu->category)
                         @if($menu->tourMenu->id !== $menu_id)
-                          <label data-aos="flip-down" class="block rounded-xl border border-gray-300 p-4 shadow-md hover:border-gray-500 hover:ring-1 hover:ring-gray-400 focus:outline-none focus:ring" href="/accountant" >
+                          <label class="block rounded-xl border border-gray-300 p-4 shadow-md hover:border-gray-500 hover:ring-1 hover:ring-gray-400 focus:outline-none focus:ring" href="/accountant" >
                             <span class="inline-block rounded-lg bg-gray-50 p-3">
                               <i class="fa-solid fa-location-pin"></i>
                             </span>
@@ -159,7 +159,7 @@
       <section class="bg-base-100 text-gray-600 p-14 w-full">
           <div data-aos="fade-down" class="px-4 py-8 sm:py-12 sm:px-6 lg:py-16 lg:px-8">
             <div class="w-full flex flex-col items-center">
-              <h2 class="text-3xl font-bold sm:text-4xl">Rooms Offer</h2>
+              <h2 class="text-3xl font-bold sm:text-4xl">Rooms Services</h2>
         
               <p class="max-w-2xl mt-4 text-gray-600 text-center">
                 We designed for your comfort. Each room is well-equipped and maintained to ensure a great stay. Our friendly staff is here to make your experience memorable. Come and enjoy a comfortable and affordable stay with us!
@@ -178,32 +178,36 @@
                     </div>
                   </div>
                 </label>
-                <x-modal id="{{Str::camel($room->name)}}Modal" title="{{$room->name}} Details">
-                    @if($room->description)
-                      <p>{{$room->description}}</p>
-                    @endif
-                    @if($room->amenities)
-                    <ul class="ml-5 sm:mt-1 sm:block sm:text-sm sm:text-gray-600">
-                      @foreach (explode(',', $room->amenities) as $item)
-                          <li>&#10003; {{$item}}</li>
-                      @endforeach
-                    </ul>
-                    @endif
-                    @if($room->description)
-                      <p>Location: {{$room->location}}</p>
-                    @endif
-                </x-modal>
+
               @endforeach
     
             </div>
         
               
           </div>
+          @foreach ($rooms as $room)
+            <x-modal id="{{Str::camel($room->name)}}Modal" title="{{$room->name}} Details">
+              @if($room->description)
+                <p>{{$room->description}}</p>
+              @endif
+              @if($room->amenities)
+              <ul class="ml-5 sm:mt-1 sm:block sm:text-sm sm:text-gray-600">
+                @foreach (explode(',', $room->amenities) as $item)
+                    <li>&#10003; {{$item}}</li>
+                @endforeach
+              </ul>
+              @endif
+              @if($room->description)
+                <p>Location: {{$room->location}}</p>
+              @endif
+          </x-modal>
+        @endforeach
+
       </section>
       <section class="bg-base-100 text-gray-600 p-14 w-full">
         <div data-aos="fade-down" class="px-4 sm:px-6 lg:px-8">
           <div class="w-full flex flex-col items-center">
-            <h2 class="text-3xl font-bold sm:text-4xl">Rides Offer</h2>
+            <h2 class="text-3xl font-bold sm:text-4xl">Rides Offers</h2>
       
             <p class="max-w-2xl mt-4 text-gray-600 text-center">
               Discover the excitement of our ATV and 4x4 Jeep rides! Hop on an ATV for an off-road thrill, tackling rugged terrain and scenic trails. Whether you're a thrill-seeker or nature lover, our rides offer unforgettable outdoor fun!

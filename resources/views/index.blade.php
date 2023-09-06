@@ -213,7 +213,7 @@
       </div>
     </div>
   </section> --}}
-  @include('gallery')
+  @include('gallery', ['gallery' => $web_contents->gallery ?? []])
 
   
 

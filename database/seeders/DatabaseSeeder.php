@@ -360,6 +360,26 @@ class DatabaseSeeder extends Seeder
 
         \App\Models\WebContent::create([
             'operation' => 1,
+            'hero' => [
+                "main_hero1" => "hero/main-hero1.jpg",
+                "main_hero2" => "hero/main-hero2.jpg",
+                "main_hero3" => "hero/main-hero3.jpg",
+                "main_hero4" => "hero/main-hero4.jpg",
+                "main_hero5" => "hero/main-hero5.jpg",
+                "main_hero6" => "hero/main-hero6.jpg",
+            ],
+            'gallery' => [
+                "gallery1" => "gallery/gallery_1.jpg",
+                "gallery2" => "gallery/gallery_2.jpg",
+                "gallery3" => "gallery/gallery_3.jpg",
+                "gallery4" => "gallery/gallery_4.jpg",
+                "gallery5" => "gallery/gallery_5.jpg",
+                "gallery6" => "gallery/gallery_6.jpg",
+                "gallery7" => "gallery/gallery_7.jpg",
+                "gallery8" => "gallery/gallery_8.jpg",
+                "gallery9" => "gallery/gallery_9.jpg",
+                "gallery10" => "gallery/gallery_10.jpg",
+            ],
         ]);
 
     }
