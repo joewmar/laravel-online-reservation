@@ -38,38 +38,7 @@
   @endpush
 
   <x-navbar :activeNav="$activeNav"/>
-  @if(!empty(env('FACEBOOK_PAGE_ID')))
-    <!-- Messenger Chat Plugin Code -->
-    <div id="fb-root"></div>
-
-    <!-- Your Chat Plugin code -->
-    <div id="fb-customer-chat" class="fb-customerchat">
-    </div>
-
-    <script>
-      var chatbox = document.getElementById('fb-customer-chat');
-      chatbox.setAttribute("page_id", "{{env('FACEBOOK_PAGE_ID')}}");
-      chatbox.setAttribute("attribution", "biz_inbox");
-    </script>
-
-    <!-- Your SDK code -->
-    <script>
-      window.fbAsyncInit = function() {
-        FB.init({
-          xfbml            : true,
-          version          : 'v17.0'
-        });
-      };
-
-      (function(d, s, id) {
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) return;
-        js = d.createElement(s); js.id = id;
-        js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
-        fjs.parentNode.insertBefore(js, fjs);
-      }(document, 'script', 'facebook-jssdk'));
-    </script>
-  @endif
+  <x-chatbot />
 {{-- Banner --}}
 <swiper-container class="landingSlider" pagination="true" pagination-clickable="true" effect="fade" autoplay-delay="2500" autoplay-disable-on-interaction="false">
     @forelse ($web_contents->hero ?? [] as $item)
@@ -149,12 +118,11 @@
     </section>
   @endif
 
-  {{-- <section  data-aos="fade-down" data-aos-anchor-placement="center-bottom">
+  <section class="h-screen" data-aos="fade-down" data-aos-anchor-placement="center-bottom">
     <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
       <div class="max-w-3xl">
         <h2 class="text-3xl font-bold sm:text-4xl">
-          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quod alias
-          doloribus impedit.
+          Welcome to Our Guesthouse and Tours!
         </h2>
       </div>
   
@@ -171,26 +139,14 @@
         <div class="lg:py-16" data-aos="fade-left">
           <article class="space-y-4 text-neutral" >
             <p>
-              Lorem ipsum dolor, sit amet consectetur adipisicing elit. Aut qui
-              hic atque tenetur quis eius quos ea neque sunt, accusantium soluta
-              minus veniam tempora deserunt? Molestiae eius quidem quam repellat.
-            </p>
-  
-            <p>
-              Lorem ipsum dolor sit amet consectetur, adipisicing elit. Dolorum
-              explicabo quidem voluptatum voluptas illo accusantium ipsam quis,
-              vel mollitia? Vel provident culpa dignissimos possimus, perferendis
-              consectetur odit accusantium dolorem amet voluptates aliquid,
-              ducimus tempore incidunt quas. Veritatis molestias tempora
-              distinctio voluptates sint! Itaque quasi corrupti, sequi quo odit
-              illum impedit!
+              On our guesthouse and tours, we warmly welcome you. We are excited to be a part of your unique experience and journey. Our goal is to provide you with a joyful and memorable stay, an opportunity for you to forget the everyday hustle and relax amidst the beauty of nature.
             </p>
           </article>
         </div>
 
       </div>
     </div>
-  </section> --}}
+  </section>
 
   @include('offers')
 

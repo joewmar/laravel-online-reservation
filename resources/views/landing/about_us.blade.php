@@ -33,7 +33,7 @@
   <x-full-content >
     <article class="mx-auto prose-lg p-10 w-full">
       <h2 class="text-center font-extrabold">Let' Introdunce</h2>
-      <div class="flex justify-around w-full gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div class="flex flex-col items-center p-10">
           <img src="{{asset('images/avatars/no-avatar.png')}}" class="w-32 rounded-full" />
           <h3 class="font-bold text-xl">Alvin Bognot</h3>
