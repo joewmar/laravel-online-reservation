@@ -430,7 +430,7 @@ class CreateReservationController extends Controller
                 'title' => 'Reservation Complete',
                 'body' => 'You Reservation at ' . Carbon::now()->format('F j, Y') .' and the Room Assign are '.implode(', ', $roomDetails).'. Be Enjoy our service with full happiness',
             ];
-            Mail::to(env('SAMPLE_EMAIL', $reserved->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            Mail::to(env('SAMPLE_EMAIL') ?? $reserved->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             session()->forget('rinfo');
             return redirect()->route('system.reservation.home')->with('success', $reserved->userReservation->name() . ' was added on Reservation');
     }

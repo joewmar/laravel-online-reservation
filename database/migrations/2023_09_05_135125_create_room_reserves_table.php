@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('room_reserves', function (Blueprint $table) {
             $table->id();
+            $table->uuid('reservation_id');
+            $table->foreign('reservation_id')->references('id')->on('reservations')->onDelete('cascade');
+            $table->json('rooms');
+            $table->date('reserved_at');
             $table->timestamps();
         });
     }

@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Hash;
 // use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservationConfirmation;
+use App\Models\RoomReserve;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
@@ -42,21 +43,26 @@ class SystemReservationController extends Controller
         if($request['tab'] === 'confirmed'){
             $r_list = Reservation::where('status', 1)->latest()->paginate(10);
         }
-        if($request['tab'] === 'checkin'){
+        if($request['tab'] === 'cin'){
             $r_list = Reservation::where('status', 2)->latest()->paginate(10);
         }
-        if($request['tab'] === 'checkout'){
+        if($request['tab'] === 'cout'){
             $r_list = Reservation::where('status', 3)->latest()->paginate(10);
         }
         if($request['tab'] === 'reschedule'){
-            $r_list = Reservation::where('status', 4)->orWhere('status', 7)->latest()->paginate(10);
+            $r_list = Reservation::where(function ($query) {
+                $query->where('status', 7)->orWhere('message->reschedule->prev_status', 4);
+            })->latest()->paginate(10);  
         }
-        if($request['tab'] === 'cancellation'){
+        if($request['tab'] === 'cancel'){
             $r_list = Reservation::where('status', 5)->orWhere('status', 8)->latest()->paginate(10);
         }
-        if($request['tab'] === 'disaprove'){
-            $r_list = Reservation::where('status', 6)->latest()->paginate(10);
+        if($request['tab'] == 'previous'){
+            $r_list = Reservation::with('previous')->latest()->paginate(10)?? [];
         }
+        // if($request['tab'] === 'disaprove'){
+        //     $r_list = Reservation::where('status', 6)->latest()->paginate(10);
+        // }
         if(isset($request['search'])){
             $names = explode(' ', $request['search']);
             $firstName = $names[0];
@@ -176,8 +182,9 @@ class SystemReservationController extends Controller
     public function showReschedule($id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
-        $availed = Reservation::all()->where('check_in', $reservation->check_in)->where('check_out', $reservation->check_out)->except($reservation->id);;
-        return view('system.reservation.show-reschedule',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'availed' => $availed]);
+        $availed = Reservation::all()->where('check_in', $reservation->check_in)->where('check_out', $reservation->check_out)->except($reservation->id);
+        $rooms = Room::all();
+        return view('system.reservation.show-reschedule',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'availed' => $availed, 'rooms' => $rooms]);
     }
     public function updateCancel(Request $request, $id){
         $id = decrypt($id);
@@ -192,21 +199,21 @@ class SystemReservationController extends Controller
         // Remove reserved rooms
         if(isset($reservation->roomid)){
             $rooms = Room::all();
-            foreach($rooms as $room){
-                $customers = $room->customer ?? [];
-                if(array_key_exists($reservation->id, $customers)) unset($customers[$reservation->id]);
-                $room->update(['customer' => $customers]);
-            }
+            foreach($rooms as $room) $room->removeCustomer($reservation->id) ;
         }
         $reservation->status = 5;
         $updated = $reservation->save();
+        $message = $reservation->message;
+
+        if(isset($message['cancel'])) unset($message['cancel']);
+
         if($updated){
             $details = [
                 'name' => $reservation->userReservation->name(),
                 'title' => 'Reservation Cancellation',
                 'body' => 'Your Reservation Cancel Request are now approved. '
             ];
-            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Cancel Request of '.$reservation->userReservation->name().'was approved');
         }
     }
@@ -229,10 +236,96 @@ class SystemReservationController extends Controller
                 'title' => 'Reservation Cancel',
                 'body' => 'Sorry, Your Cancel Request are now disapproved due to ' . $validator['reason'] . '. If you want concern. Please contact the owner'
             ];
-            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Reschedule Request of '.$reservation->userReservation->name().'was successful disapproved');
         }
     
+    }
+    public function updateReschedule(Request $request, $id){
+        $system_user = $this->system_user->user();
+        $validator = Validator::make($request->all('passcode'), [
+            'passcode' => ['required', 'digits:4', 'numeric'],
+        ]);
+
+        if($validator->fails()) return back ()->with('error', $validator->errors()->all());
+        $validator = $validator->validate();
+        if(!Hash::check($validator['passcode'], $system_user->passcode)) return back ()->with('error', 'Invalid Passcode');
+        $admins = System::all()->where('type', 0);
+        $reservation = Reservation::findOrFail(decrypt($request->id));
+        if(!$reservation->status == 7) abort(404);
+        if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($request['room_pax']);
+        else $validator['room_pax'] = $request['room_pax'];
+
+        $roomCustomer = [];
+        $reservationPax = 0;
+
+        if(Room::checkAllAvailable()){
+            foreach($validator['room_pax'] as $room_id => $newPax){
+                $reservationPax += (int)$newPax;
+                $room = Room::find($room_id);
+                if($newPax >= $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validator);
+                if($newPax >= $room->getVacantPax() && $reservationPax <= $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validator);
+                $roomCustomer[$room_id] = $newPax;
+            }
+        }
+        else{
+            $r_lists = Reservation::whereBetween('check_in', [$reservation->check_in, $reservation->check_out])
+                                ->orWhereBetween('check_out', [$reservation->check_in, $reservation->check_out])
+                                ->pluck('id');
+
+            foreach($validator['room_pax'] as $room_id => $newPax){
+                $reservationPax += (int)$newPax;
+                $count_paxes = 0;
+                foreach($r_lists as $r_list){
+                    $rooms = Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->where('id', $room_id)->get();
+                    foreach($rooms as $room) $count_paxes += $room->customer[$r_list];
+                }
+                // dd($count_paxes);
+                $room = Room::find($room_id);
+
+                if($count_paxes > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due not Available based on guest ('.$newPax.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validator);
+        
+                if($count_paxes > $reservationPax && $reservationPax < $count_paxes)  return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due invalid guest between you choose customer guest ('.$newPax.' pax) and vacant guest ('.$count_paxes.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validator);
+    
+                $roomCustomer[$room_id] = $newPax;
+            }
+        }
+        if($reservationPax > $reservation->pax || $reservationPax < $reservation->pax) return back()->with('error', 'Guest you choose ('.$reservationPax.' pax) does not match on Customer Guest ('.$reservation->pax.' pax)')->withInput($validator);
+        if(isset($reservation->roomid)){
+            $rooms = $reservation->roomid;
+            foreach($rooms as $value) {
+                $room = Room::find($value);
+                if(isset($room)) $room->removeCustomer($reservation->id);
+            } 
+        }
+        foreach($roomCustomer as $key => $pax){
+            $room = Room::find($key);
+            $room->addCustomer($reservation->id, $pax);
+        }
+        $message = $reservation->message;
+
+        $updated = $reservation->update([
+            'check_in' => $message['reschedule']['check_in'],
+            'check_out' => $message['reschedule']['check_out'],
+            'status' => $message['reschedule']['prev_status'],
+        ]);
+
+        if($updated){
+
+            if(isset($message['reschedule']['message'])) unset($message['reschedule']['message']);
+            $message['reschedule']['prev_status'] = 4; // For User Resevation List
+            $reservation->update([
+                'message' => $message,
+                'roomid' => array_keys($roomCustomer),
+            ]);
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => 'Reservation Reschedule',
+                'body' => 'Your Request are now approved. '
+            ];
+            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Reschedule Request of '.$reservation->userReservation->name().' was approved');
+        }
     }
     public function updateDisaproveReschedule(Request $request, $id){
         $id = decrypt($id);
@@ -245,7 +338,8 @@ class SystemReservationController extends Controller
         $message = $reservation->message;
         $reservation->status = $message['reschedule']['prev_status'];
         $reservation->save();
-        if(isset($message['reschedule'])) unset($message['reschedule']);
+        $message['reschedule']['prev_status'] = 7;
+        if(isset($message['reschedule']['message'])) unset($message['reschedule']['message']);
         $updated = $reservation->update(['message' => $message]);
         if($updated){
             $details = [
@@ -253,17 +347,13 @@ class SystemReservationController extends Controller
                 'title' => 'Reservation Cancellation',
                 'body' => 'Sorry, Your Reservation Cancel Request are now disapproved due to ' . $validator['reason'] . '. If you want concern. Please contact the owner'
             ];
-            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Cancel Request of '.$reservation->userReservation->name().'was successful disapproved');
         }
        
         
     }
-    public function approveReschedule($id){
-        $rooms = Room::all();
-        $reservation = Reservation::findOrFail(decrypt($id));
-        return view('system.reservation.reschedule.approve', ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms]);
-    }   
+
     public function edit($id){
         if(!$this->system_user->user()->role() === "Admin") abort(404);
         $reservation = Reservation::findOrFail(decrypt($id));
@@ -500,7 +590,8 @@ class SystemReservationController extends Controller
 
         
     }
-    public function receipt($id){
+    public function receipt($id)
+    {
         $reservation = Reservation::findOrFail(decrypt($id));
         $tour_menu = [];
         $other_addons = [];
@@ -551,7 +642,8 @@ class SystemReservationController extends Controller
         
         return view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'tour_addons' => $tour_addons, 'other_addons' => $other_addons, 'rate' => $rate, 'rooms' => $rooms]);
     }
-    public function showRooms($id){
+    public function showRooms($id)
+    {
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
         if($reservation->status >= 1) abort(404);
@@ -559,32 +651,61 @@ class SystemReservationController extends Controller
         $rate = RoomRate::all();
         return view('system.reservation.show-room',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate]);
     }
-    public function updateReservation(Request $request){
+    public function updateReservation(Request $request)
+    {
         if($request->has('room_rate')) $request['room_rate'] = decrypt($request['room_rate']);
         $validated = $request->validate([
             'room_rate' => ['required', Rule::when($request->has('room_rate'), ['numeric'])],
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
+        
         $system_user = $this->system_user->user();
         $admins = System::all()->where('type', 0);
         $reservation = Reservation::findOrFail(decrypt($request->id));
         if($reservation->status >= 1) abort(404);
-        if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($validated);
+        if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($request['room_pax']);
         else $validated['room_pax'] = $request['room_pax'];
-
         $rate = RoomRate::find($validated['room_rate']);
+
+    
         $roomCustomer = [];
         $reservationPax = 0;
-        foreach($validated['room_pax'] as $room_id => $newPax){
-            $room = Room::find($room_id);
-            if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
-            if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
-            if($newPax > $room->getVacantPax() && $reservationPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
-            $reservationPax += (int)$newPax;
-            $roomCustomer[$room_id] = $newPax;
-
+        if(Room::checkAllAvailable()){
+            foreach($validated['room_pax'] as $room_id => $newPax){
+                $reservationPax += (int)$newPax;
+                $room = Room::find($room_id);
+                if($newPax >= $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
+                if($newPax >= $room->getVacantPax() && $reservationPax <= $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
+                $roomCustomer[$room_id] = $newPax;
+            }
+            // dd('Work sa main reserved rooms');
         }
-        if($reservationPax > $reservation->pax || $reservationPax < $reservation->pax) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
+        else{
+            // dd('Work sa other reserved rooms');
+
+            $r_lists = Reservation::whereBetween('check_in', [$reservation->check_in, $reservation->check_out])
+                                ->orWhereBetween('check_out', [$reservation->check_in, $reservation->check_out])
+                                ->pluck('id');
+
+            foreach($validated['room_pax'] as $room_id => $newPax){
+                $reservationPax += (int)$newPax;
+                $count_paxes = 0;
+                foreach($r_lists as $r_list){
+                    $rooms = Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->where('id', $room_id)->get();
+                    foreach($rooms as $room) $count_paxes += $room->customer[$r_list];
+                }
+                // dd($count_paxes);
+                $room = Room::find($room_id);
+
+                if($count_paxes > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due not Available based on guest ('.$newPax.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validated);
+        
+                if($count_paxes > $reservationPax && $reservationPax < $count_paxes)  return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due invalid guest between customer ('.$newPax.' pax) and vacant guest ('.$count_paxes.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validated);
+    
+                
+                $roomCustomer[$room_id] = $newPax;
+            }
+        }
+        if($reservationPax > $reservation->pax || $reservationPax < $reservation->pax) return back()->with('error', 'Guest you choose ('.$reservationPax.' pax) does not match on Customer Guest ('.$reservation->pax.' pax)')->withInput($validated);
 
         $transaction = $reservation->transaction;
         $transaction['rid'.$rate->id]['title'] = $rate->name;
@@ -603,10 +724,6 @@ class SystemReservationController extends Controller
 
         // Update Room Availability
         if($reserved){
-            $rooms = Room::all();
-            foreach($rooms as $room){
-                if ($room->checkAvailability()) continue;
-            }
             foreach($roomCustomer as $key => $pax){
                 $room = Room::find($key);
                 $room->addCustomer($reservation->id, $pax);
@@ -623,7 +740,7 @@ class SystemReservationController extends Controller
                 }
                 $count++;
             }
-            
+        
             $roomDetails = [];
             foreach($reservation->roomid as $item)$roomDetails[] = 'Room No ' . Room::find($item)->room_no . ' ('.Room::find($item)->room->name.')';
             $text = 
@@ -675,7 +792,7 @@ class SystemReservationController extends Controller
             ];
             unset($roomDetails);
             // Notification::send($reservation->userReservation, new EmailNotification($project));
-            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationConfirmation($details['title'], $details, 'reservation.confirm-mail'));
+            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationConfirmation($details['title'], $details, 'reservation.confirm-mail'));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Confirmed');
             unset($details, $text, $url);
         }
@@ -758,10 +875,12 @@ class SystemReservationController extends Controller
             'body' => 'You now checked in at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
         ];
         if($updated){
-            foreach($admins as $admin) {
-                if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null, 'bot2');
+            if($this->system_user->role() === 'Manager'){
+                foreach($admins as $admin) {
+                    if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null, 'bot2');
+                }
             }
-            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             unset($text, $details);
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked in');
             
@@ -798,7 +917,7 @@ class SystemReservationController extends Controller
                 if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
             }
         }
-        Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.checkout-mail', $details['title']));
+        Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.checkout-mail', $details['title']));
         unset($text, $details);
         return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked out');
         
@@ -885,7 +1004,7 @@ class SystemReservationController extends Controller
                 'title' => 'Reservation Disaprove',
                 'body' => 'Your Reservation are disapprove due of ' . $messages['disaprove']. 'Sorry for waiting. Please try again to make reservation in another dates',
             ];
-            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             unset($details, $text);
             return redirect()->route('system.reservation.home')->with('success', 'Disaprove of ' . $reservation->userReservation->name() . ' was Successful');
         }
@@ -918,7 +1037,7 @@ class SystemReservationController extends Controller
                 'title' => 'Your online payment was approved',
                 'body' => 'Downpayment: ' .  $downpayment['payment']['downpayment'],
             ];
-            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
         }
         else{
             $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s'); 
@@ -933,7 +1052,7 @@ class SystemReservationController extends Controller
                 'link' => $url,
                 'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
             ];
-            Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
+            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
         }
         $text = 
         "Employee Action: Approve Online Payment !\n" .
@@ -986,7 +1105,7 @@ class SystemReservationController extends Controller
                 if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
             }
         }  
-        Mail::to(env('SAMPLE_EMAIL', $reservation->userReservation->email))->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
+        Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
     }
     public function storeForcePayment(Request $request, $id){
         $system_user = $this->system_user->user();

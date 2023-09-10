@@ -1,18 +1,17 @@
 <x-landing-layout noFooter>
     <x-navbar :activeNav="$activeNav" type="plain"/>
     <x-full-content>
-        <section class="pt-24 flex flex-col justify-center items-center h-screen">
-            <div class="tabs tabs-boxed bg-transparent">
+        <section class="pt-24 flex flex-col justify-center items-center w-full h-screen gap-5">
+            <div class="tabs tabs-boxed bg-transparent flex justify-center md:justify-start">
                 <a href="{{route('user.reservation.home')}}" class="tab {{!request()->has('tab') ? 'tab-active' : ''}}">Pending</a> 
                 <a href="{{route('user.reservation.home', Arr::query(['tab' => 'confirmed']))}}" class="tab {{request('tab') == 'confirmed' ? 'tab-active' : ''}}">Confirmed</a> 
                 <a href="{{route('user.reservation.home', Arr::query(['tab' => 'cin']))}}" class="tab {{request('tab') == 'cin' ? 'tab-active' : ''}}">Check-in</a> 
                 <a href="{{route('user.reservation.home', Arr::query(['tab' => 'cout']))}}" class="tab {{request('tab') == 'cout' ? 'tab-active' : ''}}">Check-out</a> 
                 <a href="{{route('user.reservation.home', Arr::query(['tab' => 'cancel']))}}" class="tab {{request('tab') == 'cancel' ? 'tab-active' : ''}}">Cancel</a> 
                 <a href="{{route('user.reservation.home', Arr::query(['tab' => 'reshedule']))}}" class="tab {{request('tab') == 'reshedule' ? 'tab-active' : ''}}">Reschedule</a>
-                <a href="{{route('user.reservation.home', Arr::query(['tab' => 'disaprove']))}}" class="tab {{request('tab') == 'disaprove' ? 'tab-active' : ''}}">Disaprove</a>
                 <a href="{{route('user.reservation.home', Arr::query(['tab' => 'previous']))}}" class="tab {{request('tab') == 'previous' ? 'tab-active' : ''}}">Previous</a>
               </div>
-            <div class="grid card bg-base-100 rounded-box place-items-center h-full w-5/6 ">
+            <div class="card bg-base-100 rounded-box place-items-center w-5/6 ">
                 <div class="overflow-x-auto w-full shadow-xl">
                   <table class="table w-full">
                     <!-- head -->
@@ -77,6 +76,7 @@
                     </tbody>
                   </table>
                 </div>
+                {!! $reservation->links() !!}
               </div>
           </section>
     </x-full-content>

@@ -185,16 +185,15 @@
             </article>
             <article>
                 @if($r_list->accommodation_type !== 'Room Only')
-                <h2 class="text-lg mt-5 font-bold">Tours</h2>
                     <div class="w-auto">
                         <div class="overflow-x-auto">
                             <table class="table table-zebra">
                             <!-- head -->
                             <thead>
-                                <tr>
-                                    <th>Tour</th>
-                                    <th>Price</th>
-                                    <th>Amount</th>
+                                <tr class="text-neutral font-bold">
+                                    <td>Tour</td>
+                                    <td>Price</td>
+                                    <td>Amount</td>
                                 </tr>
                             </thead>
                             <tbody>
@@ -210,18 +209,18 @@
                         </div>
                     </div>
                 @endif
-                {{-- @if($r_list->status > 4 && $r_list->status < 7)
-                    <article class="mt-3">
-                        <p class="text-md tracking-tight text-neutral">
+                {{-- @if($r_list->status < 7)
+                    <article class="mt-3 flex flex-col items-end">
+                        <div class="text-md tracking-tight text-neutral">
                             <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->getTotal(), 2) }}
-                        </p>
-                        <p class="text-md tracking-tight text-neutral">
+                        </div>
+                        <div class="text-md tracking-tight text-neutral">
                             <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment() ?? 0, 2) }}
-                        </p>
-                        <p class="text-md tracking-tight text-neutral my-5">
+                        </div>
+                        <div class="text-md tracking-tight text-neutral my-5">
                             @php $balance = abs($total - $downpayment); @endphp
                             <span class="font-medium">Balance due: </span>₱ {{ number_format($r_list->balance() ?? 0, 2) }}
-                        </p>
+                        </div>
                     </article>
                 @endif --}}
             </article>

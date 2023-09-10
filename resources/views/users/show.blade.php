@@ -34,7 +34,7 @@
                             <div class="my-5 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <x-input name="first_name" id="first_name" placeholder="First Name" value="{{$user->first_name}}" />
                                 <x-input name="last_name" id="last_name" placeholder="First Name" value="{{$user->last_name}}" />
-                                <x-datetime-picker name="birthday" id="birthday" placeholder="Brithday" class="flatpickr-reservation-one" value="{{$user->birthday}}" />
+                                <x-birthday />
                                 <x-datalist-input name="nationality" id="nationality" placeholder="Nationality" :lists="$nationality" value="{{$user->nationality}}" />
                                 <x-datalist-input name="country" id="country" placeholder="Country" :lists="$countries" value="{{$user->country}}" />
                                 <x-phone-input value="{{$user->contact}}"/>

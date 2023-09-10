@@ -17,20 +17,30 @@
         @if(request('rtab') === 'list')
             {{-- Table  --}}
             <div class="mt-20 w-full">
-                <div class="flex justify-end w-full">
-                    <form action="{{route('system.reservation.search', Arr::query(['tab' => 'list']))}}" method="POST">
-                        @csrf
-                        <div class="join">
-                            <div>
-                              <div>
-                                <input class="input input-sm input-primary join-item placeholder:text-sm" name="search" placeholder="Search Full Name..." value="{{request('search') ?? ""}}" />
-                              </div>
-                            </div>
-                            <button class="btn btn-sm join-item btn-primary">Search</button>
-                          </div>
-                    </form>
+                <div class="tabs flex justify-center md:justify-start">
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list']) )}}" class="tab tab-lifted {{!request()->has('tab') && request()->has('rtab') ? 'tab-active' : ''}}">All</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'pending']) )}}" class="tab tab-lifted {{request('tab') == 'pending' ? 'tab-active' : ''}}">Pending</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'confirmed']))}}" class="tab tab-lifted {{request('tab') == 'confirmed' ? 'tab-active' : ''}}">Confirmed</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cin']))}}" class="tab tab-lifted {{request('tab') == 'cin' ? 'tab-active' : ''}}">Check-in</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cout']))}}" class="tab tab-lifted {{request('tab') == 'cout' ? 'tab-active' : ''}}">Check-out</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cancel']))}}" class="tab tab-lifted {{request('tab') == 'cancel' ? 'tab-active' : ''}}">Cancel</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'reshedule']))}}" class="tab tab-lifted {{request('tab') == 'reshedule' ? 'tab-active' : ''}}">Reschedule</a>
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'previous']))}}" class="tab tab-lifted {{request('tab') == 'previous' ? 'tab-active' : ''}}">Previous</a>
                 </div>
                 <div class="mt-10">
+                    <div class="flex justify-end w-full gap-5">
+                        <form action="{{route('system.reservation.search', Arr::query(['rtab' => 'list', 'tab' => 'list']))}}" method="POST">
+                            @csrf
+                            <div class="join">
+                                <div>
+                                <div>
+                                    <input class="input input-sm input-primary join-item placeholder:text-sm" name="search" placeholder="Search Full Name..." value="{{request('search') ?? ""}}" />
+                                </div>
+                                </div>
+                                <button class="btn btn-sm join-item btn-primary">Search</button>
+                            </div>
+                        </form>
+                    </div>
                     <div class="overflow-x-auto w-full">
                         <table class="table w-full">
                             <!-- head -->

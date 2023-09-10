@@ -169,9 +169,8 @@
             <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-10">
               @foreach ($rooms as $room)
                 <label data-aos="zoom-in-down" for="{{Str::camel($room->name)}}Modal">
-                  <div class="card bg-base-100 shadow-xl hover:border hover:border-primary [&:hover_div_span]:block [&:hover_.roomImg1_img]:hidden [&:hover_.roomImg2_img]:inline cursor-pointer">
+                  <div class="card bg-base-100 shadow-xl hover:border hover:border-primary [&:hover_div_span]:block cursor-pointer">
                     <figure class="py-2 roomImg1"><img src="{{$room->image ? asset('storage/'.$room->image) : asset('images/logo.png')}}" alt="{{$room->name}}" class="inline object-contain h-80" /></figure>
-                    <figure class="py-2 roomImg2"><img src="{{$room->image ? asset('storage/'.$room->image) : asset('images/logo2.png')}}" alt="{{$room->name}}" class="hidden object-contain h-80" /></figure>
                     <div class="card-body flex justify-between">
                       <h2 class="card-title">{{$room->name}}</h2>
                       <span class="hidden text-xs">Click to more details</span>
@@ -185,7 +184,7 @@
         
               
           </div>
-          @foreach ($rooms as $room)
+          {{-- @foreach ($rooms as $room)
             <x-modal id="{{Str::camel($room->name)}}Modal" title="{{$room->name}} Details">
               @if($room->description)
                 <p>{{$room->description}}</p>
@@ -201,7 +200,7 @@
                 <p>Location: {{$room->location}}</p>
               @endif
           </x-modal>
-        @endforeach
+        @endforeach --}}
 
       </section>
       <section class="bg-base-100 text-gray-600 p-14 w-full">

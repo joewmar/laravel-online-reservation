@@ -87,34 +87,37 @@ function getChatIdByGroup()
     }
     return null;
 }
-function checkAvailRooms($pax, $dates)
+function checkAvailRooms(int $pax, $check_in, $check_out)
 {
     $isFull = false;
-    $countPaxes = 0;
     $rooms = Room::all();
-    $reservation = Reservation::whereIn('status', [1,2,3])->get();
-    $vacantAll = 0; // Get All Vacant
-    foreach($rooms as $key => $room){
-        if($room->availability == 0){
-            $vacantAll += $room->getVacantPax();
-        }
-    }
-    if($vacantAll < $pax){
-        foreach($reservation as $item){
-            if(Carbon::parse($item->check_out)->tomorrow()->timestamp < Carbon::parse($dates)->timestamp){
-                $isFull = true;
-                break;
-            }
-            else{
-                $isFull = false;
-            }
+    if(Room::checkAllAvailable()){
+        foreach($rooms as $value){
+            if($pax > $value->room->max_occupancy) $isFull = true;
+            if($pax > $value->getVacantPax()) $isFull = true;
         }
     }
     else{
-        $isFull = false;
+        $r_lists = Reservation::whereBetween('check_in', [$check_in, $check_out])
+                                ->orWhereBetween('check_out', [$check_in, $check_out])->pluck('id');
+        // dd($r_lists);
+
+        $count_paxes = 0;
+        foreach($r_lists as $r_list){
+            $rooms = Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->get();
+            // dd($rooms);
+            foreach($rooms as $room) {
+                $count_paxes += $room->customer[$r_list];
+                if($count_paxes > $room->room->max_occupancy) $isFull = true;
+
+            }
+        }
+        // dd($count_paxes);
+        // if($count_paxes > $pax && $pax < $count_paxes)  $isFull = true;
+     
     }
-    unset($vacantAll, $countPaxes, $arrPreCus, $countOccupancy, $maxOccAll, $rooms, $reservation, $countPaxes);
     return $isFull;
+
 }
 function telegramSendMessage($chatID, $message, $keyboard = null, $bot = 'bot1')
 {

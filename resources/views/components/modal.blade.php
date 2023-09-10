@@ -1,11 +1,12 @@
 @props(['id'=>'', 'title'=> '', 'alpinevar' => null, 'type' => 'Close', 'formID' => '', 'loader' => false])
 <input type="checkbox" id="{{$id}}" class="modal-toggle" />
 <div x-data="{loader: false}" class="modal modal-bottom sm:modal-middle" id="{{$id}}">
-  <div class="modal-box ">
+  <div {{ $attributes->merge(['class'=> "modal-box"]) }}>
     <h3 class="font-bold text-lg text-primary">{{$title}}</h3>
-    <div class="my-4">
+    <div class="my-4 overflow-y-auto">
         {{$slot}}
     </div>
+
     <div class="modal-action">
         @if($type === 'YesNo')
             @if ($loader)

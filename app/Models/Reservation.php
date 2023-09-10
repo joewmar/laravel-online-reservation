@@ -33,28 +33,35 @@ class Reservation extends Model
         if(!empty($this->attributes['offline_user_id'])) return $this->belongsTo(UserOffline::class, 'offline_user_id');
         else return $this->belongsTo(User::class, 'user_id');
     }
+    public function other_rooms(){
+        return $this->hasOne(RoomReserve::class, 'id');
+    }
     public function room(){
         return $this->hasMany(Room::class, 'roomid');
     }
     public function roomRate(){
         return $this->hasMany(RoomRate::class, 'roomrateid');
     }
-    public function status(){
+    public function status($intSt = null){
         $status = '';
-        if($this->attributes['status'] == 0) $status = 'Pending';
-        elseif($this->attributes['status'] == 1) $status = 'Confirmed';
-        elseif($this->attributes['status'] == 2) $status = 'Check-in';
-        elseif($this->attributes['status'] == 3) $status = 'Previous';
-        elseif($this->attributes['status'] == 4) $status = 'Reshedule';
-        elseif($this->attributes['status'] == 5) $status = 'Cancel';
-        elseif($this->attributes['status'] == 6) $status = 'Disaprove';
-        elseif($this->attributes['status'] == 7) $status = 'Pending Reschedule';
-        elseif($this->attributes['status'] == 8) $status = 'Pending Cancel';
+        $intst = $intSt ??  $this->attributes['status'];
+        if($intst == 0) $status = 'Pending';
+        elseif($intst == 1) $status = 'Confirmed';
+        elseif($intst == 2) $status = 'Check-in';
+        elseif($intst == 3) $status = 'Check-out';
+        elseif($intst == 4) $status = 'Reshedule';
+        elseif($intst == 5) $status = 'Cancel';
+        elseif($intst == 6) $status = 'Disaprove';
+        elseif($intst == 7) $status = 'Pending Reschedule';
+        elseif($intst == 8) $status = 'Pending Cancel';
             
-        return $status ?? $this->attributes['status'];
+        return $status ?? $intSt;
     }
     public function payment(){
         return $this->hasMany(OnlinePayment::class, 'reservation_id');
+    }
+    public function previous(){
+        return $this->hasMany(Archive::class, 'reservation_id');
     }
     protected function roomid(): Attribute
     {

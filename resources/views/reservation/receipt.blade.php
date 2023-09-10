@@ -179,7 +179,7 @@ tr:hover .cut { opacity: 1; }
 			<table class="meta">
 				<tr>
 					<th><span >Invoice #</span></th>
-					<td><span >{{$r_list->id}}</span></td>
+					<td><span >{{str_replace('-','', $r_list->id)}}</span></td>
 				</tr>
 				<tr>
 					<th><span >Date</span></th>

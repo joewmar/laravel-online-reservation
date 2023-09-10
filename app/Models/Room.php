@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-
+use Illuminate\Support\Facades\Date;
 
 class Room extends Model
 {
@@ -40,7 +40,7 @@ class Room extends Model
                 }
             }
         }
-        $this->update(['availability' => $isFull]);
+        if($this->attributes['availability'] !== $isFull ) $this->update(['availability' => $isFull]);
 
         unset($countOccupancy);
         return $isFull;
@@ -88,6 +88,20 @@ class Room extends Model
         
         $this->checkAvailability();
 
+    }
+    public static function checkAllAvailable(){
+        $isFull = true;
+        $rooms = self::all(); // Get all Room Info
+        $countAllVacant = 0;
+        $countMaxCapacity = 0;
+        
+        foreach($rooms as $room){
+            $countAllVacant += $room->getVacantPax();
+            $countMaxCapacity += $room->room->max_occupancy;
+            $isFull = $room->checkAvailability();
+        }
+        $isFull = !($countMaxCapacity >= $countAllVacant  && $isFull);
+        return $isFull;
     }
 
 }

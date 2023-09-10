@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
             'contact' => '123456897',
             'email'=> 'recelestino90@gmail.com',
             'password' => Hash::make('123456789'),
-            'valid_id' => 'valid_id/IkYI5uA6.jpg',
+            'valid_id' => 'valid_id/Valid_ID.sample.jpg',
         ]);
         \App\Models\RoomRate::create([
             'name' => 'Single Room',
@@ -297,21 +297,6 @@ class DatabaseSeeder extends Seeder
 
         /// Room
         \App\Models\RoomList::create([
-            'name' => 'Charlet',
-            // 'min_occupancy' => 1,
-            'max_occupancy' => 4,
-            'many_room' => 5,
-        ]);
-        $room = \App\Models\RoomList::findOrFail(1);
-        for($room_count = 0; $room_count < $room->many_room; $room_count++){
-            \App\Models\Room::create([
-                'roomid' => $room->id,
-                'room_no' => 0,
-            ]);
-        }
-
-        /// Room
-        \App\Models\RoomList::create([
             'name' => 'Big House',
             // 'min_occupancy' => 3,
             'max_occupancy' => 7,
@@ -342,6 +327,10 @@ class DatabaseSeeder extends Seeder
                 \App\Models\Room::create([
                     'roomid' => $room->id,
                     'room_no' => 0,
+                    'availability' => 1,
+                    'customer' => [
+                        (string)$room->id.'_'.(string)$room_count => $room->max_occupancy
+                    ],
                 ]);
             }
         }

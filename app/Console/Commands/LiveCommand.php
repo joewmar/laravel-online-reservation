@@ -56,7 +56,7 @@ class LiveCommand extends Command
                         ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reservations->id))],
                     ],
                 ];
-                Mail::to(env('SAMPLE_EMAIL', $item->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+                Mail::to(env('SAMPLE_EMAIL') ?? $item->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
                 foreach($system_user as $user){
                     if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
                 }
@@ -82,7 +82,7 @@ class LiveCommand extends Command
                         ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reservations->id))],
                     ],
                 ];
-                Mail::to(env('SAMPLE_EMAIL', $item->userReservation->email))->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+                Mail::to(env('SAMPLE_EMAIL') ?? $item->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
                 foreach($system_user as $user){
                     if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
                 }

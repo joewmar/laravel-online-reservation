@@ -18,6 +18,7 @@ use App\Http\Controllers\WebContentController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\RoomSettingController;
 use App\Http\Controllers\TourSettingController;
+use App\Http\Controllers\MyReservationController;
 use App\Http\Controllers\CreateReservationController;
 use App\Http\Controllers\SystemReservationController;
 
@@ -89,7 +90,7 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->controller(UserControlle
         Route::put('/{id}/update/valid-id', 'updateValidID')->name('update.validid');
     });
 
-    Route::prefix('my-reservation')->name('user.reservation.')->controller(ReservationController::class)->group(function (){
+    Route::prefix('my-reservation')->name('user.reservation.')->controller(MyReservationController::class)->group(function (){
         Route::get('/','index')->name('home');
         Route::get('/{id}/edit', 'edit')->name('edit');
         Route::put('/{id}/cancel', 'cancel')->name('cancel');
@@ -175,6 +176,7 @@ Route::prefix('system')->name('system.')->group(function(){
                 Route::put('/{id}/show/cancel/disaprove', 'updateDisaproveCancel')->name('update.cancel.disaprove');
                 Route::put('/{id}/show/reschedule/disaprove', 'updateDisaproveReschedule')->name('update.reschedule.disaprove');
                 Route::get('/{id}/show/reschedule/approve', 'approveReschedule')->name('reschedule.approve');
+                Route::put('/{id}/show/reschedule/approve', 'updateReschedule')->name('reschedule.update');
             });
 
         });
