@@ -371,9 +371,10 @@ class DatabaseSeeder extends Seeder
             ],
             'contact' => [
                 'main' => [
-                    'email' => '',
-                    'whatsapp' => '',
-                    'fbuser' => '',
+                    'email' => 'bognothomestay@gmail.com',
+                    'contactno' => '09198614102',
+                    'whatsapp' => '09198614102',
+                    'fbuser' => 'https://www.facebook.com/p/Alvin-and-Angie-Bognot-mt-Pinatubo-Guesthouse-and-Tours-100057519735244',
                 ],
             ],
         ]);
