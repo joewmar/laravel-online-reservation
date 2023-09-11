@@ -1,7 +1,7 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Website Content">
       <div x-data="{ wbtab: window.location.hash ? window.location.hash.substring(1) : 'hero' }" class="my-10 w-full">
-        <div class="tabs tabs-boxed my-5 bg-transparent">
+        <div class="tabs tabs-boxed my-5 flex justify-center md:justify-start bg-transparent">
           <a @click="wbtab = 'hero' " :class="wbtab == 'hero' ? 'tab md:tab-lg tab-active' : 'tab md:tab-lg' ">Main Hero</a> 
           <a @click="wbtab = 'gallery' " :class="wbtab == 'gallery' ? 'tab md:tab-lg tab-active' : 'tab md:tab-lg' ">Gallery</a> 
           <a @click="wbtab = 'contact' " :class="wbtab == 'contact' ? 'tab md:tab-lg tab-active' : 'tab md:tab-lg' ">Contact Info</a> 
@@ -145,12 +145,80 @@
           </section>
         </template>
         <template x-if="wbtab === 'contact' ">
-          <section class="p-6">
+          <section x-data="{ctType: 'Main Contact'}" class="p-6">
             <div class="flex justify-between">
-              <p class="font-medium text-xl">Contact Information</p>
-              <a href="{{route('system.webcontent.contact.create')}}" class="btn btn-primary">Add Contact</a>
+              <div class="flex justify-between">
+                <div class="w-96">
+                  <x-select name="wala" id="walaID" placeholder="Type of Contact Information" xModel="ctType" :value="['Main Contact', 'Other Contacts']" :title="['Main Contact', 'Other Contacts']" />
+                </div>
+              </div>
+              <a x-show="ctType === 'Other Contacts'" href="{{route('system.webcontent.contact.create')}}" class="btn btn-primary">Add Contact</a>
             </div>
-            <div x-data="{selectContact: []}" class="overflow-x-auto">
+            <div x-show="ctType === 'Main Contact'">
+              @if (isset($webcontents->contact['main']))
+                <div class="overflow-x-auto">
+                  <table class="table">
+                    <tbody>
+                      <tr>
+                        <th>Email Address</th>
+                        <td>{{$webcontents->contact['main']['email'] }}</td>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                      <tr>
+                        <th>Contact Number</th>
+                        <td>{{$webcontents->contact['main']['contactno'] }}</td>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                      <tr>
+                        <th>Facebook</th>
+                        <td>{{$webcontents->contact['main']['fbuser']}}</td>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                      <tr>
+                        <th>WhatsApp Contact No</th>
+                        <td>{{$webcontents->contact['main']['whatsapp']}}</td>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="flex justify-end">
+                    <label for="editMCT_modal" class="btn btn-info">Update</label>
+                    <x-modal id="editMCT_modal" title="Edit Main Contact">
+                      <form action="{{route('system.webcontent.main.contact.update')}}" method="post">
+                        @csrf
+                        @method('PUT')
+                        <x-input type="email" name="email" placeholder="Email Address" value="{{$webcontents->contact['main']['email'] }}" />
+                        <x-input type="number"  name="contact" placeholder="Contact Number" value="{{$webcontents->contact['main']['contactno'] }}" />
+                        <x-input type="number" name="whatsapp_number" placeholder="WhatsApp Number" value="{{$webcontents->contact['main']['whatsapp'] }}" />
+                        <x-input type="url" name="facebook_link" placeholder="Facebook Link (Facebook Profile Page)" value="{{$webcontents->contact['main']['fbuser'] }}" />
+                        <div class="modal-action">
+                          <button class="btn btn-primary">Save</button>
+                        </div>
+                      </form>
+                    </x-modal>
+                </div>
+              @else
+                <label for="addMCT_modal" class="btn btn-primary">Add Main Contact</label>
+                <x-modal id="addMCT_modal" title="Add Main Contact">
+                  <form action="{{route('system.webcontent.main.contact.store')}}" method="post">
+                    @csrf
+                    <x-input type="email" name="email" placeholder="Email Address" />
+                    <x-input type="number"  name="contact" placeholder="Contact Number" />
+                    <x-input type="number" name="whatsapp_number" placeholder="WhatsApp Number" />
+                    <x-input type="url" name="facebook_link" placeholder="Facebook Link (Facebook Profile Page)" />
+                    <div class="modal-action">
+                      <button class="btn btn-primary">Add</button>
+                    </div>
+                  </form>
+                </x-modal>
+              @endif
+            </div>
+            <div x-show="ctType === 'Other Contacts'" x-data="{selectContact: []}" class="overflow-x-auto">
               <form id="remove_contact_form" action="{{route('system.webcontent.contact.destroy.all')}}" method="post">
                 @csrf
                 @method("DELETE")
@@ -166,7 +234,7 @@
                   </thead>
                   <tbody>
                     <!-- row 1 -->
-                    @forelse ($webcontents->contact ?? [] as $key => $item)
+                    @forelse ($webcontents->contact['other'] ?? [] as $key => $item)
                         <tr>
                           <th>
                             <label>
@@ -195,7 +263,7 @@
             <article class="my-5">
               <div class="flex justify-between">
                 <div class="w-96">
-                  <x-select name="wala" id="walaID" placeholder="Type of Payment" xModel="type" :value="['Gcash', 'PayPal']" :title="['Gcash', 'Paypal']" />
+                  <x-select name="wala" id="walaID" placeholder="Type of Payment" xModel="type" :value="['Gcash', 'PayPal', 'Bank Transfer']" :title="['Gcash', 'Paypal', 'Bank Transfer']" />
                 </div>
                 <a x-show="type === 'Gcash'" href="{{route('system.webcontent.create.payment.gcash')}}" class="btn btn-primary" x-transition.1000ms>Add Gcash Reference</a>
                 <a x-show="type === 'PayPal'" href="{{route('system.webcontent.create.payment.paypal')}}" class="btn btn-primary" x-transition.1000ms>Add PayPal Reference</a>

@@ -247,28 +247,84 @@ class WebContentController extends Controller
         $validated = $validated->validate();
         $webcontents = WebContent::all()->first();
         $contacts = $webcontents->contact ?? [];
-        $contacts[Str::camel($validated['person'])]['name'] = $validated['person'];
-        $contacts[Str::camel($validated['person'])]['contactno'][] = $validated['contact_no'];
-        $contacts[Str::camel($validated['person'])]['email'][] = $validated['email'];
-        $contacts[Str::camel($validated['person'])]['fbuser'][] = $validated['facebook_username'];
-        $contacts[Str::camel($validated['person'])]['whatsapp'][] = $validated['whatsapp'];
+        $contacts['other'][Str::camel($validated['person'])]['name'] = $validated['person'];
+        $contacts['other'][Str::camel($validated['person'])]['contactno'][] = $validated['contact_no'];
+        $contacts['other'][Str::camel($validated['person'])]['email'][] = $validated['email'];
+        $contacts['other'][Str::camel($validated['person'])]['fbuser'][] = $validated['facebook_username'];
+        $contacts['other'][Str::camel($validated['person'])]['whatsapp'][] = $validated['whatsapp'];
         
         if(isset($webcontents)) $save = $webcontents->update(['contact' => $contacts]);
         else $save = WebContent::create(['contact' => $contacts,  'operation' => true]);
         if($save) return redirect()->route('system.webcontent.home', '#contact')->with('success', 'Contact of '.$validated['person'].'was added');
     }
+    public function storeMainContact(Request $request){
+        $validated = Validator::make($request->input(), [
+            'contact' => ['required'],
+            'email' => ['required', 'email'],
+            'facebook_link' => ['url'],
+            'whatsapp_number' => ['required'],
+        ], [
+            'contact.required' => 'Required (Contact No.)',
+            'email.required' => 'Required (Email)',
+            'facebook_link.required' => 'Required (Facebook Link)',
+            'facebook_link.url' => 'Must be Url (Facebook Link)',
+            'whatsapp_number.required' => 'Required (WhatsApp)',
+        ]);
+        if($validated->fails()){
+            return back()->with('error', $validated->errors()->all())->withInput($validated->getData());
+        }
+        $validated = $validated->validate();
+        $webcontents = WebContent::all()->first();
+        $contacts = $webcontents->contact ?? [];
+        $contacts['main']['contactno'] = $validated['contact'];
+        $contacts['main']['email'] = $validated['email'];
+        $contacts['main']['fbuser'] = $validated['facebook_link'];
+        $contacts['main']['whatsapp'] = $validated['whatsapp_number'];
+        
+        if(isset($webcontents)) $save = $webcontents->update(['contact' => $contacts]);
+        else $save = WebContent::create(['contact' => $contacts,  'operation' => true]);
+        if($save) return redirect()->route('system.webcontent.home', '#contact')->with('success', 'Main Contact was added');
+    }
+    public function updateMainContact(Request $request){
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists('main', $webcontents->contact)) abort(404);
+        $validated = Validator::make($request->input(), [
+            'contact' => ['required'],
+            'email' => ['required', 'email'],
+            'facebook_link' => ['url'],
+            'whatsapp_number' => ['required'],
+        ], [
+            'contact.required' => 'Required (Contact No.)',
+            'email.required' => 'Required (Email)',
+            'facebook_link.required' => 'Required (Facebook Link)',
+            'facebook_link.url' => 'Must be Url (Facebook Link)',
+            'whatsapp_number.required' => 'Required (WhatsApp)',
+        ]);
+        if($validated->fails()){
+            return back()->with('error', $validated->errors()->all())->withInput($validated->getData());
+        }
+        $validated = $validated->validate();
+        $webcontents = WebContent::all()->first();
+        $contacts = $webcontents->contact ?? [];
+        $contacts['main']['contactno'] = $validated['contact'];
+        $contacts['main']['email'] = $validated['email'];
+        $contacts['main']['fbuser'] = $validated['facebook_link'];
+        $contacts['main']['whatsapp'] = $validated['whatsapp_number'];
+        
+        if(isset($webcontents)) $save = $webcontents->update(['contact' => $contacts]);
+        if($save) return redirect()->route('system.webcontent.home', '#contact')->with('success', 'Main Contact was updated');
+    }
     public function showContact($key){
         $key = decrypt($key);
-        // dd($key);
         $webcontents = WebContent::all()->first();
-        if(!array_key_exists($key, $webcontents->contact)) abort(404);
-        // dd($webcontents->contact[$key]);
-        return view('system.webcontent.contact.show', ['activeSb' => 'Website Content', 'key' => $key, 'contact' => $webcontents->contact]);
+        if(!array_key_exists($key, $webcontents->contact['other'])) abort(404);
+        // dd($webcontents->contact['other'][$key]);
+        return view('system.webcontent.contact.show', ['activeSb' => 'Website Content', 'key' => $key, 'contact' => $webcontents->contact['other']]);
     }
     public function updateContact(Request $request, $key){
         $key = decrypt($key);
         $webcontents = WebContent::all()->first();
-        if(!array_key_exists($key, $webcontents->contact)) abort(404);
+        if(!array_key_exists($key, $webcontents->contact['other'])) abort(404);
         $contact = $webcontents->contact;
         if($request->has('contact')){
             $validate = Validator::make($request->input(), [
@@ -276,8 +332,8 @@ class WebContentController extends Controller
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
-            $contact[$key]['contactno'][] = $validate['contact'];
-            $message =  $contact[$key]['name'] . ' Contact No. was Added';
+            $contact['other'][$key]['contactno'][] = $validate['contact'];
+            $message =  $contact['other'][$key]['name'] . ' Contact No. was Added';
 
         }
         if($request->has('email')){
@@ -286,8 +342,8 @@ class WebContentController extends Controller
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
-            $contact[$key]['email'][] = $validate['email'];
-            $message =  $contact[$key]['name'] . ' Email Address was Added';
+            $contact['other'][$key]['email'][] = $validate['email'];
+            $message =  $contact['other'][$key]['name'] . ' Email Address was Added';
         }
         if($request->has('facebook_username')){
             $validate = Validator::make($request->input(), [
@@ -295,8 +351,8 @@ class WebContentController extends Controller
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
-            $contact[$key]['fbuser'][] = $validate['facebook_username'];
-            $message =  $contact[$key]['name'] . ' Facebook Username was Added';
+            $contact['other'][$key]['fbuser'][] = $validate['facebook_username'];
+            $message =  $contact['other'][$key]['name'] . ' Facebook Username was Added';
 
         }
         if($request->has('whatsapp')){
@@ -305,8 +361,8 @@ class WebContentController extends Controller
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
-            $contact[$key]['whatsapp'][] = $validate['whatsapp'];
-            $message =  $contact[$key]['name'] . ' WhatsApp Contact No. was Added';
+            $contact['other'][$key]['whatsapp'][] = $validate['whatsapp'];
+            $message =  $contact['other'][$key]['name'] . ' WhatsApp Contact No. was Added';
         }
         if($request->has('name')){
             $validate = Validator::make($request->input(), [
@@ -314,15 +370,15 @@ class WebContentController extends Controller
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
-            $contact[$key]['name'] = $validate['name'];
-            $message =  $contact[$key]['name'] . ' was updated the name';
+            $contact['other'][$key]['name'] = $validate['name'];
+            $message =  $contact['other'][$key]['name'] . ' was updated the name';
         }
         if($webcontents->update(['contact' => $contact])) return redirect()->route('system.webcontent.contact.show', encrypt($key))->with('success', $message);
     }
     public function destroyContactOne(Request $request, $key){
         $key = decrypt($key);
         $webcontents = WebContent::all()->first();
-        if(!array_key_exists($key, $webcontents->contact)) abort(404);
+        if(!array_key_exists($key, $webcontents->contact['other'])) abort(404);
         $contact = $webcontents->contact;
         if($request->has('rcontact')){
             $validate = Validator::make($request->input(), [
@@ -332,7 +388,7 @@ class WebContentController extends Controller
             $validate = $validate->validate();
             foreach($validate['rcontact'] as $id => $item){
                 $id = decrypt($id);
-                if(isset($contact[$key]['contactno'][$id])) unset($contact[$key]['contactno'][$id]);
+                if(isset($contact[$key]['contactno'][$id])) unset($contact['other'][$key]['contactno'][$id]);
             }
             $message =  $contact[$key]['name'] . ' was remove some contact no.';
         }
@@ -344,9 +400,9 @@ class WebContentController extends Controller
             $validate = $validate->validate();
             foreach($validate['remail'] as $id => $item){
                 $id = decrypt($id);
-                if(isset($contact[$key]['email'][$id])) unset($contact[$key]['email'][$id]);
+                if(isset($contact['other'][$key]['email'][$id])) unset($contact['other'][$key]['email'][$id]);
             }
-            $message =  $contact[$key]['name'] . ' was remove some email';
+            $message =  $contact['other'][$key]['name'] . ' was remove some email';
         }
         if($request->has('rfb')){
             $validate = Validator::make($request->input(), [
@@ -356,9 +412,9 @@ class WebContentController extends Controller
             $validate = $validate->validate();
             foreach($validate['rfb'] as $id => $item){
                 $id = decrypt($id);
-                if(isset($contact[$key]['fbuser'][$id])) unset($contact[$key]['fbuser'][$id]);
+                if(isset($contact['other'][$key]['fbuser'][$id])) unset($contact['other'][$key]['fbuser'][$id]);
             }
-            $message =  $contact[$key]['name'] . ' was remove some item facebook user';
+            $message =  $contact['other'][$key]['name'] . ' was remove some item facebook user';
         }
         if($request->has('rwapp')){
             $validate = Validator::make($request->input(), [
@@ -368,9 +424,9 @@ class WebContentController extends Controller
             $validate = $validate->validate();
             foreach($validate['rwapp'] as $id => $item){
                 $id = decrypt($id);
-                if(isset($contact[$key]['whatsapp'][$id])) unset($contact[$key]['whatsapp'][$id]);
+                if(isset($contact['other'][$key]['whatsapp'][$id])) unset($contact[$key]['whatsapp'][$id]);
             }
-            $message =  $contact[$key]['name'] . ' was remove some WhatsApp Contact No';
+            $message =  $contact['other'][$key]['name'] . ' was remove some WhatsApp Contact No';
         }
         if($webcontents->update(['contact' => $contact])) return redirect()->route('system.webcontent.contact.show', encrypt($key))->with('success', $message);
     }
@@ -383,8 +439,8 @@ class WebContentController extends Controller
         $contact = $webcontents->contact ?? [];
         foreach($validated['remove_contact'] as $key => $item){
             $contactID = decrypt($key);
-            if(array_key_exists($contactID , $contact)){
-                unset($contact[$contactID]);
+            if(array_key_exists($contactID , $contact['other'])){
+                unset($contact['other'][$contactID]);
             }
             else{
                 return redirect()->route('system.webcontent.home', '#contact')->with('error', 'Contact Information  does not exist');

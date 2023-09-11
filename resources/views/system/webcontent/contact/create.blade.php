@@ -1,9 +1,4 @@
-@php
-    $name = [];
-    if(isset($contacts)){
-        foreach ($contacts as $value) $name[] = $value['name'];
-    }
-@endphp
+
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Add New Contact">
         <section class="p-6 flex justify-center">

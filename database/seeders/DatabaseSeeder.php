@@ -369,6 +369,13 @@ class DatabaseSeeder extends Seeder
                 "gallery9" => "gallery/gallery_9.jpg",
                 "gallery10" => "gallery/gallery_10.jpg",
             ],
+            'contact' => [
+                'main' => [
+                    'email' => '',
+                    'whatsapp' => '',
+                    'fbuser' => '',
+                ],
+            ],
         ]);
 
     }

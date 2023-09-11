@@ -85,7 +85,7 @@
                                 @forelse ($email as $item)
                                     <li>{{$item}}</li>
                                 @empty
-                                    <li>No Email Address/li>
+                                    <li>No Email Address</li>
                                 @endforelse
                             </ul>
                         </div>

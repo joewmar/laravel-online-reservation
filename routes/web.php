@@ -260,7 +260,9 @@ Route::prefix('system')->name('system.')->group(function(){
 
             Route::get('/contact/create', 'createContact')->name('contact.create');
             Route::post('/contact/create', 'storeContact')->name('contact.store');
+            Route::post('/contact/main/create', 'storeMainContact')->name('main.contact.store');
             Route::put('/contact', 'updateContact')->name('contact.update');
+            Route::put('/contact/main', 'updateMainContact')->name('main.contact.update');
             Route::delete('/contact', 'destroyContact')->name('contact.destroy.all');
 
             Route::get('/contact/{key}/', 'showContact')->name('contact.show');
