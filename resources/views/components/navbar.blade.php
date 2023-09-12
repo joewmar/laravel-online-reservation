@@ -70,7 +70,7 @@
     @else
     <div class="space-x-1 flex items-center">
       <ul class="{{$type == 'plain' ? 'text-neutral' : 'toggleColour text-white'}} menu px-1">
-        <li><a href="{{route('register')}}">Sign up</a></li>
+        <li><a href="{{route('register')}}" class="uppercase">Sign up</a></li>
       </ul>
       <a href="{{route('login')}}" class="btn btn-primary text-white">Sign in</a>
     </div>

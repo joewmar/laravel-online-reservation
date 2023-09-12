@@ -420,7 +420,7 @@ class CreateReservationController extends Controller
             "Rooms: " . implode(', ', $roomDetails) ."\n" . 
             "Who Approve: " . $sysUser->name();
 
-            if($sysUser->role() === "Manager"){
+            if($sysUser->role() !== "Admin"){
                 foreach($admins as $admin){
                     if(!empty($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');;
                 }

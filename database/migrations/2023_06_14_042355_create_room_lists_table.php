@@ -14,9 +14,6 @@ return new class extends Migration
         Schema::create('room_lists', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->text('amenities')->nullable();
-            $table->text('description')->nullable();
-            // $table->integer('min_occupancy');
             $table->integer('max_occupancy');
             $table->string('location')->nullable();
             $table->integer('many_room');

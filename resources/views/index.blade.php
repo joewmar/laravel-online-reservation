@@ -71,7 +71,7 @@
         </div>
         <div class="mt-8 flex justify-center w-full">
           @foreach ($announcements as $announcement)
-            <article data-aos="fade-down" class="flex gap-4 items-center w-9/12 h-auto rounded-lg border border-gray-100 bg-white p-4 shadow-lg sm:p-6" >
+            <article data-aos="fade-down" class="flex gap-4 items-center w-9/12 h-auto rounded-lg bg-primary border border-gray-100 bg-white p-4 shadow-lg sm:p-6" >
               <span class="inline-block rounded bg-primary p-2 text-primary-content">
                 <i class="fa-solid fa-bullhorn"></i>
               </span>
@@ -118,28 +118,27 @@
     </section>
   @endif
 
-  <section class="h-screen" data-aos="fade-down" data-aos-anchor-placement="center-bottom">
+  <section class="h-screen overflow-hidden" data-aos="fade-down" data-aos-anchor-placement="center-bottom">
     <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
       <div class="max-w-3xl">
         <h2 class="text-3xl font-bold sm:text-4xl">
-          Welcome to Our Guesthouse and Tours!
+          Welcome Everyone!
         </h2>
       </div>
   
       <div data-aos="fade-up-right" class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-16">
-        <div class="relative h-64 overflow-hidden sm:h-80 lg:h-full" >
+        <div class="relative h-64 overflow-hidden sm:h-96" >
           <img
-            alt="Party"
-            src="https://images.unsplash.com/photo-1496843916299-590492c751f4?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1771&q=80"
+            alt="Alvin and Angie Guesthouse Place"
+            src="{{asset('images/main-hero3.jpg')}}"            
             class="absolute inset-0 h-full w-full object-cover"
-            
           />
         </div>
   
         <div class="lg:py-16" data-aos="fade-left">
           <article class="space-y-4 text-neutral" >
             <p>
-              On our guesthouse and tours, we warmly welcome you. We are excited to be a part of your unique experience and journey. Our goal is to provide you with a joyful and memorable stay, an opportunity for you to forget the everyday hustle and relax amidst the beauty of nature.
+              On our guesthouse and tours services, we warmly welcome you. We are excited to be a part of your unique experience and journey. Our goal is to provide you with a joyful and memorable stay, an opportunity for you to forget the everyday hustle and relax amidst the beauty of nature.
             </p>
           </article>
         </div>
@@ -147,7 +146,6 @@
       </div>
     </div>
   </section>
-
   @include('offers')
 
   @include('procedure')

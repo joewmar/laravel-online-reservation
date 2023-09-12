@@ -297,18 +297,21 @@ class DatabaseSeeder extends Seeder
 
         /// Room
         \App\Models\RoomList::create([
+            'image' => 'rooms/big-house-room.jpg',
             'name' => 'Big House',
             // 'min_occupancy' => 3,
             'max_occupancy' => 7,
             'many_room' => 3,
         ]);
         \App\Models\RoomList::create([
+            'image' => 'rooms/multi-sharing-room.jpg',
             'name' => 'Multi-Sharing Room',
             // 'min_occupancy' => 3,
             'max_occupancy' => 7,
             'many_room' => 5,
         ]);
         \App\Models\RoomList::create([
+            'image' => 'rooms/kubo-house-room.jpg',
             'name' => 'Kubo House',
             // 'min_occupancy' => 3,
             'max_occupancy' => 4,
@@ -316,6 +319,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         \App\Models\RoomList::create([
+            'image' => 'rooms/new-house-room.jpg',
             'name' => 'New House',
             // 'min_occupancy' => 3,
             'max_occupancy' => 2,
@@ -327,10 +331,10 @@ class DatabaseSeeder extends Seeder
                 \App\Models\Room::create([
                     'roomid' => $room->id,
                     'room_no' => 0,
-                    'availability' => 1,
-                    'customer' => [
-                        (string)$room->id.'_'.(string)$room_count => $room->max_occupancy
-                    ],
+                    // 'availability' => 1,
+                    // 'customer' => [
+                    //     (string)$room->id.'_'.(string)$room_count => $room->max_occupancy
+                    // ],
                 ]);
             }
         }
@@ -368,6 +372,42 @@ class DatabaseSeeder extends Seeder
                 "gallery8" => "gallery/gallery_8.jpg",
                 "gallery9" => "gallery/gallery_9.jpg",
                 "gallery10" => "gallery/gallery_10.jpg",
+            ],
+            'tour' => [
+                'mainTour' => [
+                    'mt1' => [
+                        'image' => 'tour/main_tour/pinatubo-crate-lake.jpg',
+                        'title' => 'MT. PINATUBO',
+                        'location' => 'Located on the tripoint boundary of the Philippine provinces of Zambales, Tarlac and Pampanga, all in Central Luzon on the northern island of Luzon',
+                    ],
+                    'mt2' => [
+                        'image' => 'tour/main_tour/tambo-lakes.jpg',
+                        'title' => 'TAMBO LAKE',
+                        'location' => 'Located on Tambo Lake, Capas, Tarlac, Philippines',
+                    ],
+                    'mt3' => [
+                        'image' => 'tour/main_tour/tarukan-village.jpg',
+                        'title' => 'TARUKAN VILLAGE',
+                        'location' => 'Located on Sitio Tarukan, Capas Tarlac, Capas, Philippines',
+                    ],
+                ],
+                'sideTour' => [
+                    'st1' => [
+                        'image' => 'tour/side_tour/monasterio-de-tarlac.jpg',
+                        'title' => 'Monasterio De Tarlac',
+                        'location' => 'Located on Barangay Lubigan, San José, Tarlac',
+                    ],
+                    'st2' => [
+                        'image' => 'tour/side_tour/lubigan.jpg',
+                        'title' => 'Lubigan Lake',
+                        'location' => 'Located on Barangay Lubigan, San José, Tarlac',
+                    ],
+                    'st3' => [
+                        'image' => 'tour/side_tour/bueno-hot-spring.jpg',
+                        'title' => 'Bueno Hot Spring',
+                        'location' => 'Located in Sitio Danum Mapali Capas, Tarlac',
+                    ],
+                ],
             ],
             'contact' => [
                 'main' => [

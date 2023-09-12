@@ -76,7 +76,7 @@
                 </button>
             </div>
         </div>
-        <div class="w-full p-8 sm:flex sm:space-x-6">
+        <div class="w-full py-8 sm:flex sm:space-x-6 px-20">
             <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
                 @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
                     <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
@@ -104,8 +104,11 @@
                 </div>
             </div>
         </div>
-        <div class="flex justify-between items-center space-x-1">
-            <span class="text-neutral"><strong>Number of days reminder: </strong>{{$user_days > 1 ? $user_days . ' days' : $user_days . ' day'}}</span>
+        <div class="flex justify-between items-center space-x-1 px-20">
+            <div>
+              <div class="text-neutral"><strong>Number of days reminder: </strong>{{$user_days > 1 ? $user_days . ' days' : $user_days . ' day'}}</div>
+              <div class="text-neutral"><strong>Guest will going to tour: </strong>{{$r_list->tour_pax}} guest</div>
+            </div>
             <div class="tabs tabs-boxed bg-transparent items-center">
                 <a href="{{route('system.reservation.show.addons', [encrypt($r_list->id), 'tab=TA'])}}" class="tab {{request()->has('tab') && request('tab') === 'TA' ? 'tab-active' : ''}}">Tour Addons</a> 
                 <a href="{{route('system.reservation.show.addons', encrypt($r_list->id) )}}" class="tab {{request()->has('tab') && request('tab') === 'TA' ? '' : 'tab-active'}}">Other Addons</a> 
@@ -113,7 +116,7 @@
         </div>
         <div class="divider"></div>
         @if(request()->has('tab') && request('tab') === 'TA')
-          <article x-data="{gpax: ''}" class="block w-full">
+          <article x-data="{gpax: ''}" class="block w-full px-20">
             <div class="w-full">
                 <div class="gap-10">
                   <form id="tour-form" action="{{route('system.reservation.addons.update', [encrypt($r_list->id), 'tab=TA'])}}" method="post">
@@ -209,7 +212,7 @@
                                 @php $list_count = $loop->index + 1 ?? 1; @endphp
       
                                 @if ($category->category === $list->category)
-                                  @if($user_days <= $list->no_day)
+                                  @if($user_days < $list->no_day)
                                       <div class="h-auto opacity-70" id="disabledAll">   
                                   @else
                                     <div class="h-auto">
@@ -221,7 +224,6 @@
                                               @if($user_days <= $list->no_day)
                                                 <p class="text-error">You are not allowed to select this menu if the chosen date is not exact</p>
                                                 <p class="text-error">Your days: {{$user_days}} day/s</p>
-                                                <p class="text-error">Tour duration: {{$list->no_day}} day/s only</p>
                                               @endif
                                             </div>
                                         </label>
@@ -230,7 +232,6 @@
                                           <article>
                                             <ul role="list" class="marker:text-primary list-disc pl-5 space-y-3 text-neutral">
                                               <li><strong>Number of days: </strong> {{$list->no_day <= 1 ? $list->no_day . ' day' : $list->no_day . ' days' }}</li>
-                                              <li><strong>Number of hour/s: </strong> {{Str::replace('.', ' hour and ', $list->hrs) . ' minutes'}}</li>
                                               <li><strong>Price Plan</strong></li>
                                             </ul>
                                           </article>
@@ -239,22 +240,26 @@
                                                   @php 
                                                     $menu_count = $loop->index + 1; 
                                                   @endphp
-                                                    @if(count($list->tourMenuLists) != 1)
-                                                      <div :id="gpax != {{$menu->pax}} ? 'disabledAll' : '' " class="w-full h-full">
-                                                      <input :id="gpax == {{$menu->pax}} ? '{{Str::camel($menu->type)}}{{$list->id}}' : 'disabledAll' " class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
-                                                      <label :for="gpax == {{$menu->pax}} ? '{{Str::camel($menu->type)}}{{$list->id}}': 'disabledAll' " :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
-                                                    @else
-                                                      <div class="w-full h-full">
-                                                        <input :id="!gpax < {{$menu->pax}} ? '{{Str::camel($menu->type)}}{{$list->id}}' : 'disabledAll' " class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
-                                                        <label :for="!gpax < {{$menu->pax}} ? '{{Str::camel($menu->type)}}{{$list->id}}' : 'disabledAll' " :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
-                                                    @endif
+                                                  @if(count($list->tourMenuLists) != 1 && $menu_count === count($list->tourMenuLists))
+                                                  
+                                                    <div class="w-full h-full">
+                                                      <input :id="gpax > {{$menu->pax}} ? '{{ Str::camel($menu->type). '_' . $list->id}}' : 'disabledAll'" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
+                                                      <label :for="gpax > {{$menu->pax}} ? '{{ Str::camel($menu->type). '_' . $list->id}}' : 'disabledAll'" :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
+                                                  @else
+                                                    <div class="w-full h-full">
+                                                      <input :id="gpax == {{ $menu->pax}} ? '{{Str::camel($menu->type). '_' . $list->id}}': 'disabledAll' " class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
+                                                      <label :for="gpax == {{ $menu->pax}} ? '{{Str::camel($menu->type). '_' . $list->id}}' : 'disabledAll'" :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
+                                                  @endif
                                                           <div class="flex items-center justify-between">
                                                             <p class="text-neutral" x-ref="refType{{$list_count}}">{{$menu->type}} ({{$menu->pax}} guest)</p>
                                                             <i class="hidden text-primary fa-solid fa-square-check"></i>
                                                           </div>
                                                           <p class="mt-1 text-neutral" x-ref="priceRef{{$list_count}}">P {{number_format($menu->price, 2)}}</p>
                                                           @if(count($list->tourMenuLists) !== 1)
-                                                          <template x-if="gpax != {{$menu->pax}}">
+                                                          <template x-if="gpax > {{$menu->pax}} && {{$menu_count !== count($list->tourMenuLists) ? 'true' : 'false'}}">
+                                                            <p class="absolute text-error text-xs">Invalid guest count for this price.</p>
+                                                          </template>
+                                                          <template x-if="gpax < {{$menu->pax}}">
                                                             <p class="absolute text-error text-xs">Invalid guest count for this price.</p>
                                                           </template>
                                                           @endif
@@ -283,7 +288,7 @@
               </div>
           </article>
         @else
-          <article class="w-full flex justify-center">
+          <article class="w-full flex justify-center px-20">
             <form id="other-form" action="{{route('system.reservation.addons.update', encrypt($r_list->id))}}" method="POST" class="w-96">
                 @csrf
                 @method('PUT')

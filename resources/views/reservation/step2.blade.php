@@ -1,6 +1,6 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
-    $arrPayment = ['Gcash', 'PayPal'];
+    $arrPayment = ['Gcash', 'PayPal', 'Bank Transfer'];
     $TourInfo = [];
     $tourListCart = [];
     if(session()->has('rinfo')){

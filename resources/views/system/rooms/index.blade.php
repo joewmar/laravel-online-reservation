@@ -31,7 +31,7 @@
               </label>
               <x-modal id="room_modal{{$room->id}}" title="Who guest on Room No. {{$room->room_no}}">
                 @forelse((array)$room->customer as $key => $item)
-                  <h5 class="text-md font-medium text-neutral">{{ \App\Models\Reservation::find($key)->userReservation->name() ?? 'No Name'}} ({{\App\Models\Reservation::find($key)->status()}}) - {{$item}} guest</h5>
+                  <h5 class="text-md font-medium text-neutral">{{ \App\Models\Reservation::find($key)->userReservation->name() ?? 'No Name'}} ({{\App\Models\Reservation::find($key)->status() ?? 'None'}}) - {{$item}} guest</h5>
                 @empty
                   <h5 class="text-md font-medium text-neutral">No guest</h5>
                 @endforelse

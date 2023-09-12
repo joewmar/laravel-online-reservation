@@ -95,26 +95,26 @@ class ReservationController extends Controller
         $validator = null;
         if($request['accommodation_type'] == 'Day Tour'){
             $validator = Validator::make($request->all('check_in','check_out', 'accommodation_type', 'pax'), [
-                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after:'.Carbon::now()->addDays(1)],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after_or_equal:'.Carbon::now()->addDays(1)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
                 'required' => 'Need fill up first',
                 'date_equals' => 'Choose only one day (Day Tour)',
             ]);
         }
         elseif($request['accommodation_type'] == 'Overnight'){
             $validator = Validator::make($request->all('check_in','check_out', 'accommodation_type', 'pax'), [
-                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(1)],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
                 'check_out.after_or_equal' => 'Choose within 2 or 3 days (Overnight)',
@@ -122,13 +122,13 @@ class ReservationController extends Controller
         }
         elseif($request['accommodation_type'] == 'Room Only'){
             $validator = Validator::make($request->all('check_in','check_out', 'accommodation_type', 'pax'), [
-                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(1)],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
                 'accommodation_type' => 'required',
                 'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
                 'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     
@@ -176,13 +176,13 @@ class ReservationController extends Controller
         $validated = null;
         if($request['accommodation_type'] === 'Day Tour'){
             $validated = $request->validate([
-                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after:'.Carbon::now()->addDays(1)],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after_or_equal:'.Carbon::now()->addDays(1)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
                 'required' => 'Need fill up first',
                 'date_equals' => 'Choose only one day (Day Tour)',
                 'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
@@ -191,13 +191,13 @@ class ReservationController extends Controller
         }
         elseif($request['accommodation_type'] === 'Overnight'){
             $validated = $request->validate([
-                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(1)],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
                 'pax.exists' => 'Sorry, this guest you choose is not available (Tour)',
@@ -207,13 +207,13 @@ class ReservationController extends Controller
         }
         elseif($request['accommodation_type'] === 'Room Only'){
             $validated = $request->validate([
-                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(1)],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
                 'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     
@@ -307,7 +307,7 @@ class ReservationController extends Controller
         $validated = null;
         if($request['accommodation_type'] === 'Day Tour'){
             $validated = $request->validate([
-                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after:'.Carbon::now()->addDays(1)],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after_or_equal:'.Carbon::now()->addDays(1)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
@@ -315,7 +315,7 @@ class ReservationController extends Controller
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
                 'required' => 'Need fill up first',
                 'date_equals' => 'Choose only one day (Day Tour)',
                 'tour_pax.exists' => 'Sorry, This number of guest are invalid for choose tour services',    
@@ -323,7 +323,7 @@ class ReservationController extends Controller
         }
         elseif($request['accommodation_type'] === 'Overnight'){
             $validated = $request->validate([
-                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(1)],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
@@ -331,7 +331,7 @@ class ReservationController extends Controller
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
                 'tour_pax.exists' => 'Sorry, This number of guest are invalid for choose tour services',                'check_out.after_or_equal' => 'Choose within 2 or 3 days (Overnight)',
@@ -340,14 +340,14 @@ class ReservationController extends Controller
         }
         elseif($request['accommodation_type'] === 'Room Only'){
             $validated = $request->validate([
-                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(1)],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
                 'required' => 'Need fill up first',
                 'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     

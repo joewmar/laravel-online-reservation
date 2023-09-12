@@ -94,27 +94,22 @@ function checkAvailRooms(int $pax, $check_in, $check_out)
     if(Room::checkAllAvailable()){
         foreach($rooms as $value){
             if($pax > $value->room->max_occupancy) $isFull = true;
-            if($pax > $value->getVacantPax()) $isFull = true;
+            if($pax > $value->getVacantPax() && $pax < $value->getVacantPax()) $isFull = true;
         }
     }
     else{
-        $r_lists = Reservation::whereBetween('check_in', [$check_in, $check_out])
-                                ->orWhereBetween('check_out', [$check_in, $check_out])->pluck('id');
-        // dd($r_lists);
+        $r_lists = Reservation::whereBetween('check_in', [$check_in, $check_out])->orWhereBetween('check_out', [$check_in, $check_out])->pluck('id');
 
         $count_paxes = 0;
         foreach($r_lists as $r_list){
             $rooms = Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->get();
             // dd($rooms);
             foreach($rooms as $room) {
-                $count_paxes += $room->customer[$r_list];
+                $count_paxes += $room->customer[$r_list] ?? 0;
                 if($count_paxes > $room->room->max_occupancy) $isFull = true;
-
+                else $isFull = false;
             }
         }
-        // dd($count_paxes);
-        // if($count_paxes > $pax && $pax < $count_paxes)  $isFull = true;
-     
     }
     return $isFull;
 

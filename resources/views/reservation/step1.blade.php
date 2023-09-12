@@ -16,7 +16,7 @@
                 <div class="mt-8">
                     <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$at ?? old('accommodation_type')}}" />
                     <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-3">
-                        <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$cin ?? Carbon\Carbon::now()->addDays(2)->format('Y-m-d') }}"/>
+                        <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$cin ?? (old('check_in') ??Carbon\Carbon::now()->addDays(2)->format('Y-m-d') )}}"/>
                         <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" value="{{$cout ?? ''}}" />
                         <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$px ?? '1'}}"/>
                     </div>

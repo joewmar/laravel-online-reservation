@@ -179,7 +179,7 @@ tr:hover .cut { opacity: 1; }
 			<table class="meta">
 				<tr>
 					<th><span >Invoice #</span></th>
-					<td><span >{{str_replace('-','', $r_list->id)}}</span></td>
+					<td><span>{{$r_list->id}}</span></td>
 				</tr>
 				<tr>
 					<th><span >Date</span></th>
@@ -295,12 +295,12 @@ tr:hover .cut { opacity: 1; }
 						</tr>
 					</thead>
 					<tbody>
-						@foreach ($other_addons as $key => $tour)
+						@foreach ($other_addons as $key => $other)
 							<tr>
-								<td><span >{{$tour['title']}}</span></td>
-								<td><span data-prefix></span><span>{{$tour['pcs'] ?? 0}} pcs</span></td>
-								<td><span data-prefix>₱ </span><span>{{ number_format($tour['price'], 2)}}</span></td>
-								<td><span data-prefix>₱ </span><span>{{ number_format($tour['amount'], 2)}}</span></td>
+								<td><span >{{$other['title']}}</span></td>
+								<td><span data-prefix></span><span>{{$other['pcs'] ?? 0}} pcs</span></td>
+								<td><span data-prefix>₱ </span><span>{{ number_format($other['price'], 2)}}</span></td>
+								<td><span data-prefix>₱ </span><span>{{ number_format($other['amount'], 2)}}</span></td>
 							</tr>
 						@endforeach
 					</tbody>
@@ -322,15 +322,10 @@ tr:hover .cut { opacity: 1; }
 				</tr>
 			</table>
 		</article>
-		@if($r_list->status < 3)
-			<div class="details">
-				<h5 style="color:red">Note: <span>The total amount to be paid will still depend on the situation, such as add-ons. It will find out at the check-out how much it will really be.</span></h5>
-			</div>
-		@endif
 		<aside>
 			<h1><span >Contact us</span></h1>
 			<div >
-				<p align="center">Email :- {{env('MAIN_CONTACT_EMAIL')}} || Web :- www.bognotlodge.com || Phone :- {{env('MAIN_CONTACT_NUMBER')}} </p>
+				<p align="center">Email :- {{$contacts['email'] ?? 'None'}} || Web :- www.bognotlodge.com || Phone :- {{$contacts['contactno'] ?? 'None'}} </p>
 			</div>
 		</aside>
 	</body>

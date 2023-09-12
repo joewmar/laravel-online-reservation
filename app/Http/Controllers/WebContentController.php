@@ -35,7 +35,6 @@ class WebContentController extends Controller
         if(empty($web_content)){
             $created = WebContent::create([
                 'hero' => $main_hero,
-                'operation' => true,
             ]);
         }
         else{
@@ -73,7 +72,6 @@ class WebContentController extends Controller
         if(empty($web_content)){
             $created = WebContent::create([
                 'hero' => $main_hero,
-                'operation' => true,
             ]);
         }
         else{
@@ -137,7 +135,6 @@ class WebContentController extends Controller
         if(empty($web_content)){
             $created = WebContent::create([
                 'gallery' => $gallery,
-                'operation' => true,
             ]);
         }
         else{
@@ -175,7 +172,6 @@ class WebContentController extends Controller
         if(empty($web_content)){
             $created = WebContent::create([
                 'gallery' => $gallery,
-                'operation' => true,
             ]);
         }
         else{
@@ -560,7 +556,7 @@ class WebContentController extends Controller
                 'number' => $validate['gcash_number'],
                 'qrcode' => $validate['image'],
                 'priority' => $payments['gcash'][$key]['priority'],
-            ];;
+            ];
         }
         else{
             $payments['gcash'][$key] =  [
@@ -569,7 +565,7 @@ class WebContentController extends Controller
                 'qrcode' => $payments['gcash'][$key]['qrcode'],
                 'priority' => $payments['gcash'][$key]['priority'],
 
-            ];;
+            ];
         }
         if(isset($webcontents)){
             $updated = $webcontents->update(['payment' => $payments]);

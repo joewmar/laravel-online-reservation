@@ -1,6 +1,10 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Website Content">
-      <div x-data="{ wbtab: window.location.hash ? window.location.hash.substring(1) : 'hero' }" class="my-10 w-full">
+      <div class="w-full text-center">
+          <span x-show="!document.querySelector('[x-cloak]')" class="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+      <div x-data="{ wbtab: window.location.hash ? window.location.hash.substring(1) : 'hero' }" class="my-10 w-full" x-cloak>
+
         <div class="tabs tabs-boxed my-5 flex justify-center md:justify-start bg-transparent">
           <a @click="wbtab = 'hero' " :class="wbtab == 'hero' ? 'tab md:tab-lg tab-active' : 'tab md:tab-lg' ">Main Hero</a> 
           <a @click="wbtab = 'gallery' " :class="wbtab == 'gallery' ? 'tab md:tab-lg tab-active' : 'tab md:tab-lg' ">Gallery</a> 

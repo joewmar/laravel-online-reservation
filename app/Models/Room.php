@@ -90,7 +90,7 @@ class Room extends Model
 
     }
     public static function checkAllAvailable(){
-        $isFull = true;
+        $isNotFull = true;
         $rooms = self::all(); // Get all Room Info
         $countAllVacant = 0;
         $countMaxCapacity = 0;
@@ -98,10 +98,10 @@ class Room extends Model
         foreach($rooms as $room){
             $countAllVacant += $room->getVacantPax();
             $countMaxCapacity += $room->room->max_occupancy;
-            $isFull = $room->checkAvailability();
+            $isNotFull = !$room->checkAvailability();
         }
-        $isFull = !($countMaxCapacity >= $countAllVacant  && $isFull);
-        return $isFull;
+        $isNotFull = ($countMaxCapacity >= $countAllVacant && $isNotFull);
+        return $isNotFull;
     }
 
 }

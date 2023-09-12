@@ -58,7 +58,7 @@ class RoomSettingController extends Controller
             if($validated){
 
                 if($request->hasFile('image')){                          // storage/app/logos
-                    $validated['image'] = $request->file('image')->store('room_lists', 'public');
+                    $validated['image'] = saveImageWithJPG($request, 'image', 'rooms');
                 }
         
                 // Save to database and get value
@@ -105,9 +105,8 @@ class RoomSettingController extends Controller
         ]);
 
         if($request->hasFile('image')){  
-            if($room_list->image) 
-                deleteFile($room_list->image);
-            $validated['image'] = $request->file('image')->store('room_lists', 'public');
+            if($room_list->image) deleteFile($room_list->image);
+            $validated['image'] = saveImageWithJPG($request, 'image', 'rooms');
         }
 
         //Get the code if it match on system

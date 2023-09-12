@@ -12,6 +12,7 @@ class WebContent extends Model
     protected $fillable = [
         'hero',
         'gallery',
+        'tour',
         'payment',
         'contact',
         'operation',
@@ -19,20 +20,6 @@ class WebContent extends Model
         'to',
         'reason',
     ];
-
-    // public function addNews(array $array){
-    //     $news = $array;
-
-    //     if(!empty(json_decode($this->attributes['news'], true))){
-
-    //         $this->update(['customer' => $customer]);
-    //     }
-    //     else{
-
-    //     }
-    //     $this->checkAvailability();
-
-    // }
     protected function hero(): Attribute
     {
         return Attribute::make(
@@ -55,6 +42,13 @@ class WebContent extends Model
         );
     } 
     protected function payment(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => json_decode($value, true),
+            set: fn ($value) => json_encode($value),
+        );
+    } 
+    protected function tour(): Attribute
     {
         return Attribute::make(
             get: fn ($value) => json_decode($value, true),

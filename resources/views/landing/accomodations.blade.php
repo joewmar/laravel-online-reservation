@@ -21,53 +21,74 @@
     </style>
   @endpush
     <x-navbar :activeNav="$activeNav" />
-    
+        
       <section class="bg-base-200 text-neutral overflow-x-hidden">
-        <swiper-container class="mySwiper h-screen rounded" keyboard="true" space-between="30" pagination="true" pagination-clickable="true" navigation="true" rewind="true" effect="fade">
-          <swiper-slide class="rounded-md">
-            <div class="hero min-h-screen" style="background-image: url({{asset('images/accommodation/destinations/pinatubo-crate-lake.jpg')}});">
-              <div class="hero-overlay bg-opacity-60"></div>
-              <div class="hero-content text-center text-neutral-content">
-                <div class="max-w-md text-base-100">
-                  <h1 class="mb-5 text-4xl font-bold">MT. PINATUBO</h1>
-                  <p class="mb-5">Located on the tripoint boundary of the Philippine provinces of Zambales, Tarlac and Pampanga, all in Central Luzon on the northern island of Luzon.</p>
+        @if (isset($tours))
+          <swiper-container class="mySwiper h-screen rounded" keyboard="true" space-between="30" pagination="true" pagination-clickable="true" navigation="true" rewind="true" effect="fade">
+            {{-- Main Tour --}}
+            <swiper-slide class="rounded-md">
+              <div class="hero min-h-screen">
+                <div class="hero-overlay bg-opacity-60"></div>
+                <div class="absolute top-0 -z-50 h-full w-full grid grid-cols-3">
+                    @foreach ($tours['mainTour'] ?? [] as $item)
+                      <img src="{{asset('storage/'. $item['image'])}}" class="w-auto" alt="{{$item['title']}} Photo">
+                    @endforeach
+                </div>
+                <div class="hero-content text-center text-neutral-content" class="w-auto h-auto">
+                  <div class="max-w-md text-base-100">
+                    <h1 class="mb-5 text-4xl font-bold">Tour Destination</h1>
+                  </div>
                 </div>
               </div>
-            </div>
-          </swiper-slide>
-          <swiper-slide class="rounded-md">
-            <div class="hero min-h-screen" style="background-image: url({{asset('images/accommodation/destinations/tambo-lakes.jpg')}});">
-              <div class="hero-overlay bg-opacity-60"></div>
-              <div class="hero-content text-center text-neutral-content">
-                <div class="max-w-md text-base-100">
-                  <h1 class="mb-5 text-4xl font-bold">TAMBO LAKE</h1>
-                  <p class="mb-5">Located on Tambo Lake, Capas, Tarlac, Philippines</p>
+            </swiper-slide>
+            @foreach ($tours['mainTour'] ?? [] as $item)
+              <swiper-slide class="rounded-md">
+                <div class="hero min-h-screen" style="background-image: url({{asset('storage/'. $item['image'])}});">
+                  <div class="hero-overlay bg-opacity-60"></div>
+                  <div class="hero-content text-center text-neutral-content">
+                    <div class="max-w-md text-base-100">
+                      <h1 class="mb-5 text-4xl font-bold">{{$item['title']}}</h1>
+                      <p class="mb-5">{{$item['location']}}</p>
+                    </div>
+                  </div>
+                </div>
+              </swiper-slide>
+            @endforeach
+
+            {{-- Side Tour --}}
+            <swiper-slide class="rounded-md">
+              <div class="hero min-h-screen">
+                <div class="hero-overlay bg-opacity-60"></div>
+                <div class="absolute top-0 -z-50 h-full w-full grid grid-cols-3">
+                    @foreach ($tours['sideTour'] ?? [] as $item)
+                      <img src="{{asset('storage/'. $item['image'])}}" class="w-auto" alt="{{$item['title']}} Photo">
+                    @endforeach
+                </div>
+                <div class="hero-content text-center text-neutral-content" class="w-auto h-auto">
+                  <div class="max-w-md text-base-100">
+                    <h1 class="mb-5 text-4xl font-bold">Side Tour</h1>
+                  </div>
                 </div>
               </div>
-            </div>
-          </swiper-slide>
-          <swiper-slide class="rounded-md">
-            <div class="hero min-h-screen" style="background-image: url({{asset('images/accommodation/destinations/tarukan-village.jpg')}});">
-              <div class="hero-overlay bg-opacity-60"></div>
-              <div class="hero-content text-center text-neutral-content">
-                <div class="max-w-md text-base-100">
-                  <h1 class="mb-5 text-4xl font-bold">TARUKAN VILLAGE</h1>
-                  <p class="mb-5">Located on Sitio Tarukan, Capas Tarlac, Capas, Philippines</p>
+            </swiper-slide>
+            @foreach ($tours['sideTour'] ?? [] as $item)
+              <swiper-slide class="rounded-md">
+                <div class="hero min-h-screen" style="background-image: url({{asset('storage/'. $item['image'])}});">
+                  <div class="hero-overlay bg-opacity-60"></div>
+                  <div class="hero-content text-center text-neutral-content">
+                    <div class="max-w-md text-base-100">
+                      <h1 class="mb-5 text-4xl font-bold">{{$item['title']}}</h1>
+                      <p class="mb-5">{{$item['location']}}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </swiper-slide>
-        </swiper-container>
+              </swiper-slide>
+            @endforeach
+          </swiper-container>
+        @endif
+
           <div  class="w-full px-4 py-8 sm:py-12 sm:px-6 lg:py-16 lg:px-8">
 
-            {{-- <div class="text-neutral" >
-              <div data-aos="fade-down" class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8" >
-                <div class="mx-auto max-w-lg text-center">
-                  <h2 class="text-3xl font-bold sm:text-4x">Tour Destination</h2>
-                </div>
-
-              </div>
-            </div> --}}
             <div class="grid grid-cols-1 gap-y-8 lg:gap-x-16 px-4 py-8 sm:py-12 sm:px-6 lg:py-16 lg:px-8" >
               <div class="w-full flex flex-col items-center">
                 <h2 class="text-3xl font-bold sm:text-4xl">Tour Services</h2>
@@ -166,18 +187,15 @@
               </p>
             </div>
         
-            <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 place-items-center">
               @foreach ($rooms as $room)
-                <label data-aos="zoom-in-down" for="{{Str::camel($room->name)}}Modal">
-                  <div class="card bg-base-100 shadow-xl hover:border hover:border-primary [&:hover_div_span]:block cursor-pointer">
-                    <figure class="py-2 roomImg1"><img src="{{$room->image ? asset('storage/'.$room->image) : asset('images/logo.png')}}" alt="{{$room->name}}" class="inline object-contain h-80" /></figure>
-                    <div class="card-body flex justify-between">
+                  <div data-aos="zoom-in-up" class="card bg-base-100 shadow-xl">
+                    <figure class="py-2"><img src="{{$room->image ? asset('storage/'.$room->image) : asset('images/logo.png')}}" alt="{{$room->name}}" class="object-cover h-80" /></figure>
+                    <div class="card-body">
                       <h2 class="card-title">{{$room->name}}</h2>
-                      <span class="hidden text-xs">Click to more details</span>
+                      <span class="text-sm">{{$room->location ?? ''}}</span>
                     </div>
                   </div>
-                </label>
-
               @endforeach
     
             </div>

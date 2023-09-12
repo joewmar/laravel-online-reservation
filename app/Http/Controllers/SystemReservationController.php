@@ -156,21 +156,26 @@ class SystemReservationController extends Controller
             if (strpos($key, 'OA') !== false && is_array($item)) {
                 $OAID = (int)str_replace('OA','', $key);
                 foreach($item as $key => $dataAddons){
-                    $other_addons[$count]['title'] = $reservation->transaction['OA'.$OAID]['title'];
-                    $other_addons[$count]['pcs'] = $reservation->transaction['OA'.$OAID]['pcs'];
-                    $other_addons[$count]['price'] = $reservation->transaction['OA'.$OAID]['price'];
-                    $other_addons[$count]['amount'] = $reservation->transaction['OA'.$OAID]['amount'];
+                    $other_addons[$count+$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
+                    $other_addons[$count+$key]['pcs'] = $reservation->transaction['OA'.$OAID][$key]['pcs'];
+                    $other_addons[$count+$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
+                    $other_addons[$count+$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
                 }
             }
             if (strpos($key, 'TA') !== false && is_array($item)) {
+
                 $TAID = (int)str_replace('TA','', $key);
-                $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
-                $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
-                $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
+                foreach($item as $key => $dataAddons){
+                    $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
+                    $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
+                    $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
+                }
                 
             }
+
             $count++;
         }
+
         unset($count);
         return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict, 'rooms' => implode(',', $rooms), 'rate' => $rate, 'other_addons' => $other_addons, 'tour_addons' => $tour_addons]);
     }
@@ -590,58 +595,7 @@ class SystemReservationController extends Controller
 
         
     }
-    public function receipt($id)
-    {
-        $reservation = Reservation::findOrFail(decrypt($id));
-        $tour_menu = [];
-        $other_addons = [];
-        $tour_addons = [];
-        $rooms = [];
-        // Rooms
-        foreach($reservation->roomid as $item){
-            $rooms[$item]['no'] = Room::findOrFail($item)->room_no;
-            $rooms[$item]['name'] = Room::findOrFail($item)->room->name;
-        }
-        
-        $count = 0;
-        foreach($reservation->transaction as $key => $item){
-            if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
-                $tour_menuID = (int)str_replace('tm','', $key);
-                $tour_menu[$count]['title'] = TourMenu::find($tour_menuID)->tourMenu->title;
-                $tour_menu[$count]['type'] = TourMenu::find($tour_menuID)->type;
-                $tour_menu[$count]['pax'] = TourMenu::find($tour_menuID)->pax;
-                $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'];
-                $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
-            }
-            // Rate
-            if (strpos($key, 'rid') !== false) {
-                $rateID = (int)str_replace('rid','', $key);
-                $rate['name'] = RoomRate::find($rateID)->name;
-                $rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
-                $rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
-            }
-            if (strpos($key, 'OA') !== false && is_array($item)) {
-                $OAID = (int)str_replace('OA','', $key);
-                foreach($item as $key => $dataAddons){
-                    $other_addons[$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
-                    $other_addons[$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
-                    $other_addons[$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
-                }
-            }
-            if (strpos($key, 'TA') !== false && is_array($item)) {
-                $TAID = (int)str_replace('TA','', $key);
-                foreach($item as $key => $tourAddons){
-                    $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
-                    $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
-                    $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
-                }
-            }
-            $count++;
-        }
-        unset($count);
-        
-        return view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'tour_addons' => $tour_addons, 'other_addons' => $other_addons, 'rate' => $rate, 'rooms' => $rooms]);
-    }
+
     public function showRooms($id)
     {
         $id = decrypt($id);
@@ -755,7 +709,7 @@ class SystemReservationController extends Controller
             "Rooms: " . implode(',', $roomDetails) ."\n" . 
             "Who Approve: " . $system_user->name();
 
-            if($system_user->role() === "Manager"){
+            if($system_user->role() == "Admin"){
                 foreach($admins as $admin){
                     if(isset($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');;
                 }
@@ -875,7 +829,7 @@ class SystemReservationController extends Controller
             'body' => 'You now checked in at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
         ];
         if($updated){
-            if($this->system_user->role() === 'Manager'){
+            if($system_user->role() == "Admin"){
                 foreach($admins as $admin) {
                     if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null, 'bot2');
                 }
@@ -912,7 +866,7 @@ class SystemReservationController extends Controller
             'receipt_link' => route('reservation.receipt', encrypt($reservation->id)),
             'feedback_link' => route('reservation.feedback', encrypt($reservation->id)),
         ];   
-        if($system_user->role() === "Manager"){
+        if($system_user->role() == "Admin"){
             foreach($admins as $admin) {
                 if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
             }
@@ -994,7 +948,7 @@ class SystemReservationController extends Controller
             //         ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reserve_info->id))],
             //     ],
             // ];
-            if($system_user->role() === "Manager"){
+            if($system_user->role() == "Admin"){
                 foreach($admins as $admin) {
                     if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
                 }
@@ -1061,7 +1015,7 @@ class SystemReservationController extends Controller
         "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
         "Amount: " . $reservation->userReservation->nationality  ."\n" . 
         "Who Approve Payment: " . $system_user->name() ;
-        if($system_user->role() === "Manager"){
+        if($system_user->role() == "Admin"){
             foreach($admins as $admin) {
                 if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
             }
@@ -1100,7 +1054,7 @@ class SystemReservationController extends Controller
         "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
         "Amount: " . $reservation->userReservation->nationality  ."\n" . 
         "Who Disaprove Payment: " . $system_user->name() ;
-        if($system_user->role() === "Manager"){
+        if($system_user->role() == "Admin"){
             foreach($admins as $admin) {
                 if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
             }
@@ -1136,7 +1090,7 @@ class SystemReservationController extends Controller
             "Age: " . $reservation->age ."\n" .  
             "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
             "Who Approve Force Payment: " . $system_user->name() ;
-            if($system_user->role() === "Manager"){
+            if($system_user->role() == "Admin"){
                 foreach($admins as $user){
                     if(isset($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
                 }
@@ -1235,8 +1189,10 @@ class SystemReservationController extends Controller
             'transaction' => $transaction,
         ]);
 
-        foreach($admins as $user){
-            if(isset($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
+        if($system_user->role() !== "Admin"){
+            foreach($admins as $user){
+                if(isset($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
+            }
         }
         if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Other Add-ons for '.$reservation->userReservation->name().' was successful');
 

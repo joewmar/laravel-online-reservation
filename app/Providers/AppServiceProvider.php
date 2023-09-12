@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
             "Home" => '/', 
             "About Us" => '/aboutus', 
             "Tour" => '/tour',
-            "Contact Us" => 'contact',
+            "Contact Us" => '/contact',
         ];
         View::share('landingNavbar', $arrNavItems);
 

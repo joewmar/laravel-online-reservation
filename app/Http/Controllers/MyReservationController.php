@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Archive;
 use App\Models\Room;
 use App\Models\System;
+use App\Models\Archive;
+use App\Models\RoomRate;
+use App\Models\TourMenu;
 use App\Models\Reservation;
+use App\Models\WebContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
@@ -58,6 +61,7 @@ class MyReservationController extends Controller
         $tour_addons = [];
         $rate = [];
         $total = 0;
+
         if($reservation->roomid){
             foreach($reservation->roomid as $item){
                 $rooms[] = 'Room No.' . Room::find($item)->room_no . ' ('.Room::find($item)->room->name.')';
@@ -86,10 +90,10 @@ class MyReservationController extends Controller
             if (strpos($key, 'OA') !== false && is_array($item)) {
                 $OAID = (int)str_replace('OA','', $key);
                 foreach($item as $key => $dataAddons){
-                    $other_addons[$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
-                    $other_addons[$key]['pcs'] = $reservation->transaction['OA'.$OAID][$key]['pcs'];
-                    $other_addons[$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
-                    $other_addons[$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
+                    $other_addons[$count+$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
+                    $other_addons[$count+$key]['pcs'] = $reservation->transaction['OA'.$OAID][$key]['pcs'];
+                    $other_addons[$count+$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
+                    $other_addons[$count+$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
                 }
             }
             if (strpos($key, 'TA') !== false && is_array($item)) {
@@ -237,5 +241,59 @@ class MyReservationController extends Controller
             foreach($systemUser as $user) if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
             return redirect()->route('user.reservation.home')->with('success', 'Reschedule Request was succesfull to send. Just Wait Send Email or any Contact for Approval Request');
         }
+    }
+    public function receipt($id)
+    {
+        $reservation = Reservation::findOrFail(decrypt($id));
+        $tour_menu = [];
+        $other_addons = [];
+        $tour_addons = [];
+        $rooms = [];
+        $contacts = WebContent::all()->first()->contact['main'] ?? [];
+        // Rooms
+        foreach($reservation->roomid as $item){
+            $rooms[$item]['no'] = Room::findOrFail($item)->room_no;
+            $rooms[$item]['name'] = Room::findOrFail($item)->room->name;
+        }
+        
+        $count = 0;
+        foreach($reservation->transaction as $key => $item){
+            if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
+                $tour_menuID = (int)str_replace('tm','', $key);
+                $tour_menu[$count]['title'] = TourMenu::find($tour_menuID)->tourMenu->title;
+                $tour_menu[$count]['type'] = TourMenu::find($tour_menuID)->type;
+                $tour_menu[$count]['pax'] = TourMenu::find($tour_menuID)->pax;
+                $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'];
+                $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
+            }
+            // Rate
+            if (strpos($key, 'rid') !== false) {
+                $rateID = (int)str_replace('rid','', $key);
+                $rate['name'] = RoomRate::find($rateID)->name;
+                $rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
+                $rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
+            }
+            if (strpos($key, 'OA') !== false && is_array($item)) {
+                $OAID = (int)str_replace('OA','', $key);
+                foreach($item as $key => $dataAddons){
+                    $other_addons[$count+$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
+                    $other_addons[$count+$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
+                    $other_addons[$count+$key]['pcs'] = $reservation->transaction['OA'.$OAID][$key]['pcs'];
+                    $other_addons[$count+$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
+                }
+            }
+            if (strpos($key, 'TA') !== false && is_array($item)) {
+                $TAID = (int)str_replace('TA','', $key);
+                foreach($item as $key => $tourAddons){
+                    $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
+                    $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
+                    $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
+                }
+            }
+            $count++;
+        }
+        unset($count);
+        
+        return view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'tour_addons' => $tour_addons, 'other_addons' => $other_addons, 'rate' => $rate, 'rooms' => $rooms, 'contacts' => $contacts]);
     }
 }

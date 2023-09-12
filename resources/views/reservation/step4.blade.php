@@ -5,8 +5,8 @@
   <x-full-content>
     <section x-data="{loader: false}" class="my-10 p-5">
       <x-loader />
-      <div class="flex justify-center item- pb-10 text-center ">
-        <ul class="w-full steps steps-horizontal">
+      <div class="flex justify-center pb-10 text-center ">
+        <ul class="w-full text-xs md:text-sm steps steps-horizontal">
           <li data-content="✓" class="step step-primary">Dates</li>
           <li data-content="✓" class="step step-primary">Tour Menu</li>
           <li data-content="✓" class="step step-primary">Your Details</li>
@@ -202,29 +202,11 @@
                     <label for="Phone" class="block text-xs font-medium text-gray-700">
                       Phone Number
                     </label>
-    
                     <div class="text-neutral text-xl font-medium">{{$uinfo['contact']}}</div>
                   </div>
-                  @if(!auth('web')->user()->valid_id)
-                    <div class="col-span-6">
-                      <div class="mb-5 py-4 w-full flex flex-col justify-center items-center">
-                        <div class="rounded">
-                          <img id="show_img" src="{{asset('images/logo.png')}}" alt="Valid ID"  class="object-center w-80 shadow-lg" />
-                        </div> 
-                      </div>
-                      <x-file-input id="valid_id" name="valid_id" placeholder="Send Valid ID" />
-                    </div>
-                  @else
-                    <div class="col-span-6">
-                      <div class="mb-5 py-4 w-full flex flex-col justify-center items-center">
-                        <div class="rounded">
-                          <img id="show_img" src="{{asset('storage/'. auth('web')->user()->valid_id)}}" alt="Valid ID"  class="object-center w-80 shadow-lg" />
-                        </div> 
-                      </div>
-                      <x-file-input id="valid_id" name="valid_id" placeholder="Optional: Update your Valid ID" />
-                    </div>
-                  @endif
-    
+                  <div class="col-span-6">
+                    <x-drag-drop id="valid_id" name="valid_id" fileValue="{{auth('web')->user()->valid_id ? route('private.image', ['folder' => explode('/', auth('web')->user()->valid_id)[0], 'filename' => explode('/',auth('web')->user()->valid_id)[1]]) : ''}} " />
+                  </div>
                   <div class="col-span-6 hidden md:grid grid-cols-2 gap-4 ">
                     <a href="{{route('reservation.details')}}" class="btn btn-ghost w-full">
                       Back

@@ -317,7 +317,7 @@ Route::prefix('system')->name('system.')->group(function(){
         Route::prefix('rooms')->name('rooms.')->controller(RoomSettingController::class)->middleware('can:admin')->group(function(){
                 Route::get('/','index')->name('home');
 
-                Route::get('/create', )->name('create');
+                Route::get('/create', 'create')->name('create');
                 Route::post('/store', 'store')->name('store');
                 
                 // Room Rate Setting
@@ -351,4 +351,4 @@ Route::prefix('system')->name('system.')->group(function(){
 
 });
 
-Route::get('reservation/{id}/receipt', [SystemReservationController::class, 'receipt'])->name('reservation.receipt');
+Route::get('reservation/{id}/receipt', [MyReservationController::class, 'receipt'])->name('reservation.receipt');

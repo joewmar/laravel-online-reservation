@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->json('hero')->nullable();
             $table->json('gallery')->nullable();
+            $table->json('tour')->nullable();
             $table->json('contact')->nullable();
             $table->json('payment')->nullable();
-            $table->boolean('operation');
+            $table->boolean('operation')->default(true);
             $table->date('from')->nullable();
             $table->date('to')->nullable();
             $table->text('reason')->nullable();

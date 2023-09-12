@@ -12,10 +12,6 @@ class RoomList extends Model
     protected $fillable = [
         'image',
         'name',
-        'type',
-        'amenities',
-        'description',
-        'min_occupancy',
         'max_occupancy',
         'location',
         'many_room',
