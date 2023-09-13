@@ -157,6 +157,14 @@ class SystemController extends Controller
             return back()->withErrors(['username' => 'Invalid Credentials'])->onlyInput('username');
         }
     }
+    public function notifications(){
+
+        return view('system.notification', ['activeSb' => 'Notification', 'notifs' => auth('system')->user()->unreadNotifications]);
+    }
+    public function markAsRead(){
+        Auth::guard('system')->user()->unreadNotifications->markAsRead();
+        return redirect()->back();
+    }
     public function logout(Request $request){
         Auth::guard('system')->logout();
         $request->session()->invalidate();

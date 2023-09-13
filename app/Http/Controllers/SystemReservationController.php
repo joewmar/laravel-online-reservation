@@ -26,6 +26,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservationConfirmation;
 use App\Models\RoomReserve;
 use App\Models\User;
+use App\Notifications\SystemNotification;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 
 class SystemReservationController extends Controller
@@ -709,11 +711,16 @@ class SystemReservationController extends Controller
             "Rooms: " . implode(',', $roomDetails) ."\n" . 
             "Who Approve: " . $system_user->name();
 
-            if($system_user->role() == "Admin"){
+            if($system_user->role() !== "Admin"){
                 foreach($admins as $admin){
-                    if(isset($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');;
+                    if(isset($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');
+
                 }
+                Notification::send($admins, new SystemNotification('Employee Action from '.$system_user->name().': Approved Reservation', $text, route('system.reservation.show', encrypt($reservation->id))));
+
             }
+
+
             $text = null;
             $url = null;
             if($reservation->payment_method == "Gcash"){
@@ -829,10 +836,12 @@ class SystemReservationController extends Controller
             'body' => 'You now checked in at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
         ];
         if($updated){
-            if($system_user->role() == "Admin"){
+            if($system_user->role() != "Admin"){
                 foreach($admins as $admin) {
                     if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null, 'bot2');
                 }
+                Notification::send($admins, new SystemNotification('Employee Action from '.$system_user->name().': Approved Reservation', $text, route('system.reservation.show', encrypt($reservation->id))));
+
             }
             Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
             unset($text, $details);
@@ -866,10 +875,12 @@ class SystemReservationController extends Controller
             'receipt_link' => route('reservation.receipt', encrypt($reservation->id)),
             'feedback_link' => route('reservation.feedback', encrypt($reservation->id)),
         ];   
-        if($system_user->role() == "Admin"){
+        if($system_user->role() !== "Admin"){
             foreach($admins as $admin) {
                 if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
             }
+            Notification::send($admins, new SystemNotification('Employee Action from '.$system_user->name().': Approved Reservation', $text, route('system.reservation.show', encrypt($reservation->id))));
+
         }
         Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.checkout-mail', $details['title']));
         unset($text, $details);
@@ -948,10 +959,12 @@ class SystemReservationController extends Controller
             //         ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reserve_info->id))],
             //     ],
             // ];
-            if($system_user->role() == "Admin"){
+            if($system_user->role() != "Admin"){
                 foreach($admins as $admin) {
                     if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
                 }
+                Notification::send($admins, new SystemNotification('Employee Action from '.$system_user->name().': Approved Reservation', $text, route('system.reservation.show', encrypt($reservation->id))));
+
             }    
             $details = [
                 'name' => $reservation->userReservation->name(),
@@ -1015,10 +1028,12 @@ class SystemReservationController extends Controller
         "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
         "Amount: " . $reservation->userReservation->nationality  ."\n" . 
         "Who Approve Payment: " . $system_user->name() ;
-        if($system_user->role() == "Admin"){
+        if($system_user->role() != "Admin"){
             foreach($admins as $admin) {
                 if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
             }
+            Notification::send($admins, new SystemNotification('Employee Action from '.$system_user->name().': Approved Reservation', $text, route('system.reservation.show', encrypt($reservation->id))));
+
         }   
         unset($downpayment);
         return redirect()->route('system.reservation.show.online.payment', encrypt($reservation->id))->with('success', 'Approved payment successful');
@@ -1054,10 +1069,12 @@ class SystemReservationController extends Controller
         "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
         "Amount: " . $reservation->userReservation->nationality  ."\n" . 
         "Who Disaprove Payment: " . $system_user->name() ;
-        if($system_user->role() == "Admin"){
+        if($system_user->role() != "Admin"){
             foreach($admins as $admin) {
                 if($admin->telegram_chatID != null) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, null,'bot2');
             }
+            Notification::send($admins, new SystemNotification('Employee Action from '.$system_user->name().': Approved Reservation', $text, route('system.reservation.show', encrypt($reservation->id))));
+
         }  
         Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
     }
@@ -1090,7 +1107,7 @@ class SystemReservationController extends Controller
             "Age: " . $reservation->age ."\n" .  
             "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
             "Who Approve Force Payment: " . $system_user->name() ;
-            if($system_user->role() == "Admin"){
+            if($system_user->role() != "Admin"){
                 foreach($admins as $user){
                     if(isset($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, null, 'bot2');
                 }

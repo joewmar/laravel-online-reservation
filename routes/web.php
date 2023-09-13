@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\System;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\TourSettingController;
 use App\Http\Controllers\MyReservationController;
 use App\Http\Controllers\CreateReservationController;
 use App\Http\Controllers\SystemReservationController;
+use App\Notifications\SystemNotification;
 
 /*
 |--------------------------------------------------------------------------
@@ -133,8 +135,14 @@ Route::prefix('system')->name('system.')->group(function(){
     });
     Route::middleware(['auth:system','preventBackhHistory'])->group(function(){
         Route::post('/logout', [SystemController::class, 'logout'])->name('logout');
+        Route::get('/notifications', [SystemController::class, 'notifications'])->name('notifications');
+        Route::get('/notifications/mark-as-read', [SystemController::class, 'markAsRead'])->name('notifications.mark-as-read');
 
         Route::get('/', [SystemHomeController::class, 'index'])->name('home');
+        // Route::get('/', function(){
+        //     System::find(Auth::user()->id)->notify(new SystemNotification('NOtification successful;l'));
+        //     dd('Good sa notification');
+        // })->name('home');
         Route::prefix('reservation')->name('reservation.')->group(function(){
 
             Route::controller(CreateReservationController::class)->group(function (){
