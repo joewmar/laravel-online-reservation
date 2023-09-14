@@ -1140,7 +1140,7 @@ class SystemReservationController extends Controller
             'tour_menus' => $tour_menu ?? [],
             'temp_tour' => $temp ?? [],
             'addons_list' => Addons::all(),
-            'user_days' => $reservation->getNoDays(),
+            'user_days' => $reservation->getNoDaysInToday(),
         ]);
     }
     public function updateAddons(Request $request, $id){

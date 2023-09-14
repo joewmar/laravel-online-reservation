@@ -417,6 +417,26 @@ class DatabaseSeeder extends Seeder
                     'fbuser' => 'https://www.facebook.com/p/Alvin-and-Angie-Bognot-mt-Pinatubo-Guesthouse-and-Tours-100057519735244',
                 ],
             ],
+            'payment' => [
+                "gcash" => [
+                    [
+                        "name" => "Juan Dela Cruz",
+                        "number" => "09123456789",
+                        "qrcode" => "ref_gcash/gcash.jpg",
+                        "priority" => true
+                    ],
+                ],
+                "paypal" => [
+                    [
+                        "name" => "Juan Dela Cruz",
+                        "email" => "delacruz@email.com",
+                        "image" => "ref_paypal/reciepient-paypal.png",
+                        "number" => "09147258369",
+                        "priority" => true,
+                        "username" => "delajuan.cruz"
+                    ]
+                ]
+            ]
         ]);
 
     }

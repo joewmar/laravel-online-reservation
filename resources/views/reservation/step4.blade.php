@@ -205,7 +205,7 @@
                     <div class="text-neutral text-xl font-medium">{{$uinfo['contact']}}</div>
                   </div>
                   <div class="col-span-6">
-                    <x-drag-drop id="valid_id" name="valid_id" fileValue="{{auth('web')->user()->valid_id ? route('private.image', ['folder' => explode('/', auth('web')->user()->valid_id)[0], 'filename' => explode('/',auth('web')->user()->valid_id)[1]]) : ''}} " />
+                    <x-drag-drop id="valid_id" name="valid_id" fileValue="{{auth('web')->user()->valid_id ? route('private.image', ['folder' => explode('/', auth('web')->user()->valid_id)[0], 'filename' => explode('/',auth('web')->user()->valid_id)[1]]) : asset('images/logo.png')}} " title="Upload Legit ID" />
                   </div>
                   <div class="col-span-6 hidden md:grid grid-cols-2 gap-4 ">
                     <a href="{{route('reservation.details')}}" class="btn btn-ghost w-full">

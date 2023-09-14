@@ -44,10 +44,10 @@
       <div class="dropdown dropdown-end">
         <label tabindex="0" class="btn btn-ghost btn-circle avatar">
           <div class="w-10 rounded-full">
-            @if(filter_var(auth('web')->user()->avatar ?? '', FILTER_VALIDATE_URL))
-                <img src="{{auth('web')->user()->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
-            @elseif(auth('web')->user()->avatar ?? false)
-                <img src="{{asset('storage/'. auth('web')->user()->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
+            @if(filter_var(auth('system')->user()->avatar ?? '', FILTER_VALIDATE_URL))
+                <img src="{{auth('system')->user()->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
+            @elseif(auth('system')->user()->avatar ?? false)
+                <img src="{{asset('storage/'. auth('system')->user()->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
             @else
                 <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
             @endif

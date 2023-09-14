@@ -32,7 +32,7 @@
 @endphp
 
 <x-landing-layout noFooter>
-  <section
+  <section class="w-full"
         x-data="{
           @if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at']) && $TourInfo['at'] != 'Room Type')
             filterOpen: false, 
@@ -70,7 +70,6 @@
               this.alertType = 'error';
               this.message = `${titleValue} was already added`;
             }
-            console.log(this.carts);
 
           },
           removeItemCart(id, title) {
@@ -90,17 +89,17 @@
         }"
         x-cloak>
         <x-loader />
-    <div x-show="alert" id="close" class="fixed top-0 flex justify-center z-[100] w-full" x-init="setTimeout(() => { alert = false }, 5000)">
-      <div :class="alertType == 'error' ? 'alert-error' : 'alert-success'" class="w-full alert shadow-md">
-          <i :class="alertType == 'error' ? 'fa-solid fa-circle-exclamation' : 'fa-solid fa-circle-check'" class="text-xl"></i>        
-          <div>
-              <span class="text-md font-semibold" x-text="message"></span>
-          </div>
-          <button x-on:click="alert = false" class=" btn btn-sm md:btn-circle btn-ghost">
-              <i class="hidden md:inline fa-solid fa-xmark text-md"></i>
-              <span class="inline md:hidden">CLOSE</span>
-          </button>
-      </div>
+    <div x-show="alert" id="close" class="fixed left-0 top-0 flex justify-center z-[100] w-full" x-effect="setTimeout(() => { alert = false, alertType = '', message = '' }, 5000)">
+        <div :class="alertType == 'error' ? 'alert-error' : 'alert-success'" class="alert shadow-md">
+            <i :class="alertType == 'error' ? 'fa-solid fa-circle-exclamation' : 'fa-solid fa-circle-check'" class="text-xl"></i>        
+            <div>
+                <span class="text-md font-semibold" x-text="message"></span>
+            </div>
+            <button x-on:click="alert = false" class=" btn btn-sm md:btn-circle btn-ghost">
+                <i class="hidden md:inline fa-solid fa-xmark text-md"></i>
+                <span class="inline md:hidden">CLOSE</span>
+            </button>
+        </div>
     </div>
     <div class="mx-auto max-w-screen-md md:flex flex-col justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8" >
       <div class="flex justify-center item- pb-10 text-center ">
@@ -299,14 +298,14 @@
                                                   @endif
                                                 @else
                                                   <div class="w-full h-full">
-                                                    <input id="{{$TourInfo['tpx'] == $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
-                                                    <label for="{{$TourInfo['tpx'] == $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
+                                                    <input id="{{$TourInfo['tpx'] >= $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
+                                                    <label for="{{$TourInfo['tpx'] >= $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->price}}'" :class="price == '{{$menu->price}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
                                                 @endif
                                                       <div class="flex items-center justify-between">
-                                                        <p class="text-neutral" x-ref="refType{{$list_count}}">{{$menu->type}} ({{$menu->pax}} guest)</p>
+                                                        <p class="text-neutral" x-ref="refType{{$menu->id}}">{{$menu->type}} ({{$menu->pax}} guest)</p>
                                                         <i class="hidden text-primary fa-solid fa-square-check"></i>
                                                       </div>
-                                                      <p class="mt-1 text-neutral" x-ref="priceRef{{$list_count}}">P {{number_format($menu->price, 2)}}</p>
+                                                      <p class="mt-1 text-neutral" x-ref="priceRef{{$menu->id}}">P {{number_format($menu->price, 2)}}</p>
                                                       @if(count($list->tourMenuLists) !== 1)
                                                         @if($TourInfo['tpx'] > $menu->pax && $menu_count !== count($list->tourMenuLists))
                                                             <p class="absolute text-error text-xs">Invalid guest count for this price.</p>
@@ -321,11 +320,14 @@
                                                   </div>
                                             @endforeach
                                       </div>
-                                      <div x-show="price" x-transition.duration.500ms>
-                                        <label for="{{$user_days < $list->no_day ? '' : Str::camel($list->title)}}"
-                                        @click=" addToCart(price, $refs.titleRef{{$list_count}}.innerText, $refs.refType{{$list_count}}.innerText, $refs.priceRef{{$list_count}}.innerText)" 
-                                        class="btn btn-primary float-right">Add to Cart</label>
-                                      </div>
+                                      @foreach ($list->tourMenuLists as $menu)
+
+                                          <template x-if="price == {{$menu->id}}">
+                                            <label for="{{$user_days < $list->no_day ? '' : Str::camel($list->title)}}" @click=" addToCart(price, $refs.titleRef{{$list_count}}.innerText, $refs.refType{{$menu->id}}.innerText, $refs.priceRef{{$menu->id}}.innerText)" class="btn btn-primary float-right">
+                                              Add to Cart
+                                            </label>
+                                          </template>
+                                      @endforeach
                                     </x-modal>
                                   </div>
                                 </div>

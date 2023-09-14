@@ -109,7 +109,7 @@ class ReservationController extends Controller
         elseif($request['accommodation_type'] == 'Overnight'){
             $validator = Validator::make($request->all('check_in','check_out', 'accommodation_type', 'pax'), [
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)->format('Y-m-d')],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
             ], [
@@ -144,7 +144,7 @@ class ReservationController extends Controller
             session(['ck' => false]);
             return redirect()->route('reservation.date')
             ->withErrors($validator)
-            ->withInput();
+            ->withInput($validator->getData());
         }
 
         $validator = $validator->validated();
@@ -192,7 +192,7 @@ class ReservationController extends Controller
         elseif($request['accommodation_type'] === 'Overnight'){
             $validated = $request->validate([
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)->format('Y-m-d')],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
             ], [
@@ -324,7 +324,7 @@ class ReservationController extends Controller
         elseif($request['accommodation_type'] === 'Overnight'){
             $validated = $request->validate([
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)->format('Y-m-d')],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
                 'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
