@@ -54,22 +54,6 @@ class ReservationController extends Controller
     }
 
     public function date(Request $request){
-        $dateList = [];
-        if(session()->has('rinfo')){
-            $dateList = decryptedArray(session('rinfo'));
-            return view('reservation.step1', ['cin' => $dateList['cin'], 'cout' => $dateList['cout'], 'at' => $dateList['at'], 'px' => $dateList['px']]);
-        }
-        if($request->has(['cin', 'cout', 'px', 'at', 'tpx', 'py', 'ck'])){
-            $reserve = [
-              "cin" => request('cin'),
-              "cout" => request('cout'),
-              "px" => request('px'),
-              "at" => request('at'),
-            ];
-            $reserve =  decryptedArray($reserve);
-            return view('reservation.step1', ['cin' => $reserve['cin'], 'cout' => $reserve['cout'], 'at' => $reserve['at'], 'px' => $reserve['px']]);
-
-        }
         return view('reservation.step1');
     }
     public function dateCheck(Request $request){

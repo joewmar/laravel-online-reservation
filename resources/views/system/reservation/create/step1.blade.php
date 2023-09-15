@@ -1,11 +1,22 @@
 @php
     $roomInfo = [
-        'at' => isset(session('rinfo')['at']) ? decrypt(session('rinfo')['at']) : old('accommodation_type'),
-        'rm' => isset(session('rinfo')['rm']) ? decrypt(session('rinfo')['rm']) : old('room_pax'),
-        'rt' => isset(session('rinfo')['rt']) ? decrypt(session('rinfo')['rt']) : old('room_rate'),
-        'cin' => isset(session('rinfo')['cin']) ? decrypt(session('rinfo')['cin']) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
-        'cout' => isset(session('rinfo')['cout']) ? decrypt(session('rinfo')['cout']) : old('check_out'),
+        'at' =>    request('at')  ? decrypt(request('at')) : old('accommodation_type'),
+        'px' =>    request('px')  ? decrypt(request('px')): old('pax'),
+        'rm' =>    request('rm')  ? decrypt(request('rm')): old('room_pax'),
+        'rt' =>    request('rt')  ? decrypt(request('rt')) : old('room_rate'),
+        'cin' =>   request('cin') ? decrypt(request('cin')) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
+        'cout' =>  request('cout') ? decrypt(request('cout')) : old('check_out'),
     ];
+    if(session()->has('rinfo')){
+        $roomInfo = [
+            'at' => isset(session('rinfo')['at']) ? decrypt(session('rinfo')['at']) : old('accommodation_type'),
+            'px' => isset(session('rinfo')['px']) ? decrypt(session('rinfo')['px']) : old('pax'),
+            'rm' => isset(session('rinfo')['rm']) ? decrypt(session('rinfo')['rm']) : old('room_pax'),
+            'rt' => isset(session('rinfo')['rt']) ? decrypt(session('rinfo')['rt']) : old('room_rate'),
+            'cin' => isset(session('rinfo')['cin']) ? decrypt(session('rinfo')['cin']) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
+            'cout' => isset(session('rinfo')['cout']) ? decrypt(session('rinfo')['cout']) : old('check_out'),
+        ];
+    }
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
 
 @endphp
@@ -52,12 +63,12 @@
                         </span>
                     </label>
                 </div> 
-                <x-input id="pax" name="pax" placeholder="Number of Guest" />
+                <x-input id="pax" name="pax" placeholder="Number of Guest" value="{{$roomInfo['px']}}"/>
                 <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one" value="{{$roomInfo['cin'] }}"/>
                 <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{$roomInfo['cout']}}" />
             </div>
 
-            <div x-data="{rooms: {{old('room_pax') ? '[' . implode(',', array_keys(old('room_pax'))) .']' : '[]'}}}" class="grid grid-cols-2 md:grid-cols-4 gap-5 w-full">
+            <div x-data="{rooms: {{$roomInfo['rm'] ? '[' . implode(',', array_keys($roomInfo['rm'])) .']' : '[]'}}}" class="grid grid-cols-2 md:grid-cols-4 gap-5 w-full">
                 @forelse ($rooms as $key => $item)
                     <div>
                         <input x-ref="RoomRef" x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" x-on:checked="rooms.includes({{$item->id}})" />
@@ -65,7 +76,7 @@
                             <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 {{$item->availability == 1 ? 'border-red-600' : 'border-primary'}} border-primary cursor-pointer">
                                 <span class="absolute inset-x-0 bottom-0 h-3 {{$item->availability == 1 ? 'bg-red-600' : 'bg-primary'}} flex flex-col items-center justify-center">
                                     <h4 class="text-primary-content hidden font-medium w-full text-center">Room No. {{$item->room_no}} Selected</h4> 
-                                    <div  x-data="{count: {{isset(old('room_pax')[$item->id]) ? (int)old('room_pax')[$item->id] : 1}}}" class="join hidden">
+                                    <div  x-data="{count: {{isset($roomInfo['rm'][$item->id]) ? (int)$roomInfo['rm'][$item->id] : 1}}}" class="join hidden">
                                         <button  @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
                                         <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$item->room->max_occupancy}}"  readonly/>
                                         <button  @click="count < {{$item->room->max_occupancy}} ? count++ : count = {{$item->room->max_occupancy}}"  type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>

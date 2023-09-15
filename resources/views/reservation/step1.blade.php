@@ -1,5 +1,18 @@
 @php
+    $dateInfo = [
+        'at' =>    request('at')  ? decrypt(request('at')) : old('accommodation_type'),
+        'cin' =>   request('cin') ? decrypt(request('cin')) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
+        'cout' =>  request('cout') ? decrypt(request('cout')) : old('check_out'),
+    ];
+    if(session()->has('rinfo')){
+        $dateInfo = [
+            'at' => isset(session('rinfo')['at']) ? decrypt(session('rinfo')['at']) : old('accommodation_type'),
+            'cin' => isset(session('rinfo')['cin']) ? decrypt(session('rinfo')['cin']) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
+            'cout' => isset(session('rinfo')['cout']) ? decrypt(session('rinfo')['cout']) : old('check_out'),
+        ];
+    }
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
+
 @endphp
 <x-landing-layout noFooter>
     <x-full-content>
@@ -14,11 +27,11 @@
                     <h2 class="font-bold text-3xl uppercase">Choose your Date</h2>
                 </div>
                 <div class="mt-8">
-                    <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$at ?? old('accommodation_type')}}" />
+                    <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$dateInfo['at']}}" />
                     <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-3">
-                        <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$cin ?? (old('check_in') ??Carbon\Carbon::now()->addDays(2)->format('Y-m-d') )}}"/>
-                        <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" value="{{$cout ?? ''}}" />
-                        <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$px ?? '1'}}"/>
+                        <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$dateInfo['cin']}}"/>
+                        <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" value="{{$dateInfo['cout']}}" />
+                        <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$dateInfo['cout']}}"/>
                     </div>
                 </div>
 

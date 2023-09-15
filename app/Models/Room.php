@@ -58,13 +58,14 @@ class Room extends Model
     public function getVacantPax()
     {
         $countPax = 0;
+        $vacant = $this->room->max_occupancy;
         if(isset($this->attributes['customer'])){
             foreach (json_decode($this->attributes['customer'], true) as $key => $item) {
                 $countPax += $item;
             }
             $vacant = abs($countPax - $this->room->max_occupancy);
         }
-        return $vacant ?? 0;
+        return $vacant;
     }
     public function removeCustomer($id){
         $customer = json_decode($this->attributes['customer'], true);

@@ -91,10 +91,10 @@ function checkAvailRooms(int $pax, $check_in, $check_out)
 {
     $isFull = false;
     $rooms = Room::all();
+    $vacantAll = 0;
     if(Room::checkAllAvailable()){
         foreach($rooms as $value){
-            if($pax > $value->room->max_occupancy) $isFull = true;
-            if($pax > $value->getVacantPax() && $pax < $value->getVacantPax()) $isFull = true;
+            $vacantAll += $value->getVacantPax();
         }
     }
     else{
@@ -110,7 +110,9 @@ function checkAvailRooms(int $pax, $check_in, $check_out)
                 else $isFull = false;
             }
         }
+        
     }
+    $isFull = !($vacantAll >= $pax);
     return $isFull;
 
 }
