@@ -1,7 +1,7 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
     $arrPayment = ['Walk-in', 'Other Online Booking', 'Gcash', 'Paypal'];
-    $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Previous', 'Previous', 'Reshedule', 'Cancel', 'Disaprove'];
+    $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Check-out'];
     $TourInfo = [
         "rt" => request()->has('rt') ? request('rt') : null,
         "rm" => request()->has('rm') ? request('rm') : null,

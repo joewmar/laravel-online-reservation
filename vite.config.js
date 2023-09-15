@@ -16,6 +16,7 @@ export default defineConfig({
                 'resources/js/reservation-calendar.js',
                 'resources/js/payment-image.js',
                 'resources/js/camera.js',
+                'resources/js/phone.js',
             ],
             refresh: true,
         }),

@@ -11,7 +11,7 @@
 @endphp
 <x-landing-layout>
   <div class="flex w-full justify-center">
-    <div class="card w-full md:w-2/5 bg-base-100 rounded-box my-10">
+    <div class="card w-full md:w-3/6 bg-base-100 rounded-box my-10">
       <div class="card-body">
         <h2 class="mb-1 font-bold text-xl md:text-3xl text-center">Let's Create Account!</h2>
         <div class="flex justify-center gap-5">

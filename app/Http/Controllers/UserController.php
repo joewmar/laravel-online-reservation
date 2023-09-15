@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Propaganistas\LaravelPhone\PhoneNumber;
+use Propaganistas\LaravelPhone\Rules\Phone;
 
 class UserController extends Controller
 {
@@ -44,7 +46,8 @@ class UserController extends Controller
             'birthday' => ['required', 'date'],
             'country' => ['required', 'min:3'],
             'nationality' => ['required', 'min:3'],
-            'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
+            'contact_code' => ['required'],
+            'contact' => ['required', (new Phone)->international()->country(Str::upper($request['contact_code']))],
             'email' => ['required', 'email', Rule::when($user->email !== $request['email'], [Rule::unique('users', 'email')])],
         ], [
             'contact.min' => 'Contact number must be valid',
@@ -57,6 +60,10 @@ class UserController extends Controller
         
         if($validated){
             // Hash password
+            $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
+
+            $validated['contact'] = $phone->formatInternational(); 
+
             $updated = $user->update($validated);
             // // Create User
             if($updated) return redirect()->route('profile.home')->with('success', 'Your Information was updated');
@@ -101,7 +108,8 @@ class UserController extends Controller
             'birthday' => ['required', 'date'],
             'country' => ['required', 'min:3'],
             'nationality' => ['required'],
-            'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
+            'contact_code' => ['required'],
+            'contact' => ['required', (new Phone)->international()->country(Str::upper($request['contact_code']))],
             'email' => ['required', 'email', Rule::unique('users', 'email')],
             'password' => ['required', 'confirmed', Password::min(8)->symbols()]
         ], [
@@ -197,11 +205,14 @@ class UserController extends Controller
                 'birthday' => ['required', ' date'],
                 'country' => ['required'],
                 'nationality' => ['required'],
-                'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
+                'contact_code' => ['required'],
+                'contact' => ['required', (new Phone)->international()->country(Str::upper($request['contact_code']))],
             ], [
                 'contact.min' => 'Contact number must be valid',
                 'required' => 'Need to fill up your :attribute',
             ]);
+
+
             $user = session('ginfo'); 
             $validated['google_id'] = $user['google_id'];
             $validated['avatar'] = $user['avatar'];
@@ -209,6 +220,8 @@ class UserController extends Controller
             $validated['last_name'] = $user['last_name'];
             $validated['email'] = $user['email'];
             $validated['password'] = Str::password();
+            $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
+            $validated['contact'] = $phone->formatInternational(); 
             $newUser = User::create($validated);
             if($newUser){
                 session()->forget('ginfo');
@@ -239,7 +252,8 @@ class UserController extends Controller
                 'birthday' => ['required', ' date'],
                 'country' => ['required'],
                 'nationality' => ['required'],
-                'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
+                'contact_code' => ['required'],
+                'contact' => ['required', (new Phone)->international()->country(Str::upper($request['contact_code']))],
                 'email' => [Rule::when(isset($request['email']), [Rule::unique('users', 'email')])],
             ], [
                 'contact.min' => 'Contact number must be valid',
@@ -251,6 +265,9 @@ class UserController extends Controller
             $validated['avatar'] = $user['avatar'];
             if(isset($user['email'])) $validated['email'] = $user['email'];
             $validated['password'] = Str::password();
+            $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
+            $validated['contact'] = $phone->formatInternational(); 
+
             $newUser = User::create($validated);
             if($newUser){
                 session()->forget('ginfo');
@@ -259,7 +276,7 @@ class UserController extends Controller
             }
             else{
                 return back()->with('error', 'Something Wrong')->withInput( $validated);
-            }
+            }   
            
         }
         else redirect()->route('google.redirect');

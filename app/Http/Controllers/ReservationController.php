@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Notifications\Notification;
+use Propaganistas\LaravelPhone\PhoneNumber;
+use Propaganistas\LaravelPhone\Rules\Phone;
 use AmrShawky\LaravelCurrency\Facade\Currency;
 
 
@@ -35,12 +37,15 @@ class ReservationController extends Controller
     public function __construct()
     {
         $this->user = auth('web');
+        if(Str::contains(URL::previous(), route('home')) || Str::contains(URL::previous(), route('system.home'))) session()->forget('rinfo');
+
         $this->middleware(function ($request, $next) {
             // dd($this->user->user()->id);
             $existingReservation = Reservation::where('user_id', $this->user->user()->id)->where('status', '<', 3)->first();
 
             if ($existingReservation) {
                 session(['ck' => false]);
+                session()->forget('rinfo');
                 return redirect()->route('home')->with('error', "Sorry, you can only make one reservation.");
             }
 
@@ -68,9 +73,7 @@ class ReservationController extends Controller
         return view('reservation.step1');
     }
     public function dateCheck(Request $request){
-        if(Str::contains(URL::previous(), route('home'))){
-            session()->forget('rinfo');
-        }
+
         // Check in (startDate to endDate) trim convertion
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
@@ -96,7 +99,7 @@ class ReservationController extends Controller
         if($request['accommodation_type'] == 'Day Tour'){
             $validator = Validator::make($request->all('check_in','check_out', 'accommodation_type', 'pax'), [
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after_or_equal:'.Carbon::now()->addDays(1)],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in'], 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
             ], [
@@ -123,7 +126,7 @@ class ReservationController extends Controller
         elseif($request['accommodation_type'] == 'Room Only'){
             $validator = Validator::make($request->all('check_in','check_out', 'accommodation_type', 'pax'), [
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in']],
                 'accommodation_type' => 'required',
                 'pax' => ['required', 'numeric', 'min:1'],
             ], [
@@ -153,7 +156,7 @@ class ReservationController extends Controller
             return redirect()->route('reservation.date')->with('success',"Your choose date is now available, Let s proceed if you will make reservation")->withInput($validator);
         }
     }
-    // Data Check
+    // Date Store
     public function dateStore(Request $request){
         // Check in (startDate to endDate) trim convertion
         if(str_contains($request['check_in'], 'to')){
@@ -208,7 +211,7 @@ class ReservationController extends Controller
         elseif($request['accommodation_type'] === 'Room Only'){
             $validated = $request->validate([
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
             ], [
@@ -341,7 +344,7 @@ class ReservationController extends Controller
         elseif($request['accommodation_type'] === 'Room Only'){
             $validated = $request->validate([
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
                 'payment_method' => ['required'],
@@ -443,11 +446,15 @@ class ReservationController extends Controller
             'birthday' => ['required', 'date'],
             'country' => ['required', 'min:1'],
             'nationality' => ['required'],
-            'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
+            'contact_code' => ['required'],
+            'contact' => ['required', (new Phone)->international()->country(Str::upper($request['contact_code']))],
             'email' => Rule::when($user->email === $request['email'], ['required', 'email'] ,['required', 'email',  Rule::unique('users', 'email')]),
         ]);
+        $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
+        $validated['contact'] = $phone->formatInternational(); 
+
         $user->update($validated);
-        if($user) return redirect()->route('reservation.details')->with('success', $user->name() . ' was updated!');
+        if($user) return redirect()->route('reservation.details')->with('success', $user->name() . ' information was updated');
     }
     public function detailsStore(){
         $user = User::find(auth('web')->user()->id);

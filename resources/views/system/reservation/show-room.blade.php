@@ -31,7 +31,7 @@
                 @csrf
                 @method('PUT')
                 <div class="form-control w-full">
-                    <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
+                    <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
                             <select name="room_rate" id="room_rate" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
                             <option value="" disabled selected>Please select</option>
                             @foreach ($rates as $key => $rate)
@@ -61,7 +61,7 @@
                         </span>
                     </label>
                 </div>          
-                <div x-data="{rooms: {{old('room_pax') ? '[' . implode(',', array_keys(old('room_pax'))) .']' : '[]'}}}" class="flex flex-wrap justify-center md:justify-normal flex-grow m-5 gap-5 w-full">
+                <div x-data="{rooms: {{old('room_pax') ? '[' . implode(',', array_keys(old('room_pax'))) .']' : '[]'}}}" class="grid grid-cols-2 md:grid-cols-4 gap-5 w-full">
                     @forelse ($rooms as $key => $item)
                         <div>
                             <input x-ref="RoomRef" x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" x-on:checked="rooms.includes({{$item->id}})" />

@@ -74,7 +74,7 @@
                     @csrf
                 <h2 class="text-2xl mb-5 font-bold">Why Disaprove Request of {{$r_list->userReservation->name()}}</h2>
                 <div class="form-control w-full">
-                    <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
+                    <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
                         <select x-model="reason" name="reason" id="reason" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
                             <option value="" disabled selected>Please select</option>
                             <option value="No Room Available">No Room Available</option>

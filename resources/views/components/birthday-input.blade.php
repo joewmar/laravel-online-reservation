@@ -1,8 +1,9 @@
 @props(['name' => 'birthday', 'id' => 'birthday', 'disabled' => false, 'value' => old('birthday')])
 <div class="form-control w-full {{$disabled ? 'disabledAll opacity-50' : 'opacity-100'}}">
-    <label for="{{$id}}" class="w-full relative flex justify-start rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error($name) ring-1 ring-error border-error @enderror">
-        <div x-data="{ months: [], days: [], years: [], selectedMonth: '', selectedDay: '', selectedYear: '', bdy: '{{$value}}' }" x-init="
-        months = {
+    <label for="{{$id}}" class="w-full relative flex justify-start rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error($name) ring-1 ring-error border-error @enderror">
+        <div x-data="{ months: [], days: [], years: [], selectedMonth: '{{!empty($value) ? explode('-',$value)[1] : ''}}', selectedDay: '{{!empty($value) ? explode('-',$value)[2] : ''}}', selectedYear: '{{!empty($value) ? explode('-',$value)[0] : ''}}', bdy: '{{$value}}' }" 
+        x-init=" 
+            months = {
             '1': 'January', 
             '2': 'February', 
             '3': 'March', 

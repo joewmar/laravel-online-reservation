@@ -637,8 +637,6 @@ class SystemReservationController extends Controller
             // dd('Work sa main reserved rooms');
         }
         else{
-            // dd('Work sa other reserved rooms');
-
             $r_lists = Reservation::whereBetween('check_in', [$reservation->check_in, $reservation->check_out])
                                 ->orWhereBetween('check_out', [$reservation->check_in, $reservation->check_out])
                                 ->pluck('id');

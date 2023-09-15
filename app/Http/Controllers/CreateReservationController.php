@@ -12,10 +12,12 @@ use App\Models\TourMenu;
 use App\Models\Reservation;
 use App\Models\UserOffline;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
@@ -25,6 +27,8 @@ class CreateReservationController extends Controller
     public function __construct()
     {
         $this->system_user = auth()->guard('system');
+        if(Str::contains(URL::previous(), route('home')) || Str::contains(URL::previous(), route('system.home'))) session()->forget('rinfo');
+
     }
     public function create(){
         $rooms = Room::all() ?? [];
@@ -36,43 +40,147 @@ class CreateReservationController extends Controller
         ]);
     }
     public function storeStep1(Request $request){
-        if($request->has('room_rate')) $request['room_rate'] = decrypt($request['room_rate']);
-        $validated = $request->validate([
-            'room_rate' => ['required', Rule::when($request->has('room_rate'), ['numeric'])],
-            'pax' => ['required', 'numeric', 'min:1'],
-        ], [
-            'required' => 'Required'
-        ]);
-        
+        // Check in (startDate to endDate) trim convertion
+        if(str_contains($request['check_in'], 'to')){
+            $dateSeperate = explode('to', $request['check_in']);
+            $request['check_in'] = trim($dateSeperate[0]);
+            $request['check_out'] = trim ($dateSeperate[1]);
+        }
+        // Check out convertion word to date format
+        if(str_contains($request['check_out'], ', ')){
+            $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
+            $request['check_out'] = $date->format('Y-m-d');
+        }
+
+        $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
+
+
+        if(checkAvailRooms($request['pax'] ?? 0, $request['check_in'], $request['check_out']) && !empty($request['pax'])) {
+            return back()->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
+        }
+
+        $validator = null;
+        if($request['accommodation_type'] == 'Day Tour'){
+            $validator = Validator::make($request->all('check_in','check_out', 'accommodation_type', 'pax', 'room_rate'), [
+                'check_in' => ['required', 'date', 'date_format:Y-m-d'],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in'], 'date_equals:'.$request['check_in']],
+                'accommodation_type' => ['required'],
+                'room_rate' => ['required'],
+                'pax' => ['required', 'numeric', 'min:1'],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
+                'required' => 'Need fill up first',
+                'date_equals' => 'Choose only one day (Day Tour)',
+            ]);
+        }
+        elseif($request['accommodation_type'] == 'Overnight'){
+            $validator = Validator::make($request->all('check_in','check_out', 'accommodation_type', 'pax', 'room_rate'), [
+                'check_in' => ['required', 'date', 'date_format:Y-m-d'],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)->format('Y-m-d')],
+                'accommodation_type' => ['required'],
+                'room_rate' => ['required'],
+                'pax' => ['required', 'numeric', 'min:1'],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
+                'check_out.unique' => 'Sorry, this date is not available',
+                'required' => 'Need fill up first',
+                'check_out.after_or_equal' => 'Choose within 2 or 3 days (Overnight)',
+            ]);
+        }
+        elseif($request['accommodation_type'] == 'Room Only'){
+            $validator = Validator::make($request->all('check_in','check_out', 'accommodation_type', 'pax', 'room_rate'), [
+                'check_in' => ['required', 'date', 'date_format:Y-m-d'],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in']],
+                'accommodation_type' => ['required'],
+                'room_rate' => ['required'],
+                'pax' => ['required', 'numeric', 'min:1'],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
+                'check_out.unique' => 'Sorry, this date is not available',
+                'required' => 'Need fill up first',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     
+                'after' => 'The :attribute was already chose from (Check-in)',
+    
+            ]);
+        }
+        else{
+            session(['ck' => false]);
+            return back()->withErrors(['accommodation_type' => 'Choose the Accommodation type']);
+        }
+        if ($validator->fails()) {            
+            session(['ck' => false]);
+            return back()
+            ->withErrors($validator)
+            ->withInput($validator->getData());
+        }
+        $validated = $validator->validated();
+
+        if($request->has('room_rate')) $validated['room_rate'] = decrypt($request['room_rate']);
+    
         if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($validated);
         else $validated['room_pax'] = $request['room_pax'];
         $rate = RoomRate::find($validated['room_rate']);
-        $roomCustomer = [];
+
         // Room Update and Verification
+        $roomCustomer = [];
         $reservationPax = 0;
-
-        foreach($validated['room_pax'] as $room_id => $newPax){
-            $room = Room::find($room_id);
-            if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
-            if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
-            if($newPax > $room->getVacantPax() && $reservationPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
-            $reservationPax += (int)$newPax;
-            $roomCustomer[$room_id] = $newPax;
-
+        if(Room::checkAllAvailable()){
+            foreach($validated['room_pax'] as $room_id => $newPax){
+                $reservationPax += (int)$newPax;
+                $room = Room::find($room_id);
+                if($newPax >= $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
+                if($newPax >= $room->getVacantPax() && $reservationPax <= $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
+                $roomCustomer[$room_id] = $newPax;
+            }
         }
-        if($reservationPax > $validated['pax'] || $reservationPax <  $validated['pax']) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
+        else{
+            $r_lists = Reservation::whereBetween('check_in', [$validated['check_in'], $validated['check_out']])
+                                ->orWhereBetween('check_out', [$validated['check_in'], $validated['check_out']])
+                                ->pluck('id');
+
+            foreach($validated['room_pax'] as $room_id => $newPax){
+                $reservationPax += (int)$newPax;
+                $count_paxes = 0;
+                foreach($r_lists as $r_list){
+                    $rooms = Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->where('id', $room_id)->get();
+                    foreach($rooms as $room) $count_paxes += $room->customer[$r_list];
+                }
+                // dd($count_paxes);
+                $room = Room::find($room_id);
+
+                if($count_paxes > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due not Available based on guest ('.$newPax.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validated);
+        
+                if($count_paxes > $reservationPax && $reservationPax < $count_paxes)  return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due invalid guest between customer ('.$newPax.' pax) and vacant guest ('.$count_paxes.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validated);
+    
+                
+                $roomCustomer[$room_id] = $newPax;
+            }
+        }
+        if($rate->occupancy > $validated['pax']) return back()->with('error', 'Guest you choose ('.$reservationPax.' pax) does above Room Rate ('.$rate->occupancy.' pax)')->withInput($validated);
+        if($reservationPax > $validated['pax'] || $reservationPax < $validated['pax']) return back()->with('error', 'Guest you choose ('.$reservationPax.' pax) does not match on Customer Guest ('.$validated['pax'].' pax)')->withInput($validated);
         
         $param = [
             'rt' => $rate->id,
             'rm' => $roomCustomer,
             'px' => $validated['pax'],
+            'cin' => $validated['check_in'],
+            'cout' => $validated['check_in'],
+            'at' => $validated['accommodation_type'],
         ];
+
         $param = encryptedArray($param);
         if(session()->has('rinfo')) {
             $session = session('rinfo');
             $session['rt'] = $param['rt'] ;
             $session['rm'] = $param['rm'] ;
             $session['px'] = $param['px'] ;
+            $session['cin'] = $param['cin'] ;
+            $session['cout'] = $param['cout'] ;
+            $session['at'] = $param['at'] ;
             session(['rinfo' => $session]);
         }
         return redirect()->route('system.reservation.create.step.two', Arr::query($param));
@@ -131,6 +239,8 @@ class CreateReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out']],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
+                'room_rate' => ['required'],
+                'room_rate' => ['required', Rule::when($request->has('room_rate'), ['numeric'])],
                 'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
                 'pax' => ['required', 'numeric', 'min:1'],
                 'payment_method' => ['required'],
@@ -148,6 +258,8 @@ class CreateReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d'],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(1)],
                 'accommodation_type' => ['required'],
+                'room_rate' => ['required'],
+                'room_rate' => ['required', Rule::when($request->has('room_rate'), ['numeric'])],
                 'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
                 'pax' => ['required', 'numeric', 'min:1'],
                 'payment_method' => ['required'],

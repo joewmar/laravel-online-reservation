@@ -3,7 +3,7 @@
   <div x-data="passwordValidator{{Str::camel($id)}}()">
 @endif
 <div x-data="{ show{{Str::camel($id)}}: true }" class="form-control w-full mb-4">
-  <label for="{{Str::camel($id)}}" class="relative flex rounded-md border border-base-200 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error('password') ring-1 ring-error border-error @enderror" >
+  <label for="{{Str::camel($id)}}" class="relative flex rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error('password') ring-1 ring-error border-error @enderror" >
     @if ($validation)
       <input :type="show{{Str::camel($id)}} ? 'password' : 'text'" id="{{Str::camel($id)}}" name="{{$name}}" class="input input-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0" placeholder="{{$placeholder}}" value="{{$value ?? ''}}" x-model="{{Str::camel($id)}}" @input="validatePassword{{Str::camel($id)}}" {{ $attributes }} />
     @else

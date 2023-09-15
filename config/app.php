@@ -169,6 +169,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         Laravel\Socialite\SocialiteServiceProvider::class,
+        Propaganistas\LaravelPhone\PhoneServiceProvider::class,
     ])->toArray(),
 
     /*

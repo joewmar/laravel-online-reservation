@@ -59,7 +59,7 @@
                   <x-input type="text" id="first_name" name="first_name" placeholder="First Name" value="{{$user->first_name ?? auth('web')->user()->first_name}}" /> 
                   <x-input type="text" id="last_name" name="last_name" placeholder="Last Name" value="{{$user->last_name ?? auth('web')->user()->last_name}}" /> 
                   @if(request()->has('details') && request('details') === "update")
-                      <x-datetime-picker name="birthday" id="birthday" placeholder="Your Birthday" class="flatpickr-bithday" value="{{$user->birthday ?? old('birthday')}}" />
+                      <x-birthday-input value="{{$user->birthday ?? old('birthday')}}" />
                   @else
                       <x-input type="text" id="age" name="age" placeholder="Your Age" value="{{auth('web')->user()->age()}}" /> 
                   @endif
