@@ -277,11 +277,9 @@ class MyReservationController extends Controller
         foreach($reservation->transaction as $key => $item){
             if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
                 $tour_menuID = (int)str_replace('tm','', $key);
-                $tour_menu[$count]['title'] = TourMenu::find($tour_menuID)->tourMenu->title;
-                $tour_menu[$count]['type'] = TourMenu::find($tour_menuID)->type;
-                $tour_menu[$count]['pax'] = TourMenu::find($tour_menuID)->pax;
-                $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'];
-                $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
+                $tour_menu[$count]['title'] = $item['title'];
+                $tour_menu[$count]['price'] = $item['price'];
+                $tour_menu[$count]['amount'] = $item['amount'];
             }
             // Rate
             if (strpos($key, 'rid') !== false) {

@@ -123,6 +123,25 @@ class Reservation extends Model
         }
         else return $total;
     }
+    public function getServiceTotal()
+    {
+        $total = 0;
+        if(!empty($this->attributes['transaction'])) {
+            // dd(json_decode($this->attributes['transaction'], true));
+
+            foreach(json_decode($this->attributes['transaction'], true) as $key => $item) {
+                if(strpos($key, 'tm') !== false) $total += (double)$item['amount'];
+                if(strpos($key, 'OA') !== false) {
+                    foreach($item as $key => $OA) $total += (double)$OA['amount'];
+                }
+                if(strpos($key, 'TA') !== false) {
+                    foreach($item as $key => $TA) $total += (double)$TA['amount'];
+                }
+            }
+            return $total;
+        }
+        else return $total;
+    }
     public function downpayment()
     {
         return json_decode($this->attributes['transaction'])->payment->downpayment ?? 0;
@@ -144,6 +163,18 @@ class Reservation extends Model
             $paymentCustomer += $allPaid['payment']['downpayment'] ?? 0;
         }
         return abs($this->getTotal() - $paymentCustomer) ?? 0;
+    }
+    public function refund()
+    {
+        $refund = 0;
+        $customerPayment = 0;
+        $allPaid = json_decode($this->attributes['transaction'], true); 
+        if(isset($allPaid['payment'])){
+            $customerPayment += $allPaid['payment']['cinpay'] ?? 0;
+            $customerPayment += $allPaid['payment']['downpayment'] ?? 0;
+        }
+        if($this->getTotal() < $customerPayment) $refund =  abs($customerPayment - $this->getTotal());
+        return $refund;
     }
     public function checkedOut()
     {

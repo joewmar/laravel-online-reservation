@@ -208,15 +208,13 @@ tr:hover .cut { opacity: 1; }
 				<thead>
 					<tr>
 						<th><span >Room No</span></th>
-						<th><span >Room Name</span></th>
-					</tr>
+						</tr>
 				</thead>
 				<tbody>
 					@php $amount = 0; @endphp
 					@foreach ($rooms as $key => $item)
 						<tr>
-							<td><span >Room No. {{$item['no']}}</span></td>
-							<td><span >{{$item['name']}} Room</span></td>
+							<td><span >Room No. {{$item['no']}} {{$item['name']}}</span></td>
 						</tr>
 					@endforeach
 				</tbody>
@@ -242,7 +240,6 @@ tr:hover .cut { opacity: 1; }
 				<thead>
 					<tr>
 						<th><span >Tour</span></th>
-						<th><span >Type</span></th>
 						<th><span >Price</span></th>
 						<th><span >Amount</span></th>
 					</tr>
@@ -251,7 +248,6 @@ tr:hover .cut { opacity: 1; }
 					@foreach ($menu as $item)
 						<tr>
 							<td><span >{{$item['title']}}</span></td>
-							<td><span>{{$item['type']}} - {{$item['pax']}} guest</span></td> 
 							<td><span data-prefix>₱ </span><span>{{ number_format($item['price'], 2)}}</span></td>
 							<td><span data-prefix>₱ </span><span>{{ number_format($item['amount'], 2)}}</span></td>
 						</tr>
@@ -319,6 +315,10 @@ tr:hover .cut { opacity: 1; }
 				<tr>
 					<th><span >Check-in Paid</span></th>
 					<td><span data-prefix>₱ </span><span>{{number_format($r_list->checkInPayment() ?? 0, 2)}}</span></td>
+				</tr>
+				<tr>
+					<th><span >Check-out Paid</span></th>
+					<td><span data-prefix>₱ </span><span>{{number_format($r_list->checkOutPayment() ?? 0, 2)}}</span></td>
 				</tr>
 			</table>
 		</article>

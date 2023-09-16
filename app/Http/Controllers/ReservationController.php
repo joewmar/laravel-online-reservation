@@ -583,7 +583,7 @@ class ReservationController extends Controller
             foreach(decryptedArray($validated['tour']) as $key => $tour_id) {
                 $tour_menu = TourMenu::find($tour_id);
                 $tours['tm'. $tour_id] = [
-                    'title' => $tour_menu->tourMenu->title . ' ' . $tour_menu->type,
+                    'title' => $tour_menu->tourMenu->title . ' ' . $tour_menu->type . '('.$tour_menu->pax.' pax)',
                     'price' => (double)$tour_menu->price,
                     'amount' => (double)$tour_menu->price * (int)$uinfo['tpx']
                 ];

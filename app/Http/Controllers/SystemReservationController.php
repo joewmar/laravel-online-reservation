@@ -164,36 +164,34 @@ class SystemReservationController extends Controller
         foreach($reservation->transaction ?? [] as $key => $item){
             if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
                 $tour_menuID = (int)str_replace('tm','', $key);
-                $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
-                $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'];
-                $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
+                $tour_menu[$count]['title'] = $item['title'];
+                $tour_menu[$count]['price'] = $item['price'];
+                $tour_menu[$count]['amount'] = $item['amount'];
             }
+
             // Rate
             if (strpos($key, 'rid') !== false) {
                 $rateID = (int)str_replace('rid','', $key);
-                $rate['name'] = $reservation->transaction['rid'.$rateID]['title'];;
-                $rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
-                $rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
-                if(isset($reservation->transaction['rid'.$rateID]['orig_amount'])){
-                    $rate['orig_amount'] = $reservation->transaction['rid'.$rateID]['orig_amount'];
+                $rate['name'] = $item['title'];;
+                $rate['price'] = $item['price'];
+                $rate['amount'] = $item['amount'];
+                if(isset($item['orig_amount'])){
+                    $rate['orig_amount'] = $item['orig_amount'];
                 }
             }
             if (strpos($key, 'OA') !== false && is_array($item)) {
-                $OAID = (int)str_replace('OA','', $key);
                 foreach($item as $key => $dataAddons){
-                    $other_addons[$count+$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
-                    $other_addons[$count+$key]['pcs'] = $reservation->transaction['OA'.$OAID][$key]['pcs'];
-                    $other_addons[$count+$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
-                    $other_addons[$count+$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
+                    $other_addons[$count+$key]['title'] = $dataAddons['title'];
+                    $other_addons[$count+$key]['pcs'] = $dataAddons['pcs'];
+                    $other_addons[$count+$key]['price'] = $dataAddons['price'];
+                    $other_addons[$count+$key]['amount'] = $dataAddons['amount'];
                 }
             }
             if (strpos($key, 'TA') !== false && is_array($item)) {
-
-                $TAID = (int)str_replace('TA','', $key);
-                foreach($item as $key => $dataAddons){
-                    $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
-                    $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
-                    $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
+                foreach($item as $key => $tourAddons){
+                    $tour_addons[$count]['title'] = $tourAddons['title'];
+                    $tour_addons[$count]['price'] = $tourAddons['price'];
+                    $tour_addons[$count]['amount'] = $tourAddons['amount'];
                 }
                 
             }
@@ -621,9 +619,7 @@ class SystemReservationController extends Controller
 
         
     }
-
-    public function showRooms($id)
-    {
+    public function showRooms($id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
         if($reservation->status >= 1) abort(404);
@@ -853,8 +849,10 @@ class SystemReservationController extends Controller
         ],[
             'accepted' => 'Before proceeding, full payment must be made first.'
         ]);
+        $transaction = $reservation->transaction;
+        $transaction['payment']['coutpay'] = $reservation->balance();
         if($validated) {
-            $reservation->update(['status' => 3]);
+            $reservation->update(['status' => 3, 'transaction' => $transaction]);
             $reservation->checkedOut();
         }
         $details = [
@@ -866,8 +864,8 @@ class SystemReservationController extends Controller
         ];   
 
         Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.checkout-mail', $details['title']));
-        unset($text, $details);
         $this->employeeLogNotif('Check-out of ' . $reservation->userReservation->name(), route('system.reservation.show', encrypt($reservation->id)));
+        unset($text, $details, $transaction);
         return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked out');
         
     }
@@ -1068,20 +1066,21 @@ class SystemReservationController extends Controller
         ]);
     }
     public function updateAddons(Request $request, $id){
-        $system_user = $this->system_user->user();
-        $admins = System::all()->where('type', 0);
+        // dd($request->all());
         $reservation = Reservation::findOrFail(decrypt($id));
         $transaction = $reservation->transaction;
         $type = "Other Addons";
         if($request->has('tab') && $request['tab'] == 'TA'){
             $validate = Validator::make($request->all(), [
                 'tour_menu' => ['required'],
-                'new_pax' => ['required', 'numeric'],
+                'new_pax' => ['required', 'numeric', 'min:1' , 'max:'.$reservation->pax],
                 'passcode' => ['required', 'numeric', 'digits:4'],
             ], [
                 'tour_menu.required' => 'Your Cart is empty',
                 'new_pax.required' => 'Required to fill up number of guest ',
                 'new_pax.numeric' => 'Number of guest should be number only',
+                'new_pax.min' => 'Number of guest should be 1 and above',
+                'new_pax.max' => 'INumber of guest should be '.$reservation->pax.' guest below',
             ]);     
             if($validate->fails()){
                 return back()->with('error', $validate->errors()->all())->withInput();
@@ -1090,7 +1089,7 @@ class SystemReservationController extends Controller
             if(!Hash::check($validated['passcode'], $this->system_user->user()->passcode)) return back()->with('error', 'Invalid passcode')->withInput($validated);
             foreach($validated['tour_menu'] as $item){
                 $transaction['TA'.$item][] = [
-                    'title' => TourMenu::find($item)->tourMenu->title ?? '',
+                    'title' => TourMenu::find($item)->tourMenu->title ?? ' ' . TourMenu::find($item)->type . '('.TourMenu::find($item)->pax.' pax)',
                     'price' => TourMenu::find($item)->price ?? 0,
                     'amount' => ((double)TourMenu::find($item)->price ?? 0) * (int)$validated['new_pax'],
                 ];

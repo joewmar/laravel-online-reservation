@@ -129,69 +129,70 @@
                     <form id="tour-form" action="{{route('system.reservation.addons.update', [encrypt($r_list->id), 'tab=TA'])}}" method="post">
                       @csrf
                       @method('PUT')
-                    <div class="flex justify-between mt-6">
-                      <h4 class="mb-3 text-sm font-semibold">You Guest will going on tour: <span class="font-normal">{{request('gpax')}} guest</span></h4>
+                      <div class="flex justify-between mt-6">
+                        <h4 class="mb-3 text-sm font-semibold">You Guest will going on tour: <span class="font-normal">{{request('gpax')}} guest</span></h4>
 
-                      <div class="dropdown dropdown-end">
-                        <label tabindex="0" class="btn btn-ghost btn-circle">
-                          <div class="indicator">
-                            <i class="fa-solid fa-cart-shopping text-lg"></i>
-                            <span class="badge badge-sm indicator-item" x-text="carts.length"></span>
-                          </div>
-                        </label>
-                        <div tabindex="0" class="card p-6 w-96 md:w-[50rem] compact dropdown-content z-[1] shadow-md bg-base-100 rounded-box ">
-                          <div class="card-body">
-                            <h2 class="card-title">My Cart</h2> 
-                            <div class="overflow-x-auto">
-                              <table id="cart" class="table table-zebra">
-                                <!-- head -->
-                                <thead>
-                                  <tr>
-                                    <th>Menu</th>
-                                    <th>Type</th>
-                                    <th>Price</th>
-                                    <th></th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-        
-                                  <!-- row -->
-                                  <template x-for="(cart, index) in carts" :key="index">
+                        <div class="dropdown dropdown-end">
+                          <label tabindex="0" class="btn btn-ghost btn-circle">
+                            <div class="indicator">
+                              <i class="fa-solid fa-cart-shopping text-lg"></i>
+                              <span class="badge badge-sm indicator-item" x-text="carts.length"></span>
+                            </div>
+                          </label>
+                          <div tabindex="0" class="card p-6 w-96 md:w-[50rem] compact dropdown-content z-[1] shadow-md bg-base-100 rounded-box ">
+                            <div class="card-body">
+                              <h2 class="card-title">My Cart</h2> 
+                              <div class="overflow-x-auto">
+                                <table id="cart" class="table table-zebra">
+                                  <!-- head -->
+                                  <thead>
                                     <tr>
-                                      <td x-text="cart.title"></td>
-                                      <td x-text="cart.type"></td>
-                                      <td x-text="cart.price"></td>
-                                      <td>
-                                        <label :for="'removeCart' + index" class="btn btn-ghost">
-                                          <i class="fa-solid fa-x text-xl text-error"></i>
-                                        </label>
-                                        <input type="checkbox" :id="'removeCart' + index" class="modal-toggle" />
-                                        <div class="modal">
-                                          <div class="modal-box">
-                                            <h3 class="font-bold text-lg">Do you want to remove: <span x-text="cart.title"></span></h3>
-                                            <div class="modal-action">
-                                              <label :for="'removeCart' + index" @click="removeItemCart(cart.id, cart.title)" class="btn btn-primary">Yes</label>
-                                              <label :for="'removeCart' + index" class="btn btn-ghost">No</label>
+                                      <th>Menu</th>
+                                      <th>Type</th>
+                                      <th>Price</th>
+                                      <th></th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+          
+                                    <!-- row -->
+                                    <template x-for="(cart, index) in carts" :key="index">
+                                      <tr>
+                                        <td x-text="cart.title"></td>
+                                        <td x-text="cart.type"></td>
+                                        <td x-text="cart.price"></td>
+                                        <td>
+                                          <label :for="'removeCart' + index" class="btn btn-ghost">
+                                            <i class="fa-solid fa-x text-xl text-error"></i>
+                                          </label>
+                                          <input type="checkbox" :id="'removeCart' + index" class="modal-toggle" />
+                                          <div class="modal">
+                                            <div class="modal-box">
+                                              <h3 class="font-bold text-lg">Do you want to remove: <span x-text="cart.title"></span></h3>
+                                              <div class="modal-action">
+                                                <label :for="'removeCart' + index" @click="removeItemCart(cart.id, cart.title)" class="btn btn-primary">Yes</label>
+                                                <label :for="'removeCart' + index" class="btn btn-ghost">No</label>
+                                              </div>
                                             </div>
                                           </div>
-                                        </div>
-                                      </td>
-                                        <input x-ref="idRef + (index + 1)" type="hidden" name="tour_menu[]", :value="$el.value = cart.id">
-                                    </tr>
-                                  </template>
-                                  <template x-if="carts.length === 0">
-                                    <tr colspan="2" class="w-full"><td class="font-bold w-full text-center">No Cart Item!</td></tr>
-                                  </template>
-                                
-                                </tbody>
-                              </table>
+                                        </td>
+                                          <input x-ref="idRef + (index + 1)" type="hidden" name="tour_menu[]", :value="$el.value = cart.id">
+                                      </tr>
+                                    </template>
+                                    <template x-if="carts.length === 0">
+                                      <tr colspan="2" class="w-full"><td class="font-bold w-full text-center">No Cart Item!</td></tr>
+                                    </template>
+                                  
+                                  </tbody>
+                                </table>
+                              </div>
+              
                             </div>
-            
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div x-data="{category: null}" x-cloak>
+                      <input type="hidden" name="new_pax"  value="{{request('gpax') ?? null}}">
+                      <div x-data="{category: null}" x-cloak>
                           @foreach ($tour_category as $category)
                             @if($loop->index === 0)
                               <input x-model="category" id="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-2 radio radio-primary" x-model="category" type="radio" value="{{Str::camel($category->category)}}" />

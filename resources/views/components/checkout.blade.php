@@ -11,19 +11,24 @@
                 <li><strong>Payment Method: </strong> {{$datas->payment_method ?? 'None'}}</li>
                 <li><strong>Number of Guest: </strong> {{$datas->pax ?? 'None'}}</li>
                 @php
-                    foreach($datas->roomid as $item){
-                        $room = \App\Models\Room::findOrFail($item);
-                        $rooms[] = 'Room No. ' . $room->room_no ?? 'None' . ' ('.$room->room->name.')';
+                    if(isset($datas->roomid)){
+                        foreach($datas->roomid as $item){
+                            $room = \App\Models\Room::findOrFail($item);
+                            $rooms[] = 'Room No. ' . $room->room_no ?? 'None' . ' ('.$room->room->name.')';
+                        }
                     }
                 @endphp
-                <li><strong>Room No: </strong> {{ implode(',', $rooms ?? [])}}</li>
+                @if(isset($datas->roomid))
+                    <li><strong>Room No: </strong> {{ implode(',', $rooms ?? [])}}</li>
+                @endif
                 <li><strong>Check-in: </strong> {{Carbon\Carbon::createFromFormat('Y-m-d', $datas['check_in'])->format('l, F j, Y') ?? 'None'}}</li>
                 <li><strong>Check-out: </strong> {{Carbon\Carbon::createFromFormat('Y-m-d', $datas['check_out'])->format('l, F j, Y') ?? 'None'}}</li>
             </ul>
             <div class="p-5">
                 <p class="text-lg"><strong>Total: </strong>₱ {{number_format($datas->getTotal() ?? 0, 2)}}</p>
                 {{-- <p class="text-lg"><strong>Downpayment: </strong>₱ {{number_format($datas->downpayment ?? 0, 2)}}</p> --}}
-                <p class="text-lg"><strong>Balance: </strong>₱ {{number_format($datas->balance() ?? 0, 2)?? 'No Balance'}}</p>
+                <p class="text-lg"><strong>Balance: </strong>{{$datas->balance() != 0 ? '₱ ' . number_format($datas->balance(), 2) : 'No Balance'}}</p>
+                <p class="text-lg"><strong>Refund: </strong>{{$datas->refund() != 0 ? '₱ ' . number_format($datas->refund(), 2) : 'No Refund'}}</p>
                 <div class="py-3 space-x-2">
                     <form action="{{route('system.reservation.show.checkout', encrypt($datas->id))}}" x-data="{isFullPay: {{($datas->balance() ?? 0) <= 0 ? 'true' : 'false'}} }" action="{{route('system.reservation.show.checkin', encrypt($datas->id))}}" method="post">
                         @csrf

@@ -28,8 +28,8 @@
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'previous']))}}" class="tab tab-lifted {{request('tab') == 'previous' ? 'tab-active' : ''}}">Previous</a>
                 </div>
                 <div class="mt-10">
-                    <div class="flex justify-end w-full gap-5">
-                        <form action="{{route('system.reservation.search', Arr::query(['rtab' => 'list', 'tab' => 'list']))}}" method="POST">
+                    <div class="flex justify-end w-full gap-5 -z-[100]">
+                        {{-- <form action="{{route('system.reservation.search', Arr::query(['rtab' => 'list', 'tab' => 'list']))}}" method="POST">
                             @csrf
                             <div class="join">
                                 <div>
@@ -39,7 +39,7 @@
                                 </div>
                                 <button class="btn btn-sm join-item btn-primary">Search</button>
                             </div>
-                        </form>
+                        </form> --}}
                     </div>
                     <div class="overflow-x-auto w-full">
                         <table class="table w-full">
@@ -80,8 +80,33 @@
                                         <td>{{ \Carbon\Carbon::parse($list->created_at)->format('M j, Y g:i A')}}</td>
     
                                         <th class="w-auto">
-                                            <x-reservation-action :data="$list" />
-                                            <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs" >View</a>
+                                            <div class="join">
+                                                @if($list->status() == "Pending")
+                                                    <a href="{{route('system.reservation.show.rooms', encrypt($list->id))}}" class="btn btn-secondary btn-xs join-item">Confirm</a>
+                                                    <label class="btn btn-success btn-xs join-item" disabled>Check-in</label>
+                                                    <label class="btn btn-info btn-xs join-item" disabled>Check-out</label>
+                                                @elseif($list->status() == "Confirmed")
+                                                    <a class="btn btn-secondary btn-xs join-item" disabled>Confirm</a>
+                                                    <label for="checkin" class="btn btn-success btn-xs join-item">Check-in</label>
+                                                    <x-checkin name="{{$list->userReservation->name() ?? ''}}" :datas="$list" />
+                                                    <label class="btn btn-info btn-xs join-item" disabled>Check-out</label>
+                                                @elseif($list->status() == "Check-in")
+                                                    <a href="" class="btn btn-secondary btn-xs join-item" disabled>Confirm</a>
+                                                    <label class="btn btn-success btn-xs join-item" disabled>Check-in</label>
+                                                    <label for="checkout" class="btn btn-warning btn-xs join-item">Check-out</label>
+                                                    <x-checkout name="{{$list->userReservation->name() ?? ''}}" :datas="$list" />
+                                                @endif
+                                                <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs join-item">View</a>
+                                                <div class="dropdown dropdown-top dropdown-end z-40">
+                                                    <label tabindex="0" class="btn btn-xs join-item">
+                                                        <i class="fa-solid fa-ellipsis"></i>
+                                                    </label>
+                                                    <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                                                      <li><a href="{{route('system.reservation.show.cancel', encrypt($list->id))}}">Cancel</a></li>
+                                                      <li><a href="{{route('system.reservation.show.reschedule', encrypt($list->id))}}">Reschedule</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
                                             {{-- <a href="{{route('system.reservation.show.receipt', encrypt($list->id))}}" class="btn btn-accent btn-xs" >Receipt</a> --}}
                                         </th>
                                     

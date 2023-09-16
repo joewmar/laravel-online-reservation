@@ -1,20 +1,4 @@
 @props(['id' => 'checkin', 'name', 'datas' => ''])
-@php
-@endphp
-@php
-    $total = 0;
-    $downpayment = 0;
-    foreach($datas->transaction as $key => $item){
-        if($key == 'payment'){
-            $downpayment = $item['downpayment'] ?? 0;
-            continue;
-        }
-        $total += $item['amount'];
-    }
-    $balance = abs($total - $downpayment);
-    if($balance >= $total) $refund = abs($balance - $total);
-
-@endphp
 <x-modal  id="{{$id}}" title="Check-in for {{$name}}">
     @if( ((int)str_replace('-', '', \Carbon\Carbon::now()->format('Y-m-d'))) >=  ((int)str_replace('-', '', $datas['check_in'])))
         <article>
@@ -27,27 +11,31 @@
                 <li><strong>Payment Method: </strong> {{$datas->payment_method ?? 'None'}}</li>
                 <li><strong>Number of Guest: </strong> {{$datas->pax ?? 'None'}}</li>
                 @php
-                    foreach($datas->roomid as $item){
-                        $room = \App\Models\Room::findOrFail($item);
-                        $rooms[] = 'Room No. ' . $room->room_no ?? 'None' . ' ('.$room->room->name.')';
+                    if(isset($datas->roomid)){
+                        foreach($datas->roomid as $item){
+                            $room = \App\Models\Room::findOrFail($item);
+                            $rooms[] = 'Room No. ' . $room->room_no ?? 'None' . ' ('.$room->room->name.')';
+                        }
                     }
+
                 @endphp
-                <li><strong>Room No: </strong> {{ implode(',', $rooms ?? [])}}</li>
+                @if(isset($datas->roomid))
+                    <li><strong>Room No: </strong> {{ implode(',', $rooms ?? [])}}</li>
+                @endif
                 <li><strong>Check-in: </strong> {{Carbon\Carbon::createFromFormat('Y-m-d', $datas['check_in'])->format('l, F j, Y') ?? 'None'}}</li>
                 <li><strong>Check-out: </strong> {{Carbon\Carbon::createFromFormat('Y-m-d', $datas['check_out'])->format('l, F j, Y') ?? 'None'}}</li>
             </ul>
             <div class="p-5">
                 <p class="text-lg"><strong>Total: </strong>₱ {{number_format($total ?? 0, 2)}}</p>
                 <p class="text-lg"><strong>Downpayment: </strong>₱ {{number_format($downpayment ?? 0, 2)}}</p>
-                <p class="text-lg"><strong>Balance: </strong>₱ {{number_format($balance, 2)}}</p>
-                @if(!empty($refund))
-                    <p class="text-lg"><strong>Refund: </strong>₱ {{number_format($refund, 2)}}</p>
-                @endif
+                <p class="text-lg"><strong>Balance: </strong>{{$datas->balance() != 0 ? '₱ ' . number_format($datas->balance(), 2) : 'No Balance'}}</p>
+                <p class="text-lg"><strong>Refund: </strong>{{$datas->refund() != 0 ? '₱ ' . number_format($datas->refund(), 2) : 'No Refund'}}</p>
+            
                 <div x-data="{pay: '', senior: false}" class="py-3 space-x-2">
                     <form action="{{route('system.reservation.show.checkin', encrypt($datas->id))}}" method="post">
                         @csrf
                         @method('PUT')
-                        @if(!empty($downpayment) && $downpayment >= 1000)
+                        @if(!empty($datas->downpayment()) && $datas->downpayment() >= 1000)
                             <div class="mb-10 mt-3">
                                 <input id="discount" x-model="senior" type="checkbox" class="checkbox checkbox-secondary" />
                                 <label for="discount" class="ml-4 font-semibold">Have Senior Citizen?</label>
