@@ -1,13 +1,19 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
     $arrPayment = ['Gcash', 'PayPal', 'Bank Transfer'];
-    $TourInfo = [];
+    $TourInfo = [
+        "cin" => request()->has('cin') ? old('check_in') ?? decrypt(request('cin')) : old('check_in'),
+        "cout" => request()->has('cout') ? old('check_out') ?? decrypt(request('cout')) : old('check_out'),
+        "px" => request()->has('px') ? old('pax') ?? decrypt(request('px')) : old('pax'),
+        "tpx" => request()->has('tpx') ? decrypt(request('tpx')) : old('tour_pax'),
+        "at" => request()->has('at') ? old('accommodation_type') ?? decrypt(request('at')) : old('accommodation_type'),
+        "py" => request()->has('py') ? old('payment_method') ?? decrypt(request('py')) : old('payment_method'),
+      ];
     $tourListCart = [];
     if(session()->has('rinfo')){
       $decrypted = decryptedArray(session('rinfo'));
-      if(isset($decrypted['tm'])){
-        $tourListCart = $decrypted['tm'];
-      }
+      if(isset($decrypted['tm'])) $tourListCart = $decrypted['tm'];
+      
       $TourInfo = [
         "cin" => old('check_in') ?? $decrypted['cin'],
         "cout" => old('check_out') ?? $decrypted['cout'],
@@ -18,16 +24,14 @@
         "ck" => request('ck') ?? '',
       ];
     }
-    else{
-      $TourInfo = [
-        "cin" => request()->has('cin') ? old('check_in') ?? decrypt(request('cin')) : old('check_in'),
-        "cout" => request()->has('cout') ? old('check_out') ?? decrypt(request('cout')) : old('check_out'),
-        "px" => request()->has('px') ? old('pax') ?? decrypt(request('px')) : old('pax'),
-        "tpx" => request()->has('tpx') ? decrypt(request('tpx')) : old('tour_pax'),
-        "at" => request()->has('at') ? old('accommodation_type') ?? decrypt(request('at')) : old('accommodation_type'),
-        "py" => request()->has('py') ? old('payment_method') ?? decrypt(request('py')) : old('payment_method'),
+    $TourInfoEncrypted = [
+        "cin" => request()->has('cin') ? request('cin') : old('check_in'),
+        "cout" => request()->has('cout') ? request('cout') : old('check_out'),
+        "px" => request()->has('px') ? request('px') : old('pax'),
+        "tpx" => request()->has('tpx') ? request('tpx') : old('tour_pax'),
+        "at" => request()->has('at') ? request('at') : old('accommodation_type'),
+        "py" => request()->has('py') ? request('py') : old('payment_method'),
       ];
-    }
     // dd( $TourInfo);
 @endphp
 
@@ -150,7 +154,7 @@
                     <div class="lg:flex justify-start gap-5">
                 @endif
                     <div class="mt-8 flex gap-4">
-                      <a href="{{route('reservation.date', Arr::query(['cin' => $TourInfo['cin'], 'cout' => $TourInfo['cout'], 'at' => $TourInfo['at'], 'px' => $TourInfo['px']]))}}" class="btn btn-ghost">Back</a>
+                      <a href="{{route('reservation.date', Arr::query(['cin' => $TourInfoEncrypted['cin'], 'cout' => $TourInfoEncrypted['cout'], 'at' => $TourInfoEncrypted['at'], 'px' => $TourInfoEncrypted['px']]))}}" class="btn btn-ghost">Back</a>
                       <button @click="loader = true" type="submit" class="btn btn-primary">Continue</button>
                     </div>
                   </div>

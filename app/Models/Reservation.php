@@ -93,7 +93,7 @@ class Reservation extends Model
     public function getNoDaysInToday()
     {
         $date1 = Carbon::parse($this->attributes['check_in']); // Convert $date1 to Carbon object
-        if(Carbon::now()->format('Y-m-d') === Carbon::parse($this->attributes['check_in'])->format('Y-m-d')) $date1 = Carbon::now();
+        if(Carbon::now('Asia/Manila')->format('Y-m-d') === Carbon::parse($this->attributes['check_in'])->format('Y-m-d')) $date1 = Carbon::now();
         $date2 = Carbon::parse($this->attributes['check_out']); // Convert $date2 to Carbon object
         return (int)$date1->diffInDays($date2); // Calculate the number of days between the two dates
     }

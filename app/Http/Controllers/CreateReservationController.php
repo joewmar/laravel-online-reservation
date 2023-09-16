@@ -34,6 +34,28 @@ class CreateReservationController extends Controller
         if(Str::contains(URL::previous(), route('home')) || Str::contains(URL::previous(), route('system.home'))) session()->forget('rinfo');
 
     }
+    private function employeeLogNotif($action, $link = null){
+        if(auth()->guard('system')->user()->role() !== "Admin"){
+            $admins = System::all()->where('type', 0);
+            $text = "New Employee Log! \n" .
+            "Employee: " . auth()->guard('system')->user()->name() ."\n" .
+            "Action: ".  $action ."\n" .
+            "Date: " .  Carbon::now('Asia/Manila')->format('F j, Y g:ia');
+
+            $keyboard = null;
+            if(isset($link)){
+                $keyboard = [
+                    [
+                        ['text' => 'View Log', 'url' => $link],
+                    ],
+                ];
+            }
+            foreach($admins as $admin){
+                if(isset($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, $keyboard, 'bot2');
+            }
+            Notification::send($admins, new SystemNotification('Employee Action from '.auth()->guard('system')->user()->name().': ' . Str::limit($action, 10, '...'), $text, route('system.notifications')));
+        }
+    }
     public function create(){
         $rooms = Room::all() ?? [];
         $rates = RoomRate::all() ?? [];
@@ -338,7 +360,6 @@ class CreateReservationController extends Controller
                 'px' => $encrypted['pax'],  
                 'py' => $encrypted['payment_method'],  
               ];
-              dd('Hello World 2');
 
             session(['rinfo' => $session]);
             return redirect()->route('system.reservation.create.step.three');
@@ -369,7 +390,6 @@ class CreateReservationController extends Controller
         session(['rinfo' => $session]);
         return redirect()->route('system.reservation.create.step.three');
     }
-
     public function step3(Request $request){
         return view('system.reservation.create.step3', [
             'activeSb' => 'Reservation', 
@@ -448,6 +468,7 @@ class CreateReservationController extends Controller
             'image' => 'The file must be an image of type: jpeg, png, jpg',
             'mimes' => 'The image must be of type: jpeg, png, jpg',
             'max' => 'The image size must not exceed 5 MB',
+            'payment_amount.min' => 'The amount must be ₱ 1,000 above',
         ]);
         $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
         $validated['contact'] = $phone->formatInternational(); 
@@ -500,12 +521,11 @@ class CreateReservationController extends Controller
                         'amount' => (double)$rate->price * (int)$decrypted['px']
                     ];
                 }
-                if($decrypted['st'] >= 2){
-                    $transaction['payment']['cinpay'] = $validated['payment_amount'];
-                }
-                else{
-                    $transaction['payment']['downpayment'] = $validated['payment_amount'];
-                }
+
+                if($decrypted['st'] >= 2) $transaction['payment']['cinpay'] = $validated['payment_amount'];
+                
+                else $transaction['payment']['downpayment'] = $validated['payment_amount'];
+                
                 $reserved = Reservation::create([
                     'offline_user_id' => $created->id,
                     'roomid' => array_keys($decrypted['rm']),
@@ -528,25 +548,9 @@ class CreateReservationController extends Controller
                     }
                 }
             }
-            $text = 
-            "Employee Action: Create Reservation !\n" .
-            "Name: ". $reserved->userReservation->name() ."\n" . 
-            "Age: " . $reserved->age ."\n" .  
-            "Nationality: " . $reserved->userReservation->nationality  ."\n" . 
-            "Country: " . $reserved->userReservation->country ."\n" . 
-            "Check-in: " . Carbon::createFromFormat('Y-m-d', $reserved->check_in)->format('F j, Y') ."\n" . 
-            "Check-out: " . Carbon::createFromFormat('Y-m-d', $reserved->check_out)->format('F j, Y') ."\n" . 
-            "Type: " . $reserved->accommodation_type ."\n" . 
-            "Rooms: " . implode(', ', $roomDetails) ."\n" . 
-            "Who Approve: " . $sysUser->name();
 
-            if($sysUser->role() !== "Admin"){
-                foreach($admins as $admin){
-                    if(!empty($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, null, 'bot2');;
-                }
-                Notification::send($admins, new SystemNotification('Employee Action from '.$sysUser->name().': Approved Reservation', $text, route('system.reservation.show', encrypt($reserved->id))));
 
-            }
+            $this->employeeLogNotif('Add Booking for ' . $reserved->userReservation->name(), route('system.reservation.show', encrypt($reserved->id)));
             $details = [
                 'name' => $reserved->userReservation->name(),
                 'title' => 'Reservation Complete',

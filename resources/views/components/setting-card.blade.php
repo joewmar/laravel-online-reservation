@@ -1,7 +1,7 @@
 @props(['link', 'icon', 'title', 'description'])
 
 <a href="{{$link}}">
-    <div class="card w-80 bg-base-100 shadow-xl hover:bg-primary hover:text-white">
+    <div class="card w-80 h-full bg-base-100 shadow-xl hover:bg-primary hover:text-white">
         <figure class="px-10 pt-10">
             <i class="{{$icon}} text-7xl"></i>
         </figure>

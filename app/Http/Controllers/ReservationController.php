@@ -22,10 +22,11 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Mail;
 use App\Notifications\EmailNotification;
+use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Notifications\Notification;
 use Propaganistas\LaravelPhone\PhoneNumber;
 use Propaganistas\LaravelPhone\Rules\Phone;
+use Illuminate\Support\Facades\Notification;
 use AmrShawky\LaravelCurrency\Facade\Currency;
 
 
@@ -48,16 +49,33 @@ class ReservationController extends Controller
                 session()->forget('rinfo');
                 return redirect()->route('home')->with('error', "Sorry, you can only make one reservation.");
             }
+            // if(\Carbon\Carbon::createFromFormat('Y-m-d', $operation['from'])->timestamp >=\Carbon\Carbon::now()->timestamp){
+                
+            // }
 
             return $next($request);
         })->except(['index', 'show', 'done', 'storeMessage', 'gcash', 'doneGcash', 'donePayPal', 'paymentStore','paypal', 'feedback', 'storeFeedback', 'date', 'dateCheck', 'dateStore', 'cancel','reschedule']); // You can specify the specific method where this middleware should be applied.
+    }
+    private function systemNotification($text, $link = null){
+            $systems = System::whereBetween('type', [0, 1])->get();
+            $keyboard = null;
+            if(isset($link)){
+                $keyboard = [
+                    [
+                        ['text' => 'View', 'url' => $link],
+                    ],
+                ];
+            }
+            foreach($systems as $system){
+                if(isset($system->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard);
+            }
+            Notification::send($systems, new SystemNotification(Str::limit($text, 10), $text, route('system.notifications')));
     }
 
     public function date(Request $request){
         return view('reservation.step1');
     }
     public function dateCheck(Request $request){
-
         // Check in (startDate to endDate) trim convertion
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
@@ -77,6 +95,13 @@ class ReservationController extends Controller
         if(checkAvailRooms($request['pax'] ?? 0, $request['check_in'], $request['check_out']) && !empty($request['pax'])) {
             return redirect()->route('reservation.date')->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
         }
+        $web_contents = WebContent::all()->first();
+        if(isset($web_contents->from) && isset($web_contents->to)){
+            if(Carbon::createFromFormat('Y-m-d', $request['check_in'])->timestamp >= Carbon::createFromFormat('Y-m-d', $web_contents->from)->timestamp && Carbon::createFromFormat('Y-m-d', $request['check_in'])->timestamp <= Carbon::createFromFormat('Y-m-d', $web_contents->to)->timestamp) {
+                return redirect()->route('reservation.date')->with('error', 'Sorry, this date cannot be allowed due ' . $web_contents->reason)->withInput($request->input());
+            }
+        }
+
         
 
         $validator = null;
@@ -125,7 +150,7 @@ class ReservationController extends Controller
         }
         else{
             session(['ck' => false]);
-            return redirect()->route('reservation.date')->withErrors(['accommodation_type' => 'Choose the Accommodation type']);
+            return redirect()->route('reservation.date')->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput($validator->getData());;
         }
         if ($validator->fails()) {            
             session(['ck' => false]);
@@ -159,6 +184,12 @@ class ReservationController extends Controller
         
         if(checkAvailRooms($request['pax'] ?? 0, $request['check_in'], $request['check_out'] && !empty($request['pax']))){
             return redirect()->route('reservation.date')->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
+        }
+        $web_contents = WebContent::all()->first();
+        if(isset($web_contents->from) && isset($web_contents->to)){
+            if(Carbon::createFromFormat('Y-m-d', $request['check_in'])->timestamp >= Carbon::createFromFormat('Y-m-d', $web_contents->from)->timestamp && Carbon::createFromFormat('Y-m-d', $request['check_in'])->timestamp <= Carbon::createFromFormat('Y-m-d', $web_contents->to)->timestamp) {
+                return redirect()->route('reservation.date')->with('error', 'Sorry, this date cannot be allowed due ' . $web_contents->reason)->withInput($request->input());
+            }
         }
         $validated = null;
         if($request['accommodation_type'] === 'Day Tour'){
@@ -291,6 +322,15 @@ class ReservationController extends Controller
         $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
         $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
         
+        if(checkAvailRooms($request['pax'] ?? 0, $request['check_in'], $request['check_out'] && !empty($request['pax']))){
+            return redirect()->route('reservation.date')->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
+        }
+        $web_contents = WebContent::all()->first();
+        if(isset($web_contents->from) && isset($web_contents->to)){
+            if(Carbon::createFromFormat('Y-m-d', $request['check_in'])->timestamp >= Carbon::createFromFormat('Y-m-d', $web_contents->from)->timestamp && Carbon::createFromFormat('Y-m-d', $request['check_in'])->timestamp <= Carbon::createFromFormat('Y-m-d', $web_contents->to)->timestamp) {
+                return redirect()->route('reservation.date')->with('error', 'Sorry, this date cannot be allowed due ' . $web_contents->reason)->withInput($request->input());
+            }
+        }
         $validated = null;
         if($request['accommodation_type'] === 'Day Tour'){
             $validated = $request->validate([
@@ -362,7 +402,7 @@ class ReservationController extends Controller
         }
         else{
             session(['ck' => false]);
-            return back()->withErrors(['error' => "Choose the Accommodation type"])->withInput($validated);
+            return back()->withErrors(['error' => "Choose the Accommodation type"])->withInput($request->input());
         }
 
         if($validated){
@@ -588,12 +628,7 @@ class ReservationController extends Controller
         "Check-in: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_in)->format('F j, Y') ."\n" . 
         "Check-out: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_out)->format('F j, Y') ."\n" . 
         "Type: " . $reserve_info->accommodation_type ;
-        // Send Notification to 
-        $keyboard = [
-            [
-                ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reserve_info->id))],
-            ],
-        ];
+        // Send Notification 
         $details = [
             'name' => $reserve_info->userReservation->name(),
             'title' => 'Reservation Complete',
@@ -605,6 +640,7 @@ class ReservationController extends Controller
         }
         session()->forget('rinfo');
         session()->forget('ck');
+        $this->systemNotification($text, encrypt($reserve_info->id));
 
         unset($text, $keyboard, $details, $uinfo);
         return redirect()->route('reservation.done', ['id' => encrypt($reserve_info->id)]);
@@ -667,19 +703,8 @@ class ReservationController extends Controller
                     "Payment Name: " . $validated['payment_name'] ."\n" . 
                     "Total Amount " . number_format($validated['amount'], 2) ."\n" . 
                     "Reference No: " . $validated['reference_no'];
-                    $keyboard = [
-                        [
-                            ['text' => 'View Details', 'url' => route('system.reservation.show.online.payment', encrypt($reservation->id))],
-                        ],
-                    ];
-                    // foreach($systemUser as $user){
-                    //     if($user->telegram_chatID != null){
-                    //         telegramSendMessage($user->telegram_chatID, $text, $keyboard); 
-                    //     }
-            
-                    // }
-                    telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID'), $text, $keyboard); 
-
+                    // Send Notification 
+                    $this->systemNotification($text, encrypt($reservation->id));
                     $text = null;
                     $keyboard = null;
                     if($reservation->payment_method === 'Gcash') return redirect()->route('reservation.gcash.done', encrypt($sended->id));

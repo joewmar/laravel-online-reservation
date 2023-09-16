@@ -458,9 +458,10 @@ class WebContentController extends Controller
         if(!$request->has('operation')){
             $validated = $request->validate([
                 'from' => ['required', 'date',  'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->format('Y-m-d')],
-                'to' => ['required', 'date',  'date_format:Y-m-d', 'after:'.$request['from']],
+                'to' => ['required', 'date',  'date_format:Y-m-d', 'after_or_equal:'.$request['from']],
                 'reason' => ['required'],
             ]);
+            $validated['operation'] = false;
         }
         else{
             $validated['operation'] = true;

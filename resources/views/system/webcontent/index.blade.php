@@ -374,15 +374,15 @@
                       <p class="text-error">$message</p>
                   @enderror
                 </div>
-                <template x-if="!allow" >
+                <div x-show="!allow" x-transition>
                   <div class="py-5">
-                    <div class="flex space-x-2">
-                      <x-datetime-picker type="date" name="from" id="from" placeholder="Date Stop Operation" value="{{$webcontents->from ?? Carbon\Carbon::now()->format('Y-m-d')}}" />
-                      <x-datetime-picker type="date" name="to" id="to" placeholder="Date Upto Stop Operation" value="{{$webcontents->to ?? ''}}" />
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <x-datetime-picker type="date" name="from" id="from" placeholder="Date Stop Operation" class="flatpickr-reservation-one" value="{{$webcontents->from ?? Carbon\Carbon::now()->format('Y-m-d')}}" />
+                      <x-datetime-picker type="date" name="to" id="to" placeholder="Date Upto Stop Operation" class="flatpickr-reservation-one"  value="{{$webcontents->to ?? ''}}" />
                     </div>
                     <x-textarea name="reason" id="reason" placeholder="Reason to Stop Reservation?" value="{{$webcontents->reason ?? ''}}" />
                   </div>
-                </template>
+                </div>
                 <label for="change_modal" class="btn btn-primary">Save</label>
 
                 <x-passcode-modal title="Change Operation Confirmation" id="change_modal" formId="change-form" />        

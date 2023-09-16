@@ -47,7 +47,7 @@
             @if(filter_var(auth('system')->user()->avatar ?? '', FILTER_VALIDATE_URL))
                 <img src="{{auth('system')->user()->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
             @elseif(auth('system')->user()->avatar ?? false)
-                <img src="{{asset('storage/'. auth('system')->user()->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
+                <img src="{{route('private.image', ['folder' => explode('/', auth('system')->user()->avatar)[0], 'filename' => explode('/', auth('system')->user()->avatar)[1]])}}" alt="" class="object-cover object-center w-full h-full rounded">
             @else
                 <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
             @endif

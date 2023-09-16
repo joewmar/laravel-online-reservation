@@ -6,22 +6,24 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Telegram\Bot\Laravel\Facades\Telegram;
+use Telegram\Bot\Objects\Message;
 
 class SystemNotification extends Notification
 {
     use Queueable;
-    protected $title,$message, $link; 
+    protected $title,$message, $link, $telegramBot, $telegramText, $telegramLink, $telegramButton; 
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($title, $message = null, $link = null)
+    public function __construct($title, $message = null, $link = null, $telegramBot = 'bot1')
     {
         $this->title=$title;
+        $this->title=$title;
         if(isset($message)) $this->message=$message;
+        if(isset($$telegramBot)) $this->$telegramBot=$$telegramBot;
         if(isset($link)) $this->link=$link;
-
-
     }
 
     /**
@@ -33,18 +35,17 @@ class SystemNotification extends Notification
     {
         return ['database'];
     }
+    public function toTelegram($notifiable)
+    {
+        if(isset($notifiable->telegram_chatID)){
+            if(isset($notifiable->telegram_chatID)) {
+                return telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $notifiable->telegram_chatID), $text, null, $bot);
 
-    /**
-     * Get the mail representation of the notification.
-     */
-    // public function toMail(object $notifiable): MailMessage
-    // {
-    //     return (new MailMessage)
-    //                 ->line('The introduction to the notification.')
-    //                 ->action('Notification Action', url('/'))
-    //                 ->line('Thank you for using our application!');
-    // }
+            }
 
+        }
+
+    }
     /**
      * Get the array representation of the notification.
      *

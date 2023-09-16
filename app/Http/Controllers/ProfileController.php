@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Laravel\Ui\Presets\React;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
@@ -25,7 +26,6 @@ class ProfileController extends Controller
     public function update(Request $request, $id){
         $system_user = System::findOrFail(decrypt($id));
         $validated = $request->validate([
-            'avatar' =>  ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
             'first_name' => ['required'],
             'last_name' => ['required'],
             'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
@@ -41,14 +41,26 @@ class ProfileController extends Controller
             else $validated['telegram_chatID'] = $chat_id;
         }
 
-
-        if($request->hasFile('avatar')){                        
-            $validated['avatar'] =  saveImageWithJPG($request, 'avatar', 'employee', 'private');
-        }
-
         $updated = $system_user->update($validated);
         if($system_user->telegram_chatID && $updated) telegramSendMessage($system_user->telegram_chatID, "Hello there, " . $system_user->name() . " Your username was updated", null, 'bot2');
         if($updated) return redirect()->route('system.profile.edit')->with('success', 'Your Profile was updated');
+    }
+    public function updateAvatar(Request $request, $id){
+        $system_user = System::findOrFail(decrypt($id));
+        $validated = Validator::make($request->all('avatar'),[
+            'avatar' =>  ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
+        ], [
+            'required' => 'Required to upload image',
+        ]);
+        if($validated->fails()){
+            return back()->with('error', $validated->errors()->all());
+        }
+        $validated = $validated->validate();
+ 
+        $validated['avatar'] =  saveImageWithJPG($request, 'avatar', 'employee', 'private');
+
+        $updated = $system_user->update($validated);
+        if($updated) return redirect()->route('system.profile.edit')->with('success', 'Your Avatar was updated');
     }
 
     public function password(){

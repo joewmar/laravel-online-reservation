@@ -22,7 +22,21 @@
                         <i class="fa-solid fa-phone w-4 h-4"></i>
                         <span class="text-neutral">{{$systemUser->contact}}</span>
                     </span>
+
                 </div>
+                <span class="w-full">
+                    <label for="avatar_modal" class="btn btn-secondary btn-sm">Change Avatar</label>
+                    <x-modal id="avatar_modal" title="Choose Photo">
+                        <form action="{{route('system.profile.update.avatar', encrypt($systemUser->id))}}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            @method('PUT')
+                            <x-drag-drop name="avatar" id="avatar1" />
+                            <div class="modal-action">
+                                <button class="btn btn-primary" type="submit">Save</button>
+                            </div>
+                        </form>
+                    </x-modal>
+                </span>
             </div>
           </div>
           <div class="divider"></div>
@@ -37,11 +51,6 @@
                     <x-input type="text" name="username" id="username" placeholder="Username" value="{{$systemUser->username ?? ''}}" />
                     <x-input type="text" name="telegram_username" id="telegram_username" placeholder="Telegram Username" value="{{$systemUser->telegram_username}}" />
                     <p class="text-red-500 my-5">Note: To be valid for sending notifications, simply search for <kbd class="kbd">{{ \Telegram\Bot\Laravel\Facades\Telegram::getMe()->getUsername()}}</kbd> and <kbd class="kbd">{{\Telegram\Bot\Laravel\Facades\Telegram::bot('bot2')->getMe()->getUsername()}}</kbd> (for systemUser Notification) on telegram app. Then, type anything and send it. If you receive a message from Telegram, it means that the Telegram username is valid.</p>
-                    {{-- <input type="file" name="avatar" class="file-input file-input-bordered file-input-primary w-full" /> --}}
-                    {{-- @error('avatar')
-                        <span class="mb-5 label-text-alt text-error">{{$message}}</span>
-                    @enderror --}}
-                    <x-drag-drop name="avatar" id="avatar1" title="Profile Avatar" />
                     <label for="change_modal" class="btn btn-primary w-full mt-5">Save</label>
                     <x-modal id="change_modal" title="Do you want change information" type="YesNo" loader=true formID="edit_form">
                     </x-modal >

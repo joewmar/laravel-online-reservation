@@ -7,7 +7,7 @@
         <div class="grid grid-cols-1 gap-x-16 gap-y-8 lg:grid-cols-5 m-10">
             <div class="lg:col-span-2 lg:py-12">
               <div class="w-52">
-                <img src="{{$employee->avatar ? asset('storage/'. $employee->avatar) : asset('images/logo.png') }} " alt="{{$employee->name()}} images">
+                <img src="{{$employee->avatar ? route('private.image', ['folder' => explode('/', auth('system')->user()->avatar)[0], 'filename' => explode('/', auth('system')->user()->avatar)[1]]) : asset('images/logo.png') }} " alt="{{$employee->name()}} images">
               </div>
               <div class="mt-8 font-bold text-neutral text-2xl">
                 {{$employee->name()}}

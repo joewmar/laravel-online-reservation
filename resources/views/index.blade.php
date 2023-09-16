@@ -202,7 +202,7 @@
 
   
 
-  <x-date-modal id="reservation" operation="{{$web_contents->operation}}" />
+  <x-date-modal id="reservation" :operation="['operation' => $web_contents->operation ?? true, 'from' => $web_contents->from ?? null, 'to' => $web_contents->to, 'reason' => $web_contents->reason]" />
 
   @push('scripts')
     <script src="{{Vite::asset("resources/js/navbar.js")}}"></script>

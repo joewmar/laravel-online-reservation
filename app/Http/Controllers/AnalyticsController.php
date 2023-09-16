@@ -32,8 +32,8 @@ class AnalyticsController extends Controller
                 $year = $item->year;
                 $week = $item->week;
         
-                $startDate = Carbon::now()->setISODate($year, $week)->startOfWeek();
-                $endDate = Carbon::now()->setISODate($year, $week)->endOfWeek();
+                $startDate = Carbon::now('Asia/Manila')->setISODate($year, $week)->startOfWeek();
+                $endDate = Carbon::now('Asia/Manila')->setISODate($year, $week)->endOfWeek();
         
                 $formattedDateRange = $startDate->format('M j');
                 if ($startDate->month != $endDate->month) {

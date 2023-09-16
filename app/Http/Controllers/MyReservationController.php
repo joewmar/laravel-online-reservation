@@ -7,14 +7,31 @@ use App\Models\System;
 use App\Models\Archive;
 use App\Models\RoomRate;
 use App\Models\TourMenu;
-use App\Models\Reservation;
 use App\Models\WebContent;
+use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Notification;
 
 class MyReservationController extends Controller
-{
+{   
+    private function systemNotification($text, $link = null){
+        $systems = System::whereBetween('type', [0, 1])->get();
+        $keyboard = null;
+        if(isset($link)){
+            $keyboard = [
+                [
+                    ['text' => 'View', 'url' => $link],
+                ],
+            ];
+        }
+        foreach($systems as $system){
+            if(isset($system->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard);
+        }
+        Notification::send($systems, new SystemNotification('Employee Action from '.auth()->guard('system')->user()->name().': ' . Str::limit($action, 10, '...'), $text, route('system.notifications')));
+    }
     public function index(Request $request){
         $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 0)->latest()->paginate(5) ?? [];
         if($request['tab'] == 'confirmed'){

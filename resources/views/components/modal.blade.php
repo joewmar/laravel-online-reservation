@@ -3,7 +3,7 @@
 <div x-data="{loader: false}" class="modal modal-bottom sm:modal-middle" id="{{$id}}">
   <div {{ $attributes->merge(['class'=> "modal-box"]) }}>
     <h3 class="font-bold text-lg text-primary">{{$title}}</h3>
-    <div class="my-4 overflow-y-auto">
+    <div class="my-4">
         {{$slot}}
     </div>
 

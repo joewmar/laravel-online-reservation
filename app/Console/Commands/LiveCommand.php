@@ -36,7 +36,7 @@ class LiveCommand extends Command
         $system_user = System::all()->where('type','<=', 1)->where('type','>=', 0);
         foreach($reservations as $item){
             // Verify the deadline of payment then auto canceled
-            if((string)$item->payment_cutoff === Carbon::now()->format('Y-m-d H:i:s')){
+            if((string)$item->payment_cutoff === Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')){
                 $details = [
                     'name' => $item->userReservation->name(),
                     'title' => 'Reservation was Canceled',
@@ -75,7 +75,7 @@ class LiveCommand extends Command
                 "Age: " . $reservations->age ."\n" .  
                 "Nationality: " . $reservations->userReservation->nationality  ."\n" . 
                 "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservations->check_in)->format('F j, Y') ."\n" . 
-                "Today: " . Carbon::now()->format('F j, Y') ."\n" . 
+                "Today: " . Carbon::now('Asia/Manila')->format('F j, Y') ."\n" . 
                 // Send Notification to 
                 $keyboard = [
                     [

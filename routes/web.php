@@ -299,6 +299,7 @@ Route::prefix('system')->name('system.')->group(function(){
         Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function(){
             Route::get('/', 'index')->name('home');
             Route::get('/edit', 'edit')->name('edit');
+            Route::put('/{id}/update/avatar', 'updateAvatar')->name('update.avatar');
             Route::put('/{id}/update', 'update')->name('update');
             // Route::view('/link', 'system.profile.link',  ['activeSb' => 'Link'])->name('link');
             Route::get('/password', 'password')->name('password');

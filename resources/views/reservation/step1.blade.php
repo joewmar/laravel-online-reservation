@@ -2,12 +2,14 @@
     $dateInfo = [
         'at' =>    request('at')  ? decrypt(request('at')) : old('accommodation_type'),
         'cin' =>   request('cin') ? decrypt(request('cin')) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
+        'px' =>   request('px') ? decrypt(request('px')) : old('pax'),
         'cout' =>  request('cout') ? decrypt(request('cout')) : old('check_out'),
     ];
     if(session()->has('rinfo')){
         $dateInfo = [
             'at' => isset(session('rinfo')['at']) ? decrypt(session('rinfo')['at']) : old('accommodation_type'),
             'cin' => isset(session('rinfo')['cin']) ? decrypt(session('rinfo')['cin']) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
+            'px' =>   request('px') ? decrypt(request('px')) : old('pax'),
             'cout' => isset(session('rinfo')['cout']) ? decrypt(session('rinfo')['cout']) : old('check_out'),
         ];
     }
@@ -31,7 +33,7 @@
                     <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-3">
                         <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$dateInfo['cin']}}"/>
                         <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" value="{{$dateInfo['cout']}}" />
-                        <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$dateInfo['cout']}}"/>
+                        <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$dateInfo['px']}}"/>
                     </div>
                 </div>
 

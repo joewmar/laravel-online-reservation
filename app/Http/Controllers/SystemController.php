@@ -90,7 +90,7 @@ class SystemController extends Controller
         $systemUser = System::findOrFail(decrypt($id));
         $validated = $request->validate([
             'type' => ['required'],
-            'avatar' =>  ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
+            // 'avatar' =>  ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
             'first_name' => ['required'],
             'last_name' => ['required'],
             'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
@@ -121,7 +121,7 @@ class SystemController extends Controller
         }
         $updated = $systemUser->update($validated);
         if($updated){
-            return redirect()->route('system.setting.accounts.accounts')->with('success', $systemUser->name() . ' was Updated');
+            return redirect()->route('system.setting.accounts.home')->with('success', $systemUser->name() . ' was Updated');
         }
         else
             return back()->with('error', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Something Error, Try Again');
@@ -134,7 +134,7 @@ class SystemController extends Controller
         if(Hash::check($validated['passcode'], $this->system_user->user()->passcode)){
             $systemUser = System::findOrFail(decrypt($id));
             $systemUser->delete();
-            return redirect()->route('system.setting.accounts.accounts')->with('success', $systemUser->name() . ' was Deleted');
+            return redirect()->route('system.setting.accounts.home')->with('success', $systemUser->name() . ' was Deleted');
         }
         else{
             return back()->with('error', 'Invalid Passcode');
