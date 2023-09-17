@@ -163,7 +163,6 @@ class SystemReservationController extends Controller
         $count = 0;
         foreach($reservation->transaction ?? [] as $key => $item){
             if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
-                $tour_menuID = (int)str_replace('tm','', $key);
                 $tour_menu[$count]['title'] = $item['title'];
                 $tour_menu[$count]['price'] = $item['price'];
                 $tour_menu[$count]['amount'] = $item['amount'];
@@ -171,7 +170,6 @@ class SystemReservationController extends Controller
 
             // Rate
             if (strpos($key, 'rid') !== false) {
-                $rateID = (int)str_replace('rid','', $key);
                 $rate['name'] = $item['title'];;
                 $rate['price'] = $item['price'];
                 $rate['amount'] = $item['amount'];
@@ -382,9 +380,7 @@ class SystemReservationController extends Controller
        
         
     }
-
     public function edit($id){
-        if(!$this->system_user->user()->role() === "Admin") abort(404);
         $reservation = Reservation::findOrFail(decrypt($id));
         if($reservation->status === 3) abort(404);
         $rooms = Room::all();
@@ -395,48 +391,40 @@ class SystemReservationController extends Controller
         $count = 0;
         foreach($reservation->transaction ?? [] as $transKey => $item){
             if (strpos($transKey, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
-                $tour_menuID = (int)str_replace('tm','', $transKey);
                 $tour_menu[$count]['id'] = $transKey;
-                $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
-                $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'];
-                $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
+                $tour_menu[$count]['title'] = $item['title'];
+                $tour_menu[$count]['price'] = $item['price'];
+                $tour_menu[$count]['amount'] = $item['amount'];
             }
             // Rate
             if (strpos($transKey, 'rid') !== false) {
-                $rateID = (int)str_replace('rid','', $transKey);
-                $your_rate['name'] = $reservation->transaction['rid'.$rateID]['title'];;
-                $your_rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
-                $your_rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
+                $your_rate['name'] = $item['title'];
             }
             if (strpos($transKey, 'TA') !== false && is_array($item)) {
-                $TAID = (int)str_replace('TA','', $transKey);
                 foreach($item as $key => $tourAddons){
-                    $tour_addons[$count]['id'] = $key;
-                    $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
-                    $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
-                    $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
+                    $tour_addons[$count]['id'] = $transKey;
+                    $tour_addons[$count]['title'] = $tourAddons['title'];
+                    $tour_addons[$count]['price'] = $tourAddons['price'];
+                    $tour_addons[$count]['amount'] = $tourAddons['amount'];
                 }
             }
             if (strpos($transKey, 'OA') !== false && is_array($item)) {
-                $OAID = (int)str_replace('OA','', $transKey);
                 foreach($item as $key => $tourAddons){
                     $other_addons[$count]['id'] = $transKey;
-                    $other_addons[$count]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
-                    $other_addons[$count]['pcs'] = $reservation->transaction['OA'.$OAID][$key]['pcs'];
-                    $other_addons[$count]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
-                    $other_addons[$count]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
+                    $other_addons[$count]['title'] = $tourAddons['title'];
+                    $other_addons[$count]['pcs'] = $tourAddons['pcs'];
+                    $other_addons[$count]['price'] = $tourAddons['price'];
+                    $other_addons[$count]['amount'] = $tourAddons['amount'];
                 }
             }
             $count++;
         }
         unset($count);
-        return view('system.reservation.edit',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate, 'tour_addons' => $tour_addons, 'tour_menu' => $tour_menu, 'other_addons' => $other_addons]);
+        return view('system.reservation.edit',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate, 'your_rate' => $your_rate ?? [], 'tour_addons' => $tour_addons, 'tour_menu' => $tour_menu, 'other_addons' => $other_addons]);
 
     }
     public function updateRInfo(Request $request, $id){ 
-        if(!$this->system_user->user()->role() === "Admin") abort(404);
         $reservation = Reservation::findOrFail(decrypt($id));
-        $user = User::findOrFail($reservation->userReservation->id);
         $rooms = Room::all();
         if(str_contains($request['check_in'], 'to')){
             $dateSeperate = explode('to', $request['check_in']);
@@ -447,35 +435,29 @@ class SystemReservationController extends Controller
             $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
             $request['check_out'] = $date->format('Y-m-d');
         }
-        $request['check_in'] = Carbon::parse($request['check_in'] , 'Asia/Manila')->format('Y-m-d');
-        $request['check_out'] = Carbon::parse($request['check_out'] , 'Asia/Manila')->format('Y-m-d');
-        // Check out convertion word to date format
-
-        if(checkAvailRooms($request['pax'], $request['check_in'])){
-            return back()->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
-        }
+        $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone( 'Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone( 'Asia/Manila')->format('Y-m-d');
 
         $validator = null;
         if($request['accommodation_type'] == 'Day Tour'){
             $validator = Validator::make($request->all(), [
                 'age' => ['required', 'numeric', 'min:8'],
-                'room_rate' => ['required', 'numeric'],
+                'room_rate' => ['nullable', 'numeric'],
                 'status' => ['required', 'numeric'],
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after:'.Carbon::now()->addDays(2)],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
                 'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
                 'pax' => ['required', 'numeric', 'min:1'],
-                'room_pax' => ['required', 'array'],
+                'room_pax' => Rule::when(!empty($request['room_pax']), ['required', 'array']),
                 'payment_method' => ['required'],
                 'tour_menu' => Rule::when(!empty($request['tour_menu']), ['array']),
                 'other_addons' => Rule::when(!empty($request['other_addons']), ['array']),
                 'tour_addons' => Rule::when(!empty($request['tour_addons']), ['array']),
-                'valid_id' => Rule::when(!empty($request['valid_id']), ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024']),
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
-                'required' => 'Need fill up first',
+                'required' => 'Need fill up first (:attribute)',
                 'date_equals' => 'Choose only one day (Day Tour)',
                 'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',
                 'image' => 'The file must be an image of type: jpeg, png, jpg',
@@ -493,17 +475,16 @@ class SystemReservationController extends Controller
                 'accommodation_type' => ['required'],
                 'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
                 'pax' => ['required', 'numeric', 'min:1'],
-                'room_pax' => ['required', 'array'],
+                'room_pax' => Rule::when(!empty($request['room_pax']), ['required', 'array']),
                 'payment_method' => ['required'],
                 'tour_menu' => Rule::when(!empty($request['tour_menu']), ['array']),
                 'other_addons' => Rule::when(!empty($request['other_addons']), ['array']),
                 'tour_addons' => Rule::when(!empty($request['tour_addons']), ['array']),
-                'valid_id' => Rule::when(!empty($request['valid_id']), ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024']),
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
-                'required' => 'Need fill up first',
+                'required' => 'Need fill up first (:attribute)',
                 'check_out.after_or_equal' => 'Choose within 2 day and above (Overnight)',
                 'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',
                 'image' => 'The file must be an image of type: jpeg, png, jpg',
@@ -520,16 +501,15 @@ class SystemReservationController extends Controller
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
                 'accommodation_type' => 'required',
                 'pax' => ['required', 'numeric', 'min:1', 'max:'.(string)RoomList::max('max_occupancy')],
-                'room_pax' => ['required', 'array'],
+                'room_pax' => Rule::when(!empty($request['room_pax']), ['required', 'array']),
                 'payment_method' => ['required'],
                 'other_addons' => Rule::when(!empty($request['other_addons']), ['array']),
                 'tour_addons' => Rule::when(!empty($request['tour_addons']), ['array']),
-                'valid_id' => Rule::when(!empty($request['valid_id']), ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024']),
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
                 'check_out.unique' => 'Sorry, this date is not available',
-                'required' => 'Need fill up first',
+                'required' => 'Need fill up first (:attribute)',
                 'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     
                 'after' => 'The :attribute was already chose from (Check-in)',
                 'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',
@@ -541,80 +521,79 @@ class SystemReservationController extends Controller
         else{
             return back()->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput();
         }
-        if(empty($validator->getData()['room_pax'])) return back()->with('error', 'Required to choose room')->withInput($validator->getData());
         if ($validator->fails()) {   
-            // $validator->         
-            return back()->with('error', $validator->errors())->withInput();
-            // return back()->withErrors($validator)->withInput();
+            return back()->with('error', $validator->errors()->all())->withInput($validator->getData());
         }
         $validated = $validator->validated();
+        $transaction = $reservation->transaction;
+        if(isset($request['room_pax'])){
+            $roomCustomer = [];
+            // Room Update and Verification
+            $reservationPax = 0;
+            $validated['room_pax'] = $request['room_pax'];
+            if(checkAvailRooms($validated['pax'], $validated['check_in'], $validated['check_out'])){
+                return back()->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
+            }
+            foreach($validated['room_pax'] as $room_id => $newPax){
+                $room = Room::find($room_id);
+                if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
+                if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
+                if($newPax > $room->getVacantPax() && $reservationPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
+                $reservationPax += (int)$newPax;
+                $roomCustomer[$room_id] = $newPax;
+            }
+            if($reservationPax > $reservation->pax || $reservationPax < $reservation->pax) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
 
-        $roomCustomer = [];
-        // Room Update and Verification
-        $reservationPax = 0;
-
-        $rate = RoomRate::find($validated['room_rate']);
-        foreach($validated['room_pax'] as $room_id => $newPax){
-            $room = Room::find($room_id);
-            if($room->availability === true) return back()->with('error', 'Room No. ' . $room->room_no. ' is not available')->withInput($validated);
-            if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
-            if($newPax > $room->getVacantPax() && $reservationPax < $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
-            $reservationPax += (int)$newPax;
-            $roomCustomer[$room_id] = $newPax;
-
+            foreach($rooms as $room){
+                $room->removeCustomer($reservation->id);
+                if(array_key_exists($room->id, $roomCustomer)) $room->addCustomer($reservation->id, $roomCustomer[$room->id]);
+            }
         }
-        if($reservationPax > $reservation->pax || $reservationPax < $reservation->pax) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$reservationPax.' pax) that already choose in previous room')->withInput($validated);
-
-        if($request->hasFile('valid_id')){  
-            if($reservation->userReservation->valid_id) deleteFile($reservation->userReservation->valid_id, 'private');
-            $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
+        if(isset($request['room_rate'])){
+            $rate = RoomRate::find($validated['room_rate']);
+            foreach($transaction as $key => $item){
+                if(strpos($key, 'tm'.$rate->id) === false){
+                    $transaction['rid'.$rate->id]['title'] = $rate->name;
+                    $transaction['rid'.$rate->id]['price'] = $rate->price;
+                    $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
+                }
+            }
         }
+        if(!empty($validated['tour_menu'])){
+            foreach($validated['tour_menu'] as $item){
+                if (isset($transaction[decrypt($item)])) {
+                    unset($transaction[decrypt($item)]);
+                }
+            }
+        }
+        if(!empty($validated['tour_addons'])){
+            foreach($validated['tour_addons'] as $item){
+                if (isset($transaction[decrypt($item)])) {
+                    unset($transaction[decrypt($item)]);
+                }
+            }
+        }
+        if(!empty($validated['other_addons'])){
+            foreach($validated['other_addons'] as $item){
+                if (isset($transaction[decrypt($item)])) {
+                    unset($transaction[decrypt($item)]);
+                }
+            }
+        }
+
         $reservation->update([
             'age' => $validated['age'],
             'check_in' => $validated['check_in'],
             'check_out' => $validated['check_out'],
             'accommodation_type' => $validated['accommodation_type'],
             'pax' => $validated['pax'],
-            'tour_pax' => $validated['tour_pax'],
+            'tour_pax' => !empty($validated['tour_pax']) ? $validated['tour_pax'] : null,
             'payment_method' => $validated['payment_method'],
             'status' => $validated['status'],
-            'roomrateid' => $validated['room_rate'],
-            'roomid' => array_keys($roomCustomer),
+            'roomid' => !empty($roomCustomer) ? array_keys($roomCustomer) : $reservation->roomid,
+            'transation' => $transaction,
         ]);
-        $user->update(['valid_id' => $validated['valid_id'] ?? $reservation->userReservation->valid_id,]);
-        foreach($rooms as $room){
-            $room->removeCustomer($reservation->id);
-            if(array_key_exists($room->id, $roomCustomer)) $room->addCustomer($reservation->id, $roomCustomer[$room->id]);
-        }
 
-
-        if(!empty($validated['tour_menu'])){
-            foreach($validated['tour_menu'] as $item){
-                $transaction = $reservation->transaction;
-                if (isset($transaction[decrypt($item)])) {
-                    unset($transaction[decrypt($item)]);
-                    $reservation->update(['transaction' => $transaction]);
-                }
-            }
-        }
-        if(!empty($validated['tour_addons'])){
-            foreach($validated['tour_addons'] as $item){
-                $transaction = $reservation->transaction;
-                if (isset($transaction[decrypt($item)])) {
-                    unset($transaction[decrypt($item)]);
-                    $reservation->update(['transaction' => $transaction]);
-                }
-            }
-        }
-        if(!empty($validated['other_addons'])){
-            foreach($validated['other_addons'] as $item){
-                $transaction = $reservation->transaction;
-                if (isset($transaction[decrypt($item)])) {
-                    unset($transaction[decrypt($item)]);
-                    $reservation->update(['transaction' => $transaction]);
-                }
-            }
-        }
         return redirect()->route('system.reservation.edit', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' information was updated');
 
         
@@ -682,7 +661,6 @@ class SystemReservationController extends Controller
         $transaction = $reservation->transaction;
         $transaction['rid'.$rate->id]['title'] = $rate->name;
         $transaction['rid'.$rate->id]['price'] = $rate->price;
-        $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
         $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
         // Update Reservation
         $reserved = $reservation->update([

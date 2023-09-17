@@ -79,8 +79,6 @@
             this.alertType = 'error';
             this.message = `${titleValue} was already added`;
           }
-          console.log(this.carts);
-
         },
         removeItemCart(id, title) {
             const index = this.carts.findIndex(cartItem => cartItem.id == id);

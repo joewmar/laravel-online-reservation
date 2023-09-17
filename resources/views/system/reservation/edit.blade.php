@@ -1,7 +1,7 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
-    $arrPayment = ['Walk-in', 'Other Booking', 'Gcash', 'Paypal'];
-    $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Previous', 'Previous', 'Reshedule', 'Cancel', 'Disaprove'];
+    $arrPayment = ['Walk-in', 'Other Booking', 'Gcash', 'PayPal'];
+    $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Previous', 'Previous', 'Reshedule', 'Cancel'];
 @endphp
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Edit {{$r_list->userReservation->name()}}" back=true>
@@ -18,80 +18,38 @@
                     <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{old('pax') ?? $r_list->pax}}"/>
                     <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{old('tour_pax') ?? $r_list->tour_pax}}" />
                     <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{old('payment_method') ?? $r_list->payment_method}}"/>
-                    @if($r_list->status <= 3)
-                        <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[old('payment_method')] ?? $r_list->status()}}" disabled=true />
+                    @if($r_list->status >= 3)
+                        <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[old('status')] ?? $arrStatus[$r_list->status]}}" disabled=true />
                     @else
-                        <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[old('payment_method')] ?? $r_list->status()}}"  />
+                        <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[old('status')] ?? $arrStatus[$r_list->status]}}"  />
                     @endif
                 </div>
             </section>
             <div class="divider"></div>
-            @if($r_list->status >= 3)
-                <section class="w-full" id="disabledAll">
-            @else
-                <section class="w-full">
-            @endif
-                <h2 class="text-lg my-5">Room Information</h2>
-                <div class="form-control w-full">
-                    <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
-                            <select name="room_rate" id="room_rate" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
-                            <option value="" disabled selected>Please select</option>
-                            @foreach ($rates as $key => $rate)
-                                @if(old('room_rate') == $rate->id);
-                                    <option value="{{$rate->id}}" selected>{{$rate->name}} ({{$rate->occupancy}} pax)</option>
-                                @elseif($rate->occupancy == $r_list->pax)
-                                    <option value="{{$rate->id}}" selected>{{$rate->name}} ({{$rate->occupancy}} pax)</option>
-                                @else
-                                    <option value="{{$rate->id}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
-                                @endif
-                            @endforeach
-                        </select>        
-                        <span id="room_rate" class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-neutral transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                            Room Type
-                        </span>
-                    </label>
-                    <label class="label">
-                        <span class="label-text-alt">
-                            @error('room_rate')
-                                <span class="label-text-alt text-error">{{$message}}</span>
-                            @enderror
-                        </span>
-                    </label>
-                </div>    
-                <div x-data="{rooms: {{$r_list->roomid ? '[' . implode(',', $r_list->roomid) .']' : '[]'}}, allCount: 0}" class="flex flex-wrap justify-center md:justify-normal flex-grow m-5 gap-5 w-full">
+            <section class="w-full">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-xl my-5">Room Information {{$r_list->roomid ? '' : '(No Room Yet)'}}</div> 
+                        <div class="text-sm mb-5 font-bold">{{$your_rate ? 'Rate: ' . $your_rate['name'] : 'No Rate Yet'}}</div> 
+                    </div>
+                    <button class="btn btn-primary btn-sm">Change Room</button>
+                </div>
+                <div class="flex {{$r_list->roomid ? '' : 'opacity-50'}} grid grid-cols-1 md:grid-cols-4 gap-5 w-full" id="{{$r_list->roomid ? '' : 'disabledAll'}}">
                     @forelse ($rooms as $key => $item)
-                        <div id="{{$item->availability == 1 ? 'disabledAll' : ''}}">
-                            @if($item->availability == 1)
-                                <input x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" disabled/>
-                            @else
-                                <input x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" x-on:checked="rooms.includes({{$item->id}})" />
-                            @endif
+                        <div>
                             <label for="RoomNo{{$item->room_no}}">
-                                <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 {{$item->availability == 1 ? 'opacity-70 bg-red-600' : 'border-primary cursor-pointer'}}">
-                                    @if($item->availability == 1)
-                                        <span class="absolute inset-x-0 bottom-0 h-full  bg-red-500 opacity-80 flex items-center"><h4 class="text-base-100 block font-medium w-full text-center">Full</h4></span>
-                                    @else
-                                        <span class="absolute inset-x-0 bottom-0 h-3 bg-primary flex flex-col items-center justify-center">
-                                            <h4 class="text-primary-content hidden font-medium w-full text-center">Room No. {{$item->room_no}} Selected</h4> 
-                                            @php $roomKey = 0; @endphp
-                                            <div x-data="{count: {{array_key_exists($r_list->id, $item->customer ?? []) ? (int)$item->customer[$r_list->id] : 1}}}" class="join hidden">
-                                                @php $roomKey++; @endphp
-                                                <button @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
-                                                <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" readonly/>
-                                                <button @click="count++" type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
-                                            </div>
-                                        </span>
-                                    @endif
+                                <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 border-primary">
+                                    <span class="{{in_array($item->id, $r_list->roomid) ? 'h-full' : 'h-3'}} absolute inset-x-0 bottom-0 bg-primary flex flex-col items-center justify-center">
+                                        <h4 class="{{in_array($item->id, $r_list->roomid) ? 'block' : 'hidden'}} text-primary-content w-full text-center font-bold ">Room No. {{$item->room_no}}</h4> 
+                                        @php $roomKey = 0; @endphp
+                                        <div class="{{in_array($item->id, $r_list->roomid) ? 'block' : 'hidden'}}">
+                                            <h4 class="{{in_array($item->id, $r_list->roomid) ? 'block' : 'hidden'}} text-primary-content font-medium w-full text-center"><span>{{array_key_exists($r_list->id, $item->customer ?? []) ? (int)$item->customer[$r_list->id] : 1 }}</span> Guest</h4> 
+                                        </div>
+                                    </span>
                                     <div class="sm:flex sm:justify-between sm:gap-4">
                                         <div>
                                             <h3 class="text-lg font-bold text-neutral sm:text-xl">Room No. {{$item->room_no}}</h3>
                                             <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->name}}</p>
-                                            <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->min_occupancy}} up to {{$item->room->max_occupancy}} capacity</p>
-                                            @if($item->getAllPax() === (int)$item->room->max_occupancy - 1)
-                                                <p class="mt-1 text-xs font-bold text-red-400">There is only {{$item->getAllPax()}} guest</p>
-                                            @else
-                                                <p class="mt-1 text-sm font-medium ">{{$item->getAllPax() > 0 ? $item->getAllPax() . ' guest availed' : 'No guest'}} </p>
-                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -101,25 +59,29 @@
                         <p class="text-2xl font-semibold">No Room Found</p>
                     @endforelse
                 </div>
+
                 @if (!empty($tour_menu))
                     <div class="divider"></div>
-                    <h2 class="text-lg my-5">Tour Information: Remove List</h2>
+                    <div class="flex justify-between items-center my-5">
+                        <h2 class="text-lg">Tour Information</h2>
+                        <button class="btn btn-primary btn-sm">Add Tour</button>
+                    </div>
                     <div class="overflow-x-auto">
-                        <table class="table">
+                        <table x-data="{tourMenu: []}" class="table">
                         <!-- head -->
                         <thead>
-                            <tr>
-                            <th></th>
-                            <th>Tour</th>
-                            <th>Price</th>
-                            <th>Amount</th>
-                            </tr>
+                                <th class="flex justify-start items-center">
+                                    <button class="btn btn-error btn-xs" type="button" x-show="!(tourMenu.length === 0)" x-transition>Remove</button>
+                                </th>
+                                <th>Tour</th>
+                                <th>Price</th>
+                                <th>Amount</th>
                         </thead>
-                        <tbody x-data="{tourMenu: []}">
+                        <tbody >
                             @forelse ($tour_menu as $key => $item)
                                 <tr>
                                     <th>
-                                    <label>
+                                    <label >
                                         <input x-model="tourMenu" type="checkbox" name="tour_menu[]" class="checkbox checkbox-error" value="{{encrypt($item['id'])}}" />
                                     </label>
                                     </th>
@@ -147,8 +109,8 @@
                     <!-- head -->
                             <thead>
                                 <tr>
-                                    <th>
-        
+                                    <th class="flex justify-start items-center">
+                                        <button class="btn btn-error btn-xs" type="button" x-show="!(tourMenu.length === 0)" x-transition>Remove</button>
                                     </th>
                                     <th>Tour</th>
                                     <th>Price</th>
@@ -184,7 +146,8 @@
                     <!-- head -->
                             <thead>
                                 <tr>
-                                    <th>
+                                    <th class="flex justify-start items-center">
+                                        <button class="btn btn-error btn-xs" type="button" x-show="!(tourMenu.length === 0)" x-transition>Remove</button>
                                     </th>
                                     <th>Addons</th>
                                     <th>Quantity</th>
@@ -221,15 +184,9 @@
                         <div class="w-96 rounded">
                             <img src="{{route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]])}}" alt="Valid ID">
                         </div>
-                        <x-file-input id="valid_id" name="valid_id" placeholder="Send Valid ID" value="{{ route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]]) }}" />
                     </div>
                 </div>
-                <div class="flex justify-end space-x-3">
-                    <label for="save_reservation" class="btn btn-primary">Save</label>
-                    <x-modal formID="edit-form" id="save_reservation" title="Do you want change information of {{$r_list->userReservation->name()}}" type="YesNo" loader=true >
-                    </x-modal>
-                    {{-- <button class="btn btn-error">Remove</button> --}}
-                </div>
+
             </section>
         </form>
     </x-system-content>

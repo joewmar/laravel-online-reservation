@@ -36,7 +36,12 @@
                             <td>{{$list->status()}} </td>
                             <th class="w-36 md:w-96 grid grid-cols-1 md:grid-cols-3 gap-2 place-content-center">
                               @if ($list->status !== 5)
-                              <label for="cancel_modal" class="btn btn-error btn-xs" {{isset($list->message['cancel']) || isset($list->message['reschedule']) ? 'disabled' : ''}}>Cancel</label>
+                              
+                              <div class="join">
+                                <label for="{{isset($list->message['cancel']) || isset($list->message['reschedule']) || (!($list->status >= 0 && $list->status < 2)) ? 'disabled' : 'cancel_modal'}}" class="btn btn-error btn-xs join-item" {{isset($list->message['cancel']) || isset($list->message['reschedule']) || (!($list->status >= 0 && $list->status < 2)) ? 'disabled' : ''}}>Cancel</label>
+                                <label for="{{isset($list->message['cancel']) || isset($list->message['reschedule']) || (!($list->status >= 0 && $list->status < 2)) ? 'disabled' : 'reschedule_modal'}}" class="btn btn-warning btn-xs join-item" {{!empty($list->message['cancel']) || !empty($list->message['reschedule']) || (!($list->status >= 0 && $list->status < 2)) ? 'disabled' : ''}}>Reschedule</label>
+                                <a href="{{route('user.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs join-item" >More Details</a>
+                              </div>
                               <x-modal id="{{isset($list->message['cancel']) ? 'disabledALl' : 'cancel_modal'}}" title="Why do you want to cancel?"> 
                                 <form action="{{route('user.reservation.cancel', encrypt($list->id))}}" method="POST">
                                   @csrf
@@ -47,7 +52,6 @@
                                   </div>
                                 </form>
                               </x-modal> 
-                              <label for="reschedule_modal" class="btn btn-warning btn-xs" {{!empty($list->message['cancel']) || !empty($list->message['reschedule']) || (!($list->status > 0 && $list->status < 2)) ? 'disabled' : ''}}>Reschedule</label>
                               <x-modal id="reschedule_modal" title="Why do you want to reschedule?"> 
                                 <form action="{{route('user.reservation.reschedule', encrypt($list->id))}}" method="POST">
                                   @csrf
@@ -64,7 +68,6 @@
                                 </form>
                               </x-modal> 
                               @endif
-                              <a href="{{route('user.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs" >More Details</a>
 
                             </th>
                           </tr>

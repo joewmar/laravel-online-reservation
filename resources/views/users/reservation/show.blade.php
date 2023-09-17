@@ -1,9 +1,9 @@
 @php
     $total = 0;
     $downpayment = 0;
-    $dscPerson = null;
+    $dscPerson = 0;
 
-    foreach ($r_list->transaction as $outerKey => $outerItem) {
+    foreach ($r_list->transaction ?? [] as $outerKey => $outerItem) {
         if ($outerKey == 'payment' && is_array($outerItem)) {
             $downpayment = $outerItem['downpayment'] ?? 0;
             $dscPerson = $outerItem['discountPerson'] ?? 0;
@@ -16,7 +16,7 @@
 <x-landing-layout noFooter>
     <x-navbar :activeNav="$activeNav" type="plain"/>
     <x-full-content>
-        <section class="p-6 pt-24">
+        <section class="px-10 md:px-20 pt-24">
             {{-- User Details --}}
             <div class="px-0 md:px-20">
                 <div class="w-full sm:flex sm:space-x-6">
@@ -56,13 +56,13 @@
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                             @if($r_list->status >= 1 && $r_list->status !== 5)
                                 <li>
-                                    <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                                    <a href="{{route('reservation.receipt', encrypt($r_list->id))}}">
                                         Reciept
                                     </a>
                                 </li>
                             @endif
                                 <li>
-                                    <a href="{{route('user.reservation.edit', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm" {{$r_list->status >= 0 || $r_list->status !== 5 ? 'disabled' : ''}}>
+                                    <a href="{{route('user.reservation.edit', encrypt($r_list->id))}}" {{!($r_list->status > 0 || $r_list->status <= 3) ? 'disabled' : ''}}>
                                         Edit Information
                                     </a>
                                 </li>
@@ -76,36 +76,87 @@
                             Reciept
                         </a>
                     @endif
-                    <a href="{{route('user.reservation.edit', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm" {{$r_list->status >= 0 || $r_list->status !== 5 ? 'disabled' : ''}}>
+                    <a href="{{route('user.reservation.edit', encrypt($r_list->id))}}" class="btn btn-sm" {{!($r_list->status > 0 || $r_list->status <= 3) ? 'disabled' : ''}}>
                         Edit Information
                     </a>
                 </div>
                 <div class="divider"></div>
-                <div class="block md:flex items-center justify-between">
+                <div class="block">
                     <article class="text-md tracking-tight text-neutral my-5 w-auto">
                         <h2 class="text-2xl mb-5 font-bold">Details</h2>
-                        <p class="my-1"><strong>Number of Guest: </strong>{{$r_list->pax . ' guest' ?? 'None'}}</p>
-                        @if(!empty($r_list->tour_pax))
-                            <p class="my-1"><strong>Guest going on tour: </strong>{{$r_list->tour_pax . ' guest' ?? 'None'}}</p>
-                        @endif
-                        <p class="my-1"><strong>Type: </strong>{{$r_list->accommodation_type ?? 'None'}}</p>
-                        <p class="my-1"><strong>Room No: </strong>{{!empty($rooms) ? $rooms : 'None'}}</p>
-                        <p class="my-1"><strong>Check-in: </strong>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_in )->format('l, F j, Y') ?? 'None'}}</p>
-                        <p class="my-1"><strong>Check-out: </strong>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out )->format('l, F j, Y') ?? 'None'}}</p>
-                        <p class="my-1"><strong>Payment Method: </strong>{{ $r_list->payment_method ?? 'None'}}</p>
-                        <p class="my-1"><strong>Status: </strong>{{ $r_list->status() ?? 'None'}}</p>
+                        <div class="overflow-x-auto">
+                            <table class="table">
+                              <!-- head -->
+                              <tbody>
+                                <!-- row 1 -->
+                                
+                                <tr>
+                                  <th>Number of Guest</th>
+                                  <td>{{$r_list->pax . ' guest' ?? 'None'}}</td>
+                                  <td></td>
+                                  <td></td>
+                                </tr>
+        
+                                @if(!empty($r_list->tour_pax))
+                                    <tr>
+                                        <th>Guest going on tour</th>
+                                        <td>{{$r_list->tour_pax . ' guest' ?? 'None'}}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                @endif
+                                <tr>
+                                    <th>Type</th>
+                                    <td>{{$r_list->accommodation_type ?? 'None'}}</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <th>Room No</th>
+                                    <td>{{!empty($rooms) ? $rooms : 'None'}}</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <th>Check-in</th>
+                                    <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_in )->format('l, F j, Y') ?? 'None'}}</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <th>Check-out</th>
+                                    <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out )->format('l, F j, Y') ?? 'None'}}</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Method</th>
+                                    <td>{{ $r_list->payment_method ?? 'None'}}</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <th>Status</th>
+                                    <td>{{ $r_list->status() ?? 'None'}}</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                              </tbody>
+                            </table>
+                        </div>
+                        
                     </article>
                     <article>
                         @if($r_list->accommodation_type !== 'Room Only')
                             <div class="w-auto">
                                 <div class="overflow-x-auto">
-                                    <table class="table table-zebra table-xs">
+                                    <table class="table table-zebra">
                                     <!-- head -->
                                     <thead>
-                                        <tr>
-                                            <th>Tour</th>
-                                            <th>Price</th>
-                                            <th>Amount</th>
+                                        <tr class="text-neutral font-bold">
+                                            <td>Tour</td>
+                                            <td>Price</td>
+                                            <td>Amount</td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -121,20 +172,20 @@
                                 </div>
                             </div>
                         @endif
-                        @if($r_list->status > 4 && $r_list->status < 7)
-                            <article class="mt-3">
-                                <p class="text-md tracking-tight text-neutral">
+                        {{-- @if($r_list->status < 7)
+                            <article class="mt-3 flex flex-col items-end">
+                                <div>
                                     <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->getTotal(), 2) }}
-                                </p>
-                                <p class="text-md tracking-tight text-neutral">
+                                </div>
+                                <div class="text-md tracking-tight text-neutral">
                                     <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment() ?? 0, 2) }}
-                                </p>
-                                <p class="text-md tracking-tight text-neutral my-5">
+                                </div>
+                                <div class="text-md tracking-tight text-neutral my-5">
                                     @php $balance = abs($total - $downpayment); @endphp
                                     <span class="font-medium">Balance due: </span>₱ {{ number_format($r_list->balance() ?? 0, 2) }}
-                                </p>
+                                </div>
                             </article>
-                        @endif
+                        @endif --}}
                     </article>
                 </div>
                 @if(!empty($tour_addons) || !empty($other_addons))
@@ -142,11 +193,11 @@
                     <article>
                         <h1 class="my-1 text-xl "><strong>Additional Request: </strong></h1>
                         @if(!empty($tour_addons))
-                            <div class="my-5 w-96">
+                            <div class="my-5 w-full">
                                 <p class="my-1 font-medium">Additional Tour: </p>
                                 <div class="w-auto">
                                     <div class="overflow-x-auto">
-                                        <table class="table table-zebra table-xs">
+                                        <table class="table table-zebra table-sm">
                                         <!-- head -->
                                         <thead>
                                             <tr>
@@ -170,11 +221,11 @@
                             </div>
                         @endif
                         @if(!empty($other_addons))
-                            <div class="my-5 w-96">
+                            <div class="my-5 w-full">
                                 <p class="my-1 font-medium">Other:</p>
                                 <div class="w-auto">
                                     <div class="overflow-x-auto">
-                                        <table class="table table-zebra table-xs">
+                                        <table class="table table-zebra table-sm">
                                         <!-- head -->
                                         <thead>
                                             <tr>
@@ -201,55 +252,111 @@
                         @endif
                     </article>
                 @endif
-                @if($r_list->status > 0 && $r_list->status < 4)
-                    <div class="divider"></div>
-                        <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
-                        @if (isset($dscPerson))
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">Room Rate (Orginal Price): </span>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}
-                            </p>
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">Total of Room Rate: </span>₱ {{ number_format($rate['orig_amount'] ?? 0, 2) }}
-                            </p>
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">Senior Guest : </span>{{$dscPerson ?? 0}} Guest
-                            </p>
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">Discount : </span>20%
-                            </p>
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">Total of Room Rate Discounted: </span>₱ {{ number_format($rate['amount'], 2) }}
-                            </p>
-                        @else          
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">Room Rate: </span>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}
-                            </p>
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">No. of days: </span>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}
-                            </p>
-                            <p class="text-md tracking-tight text-neutral">
-                                <span class="font-medium">Total of Room Rate: </span>₱ {{ number_format($rate['amount'], 2) }}
-                            </p>
-                        @endif
-                        <p class="text-md tracking-tight text-neutral">
-                            <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->getTotal(), 2) }}
-                        </p>
-                        <p class="text-md tracking-tight text-neutral">
-                            <span class="font-medium">Downpayment: </span>{{$r_list->downpayment() !== 0 ? '₱ ' . number_format($r_list->downpayment(), 2) : 'No Downpayment'}}
-                        </p>
-                        <p class="text-md tracking-tight text-neutral">
-                            <span class="font-medium">Payment after Check-in: </span>{{$r_list->checkInPayment() !== 0 ? '₱ ' . number_format($r_list->checkInPayment(), 2) : 'No Payment' }}
-                        </p>
-                        <p class="text-md tracking-tight text-neutral my-5">
-                            <span class="font-medium">Balance due: </span>₱ {{ number_format($r_list->balance() ?? 0, 2) }}
-                        </p>
-                    </article>
-                @endif
                 <div class="divider"></div>
-                <div class="flex flex-wrap justify-center w-full">
-                    <div class="w-96 rounded">
-                        <img src="{{route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]])}}" alt="Valid ID of {{$r_list->userReservation->name()}}">
+                    <article class="text-md tracking-tight text-neutral my-5 w-auto">
+                        <h2 class="text-2xl mt-5 font-bold">Transaction</h2>
+                        <div class="overflow-x-auto">
+                            <table class="table">
+                                <thead>
+                                    <th></th>
+                                    <th></th>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th>Service Cost:</th>
+                                        <td>₱ {{ number_format((double)$r_list->getServiceTotal() ?? 0, 2) }}</td>
+                                    </tr>
+                                    @if ($dscPerson !== 0)
+                                        <tr>
+                                            <th>Room Rate (Orginal Price)</th>
+                                            <td>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}</td>
+                                        </tr>
+                                        <tr class="text-md tracking-tight text-neutral">
+                                            <th >No. of days: </th>
+                                            <td>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Total of Room Rate</th>
+                                            <td>₱ {{ number_format($rate['orig_amount'] ?? 0, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Senior Guest</th>
+                                            <td>₱ {{$dscPerson ?? 0}} Guest</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Discount</th>
+                                            <td>20%</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Total of Room Rate Discounted</th>
+                                            <td>₱ {{ number_format($rate['amount'], 2) }}</td>
+                                        </tr>
+                                    @endif
+                                    @if($r_list->status > 0 && $r_list->status < 4 && $dscPerson === 0)
+                                        <tr>
+                                            <th>Room Rate:</th>
+                                            <td>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th >No. of days: </th>
+                                            <td>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Total of Room Rate: </th>
+                                            <td>₱ {{ number_format($rate['amount'], 2) }}</td>
+                                        </tr>
+                                    @endif
+                                <tr>
+                                    <th>Total Cost: </th>
+                                    <td>₱ {{ number_format($r_list->getTotal(), 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Downpayment: </th>
+                                    <td>{{$r_list->downpayment() !== 0 ? '₱ ' . number_format($r_list->downpayment(), 2) : 'No Downpayment'}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Payment after Check-in: </th>
+                                    <td>{{$r_list->checkInPayment() !== 0 ? '₱ ' . number_format($r_list->checkInPayment(), 2) : 'No Payment' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Payment after Check-out: </th>
+                                    <td>{{$r_list->checkOutPayment() !== 0 ? '₱ ' . number_format($r_list->checkOutPayment(), 2) : 'No Payment' }}</td>
+                                </tr>
+                                @if($r_list->checkOutPayment() === 0)
+                                    <tr class="text-md tracking-tight text-neutral my-5">
+                                        <th>Balance due: </th>
+                                        <td>{{$r_list->balance() !== 0 ? '₱ ' . number_format($r_list->balance(), 2) : 'No Balance' }}</td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
                     </div>
+                </article>
+                
+                <div class="divider"></div>
+                <div x-data="{show: false}" class=" w-full">
+                    <div class="flex items-start space-x-2">
+                        <h2 class="text-2xl mb-5 font-bold">Valid ID</h2> 
+                        <div class="join">
+                            <button @click="show = !show" type="button" x-text="show ? 'Hide' : 'Show' " class="btn btn-sm join-item"></button>
+                            <label for="edit_id_modal" class="btn btn-primary btn-sm join-item" {{$r_list->status > 0 ? 'disabled' : ''}}>Change</label> 
+                        </div>
+                        <x-modal id="edit_id_modal" title="Change Valid ID" loader>
+                            <form action="{{route('profile.update.validid', encrypt($r_list->userreservation->id))}}" method="POST" enctype="multipart/form-data" >
+                                @csrf
+                                @method('PUT')
+                                <x-drag-drop name="valid_id" id="valid_id" />
+                                <div class="modal-action">
+                                    <button type="submit" class="btn btn-primary" @click="loader = true">Save</button>
+                                </div>
+                            </form>
+                        </x-modal>
+                    </div>
+                    <template x-if="show">
+                        <div class="w-full rounded flex justify-center">
+                            <img src="{{route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]])}}" alt="Valid ID of {{$r_list->userReservation->name()}}">
+                        </div>
+                    </template>
                 </div>
                 <div class="divider"></div>
                 <div class="w-full">

@@ -16,7 +16,7 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="" back=true>
         {{-- User Details --}}
-       <div class="px-0 md:px-20">
+       <div class="px-10 md:px-20">
         <div class="w-full sm:flex sm:space-x-6">
             <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
                 @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
@@ -53,34 +53,34 @@
                 <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                     @if($r_list->status >= 1 && $r_list->status < 2)
                         <li>
-                            <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                            <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}">
                                 Online Payment
                             </a>
                         </li>
                     @endif
                     @if($r_list->status > 1 && $r_list->status < 3)
                         <li>
-                            <a href="{{route('system.reservation.show.extend', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                            <a href="{{route('system.reservation.show.extend', encrypt($r_list->id))}}">
                                 Extend Room Stay
                             </a>
                         </li>
                         <li>
-                            <a href="{{route('system.reservation.show.addons', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                            <a href="{{route('system.reservation.show.addons', encrypt($r_list->id))}}">
                                 Add-ons
                             </a>
                         </li>
                     @endif
                     @if($r_list->status >= 1)
                         <li>
-                            <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                            <a href="{{route('reservation.receipt', encrypt($r_list->id))}}">
                                 Reciept
                             </a>
                         </li>
                     @endif
                         <li>
-                            <a href="{{route('system.reservation.edit', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
+                            <label for="edit_modal" href="{{route('system.reservation.edit', encrypt($r_list->id))}}" {{$r_list->status === 3 ? 'disabled' : ''}}>
                                 Edit Information
-                            </a>
+                            </label>
                         </li>
                     </ul>
               </div>
@@ -107,16 +107,37 @@
                     Reciept
                 </a>
             @endif
-            @if ($r_list->status === 3)
-            <a href="{{route('system.reservation.edit', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm" disabled>
+
+            <label for="edit_modal" href="{{route('system.reservation.edit', encrypt($r_list->id))}}" class="btn btn-sm" {{$r_list->status === 3 ? 'disabled' : ''}}>
                 Edit Information
-            </a>
-            @else
-            <a href="{{route('system.reservation.edit', encrypt($r_list->id))}}" class="btn btn-ghost btn-sm">
-                Edit Information
-            </a>
-            @endif
+            </label>
+    
+
         </div>
+        <x-modal title="What kind do you want to edit?" id="edit_modal">
+            <div class="grid grid-cols-2 gap-5">
+                <a href="/" class="card border hover:bg-primary hover:text-primary-content">
+                    <div class="card-body justify-center items-center">
+                      <h2 class="card-title">Information</h2>
+                    </div>
+                </a>
+                <a href="/" class="card border hover:bg-primary hover:text-primary-content">
+                    <div class="card-body justify-center items-center">
+                      <h2 class="card-title">Room Assign</h2>
+                    </div>
+                </a>
+                <a href="/" class="card border hover:bg-primary hover:text-primary-content">
+                    <div class="card-body justify-center items-center">
+                      <h2 class="card-title">Tour</h2>
+                    </div>
+                </a>
+                <a href="/" class="card border hover:bg-primary hover:text-primary-content">
+                    <div class="card-body justify-center items-center">
+                      <h2 class="card-title">Addons</h2>
+                    </div>
+                </a>
+            </div>
+        </x-modal>
         <div class="divider"></div>
         <div class="block">
             <article class="text-md tracking-tight text-neutral my-5 w-auto">
@@ -329,7 +350,7 @@
                                     <td>₱ {{ number_format($rate['amount'], 2) }}</td>
                                 </tr>
                             @endif
-                            @if($r_list->status > 0 && $r_list->status < 4 && $dscPerson === 0)
+                            @if($r_list->status > 0 && $r_list->status <= 3 && $dscPerson === 0)
                                 <tr>
                                     <th>Room Rate:</th>
                                     <td>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}</td>

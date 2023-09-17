@@ -36,7 +36,7 @@ class UserController extends Controller
         if(isset($user->avatar)) deleteFile($user->avatar);
         $validated['avatar'] = saveImageWithJPG($request, 'avatar', 'avatar');
         $user->update($validated);
-        return redirect()->route('profile.home')->with('success', 'Your Profile Picture was updated');
+        return back()->with('success', 'Your Profile Picture was updated');
     }
     public function updateUserInfo(Request $request, $id){
         $user = User::findOrFail(decrypt($id));

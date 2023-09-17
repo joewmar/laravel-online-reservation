@@ -1,7 +1,7 @@
 <x-landing-layout noFooter>
     <x-navbar :activeNav="$activeNav" type="plain"/>
     <x-full-content>
-        <section class="pt-24 p-6 text-neutral h-auto">
+        <section class="pt-24 text-neutral h-auto">
             <div class="container flex flex-col mx-auto space-y-12 ng-untouched ng-pristine ng-valid">
                 <fieldset class="w-full grid grid-cols-1 md:grid-cols-6 gap-10 md:gap-2 p-6 rounded-md">
                     <div class="col-span-6 md:col-span-2 space-y-5 flex flex-col items-center">
@@ -62,8 +62,10 @@
                         </form>
                         <div class="divider"></div>
                         <h2 class="text-2xl font-bold mb-5">Valid ID</h2>
-                        <label for="show_id_modal" class="btn btn-ghost btn-sm mt-5">Show</label> 
-                        <label for="edit_id_modal" class="btn btn-primary btn-sm mt-5">Change</label> 
+                        <div class="join mt-5">
+                            <label for="show_id_modal" class="btn btn-sm join-item">Show</label> 
+                            <label for="edit_id_modal" class="btn btn-primary btn-sm join-item">Change</label> 
+                        </div>
                         <x-modal id="edit_id_modal" title="Change Valid ID" loader>
                             <form action="{{route('profile.update.validid', encrypt($user->id))}}" method="POST" enctype="multipart/form-data" >
                                 @csrf
