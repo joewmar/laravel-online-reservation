@@ -9,8 +9,7 @@
     <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
       <div class="w-full md:w-96">
         <x-input type="text" id="title" name="title" placeholder="Title" value="{{$service_menu->title}}"/>
-        <x-datalist-input id="category" name="category" placeholder="Category" :list="$category" value="{{$service_menu->category}}"/>
-        <x-select id="tour_type" name="tour_type" placeholder="Tour Type" :value="$arrTrType" :title="$arrTrType" selected="{{$service_menu->tour_type ?? old('tour_type')}}" />
+        <x-datalist-input id="category" name="category" placeholder="Category" :lists="$category" value="{{$service_menu->category}}"/>
         <x-input type="number" id="no_day" name="no_day" placeholder="Number of days" value="{{$service_menu->no_day}}" />
         <x-textarea id="inclusion" name="inclusion" placeholder="Inclusion (Item 1, Item 2)" value="{{$service_menu->inclusion}}" />
         <label for="add_modal" class="btn btn-primary w-full">Save</label>

@@ -17,15 +17,15 @@
         @if(request('rtab') === 'list')
             {{-- Table  --}}
             <div class="mt-20 w-full">
-                <div class="tabs flex justify-center md:justify-start">
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list']) )}}" class="tab tab-lifted {{!request()->has('tab') && request()->has('rtab') ? 'tab-active' : ''}}">All</a> 
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'pending']) )}}" class="tab tab-lifted {{request('tab') == 'pending' ? 'tab-active' : ''}}">Pending</a> 
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'confirmed']))}}" class="tab tab-lifted {{request('tab') == 'confirmed' ? 'tab-active' : ''}}">Confirmed</a> 
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cin']))}}" class="tab tab-lifted {{request('tab') == 'cin' ? 'tab-active' : ''}}">Check-in</a> 
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cout']))}}" class="tab tab-lifted {{request('tab') == 'cout' ? 'tab-active' : ''}}">Check-out</a> 
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cancel']))}}" class="tab tab-lifted {{request('tab') == 'cancel' ? 'tab-active' : ''}}">Cancel</a> 
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'reshedule']))}}" class="tab tab-lifted {{request('tab') == 'reshedule' ? 'tab-active' : ''}}">Reschedule</a>
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'previous']))}}" class="tab tab-lifted {{request('tab') == 'previous' ? 'tab-active' : ''}}">Previous</a>
+                <div class="tabs md:tabs-boxed md:bg-transparent flex justify-center md:justify-start">
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list']) )}}" class="tab {{!request()->has('tab') && request()->has('rtab') ? 'tab-active font-bold text-primary' : ''}}">All</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'pending']) )}}" class="tab {{request('tab') == 'pending' ? 'tab-active font-bold text-primary' : ''}}">Pending</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'confirmed']))}}" class="tab {{request('tab') == 'confirmed' ? 'tab-active font-bold text-primary' : ''}}">Confirmed</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cin']))}}" class="tab {{request('tab') == 'cin' ? 'tab-active font-bold text-primary' : ''}}">Check-in</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cout']))}}" class="tab {{request('tab') == 'cout' ? 'tab-active font-bold text-primary' : ''}}">Check-out</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cancel']))}}" class="tab {{request('tab') == 'cancel' ? 'tab-active font-bold text-primary' : ''}}">Cancel</a> 
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'reshedule']))}}" class="tab {{request('tab') == 'reshedule' ? 'tab-active font-bold text-primary' : ''}}">Reschedule</a>
+                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'previous']))}}" class="tab {{request('tab') == 'previous' ? 'tab-active font-bold text-primary' : ''}}">Previous</a>
                 </div>
                 <div class="mt-10">
                     <div class="flex justify-end w-full gap-5 -z-[100]">
@@ -97,15 +97,15 @@
                                                     <x-checkout name="{{$list->userReservation->name() ?? ''}}" :datas="$list" />
                                                 @endif
                                                 <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs join-item">View</a>
-                                                <div class="dropdown dropdown-top dropdown-end z-40">
-                                                    <label tabindex="0" class="btn btn-xs join-item">
+                                                <div class="dropdown dropdown-left dropdown-end">
+                                                    <label tabindex="0" class="btn join-item btn-xs">                                                        
                                                         <i class="fa-solid fa-ellipsis"></i>
                                                     </label>
                                                     <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                                                      <li><a href="{{route('system.reservation.show.cancel', encrypt($list->id))}}">Cancel</a></li>
-                                                      <li><a href="{{route('system.reservation.show.reschedule', encrypt($list->id))}}">Reschedule</a></li>
+                                                        <li><a href="{{route('system.reservation.show.cancel', encrypt($list->id))}}" class="text-error">Cancel</a></li>
+                                                        <li><a href="{{route('system.reservation.show.reschedule', encrypt($list->id))}}" class="text-accent-content">Reschedule</a></li>
                                                     </ul>
-                                                </div>
+                                                  </div>
                                             </div>
                                             {{-- <a href="{{route('system.reservation.show.receipt', encrypt($list->id))}}" class="btn btn-accent btn-xs" >Receipt</a> --}}
                                         </th>

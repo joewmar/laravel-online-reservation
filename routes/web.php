@@ -21,6 +21,7 @@ use App\Http\Controllers\RoomSettingController;
 use App\Http\Controllers\TourSettingController;
 use App\Http\Controllers\MyReservationController;
 use App\Http\Controllers\CreateReservationController;
+use App\Http\Controllers\EditReservationController;
 use App\Http\Controllers\SystemReservationController;
 use App\Notifications\SystemNotification;
 
@@ -156,14 +157,22 @@ Route::prefix('system')->name('system.')->group(function(){
                 Route::get('/create/step4', 'step4')->name('create.step.four');
                 Route::post('/create/step4', 'storeStep4')->name('store.step.four');
             });
+            Route::controller(EditReservationController::class)->group(function (){
 
+                Route::get('/{id}/edit/information', 'information')->name('edit.information');
+                Route::put('/{id}/edit/information', 'updateInfo')->name('edit.information.update');
+
+                Route::get('/{id}/edit/rooms', 'rooms')->name('edit.rooms');
+                Route::put('/{id}/edit/rooms', 'updateRooms')->name('edit.rooms.update');
+
+                Route::get('/{id}/edit/services', 'services')->name('edit.tour');
+                Route::put('/{id}/edit/services', 'updateServices')->name('edit.tour.update');
+            });
             Route::controller(SystemReservationController::class)->group(function (){
                 Route::get('/', 'index')->name('home');
                 Route::post('/search', 'search')->name('search');
                 Route::get('/calendar', 'event')->name('event');
                 Route::get('/{id}/show', 'show')->name('show');
-                Route::get('/{id}/edit', 'edit')->name('edit');
-                Route::put('/{id}/update', 'updateRInfo')->name('update');
                 Route::get('/{id}/show/extend', 'showExtend')->name('show.extend');
                 Route::get('/{id}/show/addons', 'showAddons')->name('show.addons');
                 Route::put('/{id}/show/addons/update', 'updateAddons')->name('addons.update');

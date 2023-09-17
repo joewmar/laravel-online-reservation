@@ -1,5 +1,4 @@
 @php
-    $total = 0;
     $downpayment = 0;
     $dscPerson = 0;
 
@@ -9,6 +8,13 @@
             $dscPerson = $outerItem['discountPerson'] ?? 0;
             continue;
         }
+    }
+    $tours = [];
+    foreach ($menu as $key => $value) {
+        $tours[$key] = $value;
+    }
+    foreach ($tour_addons as $key => $value) {
+        $tours[$key] = $value;
     }
 
 @endphp
@@ -78,7 +84,7 @@
                         </li>
                     @endif
                         <li>
-                            <label for="edit_modal" href="{{route('system.reservation.edit', encrypt($r_list->id))}}" {{$r_list->status === 3 ? 'disabled' : ''}}>
+                            <label for="edit_modal" {{$r_list->status === 3 ? 'disabled' : ''}}>
                                 Edit Information
                             </label>
                         </li>
@@ -108,32 +114,27 @@
                 </a>
             @endif
 
-            <label for="edit_modal" href="{{route('system.reservation.edit', encrypt($r_list->id))}}" class="btn btn-sm" {{$r_list->status === 3 ? 'disabled' : ''}}>
+            <label for="edit_modal" class="btn btn-sm" {{$r_list->status === 3 ? 'disabled' : ''}}>
                 Edit Information
             </label>
     
 
         </div>
         <x-modal title="What kind do you want to edit?" id="edit_modal">
-            <div class="grid grid-cols-2 gap-5">
-                <a href="/" class="card border hover:bg-primary hover:text-primary-content">
+            <div class="grid grid-cols-3 gap-5">
+                <a href="{{route('system.reservation.edit.information', encrypt($r_list->id))}}" class="card border hover:bg-primary hover:text-primary-content">
                     <div class="card-body justify-center items-center">
                       <h2 class="card-title">Information</h2>
                     </div>
                 </a>
-                <a href="/" class="card border hover:bg-primary hover:text-primary-content">
+                <a href="{{route('system.reservation.edit.rooms', encrypt($r_list->id))}}" class="card border hover:bg-primary hover:text-primary-content">
                     <div class="card-body justify-center items-center">
-                      <h2 class="card-title">Room Assign</h2>
+                      <h2 class="card-title">Room</h2>
                     </div>
                 </a>
-                <a href="/" class="card border hover:bg-primary hover:text-primary-content">
+                <a href="{{route('system.reservation.edit.tour', encrypt($r_list->id))}}" class="card border hover:bg-primary hover:text-primary-content">
                     <div class="card-body justify-center items-center">
-                      <h2 class="card-title">Tour</h2>
-                    </div>
-                </a>
-                <a href="/" class="card border hover:bg-primary hover:text-primary-content">
-                    <div class="card-body justify-center items-center">
-                      <h2 class="card-title">Addons</h2>
+                      <h2 class="card-title">Services</h2>
                     </div>
                 </a>
             </div>
@@ -205,85 +206,49 @@
                 
             </article>
             <article>
-                @if($r_list->accommodation_type !== 'Room Only')
+                @if(isset($tours))
                     <div class="w-auto">
                         <div class="overflow-x-auto">
-                            <table class="table table-zebra">
+                            <table class="table">
                             <!-- head -->
                             <thead>
                                 <tr class="text-neutral font-bold">
-                                    <td>Tour</td>
+                                    <td>Tours</td>
                                     <td>Price</td>
                                     <td>Amount</td>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($menu as $key => $item)
+                                @php $totalTour = 0 @endphp
+                                @foreach ($tours as $key => $item)
                                     <tr>
                                         <td>{{$item['title']}}</td> 
                                         <td>₱ {{number_format($item['price'], 2)}}</td> 
                                         <td>₱ {{number_format($item['amount'], 2)}}</td> 
                                     </tr>
+                                    @php $totalTour += $item['amount'] @endphp
+
                                 @endforeach
+                                <tr class="bg-base-200">
+                                    <td></td> 
+                                    <td class="font-bold">Total</td> 
+                                    <td colspan="2" class="font-bold">₱ {{number_format($totalTour, 2)}}</td> 
+                                </tr>
                             </tbody>
                             </table>
                         </div>
                     </div>
                 @endif
-                {{-- @if($r_list->status < 7)
-                    <article class="mt-3 flex flex-col items-end">
-                        <div>
-                            <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->getTotal(), 2) }}
-                        </div>
-                        <div class="text-md tracking-tight text-neutral">
-                            <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment() ?? 0, 2) }}
-                        </div>
-                        <div class="text-md tracking-tight text-neutral my-5">
-                            @php $balance = abs($total - $downpayment); @endphp
-                            <span class="font-medium">Balance due: </span>₱ {{ number_format($r_list->balance() ?? 0, 2) }}
-                        </div>
-                    </article>
-                @endif --}}
             </article>
         </div>
-        @if(!empty($tour_addons) || !empty($other_addons))
+        @if(!empty($other_addons))
             <div class="divider"></div>
             <article>
                 <h1 class="my-1 text-xl "><strong>Additional Request: </strong></h1>
-                @if(!empty($tour_addons))
-                    <div class="my-5 w-96">
-                        <p class="my-1 font-medium">Additional Tour: </p>
-                        <div class="w-auto">
-                            <div class="overflow-x-auto">
-                                <table class="table table-zebra">
-                                <!-- head -->
-                                <thead>
-                                    <tr>
-                                        <th>Tour</th>
-                                        <th>Price</th>
-                                        <th>Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($tour_addons as $key => $tour)
-                                        <tr>
-                                            <td>{{$tour['title']}}</td> 
-                                            <td>₱ {{number_format($tour['price'], 2)}}</td> 
-                                            <td>₱ {{number_format($tour['amount'], 2)}}</td> 
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                @endif
                 @if(!empty($other_addons))
-                    <div class="my-5 w-96">
-                        <p class="my-1 font-medium">Other:</p>
-                        <div class="w-auto">
-                            <div class="overflow-x-auto">
-                                <table class="table table-zebra">
+                    <div class="my-5 w-full">
+                        <div class="overflow-x-auto">
+                            <table class="table">
                                 <!-- head -->
                                 <thead>
                                     <tr>
@@ -294,6 +259,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php $totalAddons = 0 @endphp
                                     @foreach ($other_addons as $key => $addon)
                                         <tr>
                                             <td>{{$addon['title']}}</td> 
@@ -301,10 +267,16 @@
                                             <td>₱ {{number_format($addon['price'], 2)}}</td> 
                                             <td>₱ {{number_format($addon['amount'], 2)}}</td> 
                                         </tr>
+                                        @php $totalAddons += $addon['amount'] @endphp
+
                                     @endforeach
+                                    <tr class="bg-base-200">
+                                        <td colspan="2"></td> 
+                                        <td class="font-bold">Total</td> 
+                                        <td class="font-bold">₱ {{number_format($totalAddons, 2)}}</td> 
+                                    </tr>
                                 </tbody>
-                                </table>
-                            </div>
+                            </table>
                         </div>
                     </div>
                 @endif
@@ -406,20 +378,25 @@
         <div class="divider"></div>
         <div class="w-full">
             <h2 class="text-2xl mb-5 font-bold">Messages</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5"> 
-                <div class="bg-base-100 shadow-lg p-6 rounded">
-                    <h2 class="text-lg font-bold">Request Message</h2>
-                    <p class="text-md">{{$r_list->message['request'] ?? 'None'}}</p>
-                </div>
-                <div class="bg-base-100 shadow-lg p-6 rounded">
-                    <h2 class="text-lg font-bold">Reason to Cancel</h2>
-                    <p class="text-md">{{$r_list->message['cancel']['message'] ?? 'None'}}</p>
-                </div>
-                <div class="bg-base-100 shadow-lg p-6 rounded">
-                    <h2 class="text-lg font-bold">Reason to Reschedule</h2>
-                    <p class="text-md">{{$r_list->message['reschedule']['message'] ?? 'None'}}</p>
-                </div>
-            </div>
+            <div class="flow-root p-3">
+                <dl class="-my-3 divide-y divide-gray-100 text-sm">
+                  <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4">
+                    <dt class="font-medium text-gray-900">Request Message</dt>
+                    <dd class="text-gray-700 sm:col-span-2">{{$r_list->message['request'] ?? 'None'}}</dd>
+                  </div>
+              
+                  <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4">
+                    <dt class="font-medium text-gray-900">Reason to Cancel</dt>
+                    <dd class="text-gray-700 sm:col-span-2">{{$r_list->message['cancel']['message'] ?? 'None'}}</dd>
+                  </div>
+              
+                  <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4">
+                    <dt class="font-medium text-gray-900">Reason to Reschedule</dt>
+                    <dd class="text-gray-700 sm:col-span-2">{{$r_list->message['reschedule']['message'] ?? 'None'}}</dd>
+                  </div>
+                </dl>
+              </div>
+        
         </div>
         <div class="divider"></div>
         @if($r_list->status >= 0 && $r_list->status < 1 && $r_list->user_id)
@@ -480,7 +457,6 @@
             </article>
         @endif
         <div class="flex justify-end space-x-1">
-            @props(['data'])
                 <div class="join">
                     <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-xs join-item" {{!($r_list->status == 0) ? 'disabled' : ''}}>Confirm</a>
                     <label for="checkin" class="btn btn-success btn-xs join-item" {{!($r_list->status == 1) ? 'disabled' : ''}}>Check-in</label>

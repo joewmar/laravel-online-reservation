@@ -5,16 +5,18 @@
           <article class="prose">
             <h1>{{$tour_list->title}}</h1>
             <p class="text-lg"><span class="font-bold">Category:</span> {{$tour_list->description === null ? 'None': $tour_list->description}}</p>
-            <p class="text-lg"><span class="font-bold">Type: </span> {{$tour_list->tour_type === null ? 'None': $tour_list->tour_type}}</p>
             <p class="text-lg"><span class="font-bold">Number of Day:</span> {{$tour_list->no_day === null ? 'None': $tour_list->no_day}}</p>
             <p class="text-lg"><span class="font-bold">Inclusion:</span> {{$tour_list->inclusion === null ? 'None': $tour_list->inclusion}}</p>
             <p class="text-lg">
-              <span class="font-bold">Price</span>
+              <div class="space-x-4">
+                <span class="font-bold">Price</span>
+                <a href="{{route('system.menu.create', Arr::query(['tl' => encrypt($tour_list->id), 'rpl' => encrypt(true)]))}}" class="btn btn-xs btn-primary">Add Price</a href="{{route('system.menu.replace', Arr::query(['rpid' => request('rpid')]))}}}}">
+              </div>
               <ul class="list-outside md:list-inside marker:text-primary">
                 @foreach ($tour_list->tourMenuLists as $tour_menu)
                     <li class="space-x-5">
                       <strong>{{$tour_menu->type}} ({{$tour_menu->pax}} pax): </strong> P{{ number_format($tour_menu->price, 2)}}
-                      <div class="{{$loop->index === 0 && count($tour_list->tourMenuLists) == 1 ? 'hidden' : ''}} dropdown dropdown-right dropdown-hover">
+                      <div class="{{count($tour_list->tourMenuLists) <= 1 ? 'hidden' : ''}} dropdown dropdown-right dropdown-hover">
                         <label tabindex="0" class="btn btn-circle btn-ghost btn-sm text-primary">
                           <i class="fa-solid fa-ellipsis text-lg"></i>                        
                         </label>
@@ -23,16 +25,17 @@
                           </li>
                           <li><a href="{{route('system.menu.edit.price', ['id' => encrypt($tour_list->id), 'priceid' => encrypt($tour_menu->id) ])}}" class="link link-primary">Edit</a></li>
                           <li>
-                            <label for="delete_price" class="link link-error">Delete</label>
+                            <label for="delete_price{{$loop->index+1}}" class="link link-error">Delete</label>
                           </li>
                         </ul>
                       </div>
                     </li>
-                    <form id="delete-price-form" method="POST" action=" {{ route('system.menu.destroy.price',['id' => encrypt($tour_list->id), 'priceid' => encrypt($tour_menu->id) ]) }}">
+                    <form id="delete-price-form{{$loop->index+1}}" method="POST" action=" {{ route('system.menu.destroy.price',['id' => encrypt($tour_list->id), 'priceid' => encrypt($tour_menu->id) ]) }}">
                       @csrf
                       @method('DELETE')
-                      <x-passcode-modal title="Do you want remove this: {{$tour_menu->type}}" id="delete_price" formId="delete-price-form"  />
                     </form>
+                    <x-modal type="YesNo" title="Do you want remove this: {{$tour_menu->type}}" id="delete_price{{$loop->index+1}}" formId="delete-price-form{{$loop->index+1}}"  >
+                    </x-modal >
                 @endforeach
               </ul>
             </p>

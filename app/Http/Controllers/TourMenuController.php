@@ -101,7 +101,6 @@ class TourMenuController extends Controller
                     'category' =>  ['required'],
                     'inclusion' => ['nullable'],
                     'no_day' =>  ['required', 'numeric', 'min:1', Rule::when(($request['tour_type'] === 'Day Tour'), ['min:1', 'max:1']), Rule::when(($request['tour_type'] === 'Overnight'), ['min:2'])],
-                    'tour_type' =>  ['required'],
                     'pax' => ['required', 'numeric'],
                     'type' => ['required'],
                     'price' =>  ['required', 'numeric', 'decimal:0,2'],
@@ -113,7 +112,6 @@ class TourMenuController extends Controller
                             'title' => $validated['title'],
                             'category' => $validated['category'],
                             'inclusion' => $validated['inclusion'] ?? null,
-                            'tour_type' =>  $validated['tour_type'],
                             'no_day' =>  $validated['no_day'],
 
 
@@ -164,10 +162,7 @@ class TourMenuController extends Controller
                 'title' => ['required'],
                 'category' =>  ['required'],
                 'inclusion' => ['nullable'],
-                'tour_type' => ['nullable'],
                 'no_day' =>  ['required', 'numeric', 'min:1', Rule::when(($request['tour_type'] === 'Day Tour'), ['min:1', 'max:1']), Rule::when(($request['tour_type'] === 'Overnight'), ['min:2'])],
-
-                'hrs' =>  ['required', 'numeric', 'decimal:0,2'],
                 'passcode' =>  ['required', 'numeric', 'digits:4'],
             ]);
 

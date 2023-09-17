@@ -125,7 +125,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
             'inclusion' => 'Duration: 1 hr. to 1.5 hrs.',
-            'tour_type' => 'All',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
@@ -146,7 +145,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'ATV Tambo Lake and San Marcos Lake Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
             'inclusion' => 'Duration: 1 hr. to 1.5 hrs.',
-            'tour_type' => 'All',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
@@ -166,7 +164,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'ATV Combo Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
             'inclusion' => 'Duration: 5 hrs(..)Destination: Lahar Canyons, Tambo Lake, Aeta Village, Bulacan',
-            'tour_type' => 'All',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
@@ -189,7 +186,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'Tambo Lake Trail',
             'category' => 'ATV Trail Rate',
             'inclusion' => '100 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
-            'tour_type' => 'All',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
@@ -209,7 +205,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'Combo Trail',
             'category' => 'ATV Trail Rate',
             'inclusion' => '100 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
-            'tour_type' => 'All',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
@@ -229,7 +224,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'Short trail via ATV',
             'category' => 'ATV Trail Rate',
             'inclusion' => '100 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
-            'tour_type' => 'All',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
@@ -249,7 +243,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'ATV Long Trail (going to Pinatubo drop point car)',
             'category' => 'ATV Trail Rate',
             'inclusion' => '700 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
-            'tour_type' => 'Day Tour',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
@@ -266,7 +259,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'Mt. Pinatubo 4x4 Ride',
             'category' => '4x4 Ride Rate',
             'inclusion' => 'Local guide(..)All mandatory fees (conservation fees, tourism fees)(..)Trek meal (packed lunch)(..)Use of toilet & shower facilities(..)Parking facilities',
-            'tour_type' => 'Day Tour',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
