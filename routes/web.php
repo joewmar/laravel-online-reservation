@@ -78,6 +78,8 @@ Route::middleware(['guest:web'])->group(function(){
 
     Route::get('/auth/facebook/fillup', [UserController::class, 'fillupFacebook'])->name('facebook.fillup');
     Route::post('/auth/facebook/fillup/update', [UserController::class, 'fillupFacebookUpdate'])->name('facebook.fillup.store');
+    Route::get('/auth/facebook/fillup/verify', [UserController::class, 'fillupFacebookVerify'])->name('facebook.verify');
+    Route::post('/auth/facebook/fillup/verify/update', [UserController::class, 'fillupFacebookStore'])->name('facebook.verify.store');
     
 
 });

@@ -27,8 +27,7 @@ class Room extends Model
             set: fn ($value) => json_encode($value),
         );
     } 
-    public function checkAvailability()
-    {
+    public function checkAvailability(){
         $countOccupancy = 0;
         // Check if Availability All
         $isFull = false;
@@ -45,8 +44,7 @@ class Room extends Model
         unset($countOccupancy);
         return $isFull;
     }
-    public function getAllPax()
-    {
+    public function getAllPax(){
         $countPax = 0;
         if(isset($this->attributes['customer'])){
             foreach (json_decode($this->attributes['customer'], true) as $key => $item) {
@@ -55,8 +53,7 @@ class Room extends Model
         }
         return $countPax;
     }
-    public function getVacantPax()
-    {
+    public function getVacantPax(){
         $countPax = 0;
         $vacant = $this->room->max_occupancy;
         if(isset($this->attributes['customer'])){

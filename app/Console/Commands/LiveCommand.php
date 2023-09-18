@@ -32,38 +32,47 @@ class LiveCommand extends Command
     public function handle()
     {
         $reservations = Reservation::all();
-        $webcontent = WebContent::all()->first();
-        $system_user = System::all()->where('type','<=', 1)->where('type','>=', 0);
+        $system_user = System::whereBetween('type', [0, 1])->get();
         foreach($reservations as $item){
             // Verify the deadline of payment then auto canceled
-            if((string)$item->payment_cutoff === Carbon::now('Asia/Manila')->format('Y-m-d H:i:s')){
-                $details = [
-                    'name' => $item->userReservation->name(),
-                    'title' => 'Reservation was Canceled',
-                    'body' => 'Your reservation has been canceled as you did not take time to arrange the requirements. If you have any concerns, you can contact the owner or personnel.'
-                ];
-                $text = 
-                "Cancel Reservation!\n" .
-                "Name: ". $reservations->userReservation->name() ."\n" . 
-                "Age: " . $reservations->age ."\n" .  
-                "Nationality: " . $reservations->userReservation->nationality  ."\n" . 
-                "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservations->check_in)->format('F j, Y') ."\n" . 
-                "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservations->check_out)->format('F j, Y') ."\n" . 
-                "Type: " . $reservations->accommodation_type ;
-                // Send Notification to 
-                $keyboard = [
-                    [
-                        ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reservations->id))],
-                    ],
-                ];
-                Mail::to(env('SAMPLE_EMAIL') ?? $item->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
-                foreach($system_user as $user){
-                    if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
+            if(isset($item->payment_cutoff)){
+                if(Carbon::createFromFormat('Y-m-d H:i:s', $item->payment_cutoff)->timestamp <= Carbon::now('Asia/Manila')->timestamp){
+                    $item->update(['status' => 5]);
+                    $details = [
+                        'name' => $item->userReservation->name(),
+                        'title' => 'Reservation was Canceled',
+                        'body' => 'Your reservation has been canceled as you did not take time pay the downpayment. If you have any concerns, you can contact the owner or personnel.'
+                    ];
+                    $text = 
+                    "Cancel Reservation!\n" .
+                    "Name: ". $reservations->userReservation->name() ."\n" . 
+                    "Age: " . $reservations->age ."\n" .  
+                    "Nationality: " . $reservations->userReservation->nationality  ."\n" . 
+                    "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservations->check_in)->format('F j, Y') ."\n" . 
+                    "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservations->check_out)->format('F j, Y') ."\n" . 
+                    "Type: " . $reservations->accommodation_type ;
+                    // Send Notification to 
+                    $keyboard = [
+                        [
+                            ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reservations->id))],
+                        ],
+                    ];
+                    Mail::to(env('SAMPLE_EMAIL') ?? $item->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+                    foreach($system_user as $user){
+                        if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
+                    }
+                    $this->info('Cancel due downpayment');
+    
                 }
             }
-            // Verify the the not present on guesthouse then auto canceled
             $checkInToday = Carbon::now()->format('Y-m-d') . ' 9:15pm' ;
-            if(Carbon::createFromFormat('Y-m-d', $item->check_in )->addDays(2)->format('Y-m-d H:i:s') === Carbon::createFromFormat('Y-m-d g:ia', $checkInToday)->format('Y-m-d H:i:s')){
+            // $this->info(Carbon::createFromFormat('Y-m-d', $item->check_in)->addDays(2)->timestamp);
+            // $this->info(Carbon::createFromFormat('Y-m-d g:ia', $checkInToday)->timestamp);
+            // $this->info(Carbon::createFromFormat('Y-m-d', $item->check_in)->addDays(2)->timestamp === Carbon::createFromFormat('Y-m-d g:ia', $checkInToday)->timestamp ? 'true' : 'false');
+
+            // Verify the the not present on guesthouse then auto canceled
+            if(Carbon::createFromFormat('Y-m-d', $item->check_in)->addDays(2)->timestamp <= Carbon::createFromFormat('Y-m-d g:ia', $checkInToday)->timestamp){
+                $item->update(['status' => 5]);
                 $details = [
                     'name' => $item->userReservation->name(),
                     'title' => 'Reservation was Canceled',
@@ -71,34 +80,25 @@ class LiveCommand extends Command
                 ];
                 $text = 
                 "Did not show up at the Guesthouse!\n" .
-                "Name: ". $reservations->userReservation->name() ."\n" . 
-                "Age: " . $reservations->age ."\n" .  
-                "Nationality: " . $reservations->userReservation->nationality  ."\n" . 
-                "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservations->check_in)->format('F j, Y') ."\n" . 
+                "Name: ". $item->userReservation->name() ."\n" . 
+                "Age: " . $item->age ."\n" .  
+                "Nationality: " . $item->userReservation->nationality  ."\n" . 
+                "Check-in: " . Carbon::createFromFormat('Y-m-d', $item->check_in)->format('F j, Y') ."\n" . 
                 "Today: " . Carbon::now('Asia/Manila')->format('F j, Y') ."\n" . 
                 // Send Notification to 
-                $keyboard = [
-                    [
-                        ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reservations->id))],
-                    ],
-                ];
+                // $keyboard = [
+                //     [
+                //         ['text' => 'View Log', 'url' => route('system.reservation.show', encrypt($item->id))],
+                //     ],
+                // ];
                 Mail::to(env('SAMPLE_EMAIL') ?? $item->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
                 foreach($system_user as $user){
-                    if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
+                    if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text);
                 }
-            }
-        }
-        // Do Automatic Resevation Operation
-        if(isset($webcontent->from) && isset($webcontent->to)){
-            if(Carbon::now()->format('Y-m-d') === $webcontent->from){
-                $webcontent->operation = false;
-            }
-            if(Carbon::now()->yesterday()->format('Y-m-d') === $webcontent->to){
-                $webcontent->operation = true;
+                $this->info('Show up of customer');
             }
         }
         unset($checkInToday,  $keyboard, $text, $details,  $system_user, $webcontent, $reservations);
-
         $this->info('Live Application Updated');
 
     }

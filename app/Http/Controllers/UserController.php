@@ -22,7 +22,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth:web'])->except(['check', 'create', 'verify', 'verifyStore', 'fillupGoogle', 'fillupGoogleUpdate', 'fillupFacebook', 'fillupFacebookUpdate']);
+        $this->middleware(['auth:web'])->except(['check', 'create', 'verify', 'verifyStore', 'fillupGoogle', 'fillupGoogleUpdate', 'fillupFacebook', 'fillupFacebookUpdate', 'fillupFacebookVerify', 'fillupFacebookStore']);
     }
     public function index(){
         $user = User::findOrFail(auth('web')->user()->id);
@@ -260,27 +260,76 @@ class UserController extends Controller
                 'required' => 'Need to fill up your :attribute',
             ]);
             $user = session('fbubser'); 
-            $validated['facebook_id'] = $user['facebook_id'];
-            $validated['avatar'] = $user['avatar'];
-            $validated['avatar'] = $user['avatar'];
-            if(isset($user['email'])) $validated['email'] = $user['email'];
-            $validated['password'] = Str::password();
             $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
             $validated['contact'] = $phone->formatInternational(); 
+            if(isset($request['email'])){
+                $user['first_name'] = $validated['first_name'];
+                $user['last_name'] = $validated['last_name'];
+                $user['birthday'] = $validated['birthday'];
+                $user['country'] = $validated['country'];
+                $user['nationality'] = $validated['nationality'];
+                $user['contact'] = $validated['contact'];
+                $user['password'] = Str::password();
+                session(['fbubser' => $user]);
+                return redirect()->route('facebook.verify');
 
-            $newUser = User::create($validated);
-            if($newUser){
-                session()->forget('ginfo');
-                Auth::guard('web')->login($newUser);
-                return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
             }
             else{
-                return back()->with('error', 'Something Wrong')->withInput( $validated);
-            }   
-           
+                $validated['facebook_id'] = $user['facebook_id'];
+                $validated['avatar'] = $user['avatar'];
+                $validated['email'] = $user['email'];
+                $validated['password'] = Str::password();
+                $newUser = User::create($validated);
+                if($newUser){
+                        session()->forget('ginfo');
+                        Auth::guard('web')->login($newUser);
+                        return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
+                    }
+                    else{
+                        return back()->with('error', 'Something Wrong')->withInput( $validated);
+                    }   
+            }
+            
         }
-        else redirect()->route('google.redirect');
+        else redirect()->route('facebook.redirect');
 
 
     }
+    public function fillupFacebookVerify(){
+        $otp = mt_rand(1111,9999);
+        $user_info = session('fbubser');
+        // dd($user_info);
+        $details = [
+            'name' => $user_info['first_name'] . ' ' . $user_info['last_name'],
+            'title' => "Let's Verify your Email",
+            'body' => 'Verification Code: ' . $otp,
+        ];
+        Mail::to(session('fbubser')['email'])->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
+        $user_info['otp'] = $otp;
+        session(['fbubser' => $user_info]);
+        return view('users.facebook.verify', ['email' => session('fbubser')['email']]);
+    }
+    public function fillupFacebookStore(Request $request){
+        $validated = $request->validate([
+            'code' => ['required', 'digits:4', 'numeric'],
+        ]);
+
+        if(session()->has('fbubser')){
+            if(!$validated['code'] == session('fbubser')['otp']){
+                session()->forget('fbubser');
+                return back()->with('error', 'Invalid Code')->withInputs(session('fbubser') ?? []);
+            }
+            unset(session('fbubser')['otp']);
+            $user = User::create(session('fbubser'));
+            auth('web')->login($user);
+            session()->forget('fbubser');
+            return redirect()->intended(route('home'))->with('success', 'Welcome ' . auth('web')->user()->name());
+            
+        }
+        else{
+            session()->forget('fbubser');
+            return redirect()->route('facebook.redirect');
+        }
+    }
+    
 }

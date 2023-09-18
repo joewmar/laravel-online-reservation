@@ -6,15 +6,50 @@ use App\Models\Room;
 use App\Models\RoomRate;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class EditReservationController extends Controller
 {
     public function information($id){
-        return view('system.reservation.edit.information', ['activeSb' => 'Reservation', 'r_list' => Reservation::findOrFail(decrypt($id))]);
+        $id = decrypt($id);
+        $reservation = Reservation::findOrFail($id);
+        $rooms = Room::all();
+        $rate = RoomRate::all();
+        $rateID = null;
+        foreach($reservation->transaction ?? [] as $key => $item){
+            if (strpos($key, 'rid') !== false)  $rateID= explode('rid', $key)[1];
+        }
+        return view('system.reservation.edit.information', ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate, 'rateid' => $rateID]);
     }
     public function updateInfo(Request $request, $id){
-        dd($id);
-        // return view('system.reservation.edit.information', ['activeSb' => 'Reservation', 'r_list' => Reservation::findOrFail(decrypt($id))]);
+        $reservation = Reservation::findOrFail(decrypt($id));
+        $validate = Validator::make($request->all(), [
+            'age' => ['required', 'numeric'],
+            'check_in' => ['required', 'date'],
+            'check_out' => ['required', 'date', 'after_or_equal:'.$request['check_in']],
+            'accommodation_type' => ['required'],
+            'pax' => ['required', 'numeric'],
+            'payment_method' => ['required'],
+            'status' => ['required'],
+            'passcode' => Rule::when(isset($request['passcode']) && $reservation->pax == $request['pax'], ['required', 'digits:4']),
+            'room_rate' => Rule::when($reservation->pax != $request['pax'], ['required']),
+            'room_pax' => Rule::when($reservation->pax != $request['pax'], ['required']),
+        ], []);
+        
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate = $validate->validate();
+        // dd($validate);
+        if($validate['pax'] != $reservation->pax){
+
+        }
+        else{
+            if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
+            unset($validate['room_pax'], $validate['room_rate'], $validate['passcode']);
+            $reservation->update($validate);
+        }
+        return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . ' Information was Updated');
     }
     public function services($id){
         $reservation = Reservation::findOrFail(decrypt($id));
