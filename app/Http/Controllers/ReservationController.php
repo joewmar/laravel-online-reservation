@@ -104,7 +104,11 @@ class ReservationController extends Controller
 
         
 
-        $validator = null;
+        $validator = Validator::make($request->all('accommodation_type'), [
+            'accommodation_type' => ['required'],
+        ], [
+            'required' => 'Need fill up first',
+        ]);
         if($request['accommodation_type'] == 'Day Tour'){
             $validator = Validator::make($request->all('check_in','check_out', 'accommodation_type', 'pax'), [
                 'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after_or_equal:'.Carbon::now()->addDays(1)],
@@ -150,7 +154,7 @@ class ReservationController extends Controller
         }
         else{
             session(['ck' => false]);
-            return redirect()->route('reservation.date')->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput($validator->getData());;
+            return redirect()->route('reservation.date')->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput($validator->getData());
         }
         if ($validator->fails()) {            
             session(['ck' => false]);

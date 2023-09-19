@@ -47,7 +47,7 @@ Route::controller(LandingController::class)->group(function (){
     Route::get('/tour', 'services')->name('services');
     Route::get('/aboutus', 'aboutus')->name('about.us');
     Route::get('/contact', 'contact')->name('contact');
-    Route::view('/reservation/demo', ['landing.demo'])->name('reservation.demo');
+    Route::get('/reservation/demo', 'demo')->name('reservation.demo');
 });
 
 Route::prefix('reservation')->name('reservation.')->group(function (){

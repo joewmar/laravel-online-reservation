@@ -254,19 +254,19 @@
       
                 @foreach ($tour_category as $category)
                     @php $category_count = $loop->index + 1; @endphp
-                    <div class="flex w-full" x-cloak>
-                        <div x-data="{ price: '' }" :class="category == '{{Str::camel($category->category)}}' ? 'block' : 'hidden'">
+                    <div class="w-full my-5" x-cloak>
+                        <div x-data="{ price: '' }" :class="category == '{{Str::camel($category->category)}}' ? 'w-full grid grid-cols-1 md:grid-cols-2 gap-5 place-content-center' : 'hidden'">
                           {{-- Card List Tour --}}
                           @foreach ($tour_lists as $list)
                             @php $list_count = $loop->index + 1 ?? 1; @endphp
 
                             @if ($category->category === $list->category)
                               @if($user_days < $list->no_day)
-                                  <div class="h-auto opacity-70" id="disabledAll">   
+                                  <div class="opacity-70" id="disabledAll">   
                               @else
-                                <div class="h-auto">
+                                <div class="">
                               @endif
-                                  <div class="card my-3 w-96 bg-base-100 shadow-xl border border-primary hover:border-primary hover:bg-primary hover:text-base-100">
+                                  <div class="card h-full bg-base-100 shadow-xl border border-primary hover:border-primary hover:bg-primary hover:text-base-100">
                                     <label for="{{$user_days < $list->no_day ? 'disabledAll' : Str::camel($list->title)}}" tabindex="0">
                                         <div class="card-body">
                                           <h2 x-ref="titleRef{{$list_count}}" class="card-title">{{$list->title}} </h2> 

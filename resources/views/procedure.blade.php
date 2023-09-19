@@ -54,7 +54,7 @@
           </div>
           <div class="mt-12 text-center">
             <a href="{{route('reservation.demo')}}" class="btn btn-primary" >
-              Demo
+              See More
             </a>
           </div>
         </div>

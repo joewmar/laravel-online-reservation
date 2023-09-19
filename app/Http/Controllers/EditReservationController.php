@@ -36,12 +36,19 @@ class EditReservationController extends Controller
             'passcode' => Rule::when(isset($request['passcode']) && $reservation->pax == $request['pax'], ['required', 'digits:4']),
             'room_rate' => Rule::when($reservation->pax != $request['pax'], ['required']),
             'room_pax' => Rule::when($reservation->pax != $request['pax'], ['required']),
-        ], []);
+        ], [
+            'required' => 'Required (:attribute)',
+        ]);
         
         if($validate->fails()) return back()->with('error', $validate->errors()->all());
         $validate = $validate->validate();
         // dd($validate);
         if($validate['pax'] != $reservation->pax){
+
+            // foreach($reservation->roomid as $item){
+            //     $room = Room::find($item);
+            //     $room->removeCustomer($reservation->id);
+            // }
 
         }
         else{
