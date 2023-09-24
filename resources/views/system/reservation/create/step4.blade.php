@@ -59,6 +59,7 @@
                                   <thead>
                                     <tr>
                                       <th>Tour</th>
+                                      <th>Guest</th>
                                       <th>Price</th>
                                       <th>Amount</th>
                                       {{-- <th></th> --}}
@@ -69,6 +70,7 @@
                                     @foreach ($tour_menus as $key => $item)
                                         <tr>
                                           <td>{{$item['title']}}</td>
+                                          <td>{{$other_info['px']}}</td>
                                           <td>{{$item['price']}}</td>
                                           <td>₱ {{number_format($item['amount'], 2)}} </td>
                                           @php $totalPrice += (double)$item['amount']  @endphp

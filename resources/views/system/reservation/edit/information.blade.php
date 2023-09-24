@@ -33,7 +33,8 @@
                             <div x-show="!(newpax === '{{$r_list->pax}}')">
                                 <div>
                                     <x-modal id="info_modal" title="Change Room Assign and Rate" loader>
-                                        <div  class="w-full">
+                                        <div class="text-sm font-medium">Change Guest: <span x-text="newpax"></span> pax</div>
+                                        <div  class="w-full mt-5">
                                             <form id="reservation-form" action="{{route('system.reservation.show.rooms.update', encrypt($r_list->id))}}" method="post">
                                                 @csrf
                                                 @method('PUT')

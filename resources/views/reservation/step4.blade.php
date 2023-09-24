@@ -19,7 +19,7 @@
           @csrf
           <input type="hidden" name="cur" :value="currency">
         </form>
-        <form id="reservation-form" action="{{ route('reservation.store')}}" method="POST" enctype="multipart/form-data">
+        <form @submit="event.preventDefault();" id="reservation-form" action="{{ route('reservation.store')}}" method="POST" enctype="multipart/form-data">
           @csrf
         <div class="mx-auto grid max-w-screen-xl grid-cols-1 md:grid-cols-2 grid-">
             <div class="order-last md:order-first bg-base-100 py-12 md:py-24">
@@ -80,6 +80,7 @@
                                 <tr>
                                   <th>Tour</th>
                                   <th>Type</th>
+                                  <th>Quantity</th>
                                   <th>Price</th>
                                   <th>Amount</th>
                                   <th></th>
@@ -92,6 +93,7 @@
                                         <tr>
                                           <td>{{$item['title']}}</td>
                                           <td>{{$item['type']}}</td>
+                                          <td>{{$uinfo['tpx']}}</td>
                                           {{-- <td>{{$item['pax']}}</td> --}}
                                           <td>
                                               <input type="hidden" name="tour[]" value="{{encrypt($item['id'])}}">

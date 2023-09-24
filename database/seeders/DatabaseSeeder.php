@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use App\Models\Reservation;
 use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -63,21 +65,19 @@ class DatabaseSeeder extends Seeder
 
         // \App\Models\Reservation::factory()->create([
         //     'user_id' => 1,
-        //     // 'roomid' => 1, (1, 1)
+        //     // 'roomid' => 1,
         //     // 'roomrateid' => 1,
-        //     'pax' => 1,
-        //     // 'menu' => '2_1',
-        //     'accommodation_type' => 'Room Only',
+        //     'pax' => 5,
+        //     'tour_pax' => 4,
+        //     'accommodation_type' => 'Overnight',
         //     'payment_method' => 'Gcash',
         //     'age' => User::findOrfail(1)->age(),
-        //     'check_in' => Carbon::now()->addDays(30)->toDateTimeString(),
-        //     'check_out' => Carbon::now()->addDays(34)->toDateTimeString(),
-        //     'status' => 0,
-        //     'valid_id' => 'valid_id/Valid_ID-sample.jpg',
-        //     // 'additional_menu',
-        //     // 'amount' => ['room1' => 3150.00],
-        //     // 'total' => 3150.00,
+        //     'check_in' => Carbon::now('Asia/Manila')->addDays(15)->toDateTimeString(),
+        //     'check_out' => Carbon::now('Asia/Manila')->addDays(20)->toDateTimeString(),
+        //     'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
+        //     'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'amount' => 2100.00 * 4]],
         // ]);
+
         \App\Models\Reservation::factory()->create([
             'user_id' => 2,
             // 'roomid' => 1,
@@ -87,7 +87,7 @@ class DatabaseSeeder extends Seeder
             'accommodation_type' => 'Overnight',
             'payment_method' => 'PayPal',
             'age' => User::findOrfail(1)->age(),
-            'check_in' => Carbon::now()->addDays(15)->toDateTimeString(),
+            'check_in' => Carbon::now()->addDays(16)->toDateTimeString(),
             'check_out' => Carbon::now()->addDays(18)->toDateTimeString(),
             'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
             'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'amount' => 2100.00 * 4]],
@@ -292,14 +292,14 @@ class DatabaseSeeder extends Seeder
             'image' => 'rooms/big-house-room.jpg',
             'name' => 'Big House',
             // 'min_occupancy' => 3,
-            'max_occupancy' => 7,
+            'max_occupancy' => 3,
             'many_room' => 3,
         ]);
         \App\Models\RoomList::create([
             'image' => 'rooms/multi-sharing-room.jpg',
             'name' => 'Multi-Sharing Room',
             // 'min_occupancy' => 3,
-            'max_occupancy' => 7,
+            'max_occupancy' => 6,
             'many_room' => 5,
         ]);
         \App\Models\RoomList::create([
@@ -314,20 +314,29 @@ class DatabaseSeeder extends Seeder
             'image' => 'rooms/new-house-room.jpg',
             'name' => 'New House',
             // 'min_occupancy' => 3,
-            'max_occupancy' => 2,
+            'max_occupancy' => 4,
             'many_room' => 3,
         ]);
-
         foreach(\App\Models\RoomList::all() as $room){
             for($room_count = 0; $room_count < $room->many_room; $room_count++){
-                \App\Models\Room::create([
+                $rdata = [
                     'roomid' => $room->id,
                     'room_no' => 0,
                     // 'availability' => 1,
                     // 'customer' => [
-                    //     (string)$room->id.'_'.(string)$room_count => $room->max_occupancy
+                    //     Reservation::all()->first()->id => $room->max_occupancy
                     // ],
-                ]);
+                ];
+                // if($room_count == 3){
+                //     $rdata = [
+                //         'roomid' => $room->id,
+                //         'room_no' => 0,
+                //     ];
+                // }
+
+                \App\Models\Room::create($rdata);
+                
+
             }
         }
         refreshRoomNumber();

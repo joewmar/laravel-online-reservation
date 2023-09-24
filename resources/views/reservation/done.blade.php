@@ -1,6 +1,6 @@
 <x-landing-layout>
     <section class="bg-gray-50">
-        <div x-data="{loader = false}" class="mx-auto max-w-screen-xl px-4 py-32 lg:flex lg:h-screen lg:items-center" >
+        <div x-data="{loader: false}" class="mx-auto max-w-screen-xl px-4 py-32 lg:flex lg:h-screen lg:items-center" >
           <x-loader />
           <div class="mx-auto max-w-xl text-center">
             <form action="{{route('reservation.done.message.store', ['id' => $id ?? abort(404)])}}" method="post">

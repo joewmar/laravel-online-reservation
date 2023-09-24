@@ -117,11 +117,11 @@
                               @endforeach
                             </ul>
                             <div class="mt-5">
-                              <h3 class="mt-2 font-medium">Price</h3>
+                              <h3 class="mt-2 font-medium">Type</h3>
                               <ul class="ml-5 sm:mt-1 sm:block sm:text-sm sm:text-gray-600">
                                 @foreach($tour_menu as $price)
                                   @if($menu->tourMenu->id === $price->tourMenu->id)
-                                    <li class="list-disc">{{$price->type}} - <span>₱</span> {{number_format($price->price, 2)}}</li>
+                                    <li class="list-disc">{{$price->type}}</li>
                                   @endif
                                 @endforeach
                               </ul>

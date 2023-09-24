@@ -21,7 +21,7 @@
             <input type="file" name="{{$name}}" id="{{$id}}" class="hidden" accept="image/*" x-ref="fileInput{{$id}}" x-on:change="fileSelected{{$id}}($refs.fileInput{{$id}})">
           </div>
         </div>
-        <div x-effect="console.log(imageData{{$id}})" x-show="imageData{{$id}}" class="w-full flex flex-col items-center">
+        <div x-show="imageData{{$id}}" class="w-full flex flex-col items-center">
           <img id="previewImage{{$id}}" :src="imageData{{$id}}" alt="{{$title ?? ''}} Image" class="mx-auto h-auto">
           <button type="button" class="mt-5 btn btn-error btn-sm" x-on:click="clearImage{{$id}}">Reset</button>
         </div>
@@ -52,7 +52,6 @@
         },
         
         fileSelected{{$id}}(input) {
-          console.log(input);
           const file = input.files[0];
           this.displayImage{{$id}}(file);
         },

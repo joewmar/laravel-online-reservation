@@ -2,7 +2,7 @@
 
   <x-navbar :activeNav="$activeNav" type="plain" />
 
-  <section class="pt-24 p-6 {{!empty($contacts['other']) ? 'h-auto' : 'h-screen'}} w-full">
+  <section class="pt-24 p-6 {{!empty($contacts['other']) ? 'h-full' : 'h-full md:h-screen'}} w-full">
     <div class="grid max-w-6xl grid-cols-1 px-6 mx-auto lg:px-8 md:grid-cols-2">
       <div class="py-6 md:py-0 md:px-6">
         <h1 class="text-4xl font-bold py-5">Call Me</h1>

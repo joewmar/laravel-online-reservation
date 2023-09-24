@@ -13,6 +13,7 @@
     body {
       margin: 0;
       padding: 0;
+      overflow-x: hidden
     }
     .landingSlider {
       width: 100%;
@@ -53,9 +54,9 @@
     <section class="hero min-h-screen absolute top-0">
       <div class="hero-overlay bg-opacity-70"></div>
       <div class="hero-content text-center text-white ">
-        <div class="max-w-md">
-          <h1 class="mb-5 text-3xl font-bold">Alvin and Angie Mt. Pinatubo Guesthouse and Tours</h1>
-          <p class="mb-5 max-w-md">Discover the Perfect Blend of Comfort and Adventure by Reserving Your Ideal Guesthouse Stay and Guided Tour with Us. Every Moment Becomes a Cherished Memory.</p>
+        <div class="max-w-lg">
+          <h1 class="mb-5 text-3xl font-bold uppercase">Alvin and Angie Mt. Pinatubo Guesthouse and Tours</h1>
+          <p class="mb-5 max-w-lg capitalize">Discover the Perfect Blend of Comfort and Adventure by Reserving Your Ideal Guesthouse Stay and Guided Tour with Us. Every Moment Becomes a Cherished Memory.</p>
           <label for="reservation" class="btn btn-primary">Let's Book</label>
         </div>
       </div>
@@ -137,7 +138,7 @@
   
         <div class="lg:py-16" data-aos="fade-left">
           <article class="space-y-4 text-neutral" >
-            <p>
+            <p class="capitalize">
               On our guesthouse and tours services, we warmly welcome you. We are excited to be a part of your unique experience and journey. Our goal is to provide you with a joyful and memorable stay, an opportunity for you to forget the everyday hustle and relax amidst the beauty of nature.
             </p>
           </article>

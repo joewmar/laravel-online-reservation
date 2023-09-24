@@ -31,7 +31,7 @@ class CreateReservationController extends Controller
     public function __construct()
     {
         $this->system_user = auth()->guard('system');
-        if(Str::contains(URL::previous(), route('home')) || Str::contains(URL::previous(), route('system.home'))) session()->forget('rinfo');
+        if(Str::contains(URL::previous(), route('home')) || Str::contains(URL::previous(), route('system.home'))) session()->forget('nwrinfo');
 
     }
     private function employeeLogNotif($action, $link = null){
@@ -199,23 +199,23 @@ class CreateReservationController extends Controller
             'at' => $validated['accommodation_type'],
         ];
         $param = encryptedArray($param);
-        if(session()->has('rinfo')) {
-            $session = session('rinfo');
+        if(session()->has('nwrinfo')) {
+            $session = session('nwrinfo');
             $session['rt'] = $param['rt'] ;
             $session['rm'] = $param['rm'] ;
             $session['px'] = $param['px'] ;
             $session['cin'] = $param['cin'] ;
             $session['cout'] = $param['cout'] ;
             $session['at'] = $param['at'] ;
-            session(['rinfo' => $session]);
+            session(['nwrinfo' => $session]);
         }
 
         return redirect()->route('system.reservation.create.step.two', Arr::query($param));
 
     }
     public function step2(Request $request){
-        if(session()->has('rinfo') && !empty(session('rinfo')['tm'])){
-            $decryptedTm = decrypt(session('rinfo')['tm']);
+        if(session()->has('nwrinfo') && !empty(session('nwrinfo')['tm'])){
+            $decryptedTm = decrypt(session('nwrinfo')['tm']);
             $cmenu = [];
             foreach($decryptedTm as $key => $item){
                 $tour = TourMenu::find($item);
@@ -327,8 +327,8 @@ class CreateReservationController extends Controller
                 'tpx' => $encrypted['tour_pax'],  
                 'py' => $encrypted['payment_method'],  
             ];
-              if(session()->has('rinfo')) {
-                    $session = session('rinfo');
+              if(session()->has('nwrinfo')) {
+                    $session = session('nwrinfo');
                     $session['st'] =  $encrypted['status'];  
                     $session['cin'] =  $encrypted['check_in'];  
                     $session['cout'] =  $encrypted['check_out'];  
@@ -336,19 +336,19 @@ class CreateReservationController extends Controller
                     $session['px'] =  $encrypted['pax'];  
                     $session['tpx'] =  $encrypted['tour_pax'];  
                     $session['py'] =  $encrypted['payment_method'];
-                    session(['rinfo' => $session]);
+                    session(['nwrinfo' => $session]);
             }
         }
         else{
-            if(session()->has('rinfo')) {
-                $session = session('rinfo');
+            if(session()->has('nwrinfo')) {
+                $session = session('nwrinfo');
                 $session['st'] =  $encrypted['status'];  
                 $session['cin'] =  $encrypted['check_in'];  
                 $session['cout'] =  $encrypted['check_out'];  
                 $session['at'] =  $encrypted['accommodation_type'];  
                 $session['px'] =  $encrypted['pax'];  
                 $session['py'] =  $encrypted['payment_method'];
-                session(['rinfo' => $session]);
+                session(['nwrinfo' => $session]);
             }
             $session = [
                 "rt" => $request['rt'],
@@ -361,7 +361,7 @@ class CreateReservationController extends Controller
                 'py' => $encrypted['payment_method'],  
               ];
 
-            session(['rinfo' => $session]);
+            session(['nwrinfo' => $session]);
             return redirect()->route('system.reservation.create.step.three');
         }
         return redirect()->route('system.reservation.create.step.two', [Arr::query($param), '#tourmenu']);
@@ -369,8 +369,8 @@ class CreateReservationController extends Controller
     public function storeStep22(Request $request){
         if(empty($request['tour_menu'])) return back()->with('error', 'You have not selected anything in the cart yet. Please make a selection first.');
 
-        if(session()->has('rinfo')){
-            $session = session('rinfo');
+        if(session()->has('nwrinfo')){
+            $session = session('nwrinfo');
             $session['tm'] = encrypt($request['tour_menu']);
         }
         else{
@@ -387,7 +387,7 @@ class CreateReservationController extends Controller
                 "tm" => encrypt($request['tour_menu']),
               ];
         }
-        session(['rinfo' => $session]);
+        session(['nwrinfo' => $session]);
         return redirect()->route('system.reservation.create.step.three');
     }
     public function step3(Request $request){
@@ -400,16 +400,16 @@ class CreateReservationController extends Controller
         $validated = $request->validate([
             'qty.*' => Rule::when(!empty($request['qty']), ['required', 'numeric']),
         ]);
-        $encrypted = session('rinfo');
+        $encrypted = session('nwrinfo');
         if($validated){
             $encrypted['qty'] = encrypt($validated['qty']);
         }
-        session(['rinfo' => $encrypted]);
+        session(['nwrinfo' => $encrypted]);
         return redirect()->route('system.reservation.create.step.four');
 
     }
     public function step4(Request $request){
-        $decrypted = decryptedArray(session('rinfo'));
+        $decrypted = decryptedArray(session('nwrinfo'));
         $tour_menus = [];
         $addons = [];
         $rooms = [];
@@ -490,7 +490,7 @@ class CreateReservationController extends Controller
             if($created){
                 $transaction = [];
                 $roomDetails = [];
-                $decrypted = decryptedArray(session('rinfo'));
+                $decrypted = decryptedArray(session('nwrinfo'));
 
                 if(isset($decrypted['tm'])){
                     foreach($decrypted['tm'] as $key => $tour_id){
@@ -557,7 +557,7 @@ class CreateReservationController extends Controller
                 'body' => 'You Reservation at ' . Carbon::now()->format('F j, Y') .' and the Room Assign are '.implode(', ', $roomDetails).'. Be Enjoy our service with full happiness',
             ];
             Mail::to(env('SAMPLE_EMAIL') ?? $reserved->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
-            session()->forget('rinfo');
+            session()->forget('nwrinfo');
             return redirect()->route('system.reservation.home')->with('success', $reserved->userReservation->name() . ' was added on Reservation');
     }
 }

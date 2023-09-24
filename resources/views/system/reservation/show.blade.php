@@ -371,7 +371,11 @@
             </div>
             <template x-if="show">
                 <div class="w-full rounded flex justify-center">
-                    <img src="{{route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]])}}" alt="Valid ID of {{$r_list->userReservation->name()}}">
+                    @if($r_list->userReservation->valid_id)
+                        <img src="{{route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]])}}" alt="Valid ID of {{$r_list->userReservation->name()}}">
+                    @else
+                        <h2 class="text-xl font-bold ">No Valid ID Send</h2>
+                    @endif
                 </div>
             </template>
         </div>
@@ -456,16 +460,43 @@
                 </div>
             </article>
         @endif
-        <div class="flex justify-end space-x-1">
-                <div class="join">
-                    <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-xs join-item" {{!($r_list->status == 0) ? 'disabled' : ''}}>Confirm</a>
-                    <label for="checkin" class="btn btn-success btn-xs join-item" {{!($r_list->status == 1) ? 'disabled' : ''}}>Check-in</label>
+        <div class="flex justify-end">
+            <div class="join hidden md:inline">
+                <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-xs join-item" {{!($r_list->status == 0) ? 'disabled' : ''}}>Confirm</a>
+                <label for="checkin" class="btn btn-success btn-xs join-item" {{!($r_list->status == 1) ? 'disabled' : ''}}>Check-in</label>
+                <x-checkin name="{{$r_list->userReservation->name() ?? ''}}" :datas="$r_list" />
+                <label for="checkout" class="btn btn-warning btn-xs join-item" {{!($r_list->status == 2) ? 'disabled' : ''}}>Check-out</label>
+                <x-checkout name="{{$r_list->userReservation->name() ?? ''}}" :datas="$r_list" />
+                <a href="{{route('system.reservation.show.cancel', encrypt($r_list->id))}}" class="btn btn-xs btn-error join-item" {{($r_list->status >= 2 && $r_list->status <= 3) ? 'disabled' : ''}}>Cancel</a>
+                {{-- <a href="{{route('system.reservation.show.cancel', encrypt($r_list->id))}}" class="btn btn-xs btn-error join-item" {{($r_list->status >= 2 && $r_list->status <= 3) || $r_list->status !== 8 ? 'disabled' : ''}}>Cancel</a> --}}
+                <a href="{{route('system.reservation.show.reschedule', encrypt($r_list->id))}}" class="btn btn-xs btn-accent join-item" {{($r_list->status >= 2 && $r_list->status <= 3) || $r_list->status !== 7  ? 'disabled' : ''}}>Reschedule</a>
+            </div>
+            <div class="join inline md:hidden">
+                @if($r_list->status() == "Pending")
+                    <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-xs join-item">Confirm</a>
+                    <label class="btn btn-success btn-xs join-item" disabled>Check-in</label>
+                    <label class="btn btn-info btn-xs join-item" disabled>Check-out</label>
+                @elseif($r_list->status() == "Confirmed")
+                    <a class="btn btn-secondary btn-xs join-item" disabled>Confirm</a>
+                    <label for="checkin" class="btn btn-success btn-xs join-item">Check-in</label>
                     <x-checkin name="{{$r_list->userReservation->name() ?? ''}}" :datas="$r_list" />
-                    <label for="checkout" class="btn btn-warning btn-xs join-item" {{!($r_list->status == 2) ? 'disabled' : ''}}>Check-out</label>
+                    <label class="btn btn-info btn-xs join-item" disabled>Check-out</label>
+                @elseif($r_list->status() == "Check-in")
+                    <a href="" class="btn btn-secondary btn-xs join-item" disabled>Confirm</a>
+                    <label class="btn btn-success btn-xs join-item" disabled>Check-in</label>
+                    <label for="checkout" class="btn btn-warning btn-xs join-item">Check-out</label>
                     <x-checkout name="{{$r_list->userReservation->name() ?? ''}}" :datas="$r_list" />
-                    <a href="{{route('system.reservation.show.cancel', encrypt($r_list->id))}}" class="btn btn-xs btn-error join-item" {{$r_list->status >= 2 ? 'disabled' : ''}}>Cancel</a>
-                    <a href="{{route('system.reservation.show.reschedule', encrypt($r_list->id))}}" class="btn btn-xs btn-accent join-item" {{$r_list->status >= 2 ? 'disabled' : ''}}>Reschedule</a>
-                </div>
+                @endif
+                <div class="dropdown dropdown-left dropdown-end">
+                    <label tabindex="0" class="btn join-item btn-xs">                                                        
+                        <i class="fa-solid fa-ellipsis"></i>
+                    </label>
+                    <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                        <li><a href="{{route('system.reservation.show.cancel', encrypt($r_list->id))}}" class="text-error">Cancel</a></li>
+                        <li><a href="{{route('system.reservation.show.reschedule', encrypt($r_list->id))}}" class="text-accent-content">Reschedule</a></li>
+                    </ul>
+                  </div>
+            </div>
         </div>
        </div>
     </x-system-content>

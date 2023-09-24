@@ -96,9 +96,18 @@ function checkAvailRooms(int $pax, $check_in, $check_out)
         foreach($rooms as $value){
             $vacantAll += $value->getVacantPax();
         }
+        $isFull = !($vacantAll >= $pax);
+
     }
     else{
-        $r_lists = Reservation::whereBetween('check_in', [$check_in, $check_out])->orWhereBetween('check_out', [$check_in, $check_out])->pluck('id');
+        $r_lists = Reservation::where(function ($query) use ($check_in, $check_out) {
+            $query->whereBetween('check_in', [$check_in, $check_out])
+                  ->orWhereBetween('check_out', [$check_in, $check_out])
+                  ->orWhere(function ($query) use ($check_in, $check_out) {
+                      $query->where('check_in', '<=', $check_in)
+                            ->where('check_out', '>=', $check_out);
+                  });
+        })->pluck('id');
 
         $count_paxes = 0;
         foreach($r_lists as $r_list){
@@ -112,7 +121,7 @@ function checkAvailRooms(int $pax, $check_in, $check_out)
         }
         
     }
-    $isFull = !($vacantAll >= $pax);
+    // dd($r_lists);
     return $isFull;
 
 }

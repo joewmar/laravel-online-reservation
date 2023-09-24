@@ -81,7 +81,7 @@
                         Save
                       </button>
                   @else
-                    <a href="{{route('reservation.choose')}}" class="btn btn-ghost gap-2">
+                    <a href="{{URL::previous()}}" class="btn btn-ghost gap-2">
                       <i class="fa-solid fa-arrow-left"></i>            
                       Back
                     </a>

@@ -31,6 +31,7 @@ use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
+use PDO;
 
 class SystemReservationController extends Controller
 {
@@ -59,6 +60,68 @@ class SystemReservationController extends Controller
             }
             Notification::send($admins, new SystemNotification('Employee Action from '.auth()->guard('system')->user()->name().': ' . Str::limit($action, 10, '...'), $text, route('system.notifications')));
         }
+    }
+    private function roomAssign(array $rooms, Reservation $reservation, $validated, bool $forceAssign = false, bool $changeAssign = false){
+        $roomCustomer = [];
+        $reservationPax = 0;
+        if($changeAssign){
+            foreach(Room::all() as $value){
+                $value->removeCustomer($reservation->id);
+            }
+            $allPax = 0;
+            foreach($rooms as $pax){
+                $allPax += $pax ;
+                if($allPax > $reservation->pax && $allPax < $reservation->pax) return back()->with('error', 'Cannot choose due invalid guest ('.$allPax.' pax) doest not match on customer guest ('.$reservation->pax.' pax)')->withInput($validated);
+
+            }
+        }
+        if($forceAssign){
+            foreach($rooms as $room_id => $newPax){
+                $reservationPax += (int)$newPax;
+                $room = Room::find($room_id);
+                $roomCustomer[$room_id] = $newPax;
+            }
+        }
+        else{
+            if(Room::checkAllAvailable()){
+                foreach($rooms as $room_id => $newPax){
+                    $reservationPax += (int)$newPax;
+                    $room = Room::find($room_id);
+                    if($newPax > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
+                    if($newPax > $room->getVacantPax() && $reservationPax <= $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
+                    $roomCustomer[$room_id] = $newPax;
+                }
+            }
+            else{
+                $r_lists = Reservation::where(function ($query) use ($reservation) {
+                    $query->whereBetween('check_in', [$reservation->check_in, $reservation->check_out])
+                          ->orWhereBetween('check_out', [$reservation->check_in, $reservation->check_out])
+                          ->orWhere(function ($query) use ($reservation) {
+                              $query->where('check_in', '<=', $reservation->check_in)
+                                    ->where('check_out', '>=', $reservation->check_out);
+                          });
+                })->where('id', '!=', $reservation->id)->pluck('id');
+    
+                foreach($rooms as $room_id => $newPax){
+                    $reservationPax += (int)$newPax;
+                    $count_paxes = 0;
+                    foreach($r_lists as $r_list){
+                        $rooms = Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->where('id', $room_id)->get();
+                        foreach($rooms as $room) $count_paxes += $room->customer[$r_list];
+                    }
+                    // dd($count_paxes);
+                    $room = Room::find($room_id);
+    
+                    if($count_paxes > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due not Available based on guest ('.$newPax.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validated);
+            
+                    if($count_paxes > $reservationPax && $reservationPax < $count_paxes)  return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due invalid guest between customer ('.$newPax.' pax) and vacant guest ('.$count_paxes.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validated);
+    
+                    $roomCustomer[$room_id] = $newPax;
+                }
+            }
+            if($reservationPax > $reservation->pax || $reservationPax < $reservation->pax) return back()->with('error', 'Guest you choose ('.$reservationPax.' pax) does not match on Customer Guest ('.$reservation->pax.' pax)')->withInput($validated);
+        }
+        return $roomCustomer; 
     }
     public function index(Request $request){
         $r_list = Reservation::latest()->paginate(10);
@@ -283,48 +346,12 @@ class SystemReservationController extends Controller
         if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($request['room_pax']);
         else $validator['room_pax'] = $request['room_pax'];
 
-        $roomCustomer = [];
-        $reservationPax = 0;
+        $roomCustomer = $this->roomAssign($validator['room_pax'], $reservation, $validator, false, true);
 
-        if(Room::checkAllAvailable()){
-            foreach($validator['room_pax'] as $room_id => $newPax){
-                $reservationPax += (int)$newPax;
-                $room = Room::find($room_id);
-                if($newPax >= $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validator);
-                if($newPax >= $room->getVacantPax() && $reservationPax <= $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validator);
-                $roomCustomer[$room_id] = $newPax;
-            }
+        if(!is_array($roomCustomer)){
+            return $roomCustomer;
         }
-        else{
-            $r_lists = Reservation::whereBetween('check_in', [$reservation->check_in, $reservation->check_out])
-                                ->orWhereBetween('check_out', [$reservation->check_in, $reservation->check_out])
-                                ->pluck('id');
 
-            foreach($validator['room_pax'] as $room_id => $newPax){
-                $reservationPax += (int)$newPax;
-                $count_paxes = 0;
-                foreach($r_lists as $r_list){
-                    $rooms = Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->where('id', $room_id)->get();
-                    foreach($rooms as $room) $count_paxes += $room->customer[$r_list];
-                }
-                // dd($count_paxes);
-                $room = Room::find($room_id);
-
-                if($count_paxes > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due not Available based on guest ('.$newPax.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validator);
-        
-                if($count_paxes > $reservationPax && $reservationPax < $count_paxes)  return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due invalid guest between you choose customer guest ('.$newPax.' pax) and vacant guest ('.$count_paxes.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validator);
-    
-                $roomCustomer[$room_id] = $newPax;
-            }
-        }
-        if($reservationPax > $reservation->pax || $reservationPax < $reservation->pax) return back()->with('error', 'Guest you choose ('.$reservationPax.' pax) does not match on Customer Guest ('.$reservation->pax.' pax)')->withInput($validator);
-        if(isset($reservation->roomid)){
-            $rooms = $reservation->roomid;
-            foreach($rooms as $value) {
-                $room = Room::find($value);
-                if(isset($room)) $room->removeCustomer($reservation->id);
-            } 
-        }
         foreach($roomCustomer as $key => $pax){
             $room = Room::find($key);
             $room->addCustomer($reservation->id, $pax);
@@ -334,6 +361,7 @@ class SystemReservationController extends Controller
         $updated = $reservation->update([
             'check_in' => $message['reschedule']['check_in'],
             'check_out' => $message['reschedule']['check_out'],
+            'roomid' => array_keys($roomCustomer),
             'status' => $message['reschedule']['prev_status'],
         ]);
 
@@ -386,9 +414,33 @@ class SystemReservationController extends Controller
         if($reservation->status >= 1) abort(404);
         $rooms = Room::all();
         $rate = RoomRate::all();
-        return view('system.reservation.show-room',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate]);
+        $roomReserved = [];
+        $r_lists = Reservation::where(function ($query) use ($reservation) {
+            $query->whereBetween('check_in', [$reservation->check_in, $reservation->check_out])
+                  ->orWhereBetween('check_out', [$reservation->check_in, $reservation->check_out])
+                  ->orWhere(function ($query) use ($reservation) {
+                      $query->where('check_in', '<=', $reservation->check_in)
+                            ->where('check_out', '>=', $reservation->check_out);
+                  });
+        })->where('id', '!=', $reservation->id)->pluck('id');
+        
+        // Range Error
+        // dd($r_lists);
+        foreach($rooms as $key => $room){
+            $count_paxes = 0;
+            foreach($r_lists as $r_list){
+                $rs= Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->where('id', $room->id)->get();
+                foreach($rs as $room) $count_paxes += $room->customer[$r_list];
+            }
+            if($count_paxes >= $room->room->max_occupancy) {
+                $roomReserved[] = $room->id;
+            }
+
+        }
+        return view('system.reservation.show-room',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate, 'reserved' => $roomReserved]);
     }
     public function updateReservation(Request $request){
+        $roomCustomer = [];
         if($request->has('room_rate')) $request['room_rate'] = decrypt($request['room_rate']);
         $validated = $request->validate([
             'room_rate' => ['required', Rule::when($request->has('room_rate'), ['numeric'])],
@@ -398,47 +450,17 @@ class SystemReservationController extends Controller
         $system_user = $this->system_user->user();
         $reservation = Reservation::findOrFail(decrypt($request->id));
         if($reservation->status >= 1) abort(404);
+        if(!Hash::check($validated['passcode'], $system_user->passcode)) return back()->with('error', 'Invalid Passcode');
         if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($request['room_pax']);
         else $validated['room_pax'] = $request['room_pax'];
         $rate = RoomRate::find($validated['room_rate']);
 
-    
-        $roomCustomer = [];
-        $reservationPax = 0;
-        if(Room::checkAllAvailable()){
-            foreach($validated['room_pax'] as $room_id => $newPax){
-                $reservationPax += (int)$newPax;
-                $room = Room::find($room_id);
-                if($newPax >= $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot choose due invalid guest ('.$newPax.' pax) and Room Capacity ('.$room->room->max_occupancy.' capacity)')->withInput($validated);
-                if($newPax >= $room->getVacantPax() && $reservationPax <= $room->getVacantPax()) return back()->with('error', 'Room No. ' . $room->room_no. ' are only '.$room->getVacantPax().' pax to reserved and your guest ('.$reservationPax.' pax)')->withInput($validated);
-                $roomCustomer[$room_id] = $newPax;
-            }
-            // dd('Work sa main reserved rooms');
-        }
-        else{
-            $r_lists = Reservation::whereBetween('check_in', [$reservation->check_in, $reservation->check_out])
-                                ->orWhereBetween('check_out', [$reservation->check_in, $reservation->check_out])
-                                ->pluck('id');
+        if(isset($request['force'])) $roomCustomer = $this->roomAssign($validated['room_pax'], $reservation, $validated, true);
+        else $roomCustomer = $this->roomAssign($validated['room_pax'], $reservation, $validated);
 
-            foreach($validated['room_pax'] as $room_id => $newPax){
-                $reservationPax += (int)$newPax;
-                $count_paxes = 0;
-                foreach($r_lists as $r_list){
-                    $rooms = Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->where('id', $room_id)->get();
-                    foreach($rooms as $room) $count_paxes += $room->customer[$r_list];
-                }
-                // dd($count_paxes);
-                $room = Room::find($room_id);
-
-                if($count_paxes > $room->room->max_occupancy) return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due not Available based on guest ('.$newPax.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validated);
-        
-                if($count_paxes > $reservationPax && $reservationPax < $count_paxes)  return back()->with('error', 'Room No. ' . $room->room_no. ' cannot proceed due invalid guest between customer ('.$newPax.' pax) and vacant guest ('.$count_paxes.' pax) on '.Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'))->withInput($validated);
-    
-                
-                $roomCustomer[$room_id] = $newPax;
-            }
+        if(!is_array($roomCustomer)){
+            return $roomCustomer;
         }
-        if($reservationPax > $reservation->pax || $reservationPax < $reservation->pax) return back()->with('error', 'Guest you choose ('.$reservationPax.' pax) does not match on Customer Guest ('.$reservation->pax.' pax)')->withInput($validated);
 
         $transaction = $reservation->transaction;
         $transaction['rid'.$rate->id]['title'] = $rate->name;
@@ -483,6 +505,9 @@ class SystemReservationController extends Controller
                 $url = route('reservation.gcash', encrypt($reservation->id));
             }
             if($reservation->payment_method == "PayPal"){
+                $url = route('reservation.paypal', encrypt($reservation->id));
+            }
+            if($reservation->payment_method == "Bank Transfer"){
                 $url = route('reservation.paypal', encrypt($reservation->id));
             }
 
@@ -894,9 +919,6 @@ class SystemReservationController extends Controller
             'no_days' => ['required', 'numeric', 'min:1'],
         ]);
         $extended = Carbon::now('Asian/Manila')->addDays((int)$validated['no_days'])->format('Y-m-d');
-        if(checkAvailRooms($reservation->pax ?? 0, Carbon::now('Asian/Manila')->format('Y-m-d'), $extended)) {
-            return back()->with('error', 'Sorry, invalid adding days due ')->withInput($request->input());
-        }
         $rate = $reservation->transaction;
         $rate['rid'.$reservation->roomRate->id]['amount'] = $rate['rid'.$reservation->roomRate->id]['price'] * $reservation->getNoDays();
         $updated = $reservation->update([

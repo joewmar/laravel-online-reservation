@@ -1,5 +1,6 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
+    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
     $arrPayment = ['Walk-in', 'Other Online Booking', 'Gcash', 'Paypal'];
     $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Check-out'];
     $TourInfo = [
@@ -26,8 +27,8 @@
       ];
       
 
-    if(session()->has('rinfo')){
-      $decrypted = decryptedArray(session('rinfo'));
+    if(session()->has('nwrinfo')){
+      $decrypted = decryptedArray(session('nwrinfo'));
       $TourInfo = [
         "rt" => request()->has('rt') ? request('rt') : null,
         "rm" => request()->has('rm') ? request('rm') : null,
@@ -51,7 +52,7 @@
         alert: false,
         alertType: '',
         loader: false,
-         @if(session()->has('rinfo') && !empty(session()->get('rinfo')['tm']))
+         @if(session()->has('nwrinfo') && !empty(session()->get('nwrinfo')['tm']))
           carts: [
             @foreach($cmenu as $key => $item)
               { id: '{{ $item['id'] ?? '' }}', 
@@ -136,7 +137,7 @@
               @endif
                   <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one" value="{{$TourInfo['cin'] ?? \Carbon\Carbon::now('Asia/Manila')->addDays(3)->format('Y-m-d')}}"/>
                   <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{$TourInfo['cout']}}"/>
-                  <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" />
+                  <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" />
                   <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$TourInfo['px']}}" />
                   <template x-if="at === 'Day Tour' || at === 'Overnight'">
                     <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$TourInfo['tpx']}}" />
@@ -348,6 +349,7 @@
             // Scroll to the element with the provided ID
             document.getElementById('tourmenu').scrollIntoView();
           </script>
+          <script type="module" src="{{Vite::asset('resources/js/flatpickr2.js')}}"></script>
       @endpush
   </x-system-content>
 </x-system-layout>

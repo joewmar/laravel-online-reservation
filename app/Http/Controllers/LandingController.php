@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Feedback;
 use App\Models\News;
+use App\Models\Feedback;
 use App\Models\RoomList;
 use App\Models\RoomRate;
 use App\Models\TourMenu;
-use App\Models\TourMenuList;
 use App\Models\WebContent;
+use App\Models\TourMenuList;
+use Illuminate\Http\Request;
 
 class LandingController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
         $news = News::where('type', 0)->get() ?? [];
         $announcements = News::where('type', 1)->get() ?? [];
         $web_contents = WebContent::all()->first() ?? [];
         $feedbacks = Feedback::whereBetween('rating', [3, 4, 5])->latest()->get() ?? [];
+        $request->session()->flash('info', 'This Website are under testing and developing');
         return view('index', ['activeNav' => 'Home', 'news' => $news, 'web_contents' => $web_contents, 'announcements' => $announcements, 'feedbacks' => $feedbacks]);
     }
     public function aboutus(){

@@ -10,6 +10,9 @@
             continue;
         }
     }
+    $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
+    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
+    $arrPayment = ['Gcash', 'PayPal', 'Bank Transfer'];
 
 @endphp
 
@@ -18,7 +21,11 @@
     <x-full-content>
         <section class="px-10 md:px-20 pt-24">
             {{-- User Details --}}
+            <a href="{{URL::previous()}}" class="btn btn-ghost btn-circle">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
             <div class="px-0 md:px-20">
+
                 <div class="w-full sm:flex sm:space-x-6">
                     <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
                         @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
@@ -54,36 +61,65 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
                         </label>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                            @if($r_list->status >= 1 && $r_list->status !== 5)
+                            @if($r_list->status === 3)
                                 <li>
                                     <a href="{{route('reservation.receipt', encrypt($r_list->id))}}">
                                         Reciept
                                     </a>
                                 </li>
                             @endif
-                                <li>
-                                    <a href="{{route('user.reservation.edit', encrypt($r_list->id))}}" {{!($r_list->status > 0 || $r_list->status <= 3) ? 'disabled' : ''}}>
-                                        Edit Information
-                                    </a>
-                                </li>
                             </ul>
                       </div>
                 </div>
                 <div class="w-full hidden md:flex justify-end space-x-1">
-                    @if($r_list->status >= 1 && $r_list->status !== 5)
+                    @if($r_list->status === 3)
                         <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-success btn-sm">
                             <i class="fa-solid fa-receipt"></i>
                             Reciept
                         </a>
                     @endif
-                    <a href="{{route('user.reservation.edit', encrypt($r_list->id))}}" class="btn btn-sm" {{!($r_list->status > 0 || $r_list->status <= 3) ? 'disabled' : ''}}>
-                        Edit Information
-                    </a>
                 </div>
                 <div class="divider"></div>
                 <div class="block">
                     <article class="text-md tracking-tight text-neutral my-5 w-auto">
-                        <h2 class="text-2xl mb-5 font-bold">Details</h2>
+                        
+                            <div class="flex gap-4 mb-5 items-center" >
+                                <h2 class="text-2xl font-bold">Details</h2>
+                                    <label for="edit_modal" class="btn btn-sm btn-primary" {{$r_list->status > 0 ? 'disabled' : ''}}>Change</label>
+                                @if($r_list->status > 0)
+                                    <x-modal title="Change Information" id="edit_modal">
+                                        <p>You cannot change it once your reservation has been confirmed.</p>
+                                    </x-modal>
+                                @else
+                                    <x-modal title="Change Information" id="edit_modal">
+                                        <form x-data="{at: '{{$r_list->accommodation_type}}'}" action="{{route('user.reservation.update.details', encrypt($r_list->id))}}" method="post">
+                                            @csrf
+                                            @method('PUT')
+                                            <div class="mt-4 ">
+                                              <div class="space-y-4 lg:block">
+                                                    <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$r_list->check_in}}"/>
+                                                    <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" value="{{$r_list->check_out }}" />
+                                                    <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" selected="{{$r_list->accommodation_type}}" />
+                                                    {{-- Number of Guest --}}
+                                                    <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$r_list->pax}}"/>
+                                                    <template x-if="at === 'Day Tour' || at === 'Overnight'">
+                                                        <x-tooltip title="If you want to make changes, you can do so in the tour information." color="info">
+                                                            <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$r_list->tour_pax?? ''}}" disabled />
+                                                        </x-tooltip>
+                                                    </template>
+                                                    {{-- Payment Method  --}}
+                                                    <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$r_list->payment_method}}"/>
+                                                    <div class="modal-action">
+                                                        <button class="btn btn-primary">Save</button>
+                                                    </div>
+                                                </div>
+                        
+                                              </div>
+                                          </form>
+                                    </x-modal>
+                                @endif
+                            </div>
+                        
                         <div class="overflow-x-auto">
                             <table class="table">
                               <!-- head -->
@@ -154,75 +190,48 @@
                                     <!-- head -->
                                     <thead>
                                         <tr class="text-neutral font-bold">
-                                            <td>Tour</td>
+                                            <td class="flex items-center gap-4">
+                                                <h2 class="font-bold ">Tour</h2>
+                                                <a href="{{route('user.reservation.edit.tour', ['id' => encrypt($r_list->id), 'gpax='.$r_list->tour_pax])}}" class="btn btn-sm btn-ghost btn-circle btn-primary" disabled="{{$r_list->status > 1 ? 'disabled' : ''}}">
+                                                    <i class="fa-solid fa-pen-to-square"></i>
+                                                </a>
+                                            </td>
+                                            <td>Guest</td>
                                             <td>Price</td>
                                             <td>Amount</td>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        @php $amount = 0; @endphp
                                         @foreach ($menu as $key => $item)
                                             <tr>
                                                 <td>{{$item['title']}}</td> 
+                                                <td>{{$r_list->tour_pax}}</td> 
                                                 <td>₱ {{number_format($item['price'], 2)}}</td> 
                                                 <td>₱ {{number_format($item['amount'], 2)}}</td> 
                                             </tr>
+                                            @php $amount += $item['amount']; @endphp
+
                                         @endforeach
+                                        <tr class="font-bold">
+                                            <td></td> 
+                                            <td></td> 
+                                            <td>Total</td> 
+                                            <td >₱ {{number_format($amount , 2)}}</td> 
+                                        </tr>
                                     </tbody>
                                     </table>
                                 </div>
                             </div>
                         @endif
-                        {{-- @if($r_list->status < 7)
-                            <article class="mt-3 flex flex-col items-end">
-                                <div>
-                                    <span class="font-medium">Total Cost: </span>₱ {{ number_format($r_list->getTotal(), 2) }}
-                                </div>
-                                <div class="text-md tracking-tight text-neutral">
-                                    <span class="font-medium">Downpayment: </span>₱ {{ number_format($r_list->downpayment() ?? 0, 2) }}
-                                </div>
-                                <div class="text-md tracking-tight text-neutral my-5">
-                                    @php $balance = abs($total - $downpayment); @endphp
-                                    <span class="font-medium">Balance due: </span>₱ {{ number_format($r_list->balance() ?? 0, 2) }}
-                                </div>
-                            </article>
-                        @endif --}}
                     </article>
                 </div>
-                @if(!empty($tour_addons) || !empty($other_addons))
+                @if(!empty($other_addons))
                     <div class="divider"></div>
                     <article>
                         <h1 class="my-1 text-xl "><strong>Additional Request: </strong></h1>
-                        @if(!empty($tour_addons))
-                            <div class="my-5 w-full">
-                                <p class="my-1 font-medium">Additional Tour: </p>
-                                <div class="w-auto">
-                                    <div class="overflow-x-auto">
-                                        <table class="table table-zebra table-sm">
-                                        <!-- head -->
-                                        <thead>
-                                            <tr>
-                                                <th>Tour</th>
-                                                <th>Price</th>
-                                                <th>Amount</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($tour_addons as $key => $tour)
-                                                <tr>
-                                                    <td>{{$tour['title']}}</td> 
-                                                    <td>₱ {{number_format($tour['price'], 2)}}</td> 
-                                                    <td>₱ {{number_format($tour['amount'], 2)}}</td> 
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
                         @if(!empty($other_addons))
                             <div class="my-5 w-full">
-                                <p class="my-1 font-medium">Other:</p>
                                 <div class="w-auto">
                                     <div class="overflow-x-auto">
                                         <table class="table table-zebra table-sm">
@@ -359,7 +368,7 @@
                     </template>
                 </div>
                 <div class="divider"></div>
-                <div class="w-full">
+                <div class="w-full mb-10">
                     <h2 class="text-2xl mb-5 font-bold">Messages</h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5"> 
                         <div class="bg-base-100 shadow-lg p-6 rounded">
@@ -379,4 +388,18 @@
             </div>
         </section>
     </x-full-content>
+    @push('scripts')
+        <script>
+        @if(isset($from) && isset($to))
+            const mop = {
+                from: '{{\Carbon\Carbon::createFromFormat('Y-m-d', $from)->format('Y-m-d')}}',
+                to: '{{\Carbon\Carbon::createFromFormat('Y-m-d', $to)->format('Y-m-d')}}'
+            };
+        @else
+            const mop = '2001-15-30';
+        @endif
+        const md = '{{Carbon\Carbon::now()->addDays(2)->format('Y-m-d')}}';
+        </script>
+        <script type="module" src="{{Vite::asset('resources/js/flatpickr.js')}}"></script>
+    @endpush
 </x-landing-layout>

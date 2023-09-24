@@ -7,17 +7,19 @@
         'cin' =>   request('cin') ? decrypt(request('cin')) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
         'cout' =>  request('cout') ? decrypt(request('cout')) : old('check_out'),
     ];
-    if(session()->has('rinfo')){
+    if(session()->has('nwrinfo')){
         $roomInfo = [
-            'at' => isset(session('rinfo')['at']) ? decrypt(session('rinfo')['at']) : old('accommodation_type'),
-            'px' => isset(session('rinfo')['px']) ? decrypt(session('rinfo')['px']) : old('pax'),
-            'rm' => isset(session('rinfo')['rm']) ? decrypt(session('rinfo')['rm']) : old('room_pax'),
-            'rt' => isset(session('rinfo')['rt']) ? decrypt(session('rinfo')['rt']) : old('room_rate'),
-            'cin' => isset(session('rinfo')['cin']) ? decrypt(session('rinfo')['cin']) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
-            'cout' => isset(session('rinfo')['cout']) ? decrypt(session('rinfo')['cout']) : old('check_out'),
+            'at' => isset(session('nwrinfo')['at']) ? decrypt(session('nwrinfo')['at']) : old('accommodation_type'),
+            'px' => isset(session('nwrinfo')['px']) ? decrypt(session('nwrinfo')['px']) : old('pax'),
+            'rm' => isset(session('nwrinfo')['rm']) ? decrypt(session('nwrinfo')['rm']) : old('room_pax'),
+            'rt' => isset(session('nwrinfo')['rt']) ? decrypt(session('nwrinfo')['rt']) : old('room_rate'),
+            'cin' => isset(session('nwrinfo')['cin']) ? decrypt(session('nwrinfo')['cin']) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
+            'cout' => isset(session('nwrinfo')['cout']) ? decrypt(session('nwrinfo')['cout']) : old('check_out'),
         ];
     }
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
+    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
+
 
 @endphp
 
@@ -28,9 +30,9 @@
             @csrf
             <x-loader />
             <h2 class="text-2xl font-semibold my-5">Choose the room</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="col-span-2">
-                    <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$roomInfo['at']}}" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+                <div class="col-span-1 md:col-span-2">
+                    <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" selected="{{$roomInfo['at']}}" />
                 </div>
                 <div class="form-control w-full">
                     <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error('room_rate') border-error @enderror">
@@ -68,7 +70,7 @@
                 <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{$roomInfo['cout']}}" />
             </div>
 
-            <div x-data="{rooms: {{$roomInfo['rm'] ? '[' . implode(',', array_keys($roomInfo['rm'])) .']' : '[]'}}}" class="grid grid-cols-2 md:grid-cols-4 gap-5 w-full">
+            <div x-data="{rooms: {{$roomInfo['rm'] ? '[' . implode(',', array_keys($roomInfo['rm'])) .']' : '[]'}}}" class="flex justify-center flex-wrap gap-5 w-full">
                 @forelse ($rooms as $key => $item)
                     <div>
                         <input x-ref="RoomRef" x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" x-on:checked="rooms.includes({{$item->id}})" />
@@ -107,4 +109,7 @@
         </form>
     </section>
   </x-system-content>
+  @push('scripts')
+        <script type="module" src="{{Vite::asset('resources/js/flatpickr2.js')}}"></script>
+  @endpush
 </x-system-layout>

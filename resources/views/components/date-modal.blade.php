@@ -1,5 +1,6 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
+    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
 @endphp
 @props(['id' => '', 'operation' => []])
 <input type="checkbox" id="{{$id}}" class="modal-toggle" />
@@ -19,7 +20,7 @@
       </section>
       <form class="relative " id="reservation-form" action=" {{ route('reservation.date.check') }}" method="POST">
         @csrf
-        <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" />
+        <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" />
         <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-3" x-transition>
           <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{ Carbon\Carbon::now()->addDays(2)->format('Y-m-d')}}" />
           <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation " />
@@ -33,4 +34,19 @@
     </div>
   </div>
 </div>
+@push('scripts')
+    <script>
+        @if(isset($operation['from']) && isset($operation['to']))
+          const mop = {
+              from: '{{\Carbon\Carbon::createFromFormat('Y-m-d', $operation['from'])->format('Y-m-d')}}',
+              to: '{{\Carbon\Carbon::createFromFormat('Y-m-d', $operation['to'])->format('Y-m-d')}}'
+          };
+        @else
+          const mop = '2001-15-30';
+        @endif
+        const md = '{{Carbon\Carbon::now()->addDays(2)->format('Y-m-d')}}';
+
+    </script>
+    <script type="module" src="{{Vite::asset('resources/js/flatpickr.js')}}"></script>
+@endpush
 

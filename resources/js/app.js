@@ -1,6 +1,9 @@
 import './bootstrap';
 import '../css/app.css';
-import './flatpickr.js';
+import.meta.glob([
+    '../js/**',
+    '../css/**',
+  ]);
 
 import Alpine from 'alpinejs';
 window.Alpine = Alpine;

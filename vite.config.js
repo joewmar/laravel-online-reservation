@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/css/scrollcolor.css',
                 'resources/js/app.js', 
                 'resources/js/flatpickr.js',
+                'resources/js/flatpickr2.js',
                 'resources/js/navbar.js',
                 'resources/js/passcode.js',
                 'resources/js/reservation-calendar.js',

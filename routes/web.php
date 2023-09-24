@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\System;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -101,6 +100,9 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->controller(UserControlle
         Route::put('/{id}/cancel', 'cancel')->name('cancel');
         Route::get('/{id}/show', 'show')->name('show');
         Route::put('/{id}/reschedule', 'reschedule')->name('reschedule');
+        Route::put('/{id}/details/update', 'updateDetails')->name('update.details');
+        Route::get('/{id}/tour/edit', 'editTour')->name('edit.tour');
+        Route::put('/{id}/tour/update', 'updateTour')->name('update.tour');
     });
     // Reservation Information
     Route::prefix('reservation')->name('reservation.')->controller(ReservationController::class)->group(function (){
@@ -370,5 +372,5 @@ Route::prefix('system')->name('system.')->group(function(){
     });  
 
 });
-
 Route::get('reservation/{id}/receipt', [MyReservationController::class, 'receipt'])->name('reservation.receipt');
+

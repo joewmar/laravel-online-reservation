@@ -18,7 +18,7 @@
             <span class="badge badge-sm indicator-item badge-primary">{{count(auth()->user()->unreadNotifications)}}</span>
           </div>
         </label>
-        <div tabindex="0" class="mt-3 card card-compact dropdown-content w-96 bg-base-100 shadow">
+        <div tabindex="0" class="mt-3 card card-compact dropdown-content w-72 md:w-96 bg-base-100 shadow-xl">
           <div class="card-body">
             <span class="font-bold text-lg">Notifications</span>
             <ul class="menu">

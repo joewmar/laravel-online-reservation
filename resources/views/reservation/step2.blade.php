@@ -1,5 +1,6 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
+    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
     $arrPayment = ['Gcash', 'PayPal', 'Bank Transfer'];
     $TourInfo = [
         "cin" => request()->has('cin') ? old('check_in') ?? decrypt(request('cin')) : old('check_in'),
@@ -13,7 +14,7 @@
     if(session()->has('rinfo')){
       $decrypted = decryptedArray(session('rinfo'));
       if(isset($decrypted['tm'])) $tourListCart = $decrypted['tm'];
-      
+      if($decrypted['at'] === 'Room Only') $decrypted['tpx'] = $decrypted['px']; 
       $TourInfo = [
         "cin" => old('check_in') ?? $decrypted['cin'],
         "cout" => old('check_out') ?? $decrypted['cout'],
@@ -52,7 +53,7 @@
                 { id: '{{ $tourListCart[$key] ?? '' }}', 
                   title: '{{ $cmenu[$key]['title'] ?? '' }}',
                   type: '{{ $cmenu[$key]['type'] ?? '' }} ({{$cmenu[$key]['pax']}} guest)',
-                  price: 'P {{ number_format($cmenu[$key]['price'], 2) ?? '' }}',
+                  price: '₱ {{ number_format($cmenu[$key]['price'], 2) ?? '' }}',
                 },
               @endforeach
             ],
@@ -140,7 +141,7 @@
             @endif
                 <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$TourInfo['cin']}}"/>
                 <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" value="{{$TourInfo['cout'] }}" />
-                <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{$TourInfo['at']}}" />
+                <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" selected="{{$TourInfo['at']}}" />
                 {{-- Number of Guest --}}
                 <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$TourInfo['px']}}"/>
                 <template x-if="at === 'Day Tour' || at === 'Overnight'">
@@ -261,24 +262,16 @@
                             @php $list_count = $loop->index + 1 ?? 1; @endphp
 
                             @if ($category->category === $list->category)
-                              @if($user_days < $list->no_day)
-                                  <div class="opacity-70" id="disabledAll">   
-                              @else
-                                <div class="">
-                              @endif
+                                <div>
+                      
                                   <div class="card h-full bg-base-100 shadow-xl border border-primary hover:border-primary hover:bg-primary hover:text-base-100">
-                                    <label for="{{$user_days < $list->no_day ? 'disabledAll' : Str::camel($list->title)}}" tabindex="0">
+                                    <label for="{{Str::camel($list->title)}}" tabindex="0">
                                         <div class="card-body">
                                           <h2 x-ref="titleRef{{$list_count}}" class="card-title">{{$list->title}} </h2> 
-                                          @if($user_days < $list->no_day)
-                                            <p class="text-error">You are not allowed to select this menu if the chosen date is not exact</p>
-                                            <p class="text-error">Your days: {{$user_days}} day/s</p>
-                                            <p class="text-error">Tour duration: {{$list->no_day}} day/s only</p>
-                                          @endif
                                         </div>
                                     </label>
                                     {{-- Modal Tour Details --}}                                  
-                                    <x-modal id="{{$user_days < $list->no_day ? 'disabledAll' : Str::camel($list->title)}}" title="{{$list->title}}" alpinevar="price">
+                                    <x-modal id="{{Str::camel($list->title)}}" title="{{$list->title}}" alpinevar="price">
                                       <article>
                                         <ul role="list" class="marker:text-primary list-disc pl-5 space-y-3 text-neutral">
                                           <li><strong>Number of days: </strong> {{$list->no_day <= 1 ? $list->no_day . ' day' : $list->no_day . ' days' }}</li>
@@ -327,7 +320,7 @@
                                       @foreach ($list->tourMenuLists as $menu)
 
                                           <template x-if="price == {{$menu->id}}">
-                                            <label for="{{$user_days < $list->no_day ? '' : Str::camel($list->title)}}" @click=" addToCart(price, $refs.titleRef{{$list_count}}.innerText, $refs.refType{{$menu->id}}.innerText, $refs.priceRef{{$menu->id}}.innerText)" class="btn btn-primary float-right">
+                                            <label for="{{Str::camel($list->title)}}" @click=" addToCart(price, $refs.titleRef{{$list_count}}.innerText, $refs.refType{{$menu->id}}.innerText, $refs.priceRef{{$menu->id}}.innerText)" class="btn btn-primary float-right">
                                               Add to Cart
                                             </label>
                                           </template>
@@ -343,7 +336,7 @@
           </div>
           <div class="flex justify-start gap-5">
             <div class="mt-8 flex gap-4">
-              <a href="{{route('reservation.choose', Arr::query(["cin" =>  request('cin'), "cout" =>  request('cout'), "px" =>  request('px'), "at" =>  request('at')]) ) }}" class="btn btn-ghost">Back</a>
+              <a href="{{route('reservation.choose', Arr::query(['cin' => $TourInfoEncrypted['cin'], 'cout' => $TourInfoEncrypted['cout'], 'at' => $TourInfoEncrypted['at'], 'px' => $TourInfoEncrypted['px']]))}}" class="btn btn-ghost">Back</a>
               <button @click="loader = true" onclick="event.preventDefault(); document.getElementById('tour-form').submit();" class="btn btn-primary">Next</button>
             </div>
           </div>
@@ -353,10 +346,25 @@
     </div>
   </section>
 
+  @php 
+    $from = App\Models\WebContent::all()->first()->from ?? null; 
+    $to = App\Models\WebContent::all()->first()->to ?? null; 
+  @endphp
+
   @push('scripts')
       <script>
-        // Scroll to the element with the provided ID
-        document.getElementById('tourmenu').scrollIntoView();
+        @if(isset($from) && isset($to))
+          const mop = {
+              from: '{{\Carbon\Carbon::createFromFormat('Y-m-d', $from)->format('Y-m-d')}}',
+              to: '{{\Carbon\Carbon::createFromFormat('Y-m-d', $to)->format('Y-m-d')}}'
+          };
+        @else
+          const mop = '2001-15-30';
+        @endif
+        const md = '{{Carbon\Carbon::now()->addDays(2)->format('Y-m-d')}}';
+        document.getElementById('tourmenu').scrollIntoView(); // Scroll to the element with the provided ID
       </script>
+      <script type="module" src="{{Vite::asset('resources/js/flatpickr.js')}}"></script>
+
   @endpush
 </x-landing-layout>

@@ -1,5 +1,5 @@
 @php
-    $addons = isset(session('rinfo')['qty']) ? decrypt(session('rinfo')['qty']) : old('qty');
+    $addons = isset(session('nwrinfo')['qty']) ? decrypt(session('nwrinfo')['qty']) : old('qty');
 @endphp
 <x-system-layout :activeSb="$activeSb">
   <x-system-content title="Add Book" back=true>
