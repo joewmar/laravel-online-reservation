@@ -1,5 +1,6 @@
 import './bootstrap';
 import '../css/app.css';
+import './flatpickr2.js';
 import.meta.glob([
     '../js/**',
     '../css/**',

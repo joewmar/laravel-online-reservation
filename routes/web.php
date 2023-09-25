@@ -209,7 +209,10 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::get('/', [AnalyticsController::class, 'index'])->name('home');
         });
         
-        Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.home');
+        Route::prefix('rooms')->name('rooms.')->controller(RoomController::class)->group(function (){
+            Route::get('/', 'index')->name('home');
+            Route::post('/', 'search')->name('search');
+        });
 
         Route::prefix('menu')->name('menu.')->middleware('can:admin')->group(function (){
             Route::get('/', [TourMenuController::class, 'index'])->name('home');

@@ -5,10 +5,49 @@ namespace App\Http\Controllers;
 use App\Models\Room;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class RoomController extends Controller
 {
-    public function index(){
-        return view('system.rooms.index',  ['activeSb' => 'Rooms', 'rooms' =>  Room::all()]);
+    private function searchAvailability (string $dates){
+        $rooms = Room::all();
+        $roomReserved = [];
+        $r_lists = Reservation::whereDate('check_in', '<=', $dates)
+        ->whereDate('check_out', '>=', $dates)
+        ->pluck('id');
+        foreach($rooms as $key => $room){
+            $count_paxes = 0;
+            foreach($r_lists as $r_list){
+                $rs= Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->where('id', $room->id)->get();
+                foreach($rs as $room) $count_paxes += $room->customer[$r_list];
+            }
+            if($count_paxes >= $room->room->max_occupancy) {
+                $roomReserved[] = $room->id;
+            }
+
+        }
+        return $roomReserved;
+    }
+    public function index(Request $request){
+        $reserved = $this->searchAvailability(Carbon::now('Asia/Manila')->format('Y-m-d'));
+
+        if( $request['name']){
+            $search = ['search' => $request['name']];
+        }
+        if(isset($request['date'])){
+            $reserved = $this->searchAvailability(($request['date']));
+
+        }
+        return view('system.rooms.index',  ['activeSb' => 'Rooms', 'rooms' =>  Room::all(), 'reserved' => $reserved ?? []]);
+    }
+    public function search(Request $request){
+        // dd($request->all());
+        if( $request['name']){
+            $search = ['search' => $request['name']];
+        }
+        if( $request['date']){
+            $search = ['date' => $request['date']];
+        }
+        return redirect()->route('system.rooms.home', $search ?? []);
     }
 }

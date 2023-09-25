@@ -79,6 +79,6 @@
         const md = '{{Carbon\Carbon::now()->addDays(2)->format('Y-m-d')}}';
 
     </script>
-    <script type="module" src="{{Vite::asset('resources/js/flatpickr.js')}}"></script>
-@endpush
+        <script type="module" src="{{Vite::asset('resources/js/flatpickr.js')}}"></script>
+    @endpush
 </x-landing-layout>

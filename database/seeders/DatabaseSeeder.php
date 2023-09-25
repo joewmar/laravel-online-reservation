@@ -322,17 +322,17 @@ class DatabaseSeeder extends Seeder
                 $rdata = [
                     'roomid' => $room->id,
                     'room_no' => 0,
-                    // 'availability' => 1,
-                    // 'customer' => [
-                    //     Reservation::all()->first()->id => $room->max_occupancy
-                    // ],
+                    'availability' => 1,
+                    'customer' => [
+                        Reservation::all()->first()->id => $room->max_occupancy
+                    ],
                 ];
-                // if($room_count == 3){
-                //     $rdata = [
-                //         'roomid' => $room->id,
-                //         'room_no' => 0,
-                //     ];
-                // }
+                if($room_count == 3){
+                    $rdata = [
+                        'roomid' => $room->id,
+                        'room_no' => 0,
+                    ];
+                }
 
                 \App\Models\Room::create($rdata);
                 
