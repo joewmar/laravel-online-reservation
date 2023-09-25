@@ -103,6 +103,10 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->controller(UserControlle
         Route::put('/{id}/details/update', 'updateDetails')->name('update.details');
         Route::get('/{id}/tour/edit', 'editTour')->name('edit.tour');
         Route::put('/{id}/tour/update', 'updateTour')->name('update.tour');
+        Route::put('/{id}/request/update', 'updateRequest')->name('update.request');
+        Route::put('/{id}/cance/update', 'updateCancel')->name('update.cancel');
+        Route::put('/{id}/reschedule/update', 'updateReschedule')->name('update.reschedule');
+        Route::delete('/{id}/reservation/delete', 'destroyReservation')->name('destroy');
     });
     // Reservation Information
     Route::prefix('reservation')->name('reservation.')->controller(ReservationController::class)->group(function (){

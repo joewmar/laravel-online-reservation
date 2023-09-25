@@ -68,6 +68,11 @@
                                     </a>
                                 </li>
                             @endif
+                            <li>
+                                <label for="delete_rsv">
+                                    Delete Reservation
+                                </label>
+                            </li>
                             </ul>
                       </div>
                 </div>
@@ -78,7 +83,22 @@
                             Reciept
                         </a>
                     @endif
+                    <label for="delete_rsv" class="btn btn-error btn-sm">
+                        Delete Reservation
+                    </label>
                 </div>
+                @if($r_list->status == 0 || $r_list->status >= 3)
+                    <x-modal id="delete_rsv" title="If you want to delete this reservation. Enter your password for confirmation">
+                        <form action="{{route('user.reservation.destroy', encrypt($r_list->id))}}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <x-password />
+                            <div class="modal-action">
+                                <button class="btn btn-error">Force Delete</button>
+                            </div>
+                        </form>
+                    </x-modal>
+                @endif
                 <div class="divider"></div>
                 <div class="block">
                     <article class="text-md tracking-tight text-neutral my-5 w-auto">
@@ -368,22 +388,92 @@
                     </template>
                 </div>
                 <div class="divider"></div>
+
                 <div class="w-full mb-10">
-                    <h2 class="text-2xl mb-5 font-bold">Messages</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5"> 
-                        <div class="bg-base-100 shadow-lg p-6 rounded">
-                            <h2 class="text-lg font-bold">Request Message</h2>
-                            <p class="text-md">{{$r_list->message['request'] ?? 'None'}}</p>
+                    <h2 class="text-2xl mb-5 font-bold">Message</h2>
+                    <div tabindex="0" class="collapse collapse-arrow border border-base-300 bg-base-200">
+                        <div class="collapse-title text-xl font-medium">
+                            <span>Request Message</span>
+                            <label for="edit_service" class="btn btn-sm btn-ghost btn-circle btn-primary" {{!isset($r_list->message['request']) ? 'disabled' : ''}}>
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </label>
                         </div>
-                        <div class="bg-base-100 shadow-lg p-6 rounded">
-                            <h2 class="text-lg font-bold">Reason to Cancel</h2>
-                            <p class="text-md">{{$r_list->message['cancel']['message'] ?? 'None'}}</p>
-                        </div>
-                        <div class="bg-base-100 shadow-lg p-6 rounded">
-                            <h2 class="text-lg font-bold">Reason to Reschedule</h2>
-                            <p class="text-md">{{$r_list->message['reschedule']['message'] ?? 'None'}}</p>
+                        <div class="collapse-content"> 
+                          <p>{{$r_list->message['request'] ?? 'None'}}</p>
                         </div>
                     </div>
+                    <div tabindex="0" class="collapse collapse-arrow border border-base-300 bg-base-200">
+                        <div class="collapse-title text-xl font-medium">
+                            <span>Cancel Request</span>
+                            <label for="edit_cancel" class="btn btn-sm btn-ghost btn-circle btn-primary" {{!isset($r_list->message['cancel']) ? 'disabled' : ''}}>
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </label>
+                        </div>
+                        <div class="collapse-content"> 
+                          <p>{{$r_list->message['cancel']['message'] ?? 'None'}}</p>
+                        </div>
+                    </div>
+                    <div tabindex="0" class="collapse collapse-arrow border border-base-300 bg-base-200">
+                        <div class="collapse-title text-xl font-medium">
+                            <span>Reschedule Request</span>
+                            <label for="edit_reschedule" class="btn btn-sm btn-ghost btn-circle btn-primary" {{!isset($r_list->message['reschedule']) ? 'disabled' : ''}}>
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </label>
+                        </div>
+                        <div class="collapse-content"> 
+                        @if(isset($r_list->message['reschedule']['check_in']))
+                            <span class="text-md my-2 font-bold">Check-in Request: </span><span>{{$r_list->message['reschedule']['check_in']}}</span><br>
+                        @endif
+                        @if(isset($r_list->message['reschedule']['check_out']))
+                            <span class="text-md my-2 font-bold">Check-out Request: </span><span>{{$r_list->message['reschedule']['check_out']}}</span><br>
+                        @endif
+                        @if(isset($r_list->message['reschedule']['message']))
+                            <div class="text-md mt-2 font-bold">Message</div>
+                        @endif
+                          <p>{{$r_list->message['reschedule']['message'] ?? 'None'}}</p>
+                        </div>
+                    </div>
+                    @if(isset($r_list->message['request']))
+                        <x-modal id="edit_service" title="Edit Service Request"> 
+                            <form action="{{route('user.reservation.update.request', encrypt($r_list->id))}}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <x-textarea name="service_message" id="service_message" placeholder="Request" value="{{$r_list->message['request']}}" />
+                                <div class="modal-action">
+                                <button class="btn btn-primary">Save</button>
+                                </div>
+                            </form>
+                        </x-modal> 
+                    @endif
+                    @if(isset($r_list->message['cancel']))
+                        <x-modal id="edit_cancel" title="Edit Cancel Request"> 
+                            <form action="{{route('user.reservation.update.cancel', encrypt($r_list->id))}}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <x-textarea name="cancel_message" id="cancel_message" placeholder="Reason" value="{{$r_list->message['cancel']['message']}}" />
+                                <div class="modal-action">
+                                <button class="btn btn-primary">Save</button>
+                                </div>
+                            </form>
+                        </x-modal> 
+                    @endif
+                    @if(isset($r_list->message['reschedule']))
+                        <x-modal id="edit_reschedule" title="Edit Reschedule Request"> 
+                            <form action="{{route('user.reservation.update.reschedule', encrypt($r_list->id))}}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <p class="my-5">
+                                <span class="font-medium">Type: {{$r_list->accommodation_type}}</span>
+                            </p>
+                            <x-textarea name="reschedule_message" id="reschedule_message" placeholder="Reason to Reschedule Reservation" value="{{$r_list->message['reschedule']['message'] ?? ''}}"/>
+                            <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$r_list->message['reschedule']['check_in'] ?? ''}}"/>
+                            <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$r_list->message['reschedule']['check_out'] ?? ''}}" />
+                            <div class="modal-action">
+                                <button class="btn btn-warning">Save</button>
+                            </div>
+                            </form>
+                        </x-modal> 
+                    @endif
                 </div>
             </div>
         </section>

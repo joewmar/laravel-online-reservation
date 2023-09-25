@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Notification;
@@ -182,7 +183,7 @@ class MyReservationController extends Controller
         $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
         $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
 
-        if(($request['check_in'] === $reservation->check_in && $request['check_out'] === $reservation->check_out) || $request['check_in'] === $request['check_out']){
+        if(($request['check_in'] === $reservation->check_in && $request['check_out'] === $reservation->check_out)){
             return back()->with('error', 'Your choose date does not change at all');
         }
 
@@ -313,7 +314,6 @@ class MyReservationController extends Controller
         
         return view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'tour_addons' => $tour_addons, 'other_addons' => $other_addons, 'rate' => $rate, 'rooms' => $rooms, 'contacts' => $contacts]);
     }
-
     public function updateDetails(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
         if($reservation->status > 0) abort(404);
@@ -472,5 +472,129 @@ class MyReservationController extends Controller
             return redirect()->route('user.reservation.show', $id)->with('success', 'Tour Menu was updated');
         }
     }
+    public function updateRequest(Request $request, $id){
+        // dd($request->all());
+        $validate = Validator::make($request->all('service_message'), [
+            'service_message' => ['required'],
+        ], ['required' => 'Required (Request Service)']);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
+        $validate = $validate->validate();
+        $reservation = Reservation::findOrFail(decrypt($id));
+        $messages = $reservation->message;
+        $messages['request'] =   $validate['service_message'];
+        if($reservation->update(['message' => $messages])){
+            return redirect()->route('user.reservation.show', $id)->with('success', 'Service Request Message was updated');
+        }
+    }
+    public function updateCancel(Request $request, $id){
+        // dd($request->all());
+        $validate = Validator::make($request->all('cancel_message'), [
+            'cancel_message' => ['required'],
+        ], ['required' => 'Need to input the reason']);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
+        $validate = $validate->validate();
+        $reservation = Reservation::findOrFail(decrypt($id));
+        $messages = $reservation->message;
+        $messages['cancel'] = [
+            'message' =>  $validate['cancel_message'],
+        ];
+        if($reservation->update(['message' => $messages])){
+            return redirect()->route('user.reservation.show', $id)->with('success', 'Cancel Request Message was updated');
+        }
+    }
+    public function updateReschedule(Request $request, $id){
+        // dd($request->all());
+        $reservation = Reservation::findOrFail(decrypt( $id));
+        $messages = $reservation->message;
+        if(str_contains($request['check_in'], 'to')){
+            $dateSeperate = explode('to', $request['check_in']);
+            $request['check_in'] = trim($dateSeperate[0]);
+            $request['check_out'] = trim ($dateSeperate[1]);
+        }
+        // Check out convertion word to date format
+        if(str_contains($request['check_out'], ', ')){
+            $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
+            $request['check_out'] = $date->format('Y-m-d');
+        }
+        $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
+
+        if(($request['check_in'] === $messages['reschedule']['check_in'] && $request['check_out'] === $messages['reschedule']['check_out'] )){
+            return back()->with('error', 'Your choose date does not change at all');
+        }
+
+        $validator = null;
+        if($reservation->accommodation_type == 'Day Tour'){
+            $validator = Validator::make($request->all(), [
+                'reschedule_message' => ['required'],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after:'.Carbon::now()->addDays(1)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Choose date with 2 to 3 days',
+                'required' => 'Need fill up first (:attribute)',
+                'date_equals' => 'Choose only one day (Day Tour)',
+            ]);
+        }
+        elseif($reservation->accommodation_type == 'Overnight'){
+            $validator = Validator::make($request->all(), [
+                'reschedule_message' => ['required'],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(1)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Choose date with 2 to 3 days',
+                'required' => 'Need fill up first (:attribute)',
+                'check_out.after_or_equal' => 'Choose within 2 or 3 days (Overnight)',
+            ]);
+        }
+        elseif($reservation->accommodation_type == 'Room Only'){
+            $validator = Validator::make($request->all(), [
+                'reschedule_message' => ['required'],
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(1)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Choose date with 2 to 3 days',
+                'required' => 'Need fill up first',
+                'after' => 'The :attribute was already chose from (Check-in)',
+    
+            ]);
+        }
+        if ($validator->fails()) {            
+            return back()
+            ->with('error', $validator->errors()->all())
+            ->withInput();
+        }
+        $validator = $validator->validate();
+
+        $messages = $reservation->message;
+        $messages['reschedule'] = [
+            'message' => $validator['reschedule_message'],
+            'check_in' => $validator['check_in'],
+            'check_out' => $validator['check_out'],
+        ];
+        if($reservation->update(['message' => $messages])) return redirect()->route('user.reservation.show', $id)->with('success', 'Reschedule Request was updated');
         
+
+    }
+    public function destroyReservation(Request $request, $id){
+        // dd($request->all());
+        $validator = Validator::make($request->all(), [
+            'password' => ['required'],
+        ], [
+            'required' => 'Need fill up first (:attribute)',
+        ]);
+        if ($validator->fails()) {            
+            return back()->with('error', $validator->errors()->all());
+        }
+        $validator = $validator->validate();
+        if(!Hash::check($validator['password'], auth('web')->user()->password)){
+            return back()->with('error', 'Invalid Password');
+        }
+        $reservation = Reservation::findOrFail(decrypt($id));
+        if($reservation->delete()) return redirect()->route('user.reservation.home')->with('success', 'Your Reservation was removed');
+
+        
+    }
 }

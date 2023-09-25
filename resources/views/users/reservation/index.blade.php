@@ -22,9 +22,7 @@
                         <th>Check-in</th>
                         <th>Check-out</th>
                         <th>Status</th>
-                        @if (request('tab') !== 'cancel')
-                          <th>Action</th>
-                        @endif
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -36,45 +34,48 @@
                             <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $list->check_in )->format('l, F j, Y') ?? 'None'}}</td>
                             <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $list->check_out )->format('l, F j, Y') ?? 'None'}}</td>
                             <td>{{$list->status()}} </td>
-                            @if (request('tab') !== 'cancel')
 
                             <th class="w-36 md:w-96 grid grid-cols-1 md:grid-cols-3 gap-2 place-content-center">
-                              @if ($list->status !== 5)
+                              
                               
                               <div class="join">
-                                <label for="{{isset($list->message['cancel']) || isset($list->message['reschedule']) || (!($list->status >= 0 && $list->status < 2)) ? '' : 'cancel_modal'}}" class="btn btn-error btn-xs join-item" {{isset($list->message['cancel']) || isset($list->message['reschedule']) || (!($list->status >= 0 && $list->status < 2)) ? 'disabled' : ''}}>Cancel</label>
-                                <label for="{{isset($list->message['cancel']) || isset($list->message['reschedule']) || (!($list->status >= 0 && $list->status < 2)) ? '' : 'reschedule_modal'}}" class="btn btn-warning btn-xs join-item" {{!empty($list->message['cancel']) || !empty($list->message['reschedule']) || (!($list->status >= 1 && $list->status < 2)) ? 'disabled' : ''}}>Reschedule</label>
+                                @if ($list->status !== 5 || $list->status !== 4)
+                                  <label for="{{isset($list->message['cancel']) || isset($list->message['reschedule']) || (!($list->status >= 0 && $list->status < 2)) ? '' : 'cancel_modal'}}" class="btn btn-error btn-xs join-item" {{isset($list->message['cancel']) || isset($list->message['reschedule']) || (!($list->status >= 0 && $list->status < 2)) ? 'disabled' : ''}}>Cancel</label>
+                                  <label for="{{isset($list->message['cancel']) || isset($list->message['reschedule']) || (!($list->status >= 0 && $list->status < 2)) ? '' : 'reschedule_modal'}}" class="btn btn-warning btn-xs join-item" {{!empty($list->message['cancel']) || !empty($list->message['reschedule']) || (!($list->status >= 1 && $list->status < 2)) ? 'disabled' : ''}}>Reschedule</label>
+                                @endif
                                 <a href="{{route('user.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs join-item" >More Details</a>
                               </div>
-                              <x-modal id="{{isset($list->message['cancel']) ? 'disabledALl' : 'cancel_modal'}}" title="Why do you want to cancel?"> 
-                                <form action="{{route('user.reservation.cancel', encrypt($list->id))}}" method="POST">
-                                  @csrf
-                                  @method('PUT')
-                                  <x-textarea name="cancel_message" id="cancel_message" placeholder="Reason" />
-                                  <div class="modal-action">
-                                    <button class="btn btn-error">Cancel Now</button>
-                                  </div>
-                                </form>
-                              </x-modal> 
-                              <x-modal id="reschedule_modal" title="Why do you want to reschedule?"> 
-                                <form action="{{route('user.reservation.reschedule', encrypt($list->id))}}" method="POST">
-                                  @csrf
-                                  @method('PUT')
-                                  <p class="my-5">
-                                    <span class="font-medium">Type: {{$list->accommodation_type}}</span>
-                                  </p>
-                                  <x-textarea name="reschedule_message" id="reschedule_message" placeholder="Reason to Reschedule Reservation" />
-                                  <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$list->check_in  ?? ''}}"/>
-                                  <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$list->check_out  ?? ''}}" />
-                                  <div class="modal-action">
-                                    <button class="btn btn-warning">Reschedule Now</button>
-                                  </div>
-                                </form>
-                              </x-modal> 
+                              @if ($list->status !== 5 || $list->status !== 4)
+                                <x-modal id="{{isset($list->message['cancel']) ? 'disabledALl' : 'cancel_modal'}}" title="Why do you want to cancel?"> 
+                                  <form action="{{route('user.reservation.cancel', encrypt($list->id))}}" method="POST">
+                                    @csrf
+                                    @method('PUT')
+                                    <x-textarea name="cancel_message" id="cancel_message" placeholder="Reason" />
+                                    <div class="modal-action">
+                                      <button class="btn btn-error">Cancel Now</button>
+                                    </div>
+                                  </form>
+                                </x-modal> 
+                                
+                                <x-modal id="reschedule_modal" title="Why do you want to reschedule?"> 
+                                  <form action="{{route('user.reservation.reschedule', encrypt($list->id))}}" method="POST">
+                                    @csrf
+                                    @method('PUT')
+                                    <p class="my-5">
+                                      <span class="font-medium">Type: {{$list->accommodation_type}}</span>
+                                    </p>
+                                    <x-textarea name="reschedule_message" id="reschedule_message" placeholder="Reason to Reschedule Reservation" />
+                                    <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$list->check_in  ?? ''}}"/>
+                                    <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$list->check_out  ?? ''}}" />
+                                    <div class="modal-action">
+                                      <button class="btn btn-warning">Reschedule Now</button>
+                                    </div>
+                                  </form>
+                                </x-modal> 
                               @endif
 
                             </th>
-                            @endif
+
                           </tr>
                         @empty
                           <tr>
@@ -88,4 +89,18 @@
               </div>
           </section>
     </x-full-content>
+    @push('scripts')
+      <script>
+      @if(isset($from) && isset($to))
+          const mop = {
+              from: '{{\Carbon\Carbon::createFromFormat('Y-m-d', $from)->format('Y-m-d')}}',
+              to: '{{\Carbon\Carbon::createFromFormat('Y-m-d', $to)->format('Y-m-d')}}'
+          };
+      @else
+          const mop = '2001-15-30';
+      @endif
+      const md = '{{Carbon\Carbon::now()->addDays(2)->format('Y-m-d')}}';
+      </script>
+      <script type="module" src="{{Vite::asset('resources/js/flatpickr.js')}}"></script>
+  @endpush
 </x-landing-layout>
