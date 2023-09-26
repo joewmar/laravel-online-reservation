@@ -85,7 +85,10 @@ class MyReservationController extends Controller
 
         if($reservation->roomid){
             foreach($reservation->roomid as $item){
-                $rooms[] = 'Room No.' . Room::find($item)->room_no . ' ('.Room::find($item)->room->name.')';
+                $room = Room::find($item);
+                if($room) $rooms[] = 'Room No.' . $room->room_no . ' ('.$room->room->name.')';
+                else $rooms[] = 'Room Data Missing';
+
             }
         }
         $conflict = Reservation::all()->where('check_in', $reservation->check_in)->where('status', 0)->except($reservation->id);;

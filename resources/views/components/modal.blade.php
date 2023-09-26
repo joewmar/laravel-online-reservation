@@ -1,7 +1,7 @@
-@props(['id'=>'', 'title'=> '', 'alpinevar' => null, 'type' => 'Close', 'formID' => '', 'loader' => false])
+@props(['id'=>'', 'title'=> '', 'alpinevar' => null, 'type' => 'Close', 'formID' => '', 'loader' => false, 'width' => false])
 <input type="checkbox" id="{{$id}}" class="modal-toggle" />
 <div x-data="{loader: false}" class="modal modal-bottom sm:modal-middle" id="{{$id}}">
-  <div {{ $attributes->merge(['class'=> "modal-box"]) }}>
+  <div {{ $attributes->merge(['class'=> "modal-box " .($width ? 'md:w-11/12 md:max-w-5xl' : '') .""]) }}>
     <h3 class="font-bold text-lg text-primary">{{$title}}</h3>
     <div class="my-4">
         {{$slot}}

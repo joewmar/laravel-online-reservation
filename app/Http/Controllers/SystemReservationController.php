@@ -64,17 +64,7 @@ class SystemReservationController extends Controller
     private function roomAssign(array $rooms, Reservation $reservation, $validated, bool $forceAssign = false, bool $changeAssign = false){
         $roomCustomer = [];
         $reservationPax = 0;
-        if($changeAssign){
-            foreach(Room::all() as $value){
-                $value->removeCustomer($reservation->id);
-            }
-            $allPax = 0;
-            foreach($rooms as $pax){
-                $allPax += $pax ;
-                if($allPax > $reservation->pax && $allPax < $reservation->pax) return back()->with('error', 'Cannot choose due invalid guest ('.$allPax.' pax) doest not match on customer guest ('.$reservation->pax.' pax)')->withInput($validated);
 
-            }
-        }
         if($forceAssign){
             foreach($rooms as $room_id => $newPax){
                 $reservationPax += (int)$newPax;
@@ -120,6 +110,11 @@ class SystemReservationController extends Controller
                 }
             }
             if($reservationPax > $reservation->pax || $reservationPax < $reservation->pax) return back()->with('error', 'Guest you choose ('.$reservationPax.' pax) does not match on Customer Guest ('.$reservation->pax.' pax)')->withInput($validated);
+        }
+        if($changeAssign){
+            foreach(Room::all() as $value){
+                $value->removeCustomer($reservation->id);
+            }
         }
         return $roomCustomer; 
     }
@@ -218,8 +213,10 @@ class SystemReservationController extends Controller
         $tour_addons = [];
         $rate = [];
         if($reservation->roomid){
-            foreach($reservation->roomid as $item){
-                $rooms[] = 'Room No.' . Room::find($item)->room_no . ' ('.Room::find($item)->room->name.')';
+            foreach($reservation->roomid as $item) {
+                $room = Room::find($item);
+                if($room) $rooms[] = 'Room No ' . $room->room_no . ' ('.$room->room->name.')';
+                else $rooms[] = 'Room Data Missing';
             }
         }
         $conflict = Reservation::all()->where('check_in', $reservation->check_in)->where('status', 0)->except($reservation->id);;
@@ -424,8 +421,6 @@ class SystemReservationController extends Controller
                   });
         })->where('id', '!=', $reservation->id)->pluck('id');
         
-        // Range Error
-        // dd($r_lists);
         foreach($rooms as $key => $room){
             $count_paxes = 0;
             foreach($r_lists as $r_list){
@@ -496,8 +491,11 @@ class SystemReservationController extends Controller
             }
         
             $roomDetails = [];
-            foreach($reservation->roomid as $item)$roomDetails[] = 'Room No ' . Room::find($item)->room_no . ' ('.Room::find($item)->room->name.')';
-            
+            foreach($reservation->roomid as $item) {
+                $room = Room::find($item);
+                if($room) $roomDetails[] = 'Room No ' . $room->room_no . ' ('.$room->room->name.')';
+                else $roomDetails[] = 'Room Data Missing';
+            }
 
             $text = null;
             $url = null;

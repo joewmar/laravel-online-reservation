@@ -2,9 +2,9 @@
     $r = $r_list->roomid ?? array_keys(old('room_pax')); 
 @endphp
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Edit Room Assign">
+    <x-system-content title="Edit Room Assign" back>
         {{-- User Details --}}
-        <div x-data="{force: false, rooms: {{old('room_pax') ? '[' . implode(',', array_keys(old('room_pax'))) .']' : '[]'}} }" class="w-full">
+        <div x-data="{force: false, rooms: {{$r_list->roomid ? '[' . implode(',', $r_list->roomid) .']' : '[]'}} }" class="mt-5 w-full">
             <div class="flex justify-between">
                 <div>
                     <h2 class="text-2xl font-semibold">Choose the room for {{$r_list->userReservation->name()}} ({{$r_list->pax}} guest)</h2>
@@ -15,9 +15,6 @@
                     <div class="dropdown dropdown-left">
                         <label tabindex="0" class="btn btn-ghost"><i class="fa-solid fa-circle-info"></i></label>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                            <li>                    
-                                <p class="font-medium">Availability as Now</p>
-                            </li>
                             <li>                    
                                 <div class="flex items-center space-x-2">
                                     <label class="h-8 w-8 rounded-full bg-red-600 shadow-sm" ></label>
@@ -38,7 +35,7 @@
                 @csrf
                 @method('PUT')
                 <label for="ckforce" class="flex items-center">
-                    <input id="ckforce" type="checkbox" checked="checked" name="force" x-model="force" class="checkbox checkbox-primary" x-on:checked="force = true" x-effect="if(!force) rooms = {{old('room_pax') ? '[' . implode(',', array_keys(old('room_pax'))) .']' : '[]'}}" />
+                    <input id="ckforce" type="checkbox" checked="checked" name="force" x-model="force" class="checkbox checkbox-primary" x-on:checked="force = true" x-effect="if(!force) rooms = {{$r_list->roomid ? '[' . implode(',', $r_list->roomid) .']' : '[]'}}" />
                     <span class="font-bold ml-3">Force Assign</span> 
                 </label>
                 <div class="form-control w-full mt-5">
@@ -81,10 +78,10 @@
                                     <span class="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center" :class="!force ? '{{in_array($item->id, $reserved) ? 'bg-red-600 h-full' : 'bg-primary h-3'}}' : 'bg-primary h-3'">
                                         <h3 :class="!force ? '{{in_array($item->id, $reserved) ? 'block' : 'hidden'}}' : 'hidden' " class="text-base-100 block font-medium w-full text-center">Full</h3>
                                         <h4 class="text-primary-content hidden font-medium w-full text-center" >Room No. {{$item->room_no}} Selected</h4> 
-                                        <div x-data="{count: {{isset(old('room_pax')[$item->id]) ? (int)old('room_pax')[$item->id] : 1}}}" class="join hidden">
+                                        <div x-data="{count: {{in_array($item->id, $r_list->roomid) ? (int)$item->customer[$r_list->id] : 1}}}" class="join hidden">
                                             <button  @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
                                             <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$item->room->max_occupancy}}"  readonly/>
-                                            <button  @click="count < {{$item->room->max_occupancy}} ? count++ : count = {{$item->room->max_occupancy}}"  type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
+                                            <button  @click="count < {{$item->room->max_occupancy}} || force  ? count++ : count = {{$item->room->max_occupancy}}"  type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
                                         </div>
                                     </span>
                                     <div class="sm:flex sm:justify-between sm:gap-4">

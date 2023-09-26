@@ -434,7 +434,8 @@ class CreateReservationController extends Controller
         }
         foreach($decrypted['rm'] as $id => $pax){
             $room = Room::find($id);
-            $rooms[] =  'Room No. ' .$room->room_no . ' ('.$pax.' guest assigned)';
+            if($room) $rooms[] =  'Room No. ' .$room->room_no . ' ('.$pax.' guest assigned)';
+            else $rooms[] =  'Room Data Missing';
         }
         $rate = RoomRate::find($decrypted['rt']);
         $rooms = implode(', ', $rooms);

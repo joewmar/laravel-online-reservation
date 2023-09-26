@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             'contact' => '09123456789',
             'email'=> 'juan@email.com',
             'password' => Hash::make('123456789'),
+            'valid_id' => 'valid_id/Valid_ID.sample.jpg',
         ]);
 
         User::factory()->create([
@@ -63,23 +64,23 @@ class DatabaseSeeder extends Seeder
             'price' => 700.00,
         ]);
 
-        // \App\Models\Reservation::factory()->create([
-        //     'user_id' => 1,
-        //     // 'roomid' => 1,
-        //     // 'roomrateid' => 1,
-        //     'pax' => 5,
-        //     'tour_pax' => 4,
-        //     'accommodation_type' => 'Overnight',
-        //     'payment_method' => 'Gcash',
-        //     'age' => User::findOrfail(1)->age(),
-        //     'check_in' => Carbon::now('Asia/Manila')->addDays(15)->toDateTimeString(),
-        //     'check_out' => Carbon::now('Asia/Manila')->addDays(20)->toDateTimeString(),
-        //     'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-        //     'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'amount' => 2100.00 * 4]],
-        // ]);
-
         \App\Models\Reservation::factory()->create([
             'user_id' => 2,
+            // 'roomid' => 1,
+            // 'roomrateid' => 1,
+            'pax' => 5,
+            'tour_pax' => 4,
+            'accommodation_type' => 'Overnight',
+            'payment_method' => 'Gcash',
+            'age' => User::findOrfail(1)->age(),
+            'check_in' => Carbon::now('Asia/Manila')->addDays(15)->toDateTimeString(),
+            'check_out' => Carbon::now('Asia/Manila')->addDays(20)->toDateTimeString(),
+            'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
+            'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'amount' => 2100.00 * 4]],
+        ]);
+
+        \App\Models\Reservation::factory()->create([
+            'user_id' => 1,
             // 'roomid' => 1,
             // 'roomrateid' => 1,
             'pax' => 4,
