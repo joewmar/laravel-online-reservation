@@ -176,13 +176,7 @@
                         <x-input type="number" name="payment_amount" id="payment_amount" min="1000" placeholder="Payment Amount" />
                       </div>                    </div>
                     <div class="col-span-6">
-                      <div class="mb-5 py-4 w-full flex flex-col justify-center items-center">
-                        <div class="rounded">
-                          <img id="show_img" src="{{asset('images/logo.png')}}" alt="Valid ID"  class="object-center w-80 shadow-lg" />
-                        </div> 
-                      </div>
-                      <x-file-input id="valid_id" name="valid_id" placeholder="Send Valid ID" />
-
+                      <x-drag-drop title="Valid ID" name="valid_id" id="valid_id1" />
                     </div>
       
                     <div class="col-span-6 hidden md:grid grid-cols-2 gap-4 ">

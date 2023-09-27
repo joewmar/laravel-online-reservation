@@ -22,8 +22,10 @@
           </div>
         </div>
         <div x-show="imageData{{$id}}" class="w-full flex flex-col items-center">
-          <img id="previewImage{{$id}}" :src="imageData{{$id}}" alt="{{$title ?? ''}} Image" class="mx-auto h-auto">
-          <button type="button" class="mt-5 btn btn-error btn-sm" x-on:click="clearImage{{$id}}">Reset</button>
+          <img id="previewImage{{$id}}" :src="imageData{{$id}}" alt="{{$title ?? ''}} Image" class="mx-auto w-72">
+          <button type="button" class="mt-3 btn btn-circle btn-ghost btn-sm" x-on:click="clearImage{{$id}}">
+            <i class="fa-solid fa-x"></i>
+          </button>
         </div>
       </div>
     

@@ -125,7 +125,7 @@ class DatabaseSeeder extends Seeder
         \App\Models\TourMenuList::factory()->create([
             'title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
-            'inclusion' => 'Duration: 1 hr. to 1.5 hrs.',
+            'inclusion' => 'Duration: 1 hr. to 1.5 hrs.(,)Free trek meal, parking space and bottled water',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
@@ -145,7 +145,7 @@ class DatabaseSeeder extends Seeder
         \App\Models\TourMenuList::factory()->create([
             'title' => 'ATV Tambo Lake and San Marcos Lake Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
-            'inclusion' => 'Duration: 1 hr. to 1.5 hrs.',
+            'inclusion' => 'Duration: 2 hrs. to 2.5 hrs(,)Free trek meal, parking space and bottled water',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
@@ -180,80 +180,18 @@ class DatabaseSeeder extends Seeder
             'pax' => '2',
         ]);
 
-
-
-        // ATV Trail Rate //
-        \App\Models\TourMenuList::factory()->create([
-            'title' => 'Tambo Lake Trail',
-            'category' => 'ATV Trail Rate',
-            'inclusion' => '100 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
-            'no_day' => '1',
-        ]);
-        \App\Models\TourMenu::factory()->create([
-            'menu_id' => 4,
-            'type' => 'Solo Rider',
-            'price' => '3750',
-            'pax' => '1',
-        ]);
-        \App\Models\TourMenu::factory()->create([
-            'menu_id' => 4,
-            'type' => 'Double Rider',
-            'price' => '5500',
-            'pax' => '2',
-        ]);
-
-        \App\Models\TourMenuList::factory()->create([
-            'title' => 'Combo Trail',
-            'category' => 'ATV Trail Rate',
-            'inclusion' => '100 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
-            'no_day' => '1',
-        ]);
-        \App\Models\TourMenu::factory()->create([
-            'menu_id' => 5,
-            'type' => 'Solo Rider',
-            'price' => '5500',
-            'pax' => '1',
-        ]);
-        \App\Models\TourMenu::factory()->create([
-            'menu_id' => 5,
-            'type' => 'Double Rider',
-            'price' => '7000',
-            'pax' => '2',
-        ]);
-
-        \App\Models\TourMenuList::factory()->create([
-            'title' => 'Short trail via ATV',
-            'category' => 'ATV Trail Rate',
-            'inclusion' => '100 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
-            'no_day' => '1',
-        ]);
-        \App\Models\TourMenu::factory()->create([
-            'menu_id' => 6,
-            'type' => 'Solo Rider',
-            'price' => '2500',
-            'pax' => '1',
-        ]);
-        \App\Models\TourMenu::factory()->create([
-            'menu_id' => 6,
-            'type' => 'Double Rider',
-            'price' => '1000',
-            'pax' => '2',
-        ]);
-
         \App\Models\TourMenuList::factory()->create([
             'title' => 'ATV Long Trail (going to Pinatubo drop point car)',
-            'category' => 'ATV Trail Rate',
-            'inclusion' => '700 add-ons (conservation fees, tourism fees)(..)Free trek meal and bottled water',
+            'category' => 'Rent ATV',
+            'inclusion' => 'Free trek meal, parking space and bottled water',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
-            'menu_id' => 7,
-            'type' => 'Solo',
-            'price' => '13200', /* '13200 + 4,000' */
+            'menu_id' => 4,
+            'type' => 'Solo Rider with assistance 4x4',
+            'price' => '13200',
             'pax' => '1',
         ]);
-
-
 
         // Mt. Pinatubo 4x4 rate day tour //
         \App\Models\TourMenuList::factory()->create([
@@ -263,25 +201,25 @@ class DatabaseSeeder extends Seeder
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
-            'menu_id' => 8,
+            'menu_id' => 5,
             'type' => '1 PAX',
             'price' => '6600',
             'pax' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
-            'menu_id' => 8,
+            'menu_id' => 5,
             'type' => '2 PAX',
             'price' => '3750',
             'pax' => '2',
         ]);
         \App\Models\TourMenu::factory()->create([
-            'menu_id' => 8,
+            'menu_id' => 5,
             'type' => '3 PAX',
             'price' => '2900',
             'pax' => '3',
         ]);
         \App\Models\TourMenu::factory()->create([
-            'menu_id' => 8,
+            'menu_id' => 5,
             'type' => '4 PAX',
             'price' => '2700',
             'pax' => '4',

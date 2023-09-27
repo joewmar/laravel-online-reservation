@@ -45,7 +45,7 @@
 @endphp
 
 <x-system-layout :activeSb="$activeSb">
-  <x-system-content title="Add Book">
+  <x-system-content title="Add Book (Tour)">
     <section
       x-data="{
         filterOpen: false, 
@@ -111,67 +111,20 @@
         </div>
       </div>
       <div class="mx-auto max-w-screen-md md:flex flex-col justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8" >
-        <header>
-          <h2 class="text-xl font-bold text-gray-900 sm:text-3xl">
-            Tour Service
-          </h2>
-
-          <p class="mt-4 max-w-md font-bold text-2xl">
-            1. Fill up Service Information
-          </p>
-        </header>
-        <div class="mt-8 block lg:hidden">
-          <button x-on:click="filterOpen = ! filterOpen" type="button" class="flex cursor-pointer items-center gap-2 border-b border-gray-400 pb-1 text-gray-900 transition hover:border-gray-600">
-            <span class="text-sm font-medium">Filters</span>
-            <i :class="filterOpen ? 'fa-solid fa-chevron-down' : 'fa-solid fa-greater-than'"></i>          
-          </button>
-        </div>
-          <form x-data="{at: '{{$TourInfo['at']}}'}" action="{{route('system.reservation.store.step.two-one', Arr::query(['rt' => $TourInfo['rt'], 'rm' => $TourInfo['rm']]))}}" method="post">
-          @csrf
-          <div class="mt-4 ">
-            <div :class="filterOpen ? 'transition-all duration-1000 ease-in-out' : 'hidden' " class="space-y-4 lg:block">
-              @if(request()->has(['cin', 'cout', 'px', 'py', 'at', 'st', 'tpx']))
-                <div class="opacity-50" id="disabledAll">
-              @else
-                <div>
-              @endif
-                  <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one" value="{{$TourInfo['cin'] ?? \Carbon\Carbon::now('Asia/Manila')->addDays(3)->format('Y-m-d')}}"/>
-                  <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{$TourInfo['cout']}}"/>
-                  <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" />
-                  <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$TourInfo['px']}}" />
-                  <template x-if="at === 'Day Tour' || at === 'Overnight'">
-                    <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$TourInfo['tpx']}}" />
-                  </template>
-                  <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$TourInfo['py']}}"/>
-                  <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[$TourInfo['st']] ?? ''}}"/>
-                  @if(request()->has(['cin', 'cout', 'px', 'py', 'at', 'st', 'tpx']) && $TourInfo['at'] != 'Room Type')
-                      <div class="hidden">
-                  @else
-                      <div class="lg:flex justify-start gap-5">
-                  @endif
-                      <div class="mt-8 flex gap-4">
-                        <a @click="loader = true" href="{{route('system.reservation.create', Arr::query(['px' => $TourInfoEncrypted['px'], 'at' => $TourInfoEncrypted['at'], 'rm' => $TourInfoEncrypted['rm'], 'rt' => $TourInfoEncrypted['rt'], 'cin' => $TourInfoEncrypted['cin'], 'cout' => $TourInfoEncrypted['cout']]) )}}" class="btn btn-ghost">Back</a>
-                        <button @click="loader = true" type="submit" class="btn btn-primary">Continue</button>
-                      </div>
-                    </div>
-              </div>
-
-            </div>
-          </div>
-        </form>
-          <div class="divider"></div>
-          @if(request()->has(['cin', 'cout', 'px', 'py', 'at', 'st', 'tpx']) && $TourInfo['at'] != 'Room Type')
+          @if(request()->has(['cin', 'cout', 'py', 'at', 'st', 'tpx']) && $TourInfo['at'] != 'Room Type')
             <div id="tourmenu" class="w-full">
               <header>
                 <p class="mt-4 max-w-md font-bold text-2xl">
-                  2. Choose your menu wisely
+                  Choose your Tour
                 </p>
               </header>
+              <h4 class="mt-3 text-sm font-semibold">You Guest will going on tour: <span class="font-normal">{{$TourInfo['tpx']}} guest</span></h4>
+
               <div class="gap-10">
                 <form id="tour-form" action="{{route('system.reservation.store.step.two-two', Arr::query($TourInfoEncrypted))}}" method="post">
                   @csrf
                 <div class="flex justify-between mt-6">
-                  <h3 class="font-bold text-xl">Category</h3>
+                  <h3 class="font-bold text-lg">Category</h3>
                   <div class="dropdown dropdown-end">
                     <label tabindex="0" class="btn btn-ghost btn-circle">
                       <div class="indicator">
@@ -229,7 +182,6 @@
                     </div>
                   </div>
                 </div>
-                <h4 class="mb-3 text-sm font-semibold">You Guest will going on tour: <span class="font-normal">{{$TourInfo['tpx']}} guest</span></h4>
 
               </form>
               <div class="w-full text-center">

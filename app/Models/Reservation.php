@@ -88,7 +88,8 @@ class Reservation extends Model
     {
         $date1 = Carbon::parse($this->attributes['check_in']); // Convert $date1 to Carbon object
         $date2 = Carbon::parse($this->attributes['check_out']); // Convert $date2 to Carbon object
-        return (int)$date1->diffInDays($date2); // Calculate the number of days between the two dates
+        if($date1->timestamp === $date2->timestamp) return 1;
+        else return (int)$date1->diffInDays($date2); // Calculate the number of days between the two dates
     }
     public function getNoDaysInToday()
     {

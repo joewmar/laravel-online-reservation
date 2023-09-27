@@ -31,7 +31,6 @@ use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
-use PDO;
 
 class SystemReservationController extends Controller
 {

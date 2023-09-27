@@ -40,8 +40,8 @@ function getNoDays($dt1, $dt2)
 {
     $date1 = Carbon::parse($dt1); // Convert $date1 to Carbon object
     $date2 = Carbon::parse($dt2); // Convert $date2 to Carbon object
-
-    return (int)$date1->diffInDays($date2); // Calculate the number of days between the two dates
+    if($date1->timestamp === $date2->timestamp) return 1;
+    else return (int)$date1->diffInDays($date2); // Calculate the number of days between the two dates
 }
 function encryptedArray($array)
 {

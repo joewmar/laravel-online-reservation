@@ -13,9 +13,6 @@
                         <label tabindex="0" class="btn btn-ghost"><i class="fa-solid fa-circle-info"></i></label>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                             <li>                    
-                                <p class="font-medium">Availability as Now</p>
-                            </li>
-                            <li>                    
                                 <div class="flex items-center space-x-2">
                                     <label class="h-8 w-8 rounded-full bg-red-600 shadow-sm" ></label>
                                     <p class="font-medium">Full</p>

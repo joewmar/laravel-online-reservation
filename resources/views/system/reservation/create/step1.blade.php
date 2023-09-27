@@ -4,8 +4,11 @@
         'px' =>    request('px')  ? decrypt(request('px')): old('pax'),
         'rm' =>    request('rm')  ? decrypt(request('rm')): old('room_pax'),
         'rt' =>    request('rt')  ? decrypt(request('rt')) : old('room_rate'),
-        'cin' =>   request('cin') ? decrypt(request('cin')) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
+        'cin' =>   request('cin') ? decrypt(request('cin')) : old('check_in'),
         'cout' =>  request('cout') ? decrypt(request('cout')) : old('check_out'),
+        'py' =>   request('py') ? decrypt(request('py')) : old('payment_method'),
+        'tpx' =>   request('tpx') ? decrypt(request('tpx')) : old('tour_pax'),
+        'st' =>   request('st') ? decrypt(request('st')) : old('status'),
     ];
     if(session()->has('nwrinfo')){
         $roomInfo = [
@@ -13,27 +16,26 @@
             'px' => isset(session('nwrinfo')['px']) ? decrypt(session('nwrinfo')['px']) : old('pax'),
             'rm' => isset(session('nwrinfo')['rm']) ? decrypt(session('nwrinfo')['rm']) : old('room_pax'),
             'rt' => isset(session('nwrinfo')['rt']) ? decrypt(session('nwrinfo')['rt']) : old('room_rate'),
-            'cin' => isset(session('nwrinfo')['cin']) ? decrypt(session('nwrinfo')['cin']) : old('check_in') ?? Carbon\Carbon::now()->format('Y-m-d'),
+            'cin' => isset(session('nwrinfo')['cin']) ? decrypt(session('nwrinfo')['cin']) : old('check_in'),
             'cout' => isset(session('nwrinfo')['cout']) ? decrypt(session('nwrinfo')['cout']) : old('check_out'),
+            'py' => isset(session('nwrinfo')['py']) ? decrypt(session('nwrinfo')['py']) : old('payment_method'),
+            'tpx' => isset(session('nwrinfo')['tpx']) ? decrypt(session('nwrinfo')['tpx']) : old('tour_pax'),
+            'st' => isset(session('nwrinfo')['st']) ? decrypt(session('nwrinfo')['st']) : old('status'),
         ];
     }
-    $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
-    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
 
 
 @endphp
 
 <x-system-layout :activeSb="$activeSb">
-  <x-system-content title="Add Book">
+  <x-system-content title="Add Book (Room Assign)">
     <section class="w-full px-5 md:px-16">
-        <form x-data="{loader: false}" action="{{route('system.reservation.store.step.one')}}" method="post">
+        <form x-data="{loader: false, npax: {{$roomInfo['px'] ?? 1}}, at: ''}" action="{{route('system.reservation.store.step.one')}}" method="post">
             @csrf
             <x-loader />
             <h2 class="text-2xl font-semibold my-5">Choose the room</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
-                <div class="col-span-1 md:col-span-2">
-                    <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" selected="{{$roomInfo['at']}}" />
-                </div>
+                <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" />
                 <div class="form-control w-full">
                     <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error('room_rate') border-error @enderror">
                             <select name="room_rate" id="room_rate" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
@@ -47,9 +49,9 @@
                                 }
                             @endphp
                                 @if($roomInfo['rt'] == $rateID);
-                                    <option value="{{encrypt($rate->id)}}" selected>{{$rate->name}} ({{$rate->occupancy}} pax)</option>
+                                    <option value="{{encrypt($rate->id)}}" :selected="npax == {{$rate->occupancy}} || npax > {{$rate->occupancy}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
                                 @else
-                                    <option value="{{encrypt($rate->id)}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
+                                    <option value="{{encrypt($rate->id)}}" :selected="npax == {{$rate->occupancy}} || npax > {{$rate->occupancy}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
                                 @endif
                             @endforeach
                         </select>        
@@ -65,9 +67,17 @@
                         </span>
                     </label>
                 </div> 
-                <x-input id="pax" name="pax" placeholder="Number of Guest" value="{{$roomInfo['px']}}"/>
+                <div :class="at === 'Day Tour' || at === 'Overnight' ? '' : 'col-span-1 md:col-span-2'">
+                    <x-input id="pax" name="pax" placeholder="Number of Guest" xModel="npax" />
+                </div>
+                <template x-if="at === 'Day Tour' || at === 'Overnight'">
+                    <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$roomInfo['tpx']}}" />
+                </template>
                 <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one" value="{{$roomInfo['cin'] }}"/>
                 <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{$roomInfo['cout']}}" />
+
+                  <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$roomInfo['py']}}"/>
+                  <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[$roomInfo['st']] ?? ''}}"/>
             </div>
 
             <div x-data="{rooms: {{$roomInfo['rm'] ? '[' . implode(',', array_keys($roomInfo['rm'])) .']' : '[]'}}}" class="flex justify-center flex-wrap gap-5 w-full">
@@ -75,8 +85,8 @@
                     <div>
                         <input x-ref="RoomRef" x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" x-on:checked="rooms.includes({{$item->id}})" />
                         <label for="RoomNo{{$item->room_no}}">
-                            <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 {{$item->availability == 1 ? 'border-red-600' : 'border-primary'}} border-primary cursor-pointer">
-                                <span class="absolute inset-x-0 bottom-0 h-3 {{$item->availability == 1 ? 'bg-red-600' : 'bg-primary'}} flex flex-col items-center justify-center">
+                            <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 border-primary cursor-pointer">
+                                <span class="absolute inset-x-0 bottom-0 h-3 bg-primary flex flex-col items-center justify-center">
                                     <h4 class="text-primary-content hidden font-medium w-full text-center">Room No. {{$item->room_no}} Selected</h4> 
                                     <div  x-data="{count: {{isset($roomInfo['rm'][$item->id]) ? (int)$roomInfo['rm'][$item->id] : 1}}}" class="join hidden">
                                         <button  @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
