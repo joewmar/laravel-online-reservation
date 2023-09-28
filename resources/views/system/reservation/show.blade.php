@@ -57,7 +57,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
                 </label>
                 <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                    @if($r_list->status >= 1 && $r_list->status < 2)
+                    @if(isset($r_list->payment_cutoff))
                         <li>
                             <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}">
                                 Online Payment
@@ -77,11 +77,13 @@
                         </li>
                     @endif
                     @if($r_list->status >= 1)
-                        <li>
-                            <a href="{{route('reservation.receipt', encrypt($r_list->id))}}">
-                                Reciept
-                            </a>
-                        </li>
+                        @if(!$r_list->status == 6 )
+                            <li>
+                                <a href="{{route('reservation.receipt', encrypt($r_list->id))}}">
+                                    Reciept
+                                </a>
+                            </li>
+                        @endif
                     @endif
                         <li>
                             <label for="edit_modal" {{$r_list->status === 3 ? 'disabled' : ''}}>
@@ -92,7 +94,7 @@
               </div>
         </div>
         <div class="w-full hidden md:flex justify-end space-x-1">
-            @if($r_list->status >= 1 && $r_list->status < 2)
+            @if(isset($r_list->payment_cutoff))
                 <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}" class="btn btn-info btn-sm">
                     <i class="fa-solid fa-credit-card"></i>
                     Online Payment
@@ -108,10 +110,12 @@
                 </a>
             @endif
             @if($r_list->status >= 1)
-                <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-success btn-sm">
-                    <i class="fa-solid fa-receipt"></i>
-                    Reciept
-                </a>
+                @if(!$r_list->status == 6 )
+                    <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-success btn-sm">
+                        <i class="fa-solid fa-receipt"></i>
+                        Reciept
+                    </a>
+                @endif
             @endif
 
             <label for="edit_modal" class="btn btn-sm" {{$r_list->status === 3 ? 'disabled' : ''}}>
@@ -467,9 +471,8 @@
                 <x-checkin name="{{$r_list->userReservation->name() ?? ''}}" :datas="$r_list" />
                 <label for="checkout" class="btn btn-warning btn-xs join-item" {{!($r_list->status == 2) ? 'disabled' : ''}}>Check-out</label>
                 <x-checkout name="{{$r_list->userReservation->name() ?? ''}}" :datas="$r_list" />
-                <a href="{{route('system.reservation.show.cancel', encrypt($r_list->id))}}" class="btn btn-xs btn-error join-item" {{($r_list->status >= 2 && $r_list->status <= 3) ? 'disabled' : ''}}>Cancel</a>
-                {{-- <a href="{{route('system.reservation.show.cancel', encrypt($r_list->id))}}" class="btn btn-xs btn-error join-item" {{($r_list->status >= 2 && $r_list->status <= 3) || $r_list->status !== 8 ? 'disabled' : ''}}>Cancel</a> --}}
-                <a href="{{route('system.reservation.show.reschedule', encrypt($r_list->id))}}" class="btn btn-xs btn-accent join-item" {{($r_list->status >= 2 && $r_list->status <= 3) || $r_list->status !== 7  ? 'disabled' : ''}}>Reschedule</a>
+                <a href="{{route('system.reservation.show.cancel', encrypt($r_list->id))}}" class="btn btn-xs btn-error join-item" {{($r_list->status >= 2 && $r_list->status <= 3) || $r_list->status == 6 ? 'disabled' : ''}}>Cancel</a>
+                <a href="{{route('system.reservation.show.reschedule', encrypt($r_list->id))}}" class="btn btn-xs btn-accent join-item" {{($r_list->status >= 2 && $r_list->status <= 3) || $r_list->status == 6  || $r_list->status !== 7  ? 'disabled' : ''}}>Reschedule</a>
             </div>
             <div class="join inline md:hidden">
                 @if($r_list->status() == "Pending")
@@ -495,7 +498,7 @@
                         <li><a href="{{route('system.reservation.show.cancel', encrypt($r_list->id))}}" class="text-error">Cancel</a></li>
                         <li><a href="{{route('system.reservation.show.reschedule', encrypt($r_list->id))}}" class="text-accent-content">Reschedule</a></li>
                     </ul>
-                  </div>
+                </div>
             </div>
         </div>
        </div>

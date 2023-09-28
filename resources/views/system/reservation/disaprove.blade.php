@@ -1,6 +1,7 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="" back=true>
-        {{-- User Details --}}
+        <div class="px-0 md:px-24 ">
+                    {{-- User Details --}}
         <div class="w-full p-8 sm:flex sm:space-x-6">
             <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
                 <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
@@ -25,51 +26,72 @@
             </div>
         </div>
         <div class="divider"></div>
-        @if($r_list->accommodation_type !== 'Room Only')
-            <div class="block md:flex items-center justify-around">
-            <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
-        @else
-            <div class="block w-full">
-            <article class="text-md tracking-tight text-neutral my-5 px-0 md:px-24 w-auto">
-        @endif
+            <article class="text-md tracking-tight text-neutral my-5 w-auto">
                 <h2 class="text-2xl mb-5 font-bold">Details</h2>
-                <p class="my-1"><strong>Number of Guest: </strong>{{$r_list->pax ?? 'None'}}</p>
-                <p class="my-1"><strong>Type: </strong>{{$r_list->accommodation_type ?? 'None'}}</p>
-                <p class="my-1"><strong>Room No: </strong>{{$r_list->roomid ?? 'None'}}</p>
-                <p class="my-1"><strong>Check-in: </strong>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_in )->format('l, F j, Y') ?? 'None'}}</p>
-                <p class="my-1"><strong>Check-out: </strong>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out )->format('l, F j, Y') ?? 'None'}}</p>
-                <p class="my-1"><strong>Payment Method: </strong>{{ $r_list->payment_method ?? 'None'}}</p>
-                <p class="my-1"><strong>Status: </strong>{{ $r_list->status() ?? 'None'}}</p>
-            </article>
-            @if($r_list->accommodation_type !== 'Room Only')
-                <div class="w-auto">
-                    <div class="overflow-x-auto">
-                        <table class="table table-zebra">
-                        <!-- head -->
-                        <thead>
+                <div class="overflow-x-auto">
+                    <table class="table">
+                      <!-- head -->
+                      <tbody>
+                        <!-- row 1 -->
+                        
+                        <tr>
+                          <th>Number of Guest</th>
+                          <td>{{$r_list->pax . ' guest' ?? 'None'}}</td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+    
+                        @if(!empty($r_list->tour_pax))
                             <tr>
-                                <th>Tour</th>
-                                <th>Price</th>
+                                <th>Guest going on tour</th>
+                                <td>{{$r_list->tour_pax . ' guest' ?? 'None'}}</td>
+                                <td></td>
+                                <td></td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($menu as $key => $item)
-                                <tr>
-                                    <td>{{$item['title']}}</td> 
-                                    <td>{{number_format($item['amount'], 2)}}</td> 
-                                </tr>
-                            @endforeach
-                        </tbody>
-                        </table>
-                    </div>
-                    <p class="text-md tracking-tight text-neutral my-5">
-                        <span class="font-medium">Total Cost: </span>P {{ number_format($r_list->getTotal(), 2) }}
-                    </p>
+                        @endif
+                        <tr>
+                            <th>Type</th>
+                            <td>{{$r_list->accommodation_type ?? 'None'}}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <th>Room No</th>
+                            <td>{{!empty($rooms) ? $rooms : 'None'}}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <th>Check-in</th>
+                            <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_in )->format('l, F j, Y') ?? 'None'}}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <th>Check-out</th>
+                            <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out )->format('l, F j, Y') ?? 'None'}}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <th>Payment Method</th>
+                            <td>{{ $r_list->payment_method ?? 'None'}}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <th>Status</th>
+                            <td>{{ $r_list->status() ?? 'None'}}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                      </tbody>
+                    </table>
                 </div>
-            @endif
-        </div>
-        <div class="divider"></div>
-            <article x-data="{reason: '{{old('reason')}}'}" class="text-md tracking-tight text-neutral my-5 px-0 md:px-24 w-auto">
+                
+            </article>
+            <div class="divider"></div>
+            <article x-data="{reason: '{{old('reason')}}'}" class="text-md tracking-tight text-neutral my-5 w-auto">
                 <form id="disaprove-form" action="{{route('system.reservation.disaprove.store', encrypt($r_list->id))}}" method="post">
                     @csrf
                 <h2 class="text-2xl mb-5 font-bold">Why Disaprove Request of {{$r_list->userReservation->name()}}</h2>
@@ -103,11 +125,11 @@
                 <x-passcode-modal title="Disaprove Confirmation" id="disaprove" formId="disaprove-form" />        
             </form>   
             </article>
-       
+        
             <div class="flex justify-end space-x-1">
                 <label for="disaprove" class="btn btn-error btn-sm">Disaprove</label>
-                <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-sm">Back</a>
             </div>
-        
+        </div>
+    
     </x-system-content>
 </x-system-layout>

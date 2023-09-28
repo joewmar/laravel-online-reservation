@@ -2,6 +2,6 @@
   # Dear {{$details['name']}}
   {{ $details['title'] }}<br>
   {{ $details['body'] }}<br><br>
-  Thanks,<br>
-  {{ config('app.name') }}
+
+  Thank you<br>
 </x-mail::message>

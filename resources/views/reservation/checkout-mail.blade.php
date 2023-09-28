@@ -13,6 +13,5 @@
       Comment Here
   </x-mail::button>
 
-  Thanks,<br>
-  {{ config('app.name') }}
+  Thank you<br>
 </x-mail::message>

@@ -3,12 +3,8 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
-use App\Models\Room;
 use App\Models\User;
 use App\Models\System;
-use App\Models\Archive;
-use App\Models\Feedback;
-use App\Models\RoomList;
 use App\Models\TourMenu;
 use App\Models\WebContent;
 use App\Models\Reservation;
@@ -17,19 +13,15 @@ use Illuminate\Support\Str;
 use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
-use App\Models\OnlinePayment;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Mail;
-use App\Notifications\EmailNotification;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Validator;
 use Propaganistas\LaravelPhone\PhoneNumber;
 use Propaganistas\LaravelPhone\Rules\Phone;
 use Illuminate\Support\Facades\Notification;
 use AmrShawky\LaravelCurrency\Facade\Currency;
-use Exception;
-use Illuminate\Contracts\Encryption\EncryptException;
 
 class ReservationController extends Controller
 {
@@ -52,12 +44,8 @@ class ReservationController extends Controller
                 session()->forget('rinfo');
                 return redirect()->route('home')->with('error', "Sorry, you can only make one reservation.");
             }
-            // if(\Carbon\Carbon::createFromFormat('Y-m-d', $operation['from'])->timestamp >=\Carbon\Carbon::now()->timestamp){
-                
-            // }
-
             return $next($request);
-        })->except(['index', 'show', 'done', 'storeMessage', 'gcash', 'doneGcash', 'donePayPal', 'paymentStore','paypal', 'feedback', 'storeFeedback', 'date', 'dateCheck', 'dateStore', 'cancel','reschedule']); // You can specify the specific method where this middleware should be applied.
+        });
     }
     private function replaceRInfo(array $values, bool $isEncrypt = false){
         if(session()->has('rinfo')){
@@ -543,106 +531,5 @@ class ReservationController extends Controller
         $reservation->update(['message' => $message]);
         return redirect()->route('home')->with('success', 'Thank you for your request');
     }
-    public function gcash($id){
-        $reservation = Reservation::findOrFail(decrypt($id));
-        $reference = WebContent::all()->first()->payment['gcash'] ?? [];
-        foreach($reference as $key => $item){
-            if($reference[$key]['priority'] === true){
-                $reference = $reference[$key];
-                break;
-            }
-        }
-        // $references = $references->payment['gcash'];
-        if(!($reservation->status() === 'Confirmed' && $reservation->payment_method === 'Gcash'))  abort(404);
-        return view('reservation.gcash.index', ['reservation' => $reservation, 'reference' => $reference]);
-    }
-    public function paymentStore(Request $request, $id){
-        $reservation = Reservation::findOrFail(decrypt($id));
-        if(!($reservation->status() === 'Confirmed'))  abort(404);
-        $systemUser = System::all()->where('type', 0)->where('type', 1);
-        if($reservation->status() === 'Confirmed'){
-            $validator = Validator::make($request->all(), [
-                'image' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
-                'amount' => ['required', 'numeric'],
-                'reference_no' => ['required'],
-                'payment_name' => ['required'],
-            ],[
-                'required' => 'Need to fill up this information (:attribute)',
-            ]);
-            if($validator->fails()){
-                return back()->with('error', $validator);
-            }
-            if($validator->valid()){
-                $validated =  $validator->validate();
-                $validated['image'] = saveImageWithJPG($request, 'image', 'online_payment', 'private');
-                $validated['reservation_id'] = $reservation->id;
-                $validated['payment_method'] = $reservation->payment_method;
-                $sended = OnlinePayment::create($validated);
-                if($sended) {
-                    $text = 
-                    "Payment Reservation !\n" .
-                    "Name: ". $reservation->userReservation->name() ."\n" . 
-                    "Country: " . $reservation->userReservation->country ."\n" . 
-                    "Payment Method: " . $validated['payment_method'] ."\n" . 
-                    "Payment Name: " . $validated['payment_name'] ."\n" . 
-                    "Total Amount " . number_format($validated['amount'], 2) ."\n" . 
-                    "Reference No: " . $validated['reference_no'];
-                    // Send Notification 
-                    $this->systemNotification($text, encrypt($reservation->id));
-                    $text = null;
-                    $keyboard = null;
-                    if($reservation->payment_method === 'Gcash') return redirect()->route('reservation.gcash.done', encrypt($sended->id));
-                    if($reservation->payment_method === 'PayPal') return redirect()->route('reservation.paypal.done', encrypt($sended->id));
-                }
-            }
-        }
-        else{
-            abort(404);
-        }
-        
 
-    }
-    public function doneGcash($id){
-        $online_payment = OnlinePayment::findOrFail(decrypt($id));
-        if(!($online_payment->reserve->status() === 'Confirmed' && $online_payment->reserve->payment_method === 'Gcash'))  abort(404);
-        $contacts = WebContent::all()->first()->contact ?? [];
-        if($online_payment) return view('reservation.gcash.success', ['contacts' => $contacts]);
-    }
-    public function donePayPal($id){
-        $online_payment = OnlinePayment::findOrFail(decrypt($id));
-        if(!($online_payment->reserve->status() === 'Confirmed' && $online_payment->reserve->payment_method === 'PayPal'))  abort(404);
-        $contacts = WebContent::all()->first()->contact ?? [];
-        if($online_payment) return view('reservation.paypal.success', ['contacts' => $contacts]);
-    }
-    public function paypal($id){
-        $reservation = Reservation::findOrFail(decrypt($id));
-        $reference = WebContent::all()->first()->payment['paypal'] ?? [];
-        foreach($reference as $key => $item){
-            if($reference[$key]['priority'] === true){
-                $reference = $reference[$key];
-                break;
-            }
-        }    
-        if(!($reservation->status() === 'Confirmed' && $reservation->payment_method === 'PayPal')) abort(404);
-        return view('reservation.paypal.index', ['reservation' => $reservation, 'reference' => $reference]);
-            
-    }
-    public function feedback($id){
-        return view('reservation.feedback', ['reservationID' => $id]);
-    }
-    public function storeFeedback(Request $request, $id){
-        $reservation = Reservation::findOrFail(decrypt($id));
-        $validated = $request->validate([
-            'rating' => ['required', 'numeric', 'min:1', 'max:5'],
-            'message' => ['required'],
-        ], [
-            'required' => 'Required',
-        ]);
-        $created = Feedback::create([
-            'reservation_id' => $reservation->id,
-            'rating' => (int)$validated['rating'],
-            'message' => $validated['message'],
-        ]);
-        if($created) return redirect()->route('home')->with('success', 'Thank you for your opinion. Come Again');
-    }
 }

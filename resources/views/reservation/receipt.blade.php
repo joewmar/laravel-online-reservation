@@ -1,4 +1,13 @@
+@php
+    $tours = [];
+    foreach ($menu as $key => $value) {
+        $tours[$key] = $value;
+    }
+    foreach ($tour_addons as $key => $value) {
+        $tours[$key] = $value;
+    }
 
+@endphp
 <html>
 	<head>
 		<meta charset="utf-8">
@@ -204,63 +213,42 @@ tr:hover .cut { opacity: 1; }
 				<h5>Service Type: <span>{{$r_list->accommodation_type ?? 'None'}}</span></h5>
 				<h5>Payment Method: <span>{{$r_list->payment_method ?? 'None'}}</span></h5>
 			</div>
-			<table class="inventory">
-				<thead>
-					<tr>
-						<th><span >Room No</span></th>
-						</tr>
-				</thead>
-				<tbody>
-					@php $amount = 0; @endphp
-					@foreach ($rooms as $key => $item)
+			@if (!empty($rooms))			
+				<table class="inventory">
+					<thead>
 						<tr>
-							<td><span >Room No. {{$item['no']}} {{$item['name']}}</span></td>
-						</tr>
-					@endforeach
-				</tbody>
-			</table>
-			<table class="inventory">
-				<thead>
-					<tr>
-						<th><span >Room Type</span></th>
-						<th><span >No. of days</span></th>
-						<th><span >Rate</span></th>
-						<th><span >Amount</span></th>
-					</tr>
-				</thead>
-				<tbody>
-					<td><span>{{$rate['name']}}</span></td> 
-					<td><span>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</span></td> 
-					<td><span data-prefix>₱ </span><span>{{ number_format($rate['price'], 2)}}</span></td>
-					<td><span data-prefix>₱ </span><span>{{ number_format($rate['amount'], 2)}}</span></td>
-				</tbody>
-			</table>
-			@if($r_list->accommodation_type != 'Room Only')
-			<table class="inventory">
-				<thead>
-					<tr>
-						<th><span >Tour</span></th>
-						<th><span >Price</span></th>
-						<th><span >Amount</span></th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach ($menu as $item)
-						<tr>
-							<td><span >{{$item['title']}}</span></td>
-							<td><span data-prefix>₱ </span><span>{{ number_format($item['price'], 2)}}</span></td>
-							<td><span data-prefix>₱ </span><span>{{ number_format($item['amount'], 2)}}</span></td>
-						</tr>
-					@endforeach
-				</tbody>
-			</table>
-		@endif
-			@if(!empty($tour_addons) || !empty($other_addons))
-				<div class="details">
-					<h5>Additional</h5>
-				</div>
+							<th><span >Room No</span></th>
+							</tr>
+					</thead>
+					<tbody>
+						@php $amount = 0; @endphp
+						@foreach ($rooms as $key => $item)
+							<tr>
+								<td><span >Room No. {{$item['no']}} {{$item['name']}}</span></td>
+							</tr>
+						@endforeach
+					</tbody>
+				</table>
 			@endif
-			@if(!empty($tour_addons))
+			@if(isset($rate))
+				<table class="inventory">
+					<thead>
+						<tr>
+							<th><span >Room Type</span></th>
+							<th><span >No. of days</span></th>
+							<th><span >Rate</span></th>
+							<th><span >Amount</span></th>
+						</tr>
+					</thead>
+					<tbody>
+						<td><span>{{$rate['name']}}</span></td> 
+						<td><span>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</span></td> 
+						<td><span data-prefix>₱ </span><span>{{ number_format($rate['price'], 2)}}</span></td>
+						<td><span data-prefix>₱ </span><span>{{ number_format($rate['amount'], 2)}}</span></td>
+					</tbody>
+				</table>
+			@endif
+			@if(!empty($tours))
 				<table class="inventory">
 					<thead>
 						<tr>
@@ -270,17 +258,20 @@ tr:hover .cut { opacity: 1; }
 						</tr>
 					</thead>
 					<tbody>
-						@foreach ($tour_addons as $key => $tour)
+						@foreach ($tours as $item)
 							<tr>
-								<td><span >{{$tour['title']}}</span></td>
-								<td><span data-prefix>₱ </span><span>{{ number_format($tour['price'], 2)}}</span></td>
-								<td><span data-prefix>₱ </span><span>{{ number_format($tour['amount'], 2)}}</span></td>
+								<td><span >{{$item['title']}}</span></td>
+								<td><span data-prefix>₱ </span><span>{{ number_format($item['price'], 2)}}</span></td>
+								<td><span data-prefix>₱ </span><span>{{ number_format($item['amount'], 2)}}</span></td>
 							</tr>
 						@endforeach
 					</tbody>
 				</table>
 			@endif
 			@if(!empty($other_addons))
+				<div class="details">
+					<h5>Additional</h5>
+				</div>
 				<table class="inventory">
 					<thead>
 						<tr>

@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
             'nationality' => 'Filipino',
             'country' => 'Philippines',
             'contact' => '09123456789',
-            'email'=> 'juan@email.com',
+            'email'=> 'recelestino90@gmail.com',
             'password' => Hash::make('123456789'),
             'valid_id' => 'valid_id/Valid_ID.sample.jpg',
         ]);
@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
             'nationality' => 'American',
             'country' => 'Canada',
             'contact' => '123456897',
-            'email'=> 'recelestino90@gmail.com',
+            'email'=> 'recelestino1111@gmail.com',
             'password' => Hash::make('123456789'),
             'valid_id' => 'valid_id/Valid_ID.sample.jpg',
         ]);
@@ -64,20 +64,20 @@ class DatabaseSeeder extends Seeder
             'price' => 700.00,
         ]);
 
-        \App\Models\Reservation::factory()->create([
-            'user_id' => 2,
-            // 'roomid' => 1,
-            // 'roomrateid' => 1,
-            'pax' => 5,
-            'tour_pax' => 4,
-            'accommodation_type' => 'Overnight',
-            'payment_method' => 'Gcash',
-            'age' => User::findOrfail(1)->age(),
-            'check_in' => Carbon::now('Asia/Manila')->addDays(15)->toDateTimeString(),
-            'check_out' => Carbon::now('Asia/Manila')->addDays(20)->toDateTimeString(),
-            'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-            'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'amount' => 2100.00 * 4]],
-        ]);
+        // \App\Models\Reservation::factory()->create([
+        //     'user_id' => 2,
+        //     // 'roomid' => 1,
+        //     // 'roomrateid' => 1,
+        //     'pax' => 5,
+        //     'tour_pax' => 4,
+        //     'accommodation_type' => 'Overnight',
+        //     'payment_method' => 'Gcash',
+        //     'age' => User::findOrfail(1)->age(),
+        //     'check_in' => Carbon::now('Asia/Manila')->addDays(15)->toDateTimeString(),
+        //     'check_out' => Carbon::now('Asia/Manila')->addDays(20)->toDateTimeString(),
+        //     'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
+        //     'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'amount' => 2100.00 * 4]],
+        // ]);
 
         \App\Models\Reservation::factory()->create([
             'user_id' => 1,
@@ -86,7 +86,7 @@ class DatabaseSeeder extends Seeder
             'pax' => 4,
             'tour_pax' => 4,
             'accommodation_type' => 'Overnight',
-            'payment_method' => 'PayPal',
+            'payment_method' => 'Bank Transfer',
             'age' => User::findOrfail(1)->age(),
             'check_in' => Carbon::now()->addDays(16)->toDateTimeString(),
             'check_out' => Carbon::now()->addDays(18)->toDateTimeString(),
@@ -261,17 +261,17 @@ class DatabaseSeeder extends Seeder
                 $rdata = [
                     'roomid' => $room->id,
                     'room_no' => 0,
-                    'availability' => 1,
-                    'customer' => [
-                        Reservation::all()->first()->id => $room->max_occupancy
-                    ],
+                    // 'availability' => 1,
+                    // 'customer' => [
+                    //     Reservation::all()->first()->id => $room->max_occupancy
+                    // ],
                 ];
-                if($room_count == 3){
-                    $rdata = [
-                        'roomid' => $room->id,
-                        'room_no' => 0,
-                    ];
-                }
+                // if($room_count == 3){
+                //     $rdata = [
+                //         'roomid' => $room->id,
+                //         'room_no' => 0,
+                //     ];
+                // }
 
                 \App\Models\Room::create($rdata);
                 
@@ -281,8 +281,28 @@ class DatabaseSeeder extends Seeder
         refreshRoomNumber();
         // \App\Models\Archive::factory(50)->create();
         \App\Models\Addons::create([
-            'title' => 'Coca Cola',
-            'price' => 70.00,
+            'title' => 'Soda',
+            'price' => 50,
+        ]);
+        \App\Models\Addons::create([
+            'title' => 'Beer',
+            'price' => 70,
+        ]);
+        \App\Models\Addons::create([
+            'title' => 'Coffee',
+            'price' => 50,
+        ]);
+        \App\Models\Addons::create([
+            'title' => 'Hot Tea',
+            'price' => 50,
+        ]);
+        \App\Models\Addons::create([
+            'title' => 'Water 500ml',
+            'price' => 35,
+        ]);
+        \App\Models\Addons::create([
+            'title' => 'Water 1L',
+            'price' => 50,
         ]);
         \App\Models\Addons::create([
             'title' => 'Foam',
@@ -374,6 +394,14 @@ class DatabaseSeeder extends Seeder
                         "number" => "09147258369",
                         "priority" => true,
                         "username" => "delajuan.cruz"
+                    ]
+                    ],
+                "bankTransfer" => [
+                    [
+                        "name" => "Juan Dela Cruz",
+                        "acc_no" => "654-456-123",
+                        "contact" => "09147258369",
+                        "priority" => true,
                     ]
                 ]
             ]

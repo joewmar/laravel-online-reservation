@@ -496,20 +496,22 @@ class WebContentController extends Controller
             'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
         ]);
         $payments = $webcontents->payment ?? [];
+        if(count( $payments['gcash']) === 0) $gcp = true;
+        else $gcp = false;
         if($request->hasFile('image')){                          // storage/app/logos
             $validate['image'] = saveImageWithJPG($request, 'image', 'ref_gcash', 'private');
             $payments['gcash'][] =  [
                 'name' => $validate['name'],
                 'number' => $validate['gcash_number'],
                 'qrcode' => $validate['image'],
-                'priority' => false,
+                'priority' => $gcp,
             ];;
         }
         else{
             $payments['gcash'][] =  [
                 'name' => $validate['name'],
                 'number' => $validate['gcash_number'],
-                'priority' => false,
+                'priority' => $gcp,
             ];;
         }
         if(isset($webcontents)){
@@ -625,6 +627,9 @@ class WebContentController extends Controller
             'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
         ]);
         $payments = $webcontents->payment ?? [];
+        if(count( $payments['paypal']) === 0) $ppp = true;
+        else $ppp = false;
+                
         if($request->hasFile('image')){                          // storage/app/logos
             $validate['image'] = saveImageWithJPG($request, 'image', 'ref_paypal', 'private');
             $payments['paypal'][] =  [
@@ -633,7 +638,7 @@ class WebContentController extends Controller
                 'email' => $validate['email'],
                 'username' => $validate['username'],
                 'image' => $validate['image'],
-                'priority' => false,
+                'priority' => $ppp,
             ];
         }
         else{
@@ -642,7 +647,7 @@ class WebContentController extends Controller
                 'number' => $validate['paypal_number'],
                 'email' => $validate['email'],
                 'username' => $validate['username'],
-                'priority' => false,
+                'priority' => $ppp,
             ];
         }
         if(isset($webcontents)){
@@ -796,5 +801,121 @@ class WebContentController extends Controller
         else $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference ('.$payments['paypal'][$key]['name'].') was set priority');
     }
+    public function priorityPaymentBT(Request $request){
+        $validate = Validator::make($request->all(), [
+            'priority' => ['required'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate =$validate->validate();
+        $key = decrypt($validate['priority']);
+        $webcontents = WebContent::all()->first();
+        $payments = $webcontents->payment ?? [];
+        if(!array_key_exists($key, $webcontents->payment['bankTransfer'] ?? [])) abort(404);
+            foreach($payments['bankTransfer'] as $btID => $item){
+                if($btID === $key) $payments['bankTransfer'][$btID]['priority'] = true;
+                else $payments['bankTransfer'][$btID]['priority'] = false;
+            }
+        
+        if(isset($webcontents)) $updated = $webcontents->update(['payment' => $payments]);
+        else $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference ('.$payments['bankTransfer'][$key]['name'].') was set priority');
+    }
+    public function createPaymentBT(){
+        return view('system.webcontent.payment.bank-transfer', ['activeSb' => 'Website Content']);
+    }
+    public function storePaymentBT(Request $request){ 
+        $webcontents = WebContent::all()->first();
+        // dd($request->all());
+        $validate = Validator::make($request->all(), [
+            'passcode' => ['required', 'numeric', 'digits:4'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate = $validate->validate();
+        if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
+        $validate = $request->validate([
+            'acc_no' => ['required'],
+            'name' => ['required'],
+            'contact' => ['required'],
+        ]);
+        $payments = $webcontents->payment ?? [];
+        if(count($payments['bankTransfer']) === 0) $btp = true;
+        else $btp = false;
+        $payments['bankTransfer'][] =  [
+            'acc_no' => $validate['acc_no'],
+            'name' => $validate['name'],
+            'contact' => $validate['contact'],
+            'priority' => $btp,
+        ];
 
+        if(isset($webcontents)){
+            $updated = $webcontents->update(['payment' => $payments]);
+        }
+        else{
+            $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
+        }
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Bank Transfer Reference was created');
+
+    }
+    public function showPaymentBT($key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['bankTransfer'] ?? [])) abort(404);
+        return view('system.webcontent.payment.show-bnktr', ['activeSb' => 'Website Content', 'key' => $key, 'bankTransfer' =>  $webcontents->payment['bankTransfer']]);
+    }
+    public function editPaymentBT($key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['bankTransfer'] ?? [])) abort(404);
+        return view('system.webcontent.payment.edit-bank-transfer', ['activeSb' => 'Website Content', 'key' => $key, 'bankTransfer' =>  $webcontents->payment['bankTransfer']]);
+    }
+    public function updatePaymentBT(Request $request, $key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['bankTransfer'] ?? [])) abort(404);
+        $validate = Validator::make($request->all(), [
+            'passcode' => ['required', 'numeric', 'digits:4'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate = $validate->validate();
+        if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
+        $validate = $request->validate([
+            'acc_no' => ['required'],
+            'name' => ['required'],
+            'contact' => ['required'],
+        ]);
+        $payments = $webcontents->payment ?? [];
+        $payments['bankTransfer'][$key] =  [
+            'acc_no' => $validate['acc_no'],
+            'name' => $validate['name'],
+            'contact' => $validate['contact'],
+        ];
+        if(isset($webcontents))$updated = $webcontents->update(['payment' => $payments]);
+        else $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
+        
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Bank Transfer Reference ('.$validate['name'].') was updated');
+    }
+    public function destroyPaymentBT(Request $request, $key){
+        $key = decrypt($key);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
+        $validate = Validator::make($request->all(), [
+            'passcode' => ['required', 'numeric', 'digits:4'],
+        ]);
+        if($validate->fails()) return back()->with('error', $validate->errors()->all());
+        $validate = $validate->validate();
+        if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
+        $payments = $webcontents->payment ?? [];
+        foreach($payments['bankTransfer'] as $btKey => $item){
+            if($btKey === $key){
+                $name = $payments['bankTransfer'][$key]['name'];
+                unset($payments['bankTransfer'][$key]);
+            }
+        }
+        if(isset($webcontents)) $updated = $webcontents->update(['payment' => $payments]);
+        else $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
+        
+        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Bank Transfer Reference of '.$name.' was removed');
+
+        // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
+    }
 }

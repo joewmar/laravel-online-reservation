@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="">
+    <x-system-content title="PayPal of {{$paypal[$key]['name']}}">
       <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
         <div class="md:w-96 flex flex-col justify-center items-start">
           <div class="avatar">
@@ -10,7 +10,6 @@
         </div>
         <div class="w-full md:w-96">
           <article class="prose">
-            <h1>{{$paypal[$key]['name']}}</h1>
             <p class="text-lg"><span class="font-bold">PayPal Mobile Number:</span> {{$paypal[$key]['number'] === null ? 'None': $paypal[$key]['number']}}</p>
             <p class="text-lg"><span class="font-bold">PayPal Email:</span> {{$paypal[$key]['email'] === null ? 'None': $paypal[$key]['email']}}</p>
             <p class="text-lg"><span class="font-bold">PayPal Username:</span> {{$paypal[$key]['username'] === null ? 'None': $paypal[$key]['username']}}</p>

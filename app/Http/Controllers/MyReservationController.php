@@ -274,7 +274,7 @@ class MyReservationController extends Controller
         $rooms = [];
         $contacts = WebContent::all()->first()->contact['main'] ?? [];
         // Rooms
-        foreach($reservation->roomid as $item){
+        foreach($reservation->roomid  ?? [] as $item){
             $rooms[$item]['no'] = Room::findOrFail($item)->room_no;
             $rooms[$item]['name'] = Room::findOrFail($item)->room->name;
         }
@@ -315,7 +315,7 @@ class MyReservationController extends Controller
         }
         unset($count);
         
-        return view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'tour_addons' => $tour_addons, 'other_addons' => $other_addons, 'rate' => $rate, 'rooms' => $rooms, 'contacts' => $contacts]);
+        return view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'tour_addons' => $tour_addons, 'other_addons' => $other_addons, 'rate' => $rate ?? null, 'rooms' => $rooms ?? [], 'contacts' => $contacts]);
     }
     public function updateDetails(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));

@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="">
+    <x-system-content title="Gcash of {{$gcash[$key]['name']}}">
       <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
         <div class="md:w-96 flex flex-col justify-center items-start">
           <div class="avatar">
@@ -10,7 +10,6 @@
         </div>
         <div class="w-full md:w-96">
           <article class="prose">
-            <h1>{{$gcash[$key]['name']}}</h1>
             <p class="text-lg"><span class="font-bold">Gcash Number:</span> {{$gcash[$key]['number'] === null ? 'None': $gcash[$key]['number']}}</p>
           </article>
            <div class="flex justify-between w-full space-x-3 my-5">

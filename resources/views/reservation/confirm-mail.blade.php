@@ -25,14 +25,20 @@
     No Tour Services<br>
   @endif
   Pay Downpayment:
+  @if (!empty($details['payment_steps']))
+     Before proceeding with the down payment, you must complete these steps<br><br>
+    @foreach ($details['payment_steps'] as $item)
+        {{$item}}<br>
+    @endforeach
+  @endif
+
   @if(isset($details['payment_link']))
     <x-mail::button :url="$details['payment_link']">
-        Pay Now
+        Send Now
     </x-mail::button>
   @endif
   Payment Deadline: {{$details['payment_cutoff'] ?? ''}}<br>
   Note: You need to pay a downpayment for the reservation fee. If you fail to make the payment or , your reservation will be automatically canceled. <br><br>
 
-  Thanks,<br>
-  {{ config('app.name') }}
+  Thank you<br>
 </x-mail::message>

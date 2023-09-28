@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 
 class RoomController extends Controller
 {
-    private function searchAvailability (string $dates){
+    private function searchAvailability (string $dates, $reservation = false){
         $rooms = Room::all();
         $roomReserved = [];
         $r_lists = Reservation::whereDate('check_in', '<=', $dates)
@@ -26,19 +26,17 @@ class RoomController extends Controller
             }
 
         }
-        return $roomReserved;
+        if($reservation) return $r_lists->toArray();
+        else return $roomReserved;
     }
     public function index(Request $request){
         $reserved = $this->searchAvailability(Carbon::now('Asia/Manila')->format('Y-m-d'));
-
-        if( $request['name']){
-            $search = ['search' => $request['name']];
-        }
+        $reservedIDs = $this->searchAvailability(Carbon::now('Asia/Manila')->format('Y-m-d'), true);
         if(isset($request['date'])){
-            $reserved = $this->searchAvailability(($request['date']));
-
+            $reserved = $this->searchAvailability($request['date']);
+            $reservedIDs = $this->searchAvailability($request['date'], true);
         }
-        return view('system.rooms.index',  ['activeSb' => 'Rooms', 'rooms' =>  Room::all(), 'reserved' => $reserved ?? []]);
+        return view('system.rooms.index',  ['activeSb' => 'Rooms', 'rooms' =>  Room::all(), 'reserved' => $reserved ?? [], 'reservedIDS' => $reservedIDs]);
     }
     public function search(Request $request){
         // dd($request->all());

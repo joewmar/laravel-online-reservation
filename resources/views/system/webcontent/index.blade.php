@@ -269,8 +269,9 @@
                 <div class="w-96">
                   <x-select name="wala" id="walaID" placeholder="Type of Payment" xModel="type" :value="['Gcash', 'PayPal', 'Bank Transfer']" :title="['Gcash', 'Paypal', 'Bank Transfer']" />
                 </div>
-                <a x-show="type === 'Gcash'" href="{{route('system.webcontent.create.payment.gcash')}}" class="btn btn-primary" x-transition.1000ms>Add Gcash Reference</a>
-                <a x-show="type === 'PayPal'" href="{{route('system.webcontent.create.payment.paypal')}}" class="btn btn-primary" x-transition.1000ms>Add PayPal Reference</a>
+                <a x-show="type === 'Gcash'" href="{{route('system.webcontent.create.payment.gcash')}}" class="btn btn-primary btn-xs md:btn-md" x-transition.1000ms>Add Gcash Reference</a>
+                <a x-show="type === 'PayPal'" href="{{route('system.webcontent.create.payment.paypal')}}" class="btn btn-primary btn-xs md:btn-md" x-transition.1000ms>Add PayPal Reference</a>
+                <a x-show="type === 'Bank Transfer'" href="{{route('system.webcontent.create.payment.bnktr')}}" class="btn btn-primary btn-xs md:btn-md" x-transition.1000ms>Add Bank Transfer Reference</a>
               </div>
               <div x-show="type === 'Gcash' " x-data="{priorityGcash: ''}" class="overflow-x-auto" x-transition.1000ms>
                 <form id="remove_gcash_reference" action="{{route('system.webcontent.priority.payment.gcash')}}" method="post">
@@ -321,7 +322,7 @@
                     <!-- head -->
                     <thead>
                       <tr>
-                        <th><label for="ppl" class="btn btn-info btn-sm" :disabled="priorityPayPal === '' ">Set Priority</label></th>
+                        <th><label for="ppl" class="btn btn-info btn-sm" :disabled="priorityPayPal.length === 0">Set Priority</label></th>
                         <th>PayPal References</th>
                         <th>Action</th>
                       </tr>
@@ -351,6 +352,46 @@
           
                   </table>
                   <x-modal id="ppl" title="Do you want to PayPal Reference set priority selected?" type="YesNo" formID="priority_paypal_reference">
+                  </x-modal>
+                </form>
+              </div>
+              <div x-show="type === 'Bank Transfer' " x-data="{priorityBT: []}" class="overflow-x-auto" x-transition.1000ms>
+                <form id="priority_bt_reference" action="{{route('system.webcontent.priority.payment.bnktr')}}" method="post">
+                  @csrf
+                  @method("PUT")
+                  <table class="table">
+                    <!-- head -->
+                    <thead>
+                      <tr>
+                        <th><label for="bt" class="btn btn-info btn-sm" :disabled="priorityBT.length === 0">Set Priority</label></th>
+                        <th>Bank Transfer References</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- row 1 -->
+                      @forelse ($webcontents->payment['bankTransfer'] ?? [] as $key => $item)
+                          <tr>
+                            <th>
+                              <input type="radio" id="priorityPpl{{$key+1}}" x-model="priorityBT" name="priority" class="radio radio-primary" value="{{encrypt($key)}}" />
+                            </th>
+                            <td>
+                              <div class="flex flex-col">
+                                <div class="font-bold">{{$item['name']}}</div>
+                                @if(isset($item['priority']) && $item['priority'] === true)
+                                  <div class="font-bold text-sm text-error">Current Priority</div>
+                                @endif
+                              </div>
+                            </td>
+                            <td><a href="{{route('system.webcontent.show.payment.bnktr', encrypt($key) )}}" class="btn btn-warning btn-xs">View</a></td>
+                          </tr>  
+                      @empty
+                          <tr><td colspan="3" class="text-center font-bold" colspan="2">No Bank Transfer Reference</td></tr>
+                      @endforelse
+                    </tbody>
+          
+                  </table>
+                  <x-modal id="bt" title="Do you want to PayPal Reference set priority selected?" type="YesNo" formID="priority_bt_reference">
                   </x-modal>
                 </form>
               </div>

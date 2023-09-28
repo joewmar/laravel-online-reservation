@@ -21,6 +21,7 @@ use App\Http\Controllers\TourSettingController;
 use App\Http\Controllers\MyReservationController;
 use App\Http\Controllers\CreateReservationController;
 use App\Http\Controllers\EditReservationController;
+use App\Http\Controllers\ReservationTwoController;
 use App\Http\Controllers\SystemReservationController;
 use App\Notifications\SystemNotification;
 
@@ -109,30 +110,34 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->controller(UserControlle
         Route::delete('/{id}/reservation/delete', 'destroyReservation')->name('destroy');
     });
     // Reservation Information
-    Route::prefix('reservation')->name('reservation.')->controller(ReservationController::class)->group(function (){
-        Route::get('/choose', 'choose')->name('choose');
-        Route::post('/choose/check', 'chooseCheckAll')->name('choose.check.all');
+    Route::prefix('reservation')->name('reservation.')->group(function (){
+        Route::controller(ReservationController::class)->group(function (){
+            Route::get('/choose', 'choose')->name('choose');
+            Route::post('/choose/check', 'chooseCheckAll')->name('choose.check.all');
 
-        Route::post('/choose/check/one', 'chooseCheck1')->name('choose.check.one');
-        Route::get('/details', 'details')->name('details');
-        Route::post('/details', 'detailsStore')->name('details.store');
-        Route::put('/details/user/{id}/update', 'detailsUpdate')->name('details.update');
+            Route::post('/choose/check/one', 'chooseCheck1')->name('choose.check.one');
+            Route::get('/details', 'details')->name('details');
+            Route::post('/details', 'detailsStore')->name('details.store');
+            Route::put('/details/user/{id}/update', 'detailsUpdate')->name('details.update');
 
-        Route::get('/confimation', 'confirmation')->name('confirmation');
-        Route::post('/confimation/convert', 'convert')->name('convert');
-        Route::get('/confimation/tour/{id}/destroy', 'destroyTour')->name('tour.destroy');
-        Route::post('/store', 'storeReservation')->name('store');
-        Route::get('{id}/done', 'done')->name('done');
-        Route::post('/done/{id}/message/store', 'storeMessage')->name('done.message.store');
+            Route::get('/confimation', 'confirmation')->name('confirmation');
+            Route::post('/confimation/convert', 'convert')->name('convert');
+            Route::get('/confimation/tour/{id}/destroy', 'destroyTour')->name('tour.destroy');
+            Route::post('/store', 'storeReservation')->name('store');
+            Route::get('{id}/done', 'done')->name('done');
+            Route::post('/done/{id}/message/store', 'storeMessage')->name('done.message.store');
+        });
 
-        Route::get('/{id}/gcash', 'gcash')->name('gcash');
-        Route::get('/{id}/gcash/done', 'doneGcash')->name('gcash.done');
-        Route::get('/{id}/paypal', 'paypal')->name('paypal');
-        Route::get('/{id}/paypal/done', 'donePayPal')->name('paypal.done');
-        Route::post('/{id}/payment', 'paymentStore')->name('payment.store');
-        
-        Route::get('/{id}/feedback', 'feedback')->name('feedback');
-        Route::post('/{id}/feedback', 'storeFeedback')->name('feedback.store');
+        Route::controller(ReservationTwoController::class)->group(function (){
+            Route::get('/{id}/gcash', 'gcash')->name('gcash');
+            Route::get('/{id}/paypal', 'paypal')->name('paypal');
+            Route::get('/{id}/bank-transfer', 'bankTransfer')->name('bnktr');
+            Route::post('/{id}/payment', 'paymentStore')->name('payment.store');
+            Route::get('/{id}/payment/done', 'donePayment')->name('payment.done');
+            
+            Route::get('/{id}/feedback', 'feedback')->name('feedback');
+            Route::post('/{id}/feedback', 'storeFeedback')->name('feedback.store');
+        });
     });
 });
 
@@ -301,6 +306,7 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::post('/payment/gcash', 'storePaymentGcash')->name('store.payment.gcash');
             Route::put('/payment/gcash/priority', 'priorityPaymentGcash')->name('priority.payment.gcash');
             Route::put('/payment/paypal/priority', 'priorityPaymentPayPal')->name('priority.payment.paypal');
+            Route::put('/payment/bank-transfer/priority', 'priorityPaymentBT')->name('priority.payment.bnktr');
 
             Route::get('/payment/gcash/{key}', 'showPaymentGcash')->name('show.payment.gcash');
             Route::get('/payment/gcash/{key}/edit', 'editPaymentGcash')->name('edit.payment.gcash');
@@ -314,6 +320,16 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::get('/payment/paypal/{key}/edit', 'editPaymentPayPal')->name('edit.payment.paypal');
             Route::put('/payment/paypal/{key}/update', 'updatePaymentPayPal')->name('update.payment.paypal');
             Route::delete('/payment/paypal/{key}/delete', 'destroyPaymentPayPal')->name('destroy.payment.paypal');
+
+            Route::get('/payment/bank-transfer', 'createPaymentBT')->name('create.payment.bnktr');
+            Route::post('/payment/bank-transfer/store', 'storePaymentBT')->name('store.payment.bnktr');
+            Route::get('/payment/bank-transfer/{key}', 'showPaymentBT')->name('show.payment.bnktr');
+            Route::get('/payment/bank-transfer/{key}/edit', 'editPaymentBT')->name('edit.payment.bnktr');
+            Route::put('/payment/bank-transfer/{key}/update', 'updatePaymentBT')->name('update.payment.bnktr');
+            Route::delete('/payment/bank-transfer/{key}/delete', 'destroyPaymentBT')->name('destroy.payment.bnktr');
+
+
+
 
         });
         Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function(){

@@ -94,11 +94,18 @@
                   <label for="room_modal{{$room->id}}" class="block rounded-xl border border-neutral-content p-8 shadow-md transition  {{in_array($room->id, $reserved) ? 'bg-red-500 text-white hover:border-neutral' :'text-neutral hover:border-primary'}}">
                     <h2 class="mt-4 text-xl font-bold">Room No. {{$room->room_no}}</h2>
                     <h5 class="text-md font-medium">{{$room->room->name}} Room ({{$room->room->max_occupancy}} Capacity)</h5>
-                    <h5 class="text-md font-bold">{{$room->getAllPax() > 0 ? $room->getAllPax() . ' guest reserved' : 'No Guest'}} </h5>
+                    <h5 class="text-md font-bold">{{count($reservedIDS) > 0 ? $room->getAllPax() . ' guest reserved' : 'No Guest'}} </h5>
                   </label>
                   <x-modal id="room_modal{{$room->id}}" title="Who guest on Room No. {{$room->room_no}}">
                     @forelse((array)$room->customer as $key => $item)
-                      <h5 class="text-md font-medium">{{ \App\Models\Reservation::find($key)->userReservation->name() ?? 'No Name'}} ({{\App\Models\Reservation::find($key)->status() ?? 'None'}}) - {{$item}} guest</h5>
+                      @php $haveGuest = false; @endphp
+                      @if(in_array($key,$reservedIDS))
+                        <h5 class="text-md font-medium">{{ \App\Models\Reservation::find($key)->userReservation->name() ?? 'No Name'}} ({{\App\Models\Reservation::find($key)->status() ?? 'None'}}) - {{$item}} guest</h5>
+                        @php $haveGuest = true; @endphp
+                      @endif
+                      @if(!$haveGuest)
+                        <h5 class="text-md font-medium">No guest</h5>
+                      @endif
                     @empty
                       <h5 class="text-md font-medium">No guest</h5>
                     @endforelse

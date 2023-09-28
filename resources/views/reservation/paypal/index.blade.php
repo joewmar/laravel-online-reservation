@@ -110,7 +110,7 @@
                         <div class="camera"></div> 
                         <div class="display">
                             <div class="artboard artboard-demo phone-1"> 
-                                <img src="{{asset('images/payment/paypal-sample-receipt.jpg')}}" class="show_img" />
+                                <img src="{{asset('images/payment/paypal-logo.png')}}" class="show_img" />
                             </div>
                         </div>
                     </div>

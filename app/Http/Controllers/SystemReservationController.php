@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservationConfirmation;
+use App\Models\WebContent;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Collection;
@@ -499,13 +500,57 @@ class SystemReservationController extends Controller
             $text = null;
             $url = null;
             if($reservation->payment_method == "Gcash"){
+                $gc = WebContent::all()->first()->payment ?? [];
+                $sp = "";
+                if(isset($gc['gcash'])){
+                    foreach($gc['gcash'] ?? [] as $key => $item){
+                        if($item['priority'] === true){
+                            $sp = " or Mobile Number".(isset($item['name']) ? "of ".$item['name']."" : "")." ".(isset($item['number']) ? "(".$item['number'].")" : "");
+                        }
+                    }
+                }
+                $steps = [
+                    "Step 1: Pay via QR Scanner" . $sp,
+                    "Step 2: Send Screenshot of Receipt of Gcash",
+                    "Step 3: Fill up the information for verify your payment",
+                ];
                 $url = route('reservation.gcash', encrypt($reservation->id));
             }
             if($reservation->payment_method == "PayPal"){
+                $ppl = WebContent::all()->first()->payment ?? [];
+                $s = "Enter your recipient's name, PayPal username, email, or mobile number";
+                if(isset($ppl['paypal'])){
+                    foreach($ppl['paypal'] ?? [] as $key => $item){
+                        if($item['priority'] === true){
+                            $s = "Enter your recipient's name " . (isset($item['name']) ? "(".$item['name'].")" : "") ." , PayPal username ". (isset($item['username']) ? "(".$item['username'].")" : "") ." , email ".(isset($item['email'] ) ? "(".$item['email'].")" : "") .", or mobile number  ".(isset($item['number']) ? "(".$item['number'].")" : "");
+                        }
+                    }
+                }
+                $steps = [
+                    "Step 1: " . $s ,
+                    "Step 2:Enter the amount you want to send and choose a currency. You can even add a personalized note.",
+                    'Step 3: Choose "Send". Your payment is on its way.',
+                    "Step 4: Send Your Screenshot of your Receipt",
+                    "Step 5: Fill up the information for verify your payment",
+                ];
                 $url = route('reservation.paypal', encrypt($reservation->id));
             }
             if($reservation->payment_method == "Bank Transfer"){
-                $url = route('reservation.paypal', encrypt($reservation->id));
+                $bt = WebContent::all()->first()->payment ?? [];
+                $sbt = "Make your payment at the nearest or preferred bank location. Don't forget to keep your receipt.";
+                if(isset($bt['bankTransfer'])){
+                    foreach($bt['bankTransfer'] ?? [] as $key => $item){
+                        if($item['priority'] === true){
+                            $sbt = "Make your payment at the nearest or preferred bank company location". (isset($item['name']) ? " and Send to ".$item['name']."" : "") . "". (isset($item['acc_no'] ) ? " with Account No. ".$item['acc_no']."." : "") ." Don't forget to keep your receipt.";
+                        }
+                    }
+                }
+                $steps = [
+                    "Step 1: " . $sbt,
+                    "Step 2: Send Your Screenshot of your Receipt",
+                    "Step 3: Fill up the information for verify your payment",
+                ];
+                $url = route('reservation.bnktr', encrypt($reservation->id));
             }
 
             $details = [
@@ -527,14 +572,15 @@ class SystemReservationController extends Controller
                 'room_rate' => $rate->price,
                 'total' => $reservation->getTotal(),
                 'payment_link' => $url,
+                'payment_steps' => $steps,
                 'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('F j Y \a\t g:iA'),
             ];
             $this->employeeLogNotif('Chose to Approve of ' . $reservation->userReservation->name() . ' Reservation with Room Assign '.implode(',', $roomDetails), route('system.reservation.show', encrypt($reservation->id)));
             unset($roomDetails);
             // Notification::send($reservation->userReservation, new EmailNotification($project));
             Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationConfirmation($details['title'], $details, 'reservation.confirm-mail'));
-            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Confirmed');
             unset($details, $text, $url);
+            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Confirmed');
         }
     }
     public function updateCheckin(Request $request){

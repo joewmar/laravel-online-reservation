@@ -95,7 +95,7 @@
                         <div class="camera"></div> 
                         <div class="display">
                             <div class="artboard artboard-demo phone-1"> 
-                                <img src="{{asset('images/payment/sample-gcash-receipt.jpg')}}" class="show_img" />
+                                <img src="{{asset('images/payment/gcash-logo.png')}}" class="show_img" />
                             </div>
                         </div>
                     </div>

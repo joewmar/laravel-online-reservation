@@ -42,7 +42,7 @@
                         </form> --}}
                     </div>
                     <div class="overflow-x-auto w-full">
-                        <table class="table w-full">
+                        <table class="table table-xs md:table-md">
                             <!-- head -->
                             <thead>
                                 <tr>
@@ -69,10 +69,10 @@
                                             </div>
                                         </td>
                                         <td>
-                                        <div>
-                                            <div class="font-bold">{{$list->userReservation->name() ?? ''}}</div>
-                                            <div class="text-sm opacity-50">{{$list->userReservation->country}}</div>
-                                        </div>
+                                            <div>
+                                                <div class="font-bold">{{$list->userReservation->name() ?? ''}}</div>
+                                                <div class="text-sm opacity-50">{{$list->userReservation->country}}</div>
+                                            </div>
                                         </td>
                                         <td>{{$list->age ?? ''}} years old</td>
                                         <td>{{$list->userReservation->country ?? ''}}</td>
@@ -97,19 +97,19 @@
                                                     <x-checkout name="{{$list->userReservation->name() ?? ''}}" :datas="$list" />
                                                 @endif
                                                 <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs join-item">View</a>
-                                                <div class="dropdown dropdown-left dropdown-end">
-                                                    <label tabindex="0" class="btn join-item btn-xs">                                                        
-                                                        <i class="fa-solid fa-ellipsis"></i>
-                                                    </label>
-                                                    <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                                                        <li><a href="{{route('system.reservation.show.cancel', encrypt($list->id))}}" class="text-error">Cancel</a></li>
-                                                        <li><a href="{{route('system.reservation.show.reschedule', encrypt($list->id))}}" class="text-accent-content">Reschedule</a></li>
-                                                    </ul>
-                                                  </div>
+                                                @if (!($list->status >= 3 && $list->status <= 6))
+                                                    <div class="dropdown dropdown-left dropdown-end">
+                                                        <label tabindex="0" class="btn join-item btn-xs">                                                        
+                                                            <i class="fa-solid fa-ellipsis"></i>
+                                                        </label>
+                                                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                                                            <li><a href="{{route('system.reservation.show.cancel', encrypt($list->id))}}" class="text-error">Cancel</a></li>
+                                                            <li><a href="{{route('system.reservation.show.reschedule', encrypt($list->id))}}" class="text-accent-content">Reschedule</a></li>
+                                                        </ul>
+                                                    </div>
+                                                @endif
                                             </div>
-                                            {{-- <a href="{{route('system.reservation.show.receipt', encrypt($list->id))}}" class="btn btn-accent btn-xs" >Receipt</a> --}}
                                         </th>
-                                    
                                     </tr>
                                 @empty
                                     <tr>
