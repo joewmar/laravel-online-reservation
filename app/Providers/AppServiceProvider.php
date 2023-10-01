@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Models\System;
+use App\Jobs\SendTelegramMessage;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Foundation\Application;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -534,16 +536,5 @@ class AppServiceProvider extends ServiceProvider
 
         View::share('currencies', $arrCur);
         View::share('currencyKey', array_keys($arrCur));
-
-        // Should return TRUE or FALSE
-        Gate::define('admin', function(System $system_user) {
-            return $system_user->type === 0;
-        });
-        Gate::define('manager', function(System $system_user) {
-            return $system_user->type === 1;
-        });
-        Gate::define('front-desk', function(System $system_user) {
-            return $system_user->type === 2;
-        });
     }
 }

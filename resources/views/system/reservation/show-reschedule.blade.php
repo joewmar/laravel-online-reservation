@@ -182,7 +182,7 @@
                 <x-passcode-modal title="Approve Confirmation" id="approve" formId="approve-form" />        
             </form>
             <label for="disaprove_modal" class="btn btn-sm btn-error" {{$r_list->status === 5 || !isset($r_list->message['reschedule']) ? 'disabled' : ''}}>Dissaprove</label>
-            <x-modal id="disaprove_modal" title="Why Disaprove Reschedule">
+            <x-modal id="disaprove_modal" title="Why Disapprove Reschedule">
                 <form x-data="{resched: ''}" action="{{route('system.reservation.update.reschedule.disaprove', encrypt($r_list->id))}}" method="POST">
                     @csrf
                     @method('PUT')
@@ -204,7 +204,7 @@
                         <x-textarea placeholder="Reason Message" name="reason" id="reason" />
                     </template>
                     <div class="modal-action">
-                        <button class="btn btn-sm btn-error">Proceed Disaprove</button>
+                        <button class="btn btn-sm btn-error">Proceed Disapprove</button>
                     </div>
                 </form>
             </x-modal>

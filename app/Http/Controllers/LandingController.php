@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendTelegramMessage;
 use App\Models\News;
 use App\Models\Feedback;
 use App\Models\RoomList;

@@ -9,6 +9,7 @@ use App\Models\Reservation;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\OnlinePayment;
+use App\Jobs\SendTelegramMessage;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Notification;
@@ -21,12 +22,12 @@ class ReservationTwoController extends Controller
         if(isset($link)){
             $keyboard = [
                 [
-                    'text' => 'View', 'url' => $link,
+                    ['text' => 'View', 'url' => $link],
                 ],
             ];
         }
         foreach($systems as $system){
-            if(isset($system->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard);
+            if(isset($system->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard, 'bot2'));
         }
         Notification::send($systems, new SystemNotification(Str::limit($text, 10), $text, route('system.notifications')));
     }
@@ -132,9 +133,10 @@ class ReservationTwoController extends Controller
         ]);
         $created = Feedback::create([
             'reservation_id' => $reservation->id,
+            'name' => $reservation->userReservation->name(),
             'rating' => (int)$validated['rating'],
             'message' => $validated['message'],
         ]);
-        if($created) return redirect()->route('home')->with('success', 'Thank you for your opinion. Come Again');
+        if($created) return redirect()->route('home')->with('success', 'Thank you for your feedback. Come Again');
     }
 }

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->tinyInteger('tour_pax')->nullable();
             $table->tinyText('accommodation_type');
             $table->tinyText('payment_method');
-            $table->integer('age')->nullable();
+            $table->integer('age');
             $table->date('check_in');
             $table->date('check_out');
             $table->tinyInteger('status')->default(0); /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => done/check-out, 4 => reshedule, 5 => cancel, 6 => disaprove*, 7 => pending reschedule, 8 => pending cancel */

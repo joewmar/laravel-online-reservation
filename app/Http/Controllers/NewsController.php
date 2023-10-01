@@ -14,6 +14,7 @@ class NewsController extends Controller
     public function __construct()
     {
         $this->system_user = auth('system');
+        $this->authorize('admin');
     }
     public function index(Request $request){
         $news = News::news()->get();

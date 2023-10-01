@@ -8,7 +8,7 @@
   <div class="modal-box">
     <h3 class="font-bold text-xl mb-4 md:mb-0">Choose Date</h3>
     <div class="py-4 overflow-y-scroll h-72 md:h-full">
-      <section class="w-full text-error mb-8">
+      <section class="w-full text-red-500 mb-8">
         <h2 class="text-sm md:text-lg">Note: Before making reservations, we must prepare the following:</h2>
         <ul type="disc" class="text-xs md:text-sm list-disc pl-10">
           <li>Downpayment through PayPal or Gcash.</li>

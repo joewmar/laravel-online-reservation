@@ -68,5 +68,6 @@ class Kernel extends HttpKernel
         'manager' => \App\Http\Middleware\Manager::class,
         // 'role' => \App\Http\Middleware\SystemRoleMiddleware::class,
         'auth.image' => \App\Http\Middleware\AuthenticateImageAccess::class,
+        'auth.dbBackup' => \App\Http\Middleware\AuthenticateDatabaseBackup::class,
     ];
 }

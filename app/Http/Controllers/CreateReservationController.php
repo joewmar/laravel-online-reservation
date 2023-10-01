@@ -425,14 +425,13 @@ class CreateReservationController extends Controller
         ]);
     }
     public function storeStep4(Request $request){
-        $sysUser = $this->system_user->user();
-        $admins = System::where('type', 0);
         $validated = $request->validate([
             'first_name' => ['required', 'min:1'],
             'last_name' => ['required', 'min:1'],
             'age' => ['required', 'numeric','min:8'],
             'payment_amount' => ['required', 'numeric','min:1000'],
             'country' => ['required', 'min:1'],
+            'type' => ['required'],
             'nationality' => ['required'],
             'contact_code' => ['required'],
             'contact' => ['required', (new Phone)->international()->country(Str::upper($request['contact_code']))],
@@ -462,77 +461,77 @@ class CreateReservationController extends Controller
             "valid_id" => $validated['valid_id'] ?? null,
         ]);
 
-            if($created){
-                $transaction = [];
-                $roomDetails = [];
-                $decrypted = decryptedArray(session('nwrinfo'));
+        if($created){
+            $transaction = [];
+            $roomDetails = [];
+            $decrypted = decryptedArray(session('nwrinfo'));
 
-                if(isset($decrypted['tm'])){
-                    foreach($decrypted['tm'] as $key => $tour_id){
-                        $tour_menu = TourMenu::find($tour_id);
-                        $transaction['tm'. $tour_id] = [
-                            'title' => $tour_menu->tourMenu->title . ' ' . $tour_menu->type . '('.$tour_menu->pax.' pax)',
-                            'price' => (double)$tour_menu->price,
-                            'amount' => (double)$tour_menu->price * (int)$decrypted['tpx']
-                        ];
-                    }
-                }
-                if(isset($decrypted['qty'])){
-                    foreach($decrypted['qty'] as $key => $qty){
-                        $addons = Addons::find($key);
-                        $transaction['OA'. $addons->id] = [
-                            'title' => $addons->title,
-                            'price' => (double)$addons->price,
-                            'pcs' => (int)$qty,
-                            'amount' => (double)$addons->price * (int)$qty
-                        ];
-                    }
-                }
-                if(isset($decrypted['rt'])){
-                    $rate = RoomRate::find($decrypted['rt']);
-                    $transaction['rid'. $rate->id] = [
-                        'title' => $rate->name,
-                        'price' => (double)$rate->price,
-                        'amount' => (double)$rate->price * (int)$decrypted['px']
+            if(isset($decrypted['tm'])){
+                foreach($decrypted['tm'] as $key => $tour_id){
+                    $tour_menu = TourMenu::find($tour_id);
+                    $transaction['tm'. $tour_id] = [
+                        'title' => $tour_menu->tourMenu->title . ' ' . $tour_menu->type . '('.$tour_menu->pax.' pax)',
+                        'price' => (double)$tour_menu->price,
+                        'amount' => (double)$tour_menu->price * (int)$decrypted['tpx']
                     ];
                 }
-
-                if($decrypted['st'] >= 2) $transaction['payment']['cinpay'] = $validated['payment_amount'];
-                
-                else $transaction['payment']['downpayment'] = $validated['payment_amount'];
-                
-                $reserved = Reservation::create([
-                    'offline_user_id' => $created->id,
-                    'roomid' => array_keys($decrypted['rm']),
-                    'roomrateid' => $decrypted['rt'],
-                    'pax' => $decrypted['px'],
-                    'tour_pax' => $decrypted['tpx'] ?? null,
-                    'age' => $created->age,
-                    'accommodation_type' => $decrypted['at'],
-                    'payment_method' => $decrypted['py'],
-                    'check_in' => $decrypted['cin'],
-                    'check_out' => $decrypted['cout'],
-                    'status' => $decrypted['st'],
-                    'transaction' => $transaction,
-                ]);
-                if(isset($decrypted['rm'])){
-                    foreach($decrypted['rm'] as $id => $pax){
-                        $room = Room::find($id);
-                        $room->addCustomer($reserved->id, $pax);
-                        $roomDetails[] = 'Room No. ' . $room->room_no . ' ('.$room->room->name.')';
-                    }
+            }
+            if(isset($decrypted['qty'])){
+                foreach($decrypted['qty'] as $key => $qty){
+                    $addons = Addons::find($key);
+                    $transaction['OA'. $addons->id] = [
+                        'title' => $addons->title,
+                        'price' => (double)$addons->price,
+                        'pcs' => (int)$qty,
+                        'amount' => (double)$addons->price * (int)$qty
+                    ];
                 }
             }
+            if(isset($decrypted['rt'])){
+                $rate = RoomRate::find($decrypted['rt']);
+                $transaction['rid'. $rate->id] = [
+                    'title' => $rate->name,
+                    'price' => (double)$rate->price,
+                    'amount' => (double)$rate->price * (int)$decrypted['px']
+                ];
+            }
+
+            if($validated['type'] == 'cinpayment') $transaction['payment']['cinpay'] = $validated['payment_amount'];
+            elseif($validated['type'] == 'coutpayment') $transaction['payment']['coutnpay'] = $validated['payment_amount'];
+            else $transaction['payment']['downpayment'] = $validated['payment_amount'];
+
+            $reserved = Reservation::create([
+                'offline_user_id' => $created->id,
+                'roomid' => array_keys($decrypted['rm']),
+                'roomrateid' => $decrypted['rt'],
+                'pax' => $decrypted['px'],
+                'tour_pax' => $decrypted['tpx'] ?? null,
+                'age' => $created->age,
+                'accommodation_type' => $decrypted['at'],
+                'payment_method' => $decrypted['py'],
+                'check_in' => $decrypted['cin'],
+                'check_out' => $decrypted['cout'],
+                'status' => $decrypted['st'],
+                'transaction' => $transaction,
+            ]);
+            if(isset($decrypted['rm'])){
+                foreach($decrypted['rm'] as $id => $pax){
+                    $room = Room::find($id);
+                    $room->addCustomer($reserved->id, $pax);
+                    $roomDetails[] = 'Room No. ' . $room->room_no . ' ('.$room->room->name.')';
+                }
+            }
+        }
 
 
-            $this->employeeLogNotif('Add Booking for ' . $reserved->userReservation->name(), route('system.reservation.show', encrypt($reserved->id)));
-            $details = [
-                'name' => $reserved->userReservation->name(),
-                'title' => 'Reservation Complete',
-                'body' => 'You Reservation at ' . Carbon::now()->format('F j, Y') .' and the Room Assign are '.implode(', ', $roomDetails).'. Be Enjoy our service with full happiness',
-            ];
-            Mail::to(env('SAMPLE_EMAIL') ?? $reserved->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
-            session()->forget('nwrinfo');
-            return redirect()->route('system.reservation.home')->with('success', $reserved->userReservation->name() . ' was added on Reservation');
+        $this->employeeLogNotif('Add Booking for ' . $reserved->userReservation->name(), route('system.reservation.show', encrypt($reserved->id)));
+        $details = [
+            'name' => $reserved->userReservation->name(),
+            'title' => 'Reservation Complete',
+            'body' => 'You Reservation at ' . Carbon::now()->format('F j, Y') .' and the Room Assign are '.implode(', ', $roomDetails).'. Be Enjoy our service with full happiness',
+        ];
+        Mail::to(env('SAMPLE_EMAIL') ?? $reserved->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+        session()->forget('nwrinfo');
+        return redirect()->route('system.reservation.home')->with('success', $reserved->userReservation->name() . ' was added on Reservation');
     }
 }

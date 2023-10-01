@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Carbon\Carbon;
 use App\Models\Reservation;
 use App\Mail\ReservationMail;
+use App\Models\OnlinePayment;
 use App\Models\System;
 use App\Models\WebContent;
 use Illuminate\Console\Command;
@@ -32,6 +33,7 @@ class LiveCommand extends Command
     public function handle()
     {
         $reservations = Reservation::all();
+        $online_payments = OnlinePayment::all();
         $system_user = System::whereBetween('type', [0, 1])->get();
         foreach($reservations as $item){
             // Verify the deadline of payment then auto canceled
@@ -96,6 +98,12 @@ class LiveCommand extends Command
                     if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text);
                 }
                 $this->info('Show up of customer');
+            }
+        }
+        // Automatic Delete After One Month
+        foreach($online_payments as $item){
+            if(Carbon::createFromFormat('Y-m-d', $item->check_in)->addMonth()->timestamp <= Carbon::now('Asia/Manila')->timestamp){
+                $item->delete();
             }
         }
         unset($checkInToday,  $keyboard, $text, $details,  $system_user, $webcontent, $reservations);

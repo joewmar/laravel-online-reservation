@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('reservation_id');
             $table->foreign('reservation_id')->references('id')->on('reservations')->onDelete('cascade');
+            $table->string('name');
             $table->tinyInteger('rating');
             $table->text('message');
             $table->timestamps();

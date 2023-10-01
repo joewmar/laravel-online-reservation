@@ -69,7 +69,7 @@
                                             <span class="text-xl font-bold">Disaprove</span>
                                         </div>
                                     @endif
-                                    <p class="text-neutral font-bold text-2xl">Payment information</p>
+                                    <p class="text-neutral font-bold text-2xl">Payment information {{$loop->index+1}}</p>
                                     <div class="mt-5">
                                         <p class="text-neutral text-xl"><strong>Payer Name: </strong>{{$item->payment_name}}</p>
                                         <p class="text-neutral text-xl"><strong>Reference No.: </strong>{{$item->reference_no}}</p>

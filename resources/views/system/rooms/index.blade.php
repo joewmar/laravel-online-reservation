@@ -19,7 +19,7 @@
                 </div>
                 <div x-show="type == 'date'">
                   <div class="join mt-3">
-                      <input type="text" class="input input-bordered input-primary btn-sm md:btn-md join-item flatpickr-reservation-one" :name="type == 'date' ? 'date' : '' " placeholder="Date" value="{{request('date') ?? Carbon\Carbon::now('Asia/Manila')->format('Y-m-d')}}" />
+                      <input type="text" class="input input-bordered input-primary btn-sm md:btn-md join-item flatpickr-room-today" :name="type == 'date' ? 'date' : '' " placeholder="Date" value="{{request('date') ?? Carbon\Carbon::now('Asia/Manila')->format('Y-m-d')}}" />
                       <button class="btn btn-primary btn-sm md:btn-md join-item">Search</button>
                   </div>
                 </div>

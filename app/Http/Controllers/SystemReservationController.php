@@ -12,6 +12,7 @@ use App\Models\Archive;
 use App\Models\RoomList;
 use App\Models\RoomRate;
 use App\Models\TourMenu;
+use App\Models\WebContent;
 use App\Models\Reservation;
 use App\Models\RoomReserve;
 use Illuminate\Support\Arr;
@@ -20,24 +21,31 @@ use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
 use App\Models\OnlinePayment;
-use Illuminate\Validation\Rule;
 // use App\Notifications\EmailNotification;
+use Illuminate\Validation\Rule;
+use App\Jobs\SendTelegramMessage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservationConfirmation;
-use App\Models\WebContent;
 use App\Notifications\SystemNotification;
+use App\Notifications\UserNotif;
+use Exception;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
 
 class SystemReservationController extends Controller
 {
-    private $system_user, $admins;
+    private $system_user;
     public function __construct(){
-        $this->system_user = auth()->guard('system');
+        $this->system_user = auth('system');
+        $this->middleware(function ($request, $next){
+            if(!($this->system_user->user()->type === 0 || $this->system_user->user()->type === 1 )) abort(404);
+            return $next($request);
+
+        })->except(['updateCheckin', 'updateCheckout', 'show', 'index', 'search', 'event']);
     }
     private function employeeLogNotif($action, $link = null){
         if(auth()->guard('system')->user()->role() !== "Admin"){
@@ -56,7 +64,7 @@ class SystemReservationController extends Controller
                 ];
             }
             foreach($admins as $admin){
-                if(isset($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, $keyboard, 'bot2');
+                if(isset($admin->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, $keyboard, 'bot2'));
             }
             Notification::send($admins, new SystemNotification('Employee Action from '.auth()->guard('system')->user()->name().': ' . Str::limit($action, 10, '...'), $text, route('system.notifications')));
         }
@@ -120,32 +128,33 @@ class SystemReservationController extends Controller
     }
     public function index(Request $request){
         $r_list = Reservation::latest()->paginate(10);
-        if($request['tab'] === 'pending'){
-            $r_list = Reservation::where('status', 0)->latest()->paginate(10);
-        }
-        if($request['tab'] === 'confirmed'){
-            $r_list = Reservation::where('status', 1)->latest()->paginate(10);
-        }
+        if($this->system_user->user()->type === 2) $r_list = Reservation::whereBetween('status', [2,3])->latest()->paginate(10);
+        if(!$this->system_user->user()->type === 2) {
+            if($request['tab'] === 'pending'){
+                $r_list = Reservation::where('status', 0)->latest()->paginate(10);
+            }
+            if($request['tab'] === 'confirmed'){
+                $r_list = Reservation::where('status', 1)->latest()->paginate(10);
+            }
+            if($request['tab'] === 'reschedule'){
+                $r_list = Reservation::where(function ($query) {
+                    $query->where('status', 7)->orWhere('message->reschedule->prev_status', 4);
+                })->latest()->paginate(10);  
+            }
+            if($request['tab'] === 'cancel'){
+                $r_list = Reservation::where('status', 5)->orWhere('status', 8)->latest()->paginate(10);
+            }
+        } 
+
         if($request['tab'] === 'cin'){
             $r_list = Reservation::where('status', 2)->latest()->paginate(10);
         }
         if($request['tab'] === 'cout'){
             $r_list = Reservation::where('status', 3)->latest()->paginate(10);
         }
-        if($request['tab'] === 'reschedule'){
-            $r_list = Reservation::where(function ($query) {
-                $query->where('status', 7)->orWhere('message->reschedule->prev_status', 4);
-            })->latest()->paginate(10);  
-        }
-        if($request['tab'] === 'cancel'){
-            $r_list = Reservation::where('status', 5)->orWhere('status', 8)->latest()->paginate(10);
-        }
         if($request['tab'] == 'previous'){
             $r_list = Reservation::with('previous')->latest()->paginate(10)?? [];
         }
-        // if($request['tab'] === 'disaprove'){
-        //     $r_list = Reservation::where('status', 6)->latest()->paginate(10);
-        // }
         if(isset($request['search'])){
             $names = explode(' ', $request['search']);
             $firstName = $names[0];
@@ -237,37 +246,33 @@ class SystemReservationController extends Controller
                     $rate['orig_amount'] = $item['orig_amount'];
                 }
             }
-            if (strpos($key, 'OA') !== false && is_array($item)) {
-                foreach($item as $key => $dataAddons){
-                    $other_addons[$count+$key]['title'] = $dataAddons['title'];
-                    $other_addons[$count+$key]['pcs'] = $dataAddons['pcs'];
-                    $other_addons[$count+$key]['price'] = $dataAddons['price'];
-                    $other_addons[$count+$key]['amount'] = $dataAddons['amount'];
-                }
-            }
-            if (strpos($key, 'TA') !== false && is_array($item)) {
-                foreach($item as $key => $tourAddons){
-                    $tour_addons[$count]['title'] = $tourAddons['title'];
-                    $tour_addons[$count]['price'] = $tourAddons['price'];
-                    $tour_addons[$count]['amount'] = $tourAddons['amount'];
-                }
+            if (strpos($key, 'OA') !== false) {
+                $other_addons[$count]['title'] = $item['title'];
+                $other_addons[$count]['pcs'] = $item['pcs'];
+                $other_addons[$count]['price'] = $item['price'];
+                $other_addons[$count]['amount'] = $item['amount'];
                 
+            }
+            if (strpos($key, 'TA') !== false) {
+                $tour_addons[$count]['title'] = $item['title'];
+                $tour_addons[$count]['price'] = $item['price'];
+                $tour_addons[$count]['amount'] = $item['amount'];  
             }
 
             $count++;
         }
-
         unset($count);
         return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict, 'rooms' => implode(',', $rooms), 'rate' => $rate, 'other_addons' => $other_addons, 'tour_addons' => $tour_addons]);
     }
     public function showCancel($id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
+        if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
         return view('system.reservation.show-cancel',  ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
     public function showReschedule($id){
-        $id = decrypt($id);
-        $reservation = Reservation::findOrFail($id);
+        $reservation = Reservation::findOrFail(decrypt($id));
+        if($reservation->status >= 2 && $reservation->status <= 3 || $reservation->status == 0) abort(404);
         $availed = Reservation::all()->where('check_in', $reservation->check_in)->where('check_out', $reservation->check_out)->except($reservation->id);
         $rooms = Room::all();
         return view('system.reservation.show-reschedule',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'availed' => $availed, 'rooms' => $rooms]);
@@ -275,6 +280,8 @@ class SystemReservationController extends Controller
     public function updateCancel(Request $request, $id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
+        if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
+
         if(!$reservation->status >= 5) abort(404);
         $validator = Validator::make($request->all('passcode'), [
             'passcode' => ['required', 'digits:4', 'numeric'],
@@ -307,6 +314,7 @@ class SystemReservationController extends Controller
     public function updateDisaproveCancel(Request $request, $id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
+        if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
         $validator = Validator::make($request->all('reason'), [
             'reason' => ['required'],
         ]);
@@ -328,7 +336,56 @@ class SystemReservationController extends Controller
         }
     
     }
+    public function forceCancel($id){
+        $id = decrypt($id);
+        $reservation = Reservation::findOrFail($id);
+        if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
+
+        return view('system.reservation.cancel.force-cancel',  ['activeSb' => 'Reservation', 'r_list' => $reservation]);
+    }
+    public function updateForceCancel(Request $request, $id){
+        $reservation = Reservation::findOrFail(decrypt($id));
+        if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
+        $system_user = $this->system_user->user();
+        if($request['reason'] === 'Other'){
+            $validated = $request->validate([
+                'reason' => ['required'],
+                'message' => ['required'],
+                'passcode' => ['required', 'digits:4', 'numeric'],
+            ], [
+                'required' => 'Need to fill up this form'
+            ]);
+
+        }
+        else{
+            $validated = $request->validate([
+                'reason' => ['required'],
+                'passcode' => ['required', 'digits:4', 'numeric'],
+            ], [
+                'required' => 'Need to fill up this form'
+            ]);
+            $validated['message'] =  $validated['reason'];
+        }
+        if(!Hash::check($validated['passcode'], $system_user->passcode))  return back()->with('error', 'Invalid Passcode, Try Again')->withInput($validated);
+        $updated = $reservation->update(['status' => 5]);
+        if($updated){
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => 'Reservation Disapprove',
+                'body' => 'Your Reservation are Forced Cancel from '.$system_user->name().' due of ' . $validated['disaprove']. 'Sorry for waiting. Please try again to make reservation in another dates',
+            ];
+            $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'canceled'])) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+            unset($details, $text);
+            $this->employeeLogNotif('Cancel Forced of ' . $reservation->userReservation->name() . ' Reservation', route('system.reservation.show', encrypt($reservation->id)));
+            return redirect()->route('system.reservation.home')->with('success', 'Force Cancel of ' . $reservation->userReservation->name() . ' was Successful');
+        }
+        else{
+            return back()->with('error', 'Something Wrong, Try Again')->withInput($request->all());
+        }
+    }
     public function updateReschedule(Request $request, $id){
+        $reservation = Reservation::findOrFail(decrypt($request->id));
+        if($reservation->status >= 2 && $reservation->status <= 3 || $reservation->status == 0) abort(404);
         $system_user = $this->system_user->user();
         $validator = Validator::make($request->all('passcode'), [
             'passcode' => ['required', 'digits:4', 'numeric'],
@@ -338,7 +395,7 @@ class SystemReservationController extends Controller
         $validator = $validator->validate();
         if(!Hash::check($validator['passcode'], $system_user->passcode)) return back ()->with('error', 'Invalid Passcode');
         $admins = System::all()->where('type', 0);
-        $reservation = Reservation::findOrFail(decrypt($request->id));
+
         if(!$reservation->status == 7) abort(404);
         if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($request['room_pax']);
         else $validator['room_pax'] = $request['room_pax'];
@@ -380,8 +437,8 @@ class SystemReservationController extends Controller
         }
     }
     public function updateDisaproveReschedule(Request $request, $id){
-        $id = decrypt($id);
-        $reservation = Reservation::findOrFail($id);
+        $reservation = Reservation::findOrFail(decrypt($id));
+        if($reservation->status >= 2 && $reservation->status <= 3 || $reservation->status == 0) abort(404);
         $validator = Validator::make($request->all('reason'), [
             'reason' => ['required'],
         ]);
@@ -435,243 +492,262 @@ class SystemReservationController extends Controller
         return view('system.reservation.show-room',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'rooms' => $rooms, 'rates' => $rate, 'reserved' => $roomReserved]);
     }
     public function updateReservation(Request $request){
-        $roomCustomer = [];
-        if($request->has('room_rate')) $request['room_rate'] = decrypt($request['room_rate']);
-        $validated = $request->validate([
-            'room_rate' => ['required', Rule::when($request->has('room_rate'), ['numeric'])],
-            'passcode' =>  ['required', 'numeric', 'digits:4'],
-        ]);
-        
-        $system_user = $this->system_user->user();
-        $reservation = Reservation::findOrFail(decrypt($request->id));
-        if($reservation->status >= 1) abort(404);
-        if(!Hash::check($validated['passcode'], $system_user->passcode)) return back()->with('error', 'Invalid Passcode');
-        if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($request['room_pax']);
-        else $validated['room_pax'] = $request['room_pax'];
-        $rate = RoomRate::find($validated['room_rate']);
+        try{
+            $roomCustomer = [];
+            if($request->has('room_rate')) $request['room_rate'] = decrypt($request['room_rate']);
+            $validated = $request->validate([
+                'room_rate' => ['required', Rule::when($request->has('room_rate'), ['numeric'])],
+                'passcode' =>  ['required', 'numeric', 'digits:4'],
+            ]);
+            
+            $system_user = $this->system_user->user();
+            $reservation = Reservation::findOrFail(decrypt($request->id));
+            if($reservation->status >= 1) abort(404);
+            if(!Hash::check($validated['passcode'], $system_user->passcode)) return back()->with('error', 'Invalid Passcode');
+            if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($request['room_pax']);
+            else $validated['room_pax'] = $request['room_pax'];
+            $rate = RoomRate::find($validated['room_rate']);
 
-        if(isset($request['force'])) $roomCustomer = $this->roomAssign($validated['room_pax'], $reservation, $validated, true);
-        else $roomCustomer = $this->roomAssign($validated['room_pax'], $reservation, $validated);
+            if(isset($request['force'])) $roomCustomer = $this->roomAssign($validated['room_pax'], $reservation, $validated, true);
+            else $roomCustomer = $this->roomAssign($validated['room_pax'], $reservation, $validated);
 
-        if(!is_array($roomCustomer)){
-            return $roomCustomer;
+            if(!is_array($roomCustomer)){
+                return $roomCustomer;
+            }
+
+            $transaction = $reservation->transaction;
+            $transaction['rid'.$rate->id]['title'] = $rate->name;
+            $transaction['rid'.$rate->id]['price'] = $rate->price;
+            $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
+            // Update Reservation
+            $reserved = $reservation->update([
+                'roomid' => array_keys($roomCustomer),
+                'roomrateid' => $rate->id,
+                'transaction' => $transaction,
+                'status' => 1,
+            ]);
+            $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
+            $reservation->save();
+
+            // Update Room Availability
+            if($reserved){
+                foreach($roomCustomer as $key => $pax){
+                    $room = Room::find($key);
+                    $room->addCustomer($reservation->id, $pax);
+                }
+                $tour_menu = [];
+                // Get Tour Menu for Mail
+                $count = 0;
+                foreach($reservation->transaction ?? [] as $key => $item){
+                    if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
+                        $tour_menuID = (int)str_replace('tm','', $key);
+                        $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
+                        $tour_menu[$count]['price'] = (double) $reservation->transaction['tm'.$tour_menuID]['price'];
+                        $tour_menu[$count]['amount'] = (double) $reservation->transaction['tm'.$tour_menuID]['amount'] * (int)$reservation->tour_pax;
+                    }
+                    if (strpos($key, 'TA') !== false && $reservation->accommodation_type != 'Room Only') {
+                        $tour_menuID = (int)str_replace('TA','', $key);
+                        foreach($item as $TA){
+                            $tour_menu[$count]['title'] = $item['title'];
+                            $tour_menu[$count]['price'] = (double)$item['price'];
+                            $tour_menu[$count]['amount'] = (double)$item['amount'] * (int)$reservation->tour_pax;
+                        }
+
+                    }
+                    $count++;
+                }
+            
+                $roomDetails = [];
+                foreach($reservation->roomid as $item) {
+                    $room = Room::find($item);
+                    if($room) $roomDetails[] = 'Room No ' . $room->room_no . ' ('.$room->room->name.')';
+                    else $roomDetails[] = 'Room Data Missing';
+                }
+
+                $text = null;
+                $url = null;
+                if($reservation->payment_method == "Gcash"){
+                    $gc = WebContent::all()->first()->payment ?? [];
+                    $sp = "";
+                    if(isset($gc['gcash'])){
+                        foreach($gc['gcash'] ?? [] as $key => $item){
+                            if($item['priority'] === true){
+                                $sp = " or Mobile Number".(isset($item['name']) ? "of ".$item['name']."" : "")." ".(isset($item['number']) ? "(".$item['number'].")" : "");
+                            }
+                        }
+                    }
+                    $steps = [
+                        "Step 1: Pay via QR Scanner" . $sp,
+                        "Step 2: Send Screenshot of Receipt of Gcash",
+                        "Step 3: Fill up the information for verify your payment",
+                    ];
+                    $url = route('reservation.gcash', encrypt($reservation->id));
+                }
+                if($reservation->payment_method == "PayPal"){
+                    $ppl = WebContent::all()->first()->payment ?? [];
+                    $s = "Enter your recipient's name, PayPal username, email, or mobile number";
+                    if(isset($ppl['paypal'])){
+                        foreach($ppl['paypal'] ?? [] as $key => $item){
+                            if($item['priority'] === true){
+                                $s = "Enter your recipient's name " . (isset($item['name']) ? "(".$item['name'].")" : "") ." , PayPal username ". (isset($item['username']) ? "(".$item['username'].")" : "") ." , email ".(isset($item['email'] ) ? "(".$item['email'].")" : "") .", or mobile number  ".(isset($item['number']) ? "(".$item['number'].")" : "");
+                            }
+                        }
+                    }
+                    $steps = [
+                        "Step 1: " . $s ,
+                        "Step 2:Enter the amount you want to send and choose a currency. You can even add a personalized note.",
+                        'Step 3: Choose "Send". Your payment is on its way.',
+                        "Step 4: Send Your Screenshot of your Receipt",
+                        "Step 5: Fill up the information for verify your payment",
+                    ];
+                    $url = route('reservation.paypal', encrypt($reservation->id));
+                }
+                if($reservation->payment_method == "Bank Transfer"){
+                    $bt = WebContent::all()->first()->payment ?? [];
+                    $sbt = "Make your payment at the nearest or preferred bank location. Don't forget to keep your receipt.";
+                    if(isset($bt['bankTransfer'])){
+                        foreach($bt['bankTransfer'] ?? [] as $key => $item){
+                            if($item['priority'] === true){
+                                $sbt = "Make your payment at the nearest or preferred bank company location". (isset($item['name']) ? " and Send to ".$item['name']."" : "") . "". (isset($item['acc_no'] ) ? " with Account No. ".$item['acc_no']."." : "") ." Don't forget to keep your receipt.";
+                            }
+                        }
+                    }
+                    $steps = [
+                        "Step 1: " . $sbt,
+                        "Step 2: Send Your Screenshot of your Receipt",
+                        "Step 3: Fill up the information for verify your payment",
+                    ];
+                    $url = route('reservation.bnktr', encrypt($reservation->id));
+                }
+
+                $details = [
+                    'name' => $reservation->userReservation->name(),
+                    'title' => 'Reservation has Confirmed',
+                    'body' => 'Your Reservation has Confirmed, Be on time at ' . Carbon::createFromFormat('Y-m-d', $reservation->check_in, Carbon::now()->timezone->getName())->format('F j, Y') . ' to ' . Carbon::createFromFormat('Y-m-d', $reservation->check_in, Carbon::now()->timezone)->addDays(3)->format('F j, Y'),
+                    "age" => $reservation->age,  
+                    "nationality" =>  $reservation->userReservation->nationality , 
+                    "country" =>  $reservation->userReservation->country, 
+                    "check_in" =>  Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'), 
+                    "check_out" =>  Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y'), 
+                    "accommodation_type" =>  $reservation->accommodation_type,
+                    "payment_method" =>  $reservation->payment_method,
+                    "pax" =>  $reservation->pax,
+                    "tour_pax" =>  $reservation->tour_pax,
+                    'menu' => $tour_menu,
+                    "room_no" =>  implode(',', $roomDetails),
+                    "room_type" => $rate->name,
+                    'room_rate' => (double)$rate->price,
+                    'total' => (double) $reservation->getTotal(),
+                    'payment_link' => $url,
+                    'payment_steps' => $steps,
+                    'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('F j Y \a\t g:iA'),
+                ];
+                $this->employeeLogNotif('Chose to Approve of ' . $reservation->userReservation->name() . ' Reservation with Room Assign '.implode(',', $roomDetails), route('system.reservation.show', encrypt($reservation->id)));
+                unset($roomDetails);
+                $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'confirmed'])) ,$details['body'], $details, 'reservation.confirm-mail'))->onQueue(null));
+                unset($details, $text, $url);
+                return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Confirmed');
+            }
         }
-
-        $transaction = $reservation->transaction;
-        $transaction['rid'.$rate->id]['title'] = $rate->name;
-        $transaction['rid'.$rate->id]['price'] = $rate->price;
-        $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
-        // Update Reservation
-        $reserved = $reservation->update([
-            'roomid' => array_keys($roomCustomer),
-            'roomrateid' => $rate->id,
-            'transaction' => $transaction,
-            'status' => 1,
-        ]);
-        $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
-        $reservation->save();
-
-        // Update Room Availability
-        if($reserved){
-            foreach($roomCustomer as $key => $pax){
-                $room = Room::find($key);
-                $room->addCustomer($reservation->id, $pax);
-            }
-            $tour_menu = [];
-            // Get Tour Menu for Mail
-            $count = 0;
-            foreach($reservation->transaction ?? [] as $key => $item){
-                if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
-                    $tour_menuID = (int)str_replace('tm','', $key);
-                    $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
-                    $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'] . ' philippnine peso';
-                    $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'] * (int)$reservation->tour_pax . ' philippnine peso';
-                }
-                $count++;
-            }
-        
-            $roomDetails = [];
-            foreach($reservation->roomid as $item) {
-                $room = Room::find($item);
-                if($room) $roomDetails[] = 'Room No ' . $room->room_no . ' ('.$room->room->name.')';
-                else $roomDetails[] = 'Room Data Missing';
-            }
-
-            $text = null;
-            $url = null;
-            if($reservation->payment_method == "Gcash"){
-                $gc = WebContent::all()->first()->payment ?? [];
-                $sp = "";
-                if(isset($gc['gcash'])){
-                    foreach($gc['gcash'] ?? [] as $key => $item){
-                        if($item['priority'] === true){
-                            $sp = " or Mobile Number".(isset($item['name']) ? "of ".$item['name']."" : "")." ".(isset($item['number']) ? "(".$item['number'].")" : "");
-                        }
-                    }
-                }
-                $steps = [
-                    "Step 1: Pay via QR Scanner" . $sp,
-                    "Step 2: Send Screenshot of Receipt of Gcash",
-                    "Step 3: Fill up the information for verify your payment",
-                ];
-                $url = route('reservation.gcash', encrypt($reservation->id));
-            }
-            if($reservation->payment_method == "PayPal"){
-                $ppl = WebContent::all()->first()->payment ?? [];
-                $s = "Enter your recipient's name, PayPal username, email, or mobile number";
-                if(isset($ppl['paypal'])){
-                    foreach($ppl['paypal'] ?? [] as $key => $item){
-                        if($item['priority'] === true){
-                            $s = "Enter your recipient's name " . (isset($item['name']) ? "(".$item['name'].")" : "") ." , PayPal username ". (isset($item['username']) ? "(".$item['username'].")" : "") ." , email ".(isset($item['email'] ) ? "(".$item['email'].")" : "") .", or mobile number  ".(isset($item['number']) ? "(".$item['number'].")" : "");
-                        }
-                    }
-                }
-                $steps = [
-                    "Step 1: " . $s ,
-                    "Step 2:Enter the amount you want to send and choose a currency. You can even add a personalized note.",
-                    'Step 3: Choose "Send". Your payment is on its way.',
-                    "Step 4: Send Your Screenshot of your Receipt",
-                    "Step 5: Fill up the information for verify your payment",
-                ];
-                $url = route('reservation.paypal', encrypt($reservation->id));
-            }
-            if($reservation->payment_method == "Bank Transfer"){
-                $bt = WebContent::all()->first()->payment ?? [];
-                $sbt = "Make your payment at the nearest or preferred bank location. Don't forget to keep your receipt.";
-                if(isset($bt['bankTransfer'])){
-                    foreach($bt['bankTransfer'] ?? [] as $key => $item){
-                        if($item['priority'] === true){
-                            $sbt = "Make your payment at the nearest or preferred bank company location". (isset($item['name']) ? " and Send to ".$item['name']."" : "") . "". (isset($item['acc_no'] ) ? " with Account No. ".$item['acc_no']."." : "") ." Don't forget to keep your receipt.";
-                        }
-                    }
-                }
-                $steps = [
-                    "Step 1: " . $sbt,
-                    "Step 2: Send Your Screenshot of your Receipt",
-                    "Step 3: Fill up the information for verify your payment",
-                ];
-                $url = route('reservation.bnktr', encrypt($reservation->id));
-            }
-
-            $details = [
-                'name' => $reservation->userReservation->name(),
-                'title' => 'Reservation has Confirmed',
-                'body' => 'Your Reservation has Confirmed, Be on time at ' . Carbon::createFromFormat('Y-m-d', $reservation->check_in, Carbon::now()->timezone->getName())->format('F j, Y') . ' to ' . Carbon::createFromFormat('Y-m-d', $reservation->check_in, Carbon::now()->timezone)->addDays(3)->format('F j, Y'),
-                "age" => $reservation->age,  
-                "nationality" =>  $reservation->userReservation->nationality , 
-                "country" =>  $reservation->userReservation->country, 
-                "check_in" =>  Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y'), 
-                "check_out" =>  Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y'), 
-                "accommodation_type" =>  $reservation->accommodation_type,
-                "payment_method" =>  $reservation->payment_method,
-                "pax" =>  $reservation->pax,
-                "tour_pax" =>  $reservation->tour_pax,
-                'menu' => $tour_menu,
-                "room_no" =>  implode(',', $roomDetails),
-                "room_type" => $rate->name,
-                'room_rate' => $rate->price,
-                'total' => $reservation->getTotal(),
-                'payment_link' => $url,
-                'payment_steps' => $steps,
-                'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('F j Y \a\t g:iA'),
-            ];
-            $this->employeeLogNotif('Chose to Approve of ' . $reservation->userReservation->name() . ' Reservation with Room Assign '.implode(',', $roomDetails), route('system.reservation.show', encrypt($reservation->id)));
-            unset($roomDetails);
-            // Notification::send($reservation->userReservation, new EmailNotification($project));
-            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationConfirmation($details['title'], $details, 'reservation.confirm-mail'));
-            unset($details, $text, $url);
-            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Confirmed');
+        catch(Exception $e){
+            return redirect()->route('system.reservation.home');
         }
     }
     public function updateCheckin(Request $request){
-        $system_user = $this->system_user->user();
-        $admins = System::all()->where('type', 0);
-        $reservation = Reservation::findOrFail(decrypt($request->id));
-        $transaction = $reservation->transaction;
+        try{
+            $system_user = $this->system_user->user();
+            $admins = System::all()->where('type', 0);
+            $reservation = Reservation::findOrFail(decrypt($request->id));
+            if(!($reservation->status == 2)) abort(404);
 
-        if($request->has('senior_count')){
-            $validate = Validator::make(['senior_count' => $request['senior_count']], [
-                'senior_count' => ['required', 'numeric', 'min:1', 'max:'.$reservation->pax]
-            ], [
-                'senior_count.required' => 'Required Input (Senior Guest Discount)',
-                'senior_count.max' => 'Input based on Room Guest of Customer',
-            ]);
-            if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
+            $transaction = $reservation->transaction;
 
-            $discounted = $validate->validate();
-            $transaction['payment']['discountPerson'] = $discounted['senior_count'];
-            foreach($transaction ?? [] as $key => $item){
-                if (strpos($key, 'rid') !== false) {
-                    $rateID = (int)str_replace('rid','', $key);
-                    $discounted = (20 / 100) * $discounted['senior_count'];
-                    $discounted = (double)($transaction['rid'.$rateID]['amount'] * $discounted);
-                    $discounted = (double)($transaction['rid'.$rateID]['amount'] - $discounted);
-                    $transaction['rid'.$rateID]['orig_amount'] = $transaction['rid'.$rateID]['amount'];
-                    $transaction['rid'.$rateID]['amount'] = $discounted;
-                    break;
+            if($request->has('senior_count')){
+                $validate = Validator::make(['senior_count' => $request['senior_count']], [
+                    'senior_count' => ['required', 'numeric', 'min:1', 'max:'.$reservation->pax]
+                ], [
+                    'senior_count.required' => 'Required Input (Senior Guest Discount)',
+                    'senior_count.max' => 'Input based on Room Guest of Customer',
+                ]);
+                if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
+
+                $discounted = $validate->validate();
+                $transaction['payment']['discountPerson'] = $discounted['senior_count'];
+                foreach($transaction ?? [] as $key => $item){
+                    if (strpos($key, 'rid') !== false) {
+                        $rateID = (int)str_replace('rid','', $key);
+                        $discounted = (20 / 100) * $discounted['senior_count'];
+                        $discounted = (double)($transaction['rid'.$rateID]['amount'] * $discounted);
+                        $discounted = (double)($transaction['rid'.$rateID]['amount'] - $discounted);
+                        $transaction['rid'.$rateID]['orig_amount'] = $transaction['rid'.$rateID]['amount'];
+                        $transaction['rid'.$rateID]['amount'] = $discounted;
+                        break;
+                    }
                 }
+
             }
+            $downpayment = $transaction['payment']['downpayment'] ?? 0;
+            $balance = abs($reservation->getTotal() - $downpayment);
+            if($request['payments'] == 'partial'){
+                $validate = Validator::make($request->all(['payments', 'another_payment']), [
+                    'payments' => ['required'],
+                    'another_payment' =>['required', 'numeric', 'max:'.(int)$balance],
+                ], [
+                    'required' => 'Required to choose',
+                    'max' => 'Fill the amount up to ₱' . number_format($balance, 2),
+                ]);
+                if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
+                $validate = $validate->validate();
+                
+                $transaction['payment']['cinpay'] = (double)$validate['another_payment'];
+                $message = 'Partial Payment (₱ '.number_format($validate ['another_payment'], 2).')';
 
-        }
-        $downpayment = $transaction['payment']['downpayment'] ?? 0;
-        $balance = abs($reservation->getTotal() - $downpayment);
-        if($request['payments'] == 'partial'){
-            $validate = Validator::make($request->all(['payments', 'another_payment']), [
-                'payments' => ['required'],
-                'another_payment' =>['required', 'numeric', 'max:'.(int)$balance],
-            ], [
-                'required' => 'Required to choose',
-                'max' => 'Fill the amount up to ₱' . number_format($balance, 2),
+            }
+            else if($request['payments'] == 'fullpayment'){
+                $validate = Validator::make($request->all(['payments', 'another_payment']), [
+                    'payments' => ['required'],
+                ], [
+                    'required' => 'Required to choose',
+                ]);
+                if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
+                $transaction['payment']['cinpay'] = $balance;
+                $message = 'Full Payment (₱ '.number_format($balance, 2).')';
+            }
+            else{
+                return back();
+            }
+            $updated = $reservation->update([
+                'transaction' => $transaction,
+                'status' => 2,
             ]);
-            if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
-            $validate = $validate->validate();
-            
-            $transaction['payment']['cinpay'] = (double)$validate['another_payment'];
-            $message = 'Partial Payment (₱ '.number_format($validate ['another_payment'], 2).')';
-
+            unset($transaction, $discounted);
+            $text = 
+            "Employee Action: Check-in !\n" .
+            "Name: ". $reservation->userReservation->name() ."\n" . 
+            "Age: " . $reservation->age ."\n" .  
+            "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+            "Payment: " . $message  ."\n" . 
+            "Who Approve: " . $system_user->name() ;
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => 'Reservation Check-in',
+                'body' => 'You now checked in at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
+            ];
+            if($updated){
+                $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'checkin'])) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+                unset($text, $details);
+                $this->employeeLogNotif('Checked in' . $reservation->userReservation->name(), route('system.reservation.show', encrypt($reservation->id)));
+                return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked in');
+            }
         }
-        else if($request['payments'] == 'fullpayment'){
-            $validate = Validator::make($request->all(['payments', 'another_payment']), [
-                'payments' => ['required'],
-            ], [
-                'required' => 'Required to choose',
-            ]);
-            if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
-            $transaction['payment']['cinpay'] = $balance;
-            $message = 'Full Payment (₱ '.number_format($balance, 2).')';
-        }
-        else{
-            return back();
-        }
-        $updated = $reservation->update([
-            'transaction' => $transaction,
-            'status' => 2,
-        ]);
-        unset($transaction, $discounted);
-        $text = 
-        "Employee Action: Check-in !\n" .
-        "Name: ". $reservation->userReservation->name() ."\n" . 
-        "Age: " . $reservation->age ."\n" .  
-        "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
-        "Payment: " . $message  ."\n" . 
-        "Who Approve: " . $system_user->name() ;
-        $details = [
-            'name' => $reservation->userReservation->name(),
-            'title' => 'Reservation Check-in',
-            'body' => 'You now checked in at ' . Carbon::now(Carbon::now()->timezone->getName())->format('F j, Y, g:i A'),
-        ];
-        if($updated){
-            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
-            unset($text, $details);
-            $this->employeeLogNotif('Checked in' . $reservation->userReservation->name(), route('system.reservation.show', encrypt($reservation->id)));
-            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked in');
-            
+        catch(Exception $e){
+            return redirect()->route('system.reservation.home');
         }
     }
     public function updateCheckout(Request $request){
-        $system_user = $this->system_user->user();
-        $admins = System::all()->where('type', 0);
         $reservation = Reservation::findOrFail(decrypt($request->id));
+        if(!($reservation->status == 3)) abort(404);
+
         $validated = $request->validate([
             'fullpay' => ['accepted'],
         ],[
@@ -691,7 +767,7 @@ class SystemReservationController extends Controller
             'feedback_link' => route('reservation.feedback', encrypt($reservation->id)),
         ];   
 
-        Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.checkout-mail', $details['title']));
+        $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'checkin'])) ,$details['body'], $details, 'reservation.checkout-mail'))->onQueue(null));
         $this->employeeLogNotif('Check-out of ' . $reservation->userReservation->name(), route('system.reservation.show', encrypt($reservation->id)));
         unset($text, $details, $transaction);
         return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was Checked out');
@@ -700,6 +776,7 @@ class SystemReservationController extends Controller
     public function disaprove($id){
         $reservation = Reservation::findOrFail(decrypt($id));
         $admins = System::all()->where('type', 0);
+        if($reservation->status >= 1) abort(404);
 
         $tour_menu = [];
         $count = 0;
@@ -724,91 +801,110 @@ class SystemReservationController extends Controller
         return view('system.reservation.disaprove',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu]);
     }
     public function disaproveStore(Request $request, $id){
-        $reservation = Reservation::findOrFail(decrypt($id));
-        $admins = System::all()->where('type', 0);
-        $system_user = $this->system_user->user();
+        try{
+            $reservation = Reservation::findOrFail(decrypt($id));
+            if($reservation->status >= 1) abort(404);
 
-        if($request['reason'] === 'Other'){
-            $validated = $request->validate([
-                'reason' => ['required'],
-                'message' => ['required'],
-                'passcode' => ['required', 'digits:4', 'numeric'],
-            ], [
-                'required' => 'Need to fill up this form'
-            ]);
+            $system_user = $this->system_user->user();
 
-        }
-        else{
-            $validated = $request->validate([
-                'reason' => ['required'],
-                'passcode' => ['required', 'digits:4', 'numeric'],
-            ], [
-                'required' => 'Need to fill up this form'
-            ]);
-            $validated['message'] =  $validated['reason'];
-        }
-        if(!Hash::check($validated['passcode'], $system_user->passcode))  return back()->with('error', 'Invalid Passcode, Try Again')->withInput($validated);
-        $messages = $reservation->message;
-        $messages['disaprove'] = $validated['message'];
-        $updated = $reservation->update(['status' => 6, 'message' => $messages ]); // delete on reservation
-        if($updated){
+            if($request['reason'] === 'Other'){
+                $validated = $request->validate([
+                    'reason' => ['required'],
+                    'message' => ['required'],
+                    'passcode' => ['required', 'digits:4', 'numeric'],
+                ], [
+                    'required' => 'Need to fill up this form'
+                ]);
 
-            $details = [
-                'name' => $reservation->userReservation->name(),
-                'title' => 'Reservation Disaprove',
-                'body' => 'Your Reservation are disapprove due of ' . $messages['disaprove']. 'Sorry for waiting. Please try again to make reservation in another dates',
-            ];
-            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
-            unset($details, $text);
-            $this->employeeLogNotif('Chose to Disaprove of ' . $reservation->userReservation->name() . ' Reservation', route('system.reservation.show', encrypt($reservation->id)));
-            return redirect()->route('system.reservation.home')->with('success', 'Disaprove of ' . $reservation->userReservation->name() . ' was Successful');
+            }
+            else{
+                $validated = $request->validate([
+                    'reason' => ['required'],
+                    'passcode' => ['required', 'digits:4', 'numeric'],
+                ], [
+                    'required' => 'Need to fill up this form'
+                ]);
+                $validated['message'] =  $validated['reason'];
+            }
+            if(!Hash::check($validated['passcode'], $system_user->passcode))  return back()->with('error', 'Invalid Passcode, Try Again')->withInput($validated);
+            $messages = $reservation->message;
+            $messages['disaprove'] = $validated['message'];
+            $updated = $reservation->update(['status' => 5]); // delete on reservation
+            if($updated){
+
+                $details = [
+                    'name' => $reservation->userReservation->name(),
+                    'title' => 'Reservation Disapprove',
+                    'body' => 'Your Reservation are disapproved due of ' . $messages['disaprove']. 'Sorry for waiting. Please try again to make reservation in another dates',
+                ];
+                $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'canceled'])) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+
+                unset($details, $text);
+                $this->employeeLogNotif('Chose to Disapprove of ' . $reservation->userReservation->name() . ' Reservation', route('system.reservation.show', encrypt($reservation->id)));
+                return redirect()->route('system.reservation.home')->with('success', 'Disapprove of ' . $reservation->userReservation->name() . ' was Successful');
+            }
+            else{
+                return back()->with('error', 'Something Wrong, Try Again')->withInput($request->all());
+            }
         }
-        else{
-            return back()->with('error', 'Something Wrong, Try Again')->withInput($validated);
+        catch(Exception $e){
+            return redirect()->route('system.reservation.home');
         }
     }
     public function showOnlinePayment($id){
         $reservation = Reservation::findOrFail(decrypt($id));
+
         return view('system.reservation.onlinepayment.index', ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
     public function storeOnlinePayment(Request $request, $id){
-        $validated = $request->validate(['amount' => ['required', 'numeric']]);
-        $online_payment = OnlinePayment::findOrFail(decrypt($id));
-        $reservation = Reservation::findOrFail($online_payment->reservation_id);
-        $downpayment = $reservation->transaction;
-        if(isset($downpayment['payment']['downpayment'])) $downpayment['payment']['downpayment'] += (double)$validated['amount'];
-        else $downpayment['payment']['downpayment'] = (double)$validated['amount'];
-        $reservation->update(['transaction' => $downpayment]);
-        $online_payment->approval = true;
-        $online_payment->save();
-        if($downpayment['payment']['downpayment'] >= 1000){
-            $reservation->payment_cutoff = null;
-            $reservation->save();
-            $details = [
-                'name' => $reservation->userReservation->name(),
-                'title' => 'Your online payment was approved',
-                'body' => 'Downpayment: ' .  $downpayment['payment']['downpayment'],
-            ];
-            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+       try{
+            $validated = $request->validate(['amount' => ['required', 'numeric']]);
+            $online_payment = OnlinePayment::findOrFail(decrypt($id));
+            $reservation = Reservation::findOrFail($online_payment->reservation_id);
+            if($reservation->status >= 2) abort(404);
+            $downpayment = $reservation->transaction;
+            if(isset($downpayment['payment']['downpayment'])) $downpayment['payment']['downpayment'] += (double)$validated['amount'];
+            else $downpayment['payment']['downpayment'] = (double)$validated['amount'];
+            $reservation->update(['transaction' => $downpayment]);
+            $online_payment->approval = true;
+            $online_payment->save();
+            if($downpayment['payment']['downpayment'] >= 1000){
+                $reservation->payment_cutoff = null;
+                $reservation->save();
+                $details = [
+                    'name' => $reservation->userReservation->name(),
+                    'title' => 'Your online payment was approved',
+                    'body' => 'Downpayment: ' .  $downpayment['payment']['downpayment'],
+                ];
+                $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+            }
+            else{
+                $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s'); 
+                $reservation->save(); 
+
+                $online_payment->attempt += 1; 
+                $online_payment->save(); 
+
+                if($reservation->payment_method == "Gcash") $url = route('reservation.gcash', encrypt($reservation->id));
+                if($reservation->payment_method == "PayPal") $url = route('reservation.paypal', encrypt($reservation->id));
+                if($reservation->payment_method == "Bank Transfer") $url = route('reservation.bnktr', encrypt($reservation->id));
+                
+                $details = [
+                    'name' => $reservation->userReservation->name(),
+                    'title' => 'Your online payment was approved, but the amount you paid was insufficient. There is a chance for you to make another payment',
+                    'body' => 'Downpayment: ' .  $downpayment['payment']['downpayment'] .' but minimuim payment is 1000 philippine pesos so you have '.(3 - (int)$online_payment->attempt).' attempts to make another payment' ,            
+                    'link' => $url,
+                    'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
+                ];
+                $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.online-payment-mail'))->onQueue(null));
+            }
+            $this->employeeLogNotif('Approve Downpayment of ' . $reservation->userReservation->name() . ' with Paid ₱' . number_format($downpayment['payment']['downpayment'], 2), route('system.reservation.show.online.payment', encrypt($reservation->id)));
+            unset($downpayment);
+            return redirect()->route('system.reservation.show.online.payment', encrypt($reservation->id))->with('success', 'Approved payment successful');
+       }
+       catch(Exception $e){
+            return redirect()->route('system.reservation.home');
         }
-        else{
-            $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s'); 
-            $reservation->attempt += 1; 
-            $reservation->save(); 
-            if($reservation->payment_method == "Gcash") $url = route('reservation.gcash', encrypt($reservation->id));
-            
-            $details = [
-                'name' => $reservation->userReservation->name(),
-                'title' => 'Your online payment was approved, but the amount you paid was insufficient. There is a chance for you to make another payment',
-                'body' => 'Downpayment: ' .  $downpayment['payment']['downpayment'] .' but minimuim payment is 1000 philippine pesos' ,            
-                'link' => $url,
-                'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
-            ];
-            Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
-        }
-        $this->employeeLogNotif('Approve Downpayment of ' . $reservation->userReservation->name() . ' with Paid ' . $downpayment['payment']['downpayment'] . ' pesos', route('system.reservation.show.online.payment', encrypt($reservation->id)));
-        unset($downpayment);
-        return redirect()->route('system.reservation.show.online.payment', encrypt($reservation->id))->with('success', 'Approved payment successful');
     }
     public function disaproveOnlinePayment(Request $request, $id){
         $validated = $request->validate(['reason' => ['required']]);
@@ -817,6 +913,7 @@ class SystemReservationController extends Controller
         $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
         $reservation->save();
         $online_payment->approval = false;
+        $online_payment->attempt += 1;
         $online_payment->save();
 
         if($reservation->payment_method == "Gcash"){
@@ -825,45 +922,61 @@ class SystemReservationController extends Controller
         if($reservation->payment_method == "PayPal"){
             $url = route('reservation.paypal', encrypt($reservation->id));
         }
+        if($reservation->payment_method == "Bank Transfer"){
+            $url = route('reservation.bnktr', encrypt($reservation->id));
+        }
         $details = [
             'name' => $reservation->userReservation->name(),
-            'title' => 'Your online payment was approved',
-            'body' => 'Reason:  ' .  $validated['reason'] . '. I will give you a chance to make payment',
+            'title' => 'Your online payment was disapproved',
+            'body' => 'Reason:  ' .  $validated['reason'] . '. I will give you a chance to make payment with ('.(3 - $online_payment->attempt).' only) ',
             'link' => $url,
             'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
         ];
-        
-        Mail::to(env('SAMPLE_EMAIL') ?? $reservation->userReservation->email)->queue(new ReservationMail($details, 'reservation.online-payment-mail', $details['title']));
-        $this->employeeLogNotif('Choose Disaprove on Downpayment of ' . $reservation->userReservation->name(), route('system.reservation.show.online.payment', encrypt($reservation->id)));
-        return redirect()->route('system.reservation.show.online.payment', encrypt($reservation->id))->with('success', 'Disaprove payment successful');
+        $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.online-payment-mail'))->onQueue(null));
+
+        $this->employeeLogNotif('Choose Disapprove on Downpayment of ' . $reservation->userReservation->name(), route('system.reservation.show.online.payment', encrypt($reservation->id)));
+        return redirect()->route('system.reservation.show.online.payment', encrypt($reservation->id))->with('success', 'Disapprove payment successful');
 
     }
     public function storeForcePayment(Request $request, $id){
-        $system_user = $this->system_user->user();
-        $reservation = Reservation::findOrFail(decrypt($id));
-        $admins = System::all()->where('type', 0);
-        $validated = Validator::make($request->all('amount'), [
-            'amount' => ['required', 'numeric', 'min:1000', 'max:'.$reservation->getTotal()],
-        ], [
-            'required' => 'Required to fill up', 'numeric' => 'Number only',
-            'min' => 'The amount must be ₱ 1,000 above',
-            'max' => 'The amount must exact ₱ '.number_format($reservation->getTotal(), 2).' below',
-        ]);
-        if($validated->fails()){
-            return back()->with('error', $validated->errors()->all());
-        }
-        $validated = $validated->validate();
-        $downpayment = $reservation->transaction;
-        if(isset($downpayment['payment']['downpayment'] )) $downpayment['payment']['downpayment'] += (double)$validated['amount'];
-        else $downpayment['payment']['downpayment'] = (double)$validated['amount'];
-        $updated = $reservation->update(['transaction' => $downpayment]);
-        $reservation->payment_cutoff = null;
-        $reservation->save();
+        try{
+            $system_user = $this->system_user->user();
+            $reservation = Reservation::findOrFail(decrypt($id));
+            if($reservation->status >= 2) abort(404);
+            $admins = System::all()->where('type', 0);
+            $validated = Validator::make($request->all('amount'), [
+                'amount' => ['required', 'numeric', 'min:1000', 'max:'.$reservation->getTotal()],
+            ], [
+                'required' => 'Required to fill up', 'numeric' => 'Number only',
+                'min' => 'The amount must be ₱ 1,000 above',
+                'max' => 'The amount must exact ₱ '.number_format($reservation->getTotal(), 2).' below',
+            ]);
+            if($validated->fails()){
+                return back()->with('error', $validated->errors()->all());
+            }
+            $validated = $validated->validate();
+            $downpayment = $reservation->transaction;
+            if(isset($downpayment['payment']['downpayment'] )) $downpayment['payment']['downpayment'] += (double)$validated['amount'];
+            else $downpayment['payment']['downpayment'] = (double)$validated['amount'];
+            $updated = $reservation->update(['transaction' => $downpayment]);
+            $reservation->payment_cutoff = null;
+            $reservation->save();
 
-        if($updated){
-            $this->employeeLogNotif('Fill the Payment of Force Payment for ' . $reservation->userReservation->name() . ' in ' . $validated['amount'] . ' pesos', route('system.reservation.show', $id));
-            return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . 'was now paid on ₱ ' . number_format($validated['amount'], 2));
-        } 
+            if($updated){
+                $details = [
+                    'name' => $reservation->userReservation->name(),
+                    'title' => "Payment",
+                    'body' => "Your Downpayment was paid by " . $system_user->name() . " with  ₱" . number_format($validated['amount'], 2),
+                ];
+                $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+
+                $this->employeeLogNotif('Fill the Payment of Force Payment for ' . $reservation->userReservation->name() . ' in ' . $validated['amount'] . ' pesos', route('system.reservation.show', $id));
+                return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . 'was now paid on ₱ ' . number_format($validated['amount'], 2));
+            } 
+        }
+        catch(Exception $e){
+            return redirect()->route('system.reservation.home');
+        }
     }
     public function showAddons(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
@@ -895,7 +1008,10 @@ class SystemReservationController extends Controller
     }
     public function updateAddons(Request $request, $id){
         // dd($request->all());
+       try{
         $reservation = Reservation::findOrFail(decrypt($id));
+        if(!($reservation->status == 2)) abort(404);
+
         $transaction = $reservation->transaction;
         $type = "Other Addons";
         if($request->has('tab') && $request['tab'] == 'TA'){
@@ -916,7 +1032,7 @@ class SystemReservationController extends Controller
             $validated = $validate->validate();
             if(!Hash::check($validated['passcode'], $this->system_user->user()->passcode)) return back()->with('error', 'Invalid passcode')->withInput($validated);
             foreach($validated['tour_menu'] as $item){
-                $transaction['TA'.$item][] = [
+                $transaction['TA'.$item] = [
                     'title' => TourMenu::find($item)->tourMenu->title . ' ' . TourMenu::find($item)->type . '('.TourMenu::find($item)->pax.' pax)',
                     'price' => TourMenu::find($item)->price ?? 0,
                     'amount' => ((double)TourMenu::find($item)->price ?? 0) * (int)$validated['new_pax'],
@@ -934,7 +1050,7 @@ class SystemReservationController extends Controller
             $id = decrypt($validated['addons']);
             $adddon = Addons::find($id);
             $transaction = $reservation->transaction;
-            $transaction['OA'.$id][] = [
+            $transaction['OA'.$id] = [
                 'title' => $adddon->title,
                 'amount' => $adddon->price * (int)$validated['pcs'],
                 'pcs' => $validated['pcs'],
@@ -945,31 +1061,52 @@ class SystemReservationController extends Controller
         $updated = $reservation->update([
             'transaction' => $transaction,
         ]);
-
+        $details = [
+            'name' => $reservation->userReservation->name(),
+            'title' => "Add Addons Package",
+            'body' => "Your Reservation Addon was added (".$type.") by" . $system_user->name(),
+        ];
+        $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
         $this->employeeLogNotif('Add Addons Package of ' . $reservation->userReservation->name() . '(' . $type . ')');
         if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Other Add-ons for '.$reservation->userReservation->name().' was successful');
 
+       }
+       catch(Exception $e){
+            return redirect()->route('system.reservation.home');
+       }
     }
     public function showExtend($id){
         $reservation = Reservation::findOrFail(decrypt($id));
+        if(!($reservation->status == 2)) abort(404);
+
         return view('system.reservation.extend.index',  ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
     public function updateExtend(Request $request, $id){
-        $system_user = $this->system_user->user();
-        $admins = System::all()->where('type', 0);
-        $reservation = Reservation::findOrFail(decrypt($id));
-        $validated = $request->validate([
-            'no_days' => ['required', 'numeric', 'min:1'],
-        ]);
-        $extended = Carbon::now('Asian/Manila')->addDays((int)$validated['no_days'])->format('Y-m-d');
-        $rate = $reservation->transaction;
-        $rate['rid'.$reservation->roomRate->id]['amount'] = $rate['rid'.$reservation->roomRate->id]['price'] * $reservation->getNoDays();
-        $updated = $reservation->update([
-            'check_out' => $extended, 
-            'status' => 2, 
-            'transaction' => $rate
-        ]);
-        $this->employeeLogNotif('Add days of Extend Day for ' . $reservation->userReservation->name(), route('system.reservation.show', encrypt($reservation->id)));
-        if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->useReservation()->name() . ' was extend in ' . ($validated['no_days'] > 1 ? $validated['no_days'] . ' days' : $validated['no_days'] . ' day'));
+        try{
+            $reservation = Reservation::findOrFail(decrypt($id));
+            if(!($reservation->status == 2)) abort(404);
+            $validated = $request->validate([
+                'no_days' => ['required', 'numeric', 'min:1'],
+            ]);
+            $extended = Carbon::now('Asian/Manila')->addDays((int)$validated['no_days'])->format('Y-m-d');
+            $rate = $reservation->transaction;
+            $rate['rid'.$reservation->roomRate->id]['amount'] = $rate['rid'.$reservation->roomRate->id]['price'] * $reservation->getNoDays();
+            $updated = $reservation->update([
+                'check_out' => $extended, 
+                'status' => 2, 
+                'transaction' => $rate
+            ]);
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => "Extend Days Request",
+                'body' => "Extend Days was updated in  just ".($validated['no_days'] > 1 ? $validated['no_days'] . "days" : $validated['no_days'] . "day") . "(Check-in: ".Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y')." and Check-out: ".Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y').")",
+            ];
+            $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+            $this->employeeLogNotif('Add days of Extend Day for ' . $reservation->userReservation->name(), route('system.reservation.show', encrypt($reservation->id)));
+            if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->useReservation()->name() . ' was extend in ' . ($validated['no_days'] > 1 ? $validated['no_days'] . ' days' : $validated['no_days'] . ' day'));
+        }
+        catch(Exception $e){
+            return redirect()->route('system.reservation.home');
+        }
     }
 }

@@ -6,3 +6,9 @@ flatpickr(".flatpickr-reservation-one", {
     altFormat: "F j\\, Y",
     dateFormat: "Y-m-d",
 });
+flatpickr(".flatpickr-room-today", {
+    altInput: true,
+    minDate: "today",
+    altFormat: "F j\\, Y",
+    dateFormat: "Y-m-d",
+});

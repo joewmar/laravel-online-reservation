@@ -62,7 +62,7 @@
                             </div>
                         @else
                             <div class="my-3">
-                                <span class="text-error">Sorry, the downpayment has not been paid yet</span>
+                                <span class="text-red-500">Sorry, the downpayment has not been paid yet</span>
                             </div>
                         @endif
 

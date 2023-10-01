@@ -1,7 +1,7 @@
 <x-landing-layout noFooter>
     <x-navbar :activeNav="$activeNav" type="plain"/>
     <x-full-content>
-        <section class="pt-24 text-neutral h-auto">
+        <section class="pt-24 text-neutral h-auto mb-3">
             <div class="container flex flex-col mx-auto space-y-12 ng-untouched ng-pristine ng-valid">
                 <fieldset class="w-full grid grid-cols-1 md:grid-cols-6 gap-10 md:gap-2 p-6 rounded-md">
                     <div class="col-span-6 md:col-span-2 space-y-5 flex flex-col items-center">
@@ -64,7 +64,7 @@
                         <h2 class="text-2xl font-bold mb-5">Valid ID</h2>
                         <div class="join mt-5">
                             <label for="show_id_modal" class="btn btn-sm join-item">Show</label> 
-                            <label for="edit_id_modal" class="btn btn-primary btn-sm join-item">Change</label> 
+                            <label for="{{$isPending ? '' : 'edit_id_modal'}}" class="btn btn-primary btn-sm join-item" {{$isPending ? 'disabled' : ''}}>Change</label> 
                         </div>
                         <x-modal id="edit_id_modal" title="Change Valid ID" loader>
                             <form action="{{route('profile.update.validid', encrypt($user->id))}}" method="POST" enctype="multipart/form-data" >
@@ -79,12 +79,36 @@
                         <x-modal id="show_id_modal" title="Valid ID" loader>
                             @if(isset($user->valid_id))
                                 <div class="w-full rounded">
+                                    @if($isPending)
+                                        <p class="text-xs text-center text-error mb-3">You cannot change your valid ID because you still have pending reservation information.</p>
+                                    @endif
                                     <img src="{{route('private.image', ['folder' => explode('/', $user->valid_id)[0], 'filename' => explode('/', $user->valid_id)[1]])}}" alt="Valid ID of {{$user->name()}}">
                                 </div>
                             @else
                                 <h3 class="text-2xl font-bold mb-5 text-center">No Valid ID</h3>
                             @endif
                         </x-modal>
+                        <div class="divider"></div>
+                        <h2 class="text-2xl font-bold mb-5">Account</h2>
+                        @if ($isPending)
+                            <x-tooltip title="You cannot delete your account that you still have pending reservation information." color="error" position="right md:tooltip-top">
+                                <label for="{{$isPending ? '' : 'delete_acc_modal'}}" class="btn btn-primary btn-sm" {{$isPending ? 'disabled' : ''}}>Delete Account</label> 
+        
+                            </x-tooltip>
+                        @else
+                            <label for="delete_acc_modal" class="btn btn-error btn-sm">Delete Account</label> 
+                            <x-modal id="delete_acc_modal" title="Delete Account Confirmation" loader>
+                                <form action="{{route('profile.destroy.account', encrypt($user->id))}}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <p class="mb-3">Enter your password to confirm delete your account</p>
+                                    <x-password />
+                                    <div class="modal-action">
+                                        <button class="btn btn-error">Delete Account</button>
+                                    </div>
+                                </form>
+                            </x-modal>
+                        @endif
                     </div>
                 </fieldset>
             </div>

@@ -41,6 +41,10 @@ Auth::routes();
 Route::middleware(['auth.image'])->group(function () {
     Route::get('/private/{folder}/{filename}', [HomeController::class,'showImage'])->name('private.image');
 });
+// Route::middleware(['auth.dbBackup'])->group(function () {
+//     Route::get('/private/backup/{filename}', [HomeController::class,'accessBackup'])->name('private.image');
+// });
+Route::view('/auth/privacy-policies', 'privacy-policy');
 // Route::get('/bot/getUpdates',[LandingController::class, 'teleUpdates'])->name('home');
 Route::controller(LandingController::class)->group(function (){
     Route::get('/', 'index')->name('home');
@@ -93,6 +97,7 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->controller(UserControlle
         Route::put('/{id}/update/user/info', 'updateUserInfo')->name('update.user.info');
         Route::put('/{id}/update/password', 'updatePassword')->name('update.password');
         Route::put('/{id}/update/valid-id', 'updateValidID')->name('update.validid');
+        Route::delete('/{id}/delete/account', 'destroyAccount')->name('destroy.account');
     });
 
     Route::prefix('my-reservation')->name('user.reservation.')->controller(MyReservationController::class)->group(function (){
@@ -107,6 +112,7 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->controller(UserControlle
         Route::put('/{id}/request/update', 'updateRequest')->name('update.request');
         Route::put('/{id}/cance/update', 'updateCancel')->name('update.cancel');
         Route::put('/{id}/reschedule/update', 'updateReschedule')->name('update.reschedule');
+        Route::get('/{id}/show/online-payment', 'showOnlinePayment')->name('show.online.payment');
         Route::delete('/{id}/reservation/delete', 'destroyReservation')->name('destroy');
     });
     // Reservation Information
@@ -201,9 +207,11 @@ Route::prefix('system')->name('system.')->group(function(){
                 Route::put('/{id}/show/checkin', 'updateCheckin')->name('show.checkin');
                 Route::put('/{id}/show/checkout', 'updateCheckout')->name('show.checkout');
                 Route::get('/{id}/show/cancel', 'showCancel')->name('show.cancel');
+                Route::get('/{id}/show/cancel/force', 'forceCancel')->name('force.cancel');
                 Route::get('/{id}/show/reschedule', 'showReschedule')->name('show.reschedule');
                 Route::put('/{id}/show/cancel/approve', 'updateCancel')->name('update.cancel');
                 Route::put('/{id}/show/cancel/disaprove', 'updateDisaproveCancel')->name('update.cancel.disaprove');
+                Route::put('/{id}/show/cancel/force', 'updateForceCancel')->name('force.cancel.update');
                 Route::put('/{id}/show/reschedule/disaprove', 'updateDisaproveReschedule')->name('update.reschedule.disaprove');
                 Route::get('/{id}/show/reschedule/approve', 'approveReschedule')->name('reschedule.approve');
                 Route::put('/{id}/show/reschedule/approve', 'updateReschedule')->name('reschedule.update');
@@ -219,31 +227,31 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::post('/', 'search')->name('search');
         });
 
-        Route::prefix('menu')->name('menu.')->middleware('can:admin')->group(function (){
-            Route::get('/', [TourMenuController::class, 'index'])->name('home');
+        Route::prefix('menu')->name('menu.')->middleware('can:admin')->controller(TourMenuController::class)->group(function (){
+            Route::get('/', 'index')->name('home');
 
             Route::prefix('addons')->name('addons.')->group(function (){
-                Route::get('/create', [TourMenuController::class, 'createAddons'])->name('create');
-                Route::post('/create', [TourMenuController::class, 'storeAddons'])->name('store');
-                Route::get('/{id}/edit', [TourMenuController::class, 'editAddons'])->name('edit');
-                Route::put('/{id}/update', [TourMenuController::class, 'updateAddons'])->name('update');
-                Route::delete('/{id}/delete', [TourMenuController::class, 'destroyAddons'])->name('destroy');
+                Route::get('/create', 'createAddons')->name('create');
+                Route::post('/create', 'storeAddons')->name('store');
+                Route::get('/{id}/edit', 'editAddons')->name('edit');
+                Route::put('/{id}/update', 'updateAddons')->name('update');
+                Route::delete('/{id}/delete', 'destroyAddons')->name('destroy');
             });
-            Route::get('/create', [TourMenuController::class, 'create'])->name('create');
-            Route::post('/create', [TourMenuController::class, 'store'])->name('store');
-            Route::get('/create/price-details', [TourMenuController::class, 'priceDetails'])->name('price.details');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/create', 'store')->name('store');
+            Route::get('/create/price-details', 'priceDetails')->name('price.details');
 
-            Route::post('/create/next', [TourMenuController::class, 'createNext'])->name('next');
-            Route::post('/create/replace', [TourMenuController::class, 'replace'])->name('replace');
+            Route::post('/create/next', 'createNext')->name('next');
+            Route::post('/create/replace', 'replace')->name('replace');
 
-            Route::get('/{id}', [TourMenuController::class, 'show'])->name('show');
-            Route::delete('/{id}', [TourMenuController::class, 'destroy'])->name('destroy');
-            Route::get('/{id}/edit', [TourMenuController::class, 'edit'])->name('edit');
-            Route::put('/{id}/update', [TourMenuController::class, 'update'])->name('update');
+            Route::get('/{id}', 'show')->name('show');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+            Route::get('/{id}/edit', 'edit')->name('edit');
+            Route::put('/{id}/update', 'update')->name('update');
 
-            Route::get('/{id}/price/{priceid}', [TourMenuController::class, 'editPrice'])->name('edit.price');
-            Route::put('/{id}/price/{priceid}', [TourMenuController::class, 'updatePrice'])->name('update.price');
-            Route::delete('/{id}/price/{priceid}', [TourMenuController::class, 'destroyPrice'])->name('destroy.price');
+            Route::get('/{id}/price/{priceid}', 'editPrice')->name('edit.price');
+            Route::put('/{id}/price/{priceid}', 'updatePrice')->name('update.price');
+            Route::delete('/{id}/price/{priceid}', 'destroyPrice')->name('destroy.price');
         });
 
         Route::prefix('news')->name('news.')->controller(NewsController::class)->middleware('can:admin')->group(function (){
@@ -359,7 +367,7 @@ Route::prefix('system')->name('system.')->group(function(){
             });
 
 
-        Route::prefix('rooms')->name('rooms.')->controller(RoomSettingController::class)->middleware('can:admin')->group(function(){
+            Route::prefix('rooms')->name('rooms.')->controller(RoomSettingController::class)->middleware('can:admin')->group(function(){
                 Route::get('/','index')->name('home');
 
                 Route::get('/create', 'create')->name('create');
@@ -381,14 +389,6 @@ Route::prefix('system')->name('system.')->group(function(){
                 Route::put('/{id}/edit', 'update')->name('update');
 
             });
-            // Route::prefix('tour')->name('tour.')->controller(TourSettingController::class)->group(function(){
-            //     Route::get('/', 'index')->name('home');
-            //     Route::view('/create', 'system.setting.tour.create',  ['activeSb' => 'Hello'])->name('create');
-            //     Route::post('/store', 'store')->name('store');
-            //     Route::delete('/{id}', 'destroy')->name('destroy');
-            //     Route::get('/{id}/edit', 'edit')->name('edit');
-            //     Route::put('/{id}/edit', 'update')->name('update');
-            // });
 
         });
 

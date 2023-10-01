@@ -10,6 +10,7 @@ class Feedback extends Model
     use HasFactory;
     protected $fillable = [
         'reservation_id',
+        'name',
         'rating',
         'message',
     ];

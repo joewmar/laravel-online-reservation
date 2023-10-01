@@ -6,9 +6,9 @@
     <link rel="icon" href="{{asset('images/logo.png')}}" type="image/x-icon"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="author" content="name">
-    <meta name="description" content="description here">
-    <meta name="keywords" content="keywords,here">
+    <meta name="author" content="Alvin Bognot">
+    <meta name="description" content="is a business that offer accommodation and tours business for the needs of a foreign or local tourist">
+    <meta name="keywords" content="Online Reservation, Mt. Pinatubo, Tour, Guesthouse">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" /> 
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     @vite('resources/css/app.css')
@@ -41,12 +41,11 @@
   @if (!$noFooter)
     @include('partials.footer')
   @endif
+  @vite('resources/js/app.js')
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script>
     AOS.init();
   </script>
   @stack('scripts')
-  @vite('resources/js/app.js')
-
 </body>
 </html>

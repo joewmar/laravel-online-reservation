@@ -1,6 +1,6 @@
 <x-landing-layout noFooter>
-    <div class="flex items-center justify-center h-screen bg-base-200">
-      <div class="flex shadow-2xl bg-base-100">
+    <div class="flex items-center justify-center h-screen bg-base-100 md:bg-base-200">
+      <div class="flex shadow-none md:shadow-2xl bg-base-100">
         <div class="card hidden md:flex rounded-l-box w-96 h-96">
           <img src="{{asset('images/main-hero3.jpg')}}" class="object-cover h-full w-full"/>
         </div>

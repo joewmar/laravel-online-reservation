@@ -119,13 +119,25 @@ class DatabaseSeeder extends Seeder
             'telegram_username' => 'joewmar',
             'telegram_chatID' => '5870248478'
         ]);
+        \App\Models\System::factory()->create([
+            'first_name' => 'Python',
+            'last_name' => 'David',
+            'contact' => '09987456321',
+            'email'=> 'Python@email.com',
+            'username'=> 'pydavid',
+            'password' => Hash::make('147258369'),
+            'type' => '2',
+            'passcode' => Hash::make('1234'),
+            'telegram_username' => 'joewmar',
+            'telegram_chatID' => '5870248478'
+        ]);
         // \App\Models\System::factory(10)->create();
 
         // Rent ATV //
         \App\Models\TourMenuList::factory()->create([
             'title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
-            'inclusion' => 'Duration: 1 hr. to 1.5 hrs.(,)Free trek meal, parking space and bottled water',
+            'inclusion' => 'Duration: 1 hr. to 1.5 hrs.(..)Free trek meal, parking space and bottled water',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
@@ -145,7 +157,7 @@ class DatabaseSeeder extends Seeder
         \App\Models\TourMenuList::factory()->create([
             'title' => 'ATV Tambo Lake and San Marcos Lake Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
-            'inclusion' => 'Duration: 2 hrs. to 2.5 hrs(,)Free trek meal, parking space and bottled water',
+            'inclusion' => 'Duration: 2 hrs. to 2.5 hrs(..)Free trek meal, parking space and bottled water',
             'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([

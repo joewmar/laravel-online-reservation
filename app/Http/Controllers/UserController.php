@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Reservation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -15,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Ui\Presets\React;
 use Propaganistas\LaravelPhone\PhoneNumber;
 use Propaganistas\LaravelPhone\Rules\Phone;
 
@@ -26,7 +29,10 @@ class UserController extends Controller
     }
     public function index(){
         $user = User::findOrFail(auth('web')->user()->id);
-        return view('users.show', ['activeNav' => 'Profile','user' => $user]);
+        $isPending = Reservation::whereBetween('status', [1, 2])->where('user_id', $user->id)->get();
+        if($isPending->count() !== 0) $isPending = true;
+        else $isPending = false;
+        return view('users.show', ['activeNav' => 'Profile','user' => $user, 'isPending' => $isPending]);
     }
     public function updateAvatar(Request $request, $id){
         $user = User::findOrFail(decrypt($id));
@@ -111,7 +117,7 @@ class UserController extends Controller
             'contact_code' => ['required'],
             'contact' => ['required', (new Phone)->international()->country(Str::upper($request['contact_code']))],
             'email' => ['required', 'email', Rule::unique('users', 'email')],
-            'password' => ['required', 'confirmed', Password::min(8)->symbols()]
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()->symbols()],
         ], [
             'contact.min' => 'Contact number must be valid',
             'required' => 'Need to fill up your :attribute',
@@ -176,7 +182,8 @@ class UserController extends Controller
         // Attempt to log the user in (If user credentials are correct)
         if(Auth::guard('web')->attempt($validated, $request['remember'] ?? 0)){
             $request->session()->regenerate(); //Regenerate Session ID
-            return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
+            if(Carbon::createFromFormat('Y-m-d', auth('web')->user()->birthday)->age === Carbon::now()->age) return redirect()->intended(route('home'))->with('success', 'Welcome back and Happy Birthday! ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
+            else return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
         }
         else{
             return back()->withErrors(['email' => 'Invalid Credentials'])->onlyInput('email');
@@ -329,6 +336,17 @@ class UserController extends Controller
         else{
             session()->forget('fbubser');
             return redirect()->route('facebook.redirect');
+        }
+    }
+    public function destroyAccount(Request $request, $id){
+        $user = User::findOrFail(decrypt($id));
+        $validated = $request->validate(['password' => 'required'], ['password.required' => 'Required to Enter Password']);
+        if(!Hash::check($validated['password'], $user->password)) return back()->with('error', 'Invalid Credential');
+        if($user->delete()){
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect('/')->with('success', 'Your Account was permanent delete');
         }
     }
     

@@ -172,9 +172,28 @@
                     <x-phone-input />
                     </div>
                     <div class="col-span-6">
-                      <div class="w-full">
+                      @php
+                        $pyType = "";
+                        if(!auth('system'->user()->type === 2)) $pyType = "cinpayment";
+                        else $pyType = "downpayment";
+                        
+                        if($other_info['st'] == 2)$pyType = "cinpayment";
+                        elseif($other_info['st'] == 3) $pyType = "coutpayment";
+                      @endphp
+                      <div class="w-full" x-data="{category: '{{$pyType}}'}">
+                        <h2 class="text-lg font-bold">Payment Type</h2>
+                        <div class="my-3">
+                          <input id="cat1" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="downpayment" />
+                          <label :aria-checked="category == 'downpayment'" :class="category == 'downpayment' ? 'mr-5 text-primary' : 'mr-5'" for="cat1" class="my-5">Downpayment</label>  
+                          <input id="cat2" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="cinpayment" />
+                          <label :aria-checked="category == 'cinpayment'" :class="category == 'cinpayment' ? 'mr-5 text-primary' : 'mr-5'" for="cat2" class="my-5">Check-in</label>  
+                          <input id="cat3" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="coutpayment" />
+                          <label  :aria-checked="category == 'coutpayment'" :class="category == 'coutpayment' ? 'mr-5 text-primary' : 'mr-5'" for="cat3" class="my-5">Check-out</label>  
+                        </div>
                         <x-input type="number" name="payment_amount" id="payment_amount" min="1000" placeholder="Payment Amount" />
-                      </div>                    </div>
+
+                      </div>                    
+                    </div>
                     <div class="col-span-6">
                       <x-drag-drop title="Valid ID" name="valid_id" id="valid_id1" />
                     </div>

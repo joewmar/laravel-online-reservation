@@ -19,12 +19,16 @@
             <div class="mt-20 w-full">
                 <div class="tabs md:tabs-boxed md:bg-transparent flex justify-center md:justify-start">
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list']) )}}" class="tab {{!request()->has('tab') && request()->has('rtab') ? 'tab-active font-bold text-primary' : ''}}">All</a> 
+                    @if(!auth('system')->user()->type == 2)
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'pending']) )}}" class="tab {{request('tab') == 'pending' ? 'tab-active font-bold text-primary' : ''}}">Pending</a> 
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'confirmed']))}}" class="tab {{request('tab') == 'confirmed' ? 'tab-active font-bold text-primary' : ''}}">Confirmed</a> 
+                    @endif
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cin']))}}" class="tab {{request('tab') == 'cin' ? 'tab-active font-bold text-primary' : ''}}">Check-in</a> 
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cout']))}}" class="tab {{request('tab') == 'cout' ? 'tab-active font-bold text-primary' : ''}}">Check-out</a> 
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cancel']))}}" class="tab {{request('tab') == 'cancel' ? 'tab-active font-bold text-primary' : ''}}">Cancel</a> 
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'reshedule']))}}" class="tab {{request('tab') == 'reshedule' ? 'tab-active font-bold text-primary' : ''}}">Reschedule</a>
+                    @if(!auth('system')->user()->type == 2)
+                        <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cancel']))}}" class="tab {{request('tab') == 'cancel' ? 'tab-active font-bold text-primary' : ''}}">Cancel</a> 
+                        <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'reshedule']))}}" class="tab {{request('tab') == 'reshedule' ? 'tab-active font-bold text-primary' : ''}}">Reschedule</a>
+                    @endif
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'previous']))}}" class="tab {{request('tab') == 'previous' ? 'tab-active font-bold text-primary' : ''}}">Previous</a>
                 </div>
                 <div class="mt-10">
@@ -81,32 +85,29 @@
     
                                         <th class="w-auto">
                                             <div class="join">
-                                                @if($list->status() == "Pending")
-                                                    <a href="{{route('system.reservation.show.rooms', encrypt($list->id))}}" class="btn btn-secondary btn-xs join-item">Confirm</a>
-                                                    <label class="btn btn-success btn-xs join-item" disabled>Check-in</label>
-                                                    <label class="btn btn-info btn-xs join-item" disabled>Check-out</label>
-                                                @elseif($list->status() == "Confirmed")
-                                                    <a class="btn btn-secondary btn-xs join-item" disabled>Confirm</a>
-                                                    <label for="checkin" class="btn btn-success btn-xs join-item">Check-in</label>
+                                                @if(!auth('system')->user()->type == 2)
+                                                    <a href="{{route('system.reservation.show.rooms', encrypt($list->id))}}" class="btn btn-secondary btn-xs join-item {{$list->status < 0 ? 'btn-disabled"' : ''}}">Confirm</a>
+                                                @endif
+                                                <label for="checkin" class="btn btn-success btn-xs join-item" {{$list->status < 2 ? 'disabled' : ''}}>Check-in</label>
+                                                <label for="checkout" class="btn btn-info btn-xs join-item" {{$list->status < 3 ? 'disabled' : ''}}>Check-out</label>
+                                                @if($list->status() == "Confirmed")
                                                     <x-checkin name="{{$list->userReservation->name() ?? ''}}" :datas="$list" />
-                                                    <label class="btn btn-info btn-xs join-item" disabled>Check-out</label>
                                                 @elseif($list->status() == "Check-in")
-                                                    <a href="" class="btn btn-secondary btn-xs join-item" disabled>Confirm</a>
-                                                    <label class="btn btn-success btn-xs join-item" disabled>Check-in</label>
-                                                    <label for="checkout" class="btn btn-warning btn-xs join-item">Check-out</label>
                                                     <x-checkout name="{{$list->userReservation->name() ?? ''}}" :datas="$list" />
                                                 @endif
                                                 <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs join-item">View</a>
-                                                @if (!($list->status >= 3 && $list->status <= 6))
-                                                    <div class="dropdown dropdown-left dropdown-end">
-                                                        <label tabindex="0" class="btn join-item btn-xs">                                                        
-                                                            <i class="fa-solid fa-ellipsis"></i>
-                                                        </label>
-                                                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                                                            <li><a href="{{route('system.reservation.show.cancel', encrypt($list->id))}}" class="text-error">Cancel</a></li>
-                                                            <li><a href="{{route('system.reservation.show.reschedule', encrypt($list->id))}}" class="text-accent-content">Reschedule</a></li>
-                                                        </ul>
-                                                    </div>
+                                                @if(!auth('system')->user()->type == 2)
+                                                    @if (!($list->status >= 3 && $list->status <= 6))
+                                                        <div class="dropdown dropdown-left dropdown-end">
+                                                            <label tabindex="0" class="btn join-item btn-xs">                                                        
+                                                                <i class="fa-solid fa-ellipsis"></i>
+                                                            </label>
+                                                            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                                                                <li><a href="{{route('system.reservation.show.cancel', encrypt($list->id))}}" class="text-error">Cancel</a></li>
+                                                                <li><a href="{{route('system.reservation.show.reschedule', encrypt($list->id))}}" class="text-accent-content">Reschedule</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </th>

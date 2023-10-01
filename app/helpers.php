@@ -125,25 +125,7 @@ function checkAvailRooms(int $pax, $check_in, $check_out)
     return $isFull;
 
 }
-function telegramSendMessage($chatID, $message, $keyboard = null, $bot = 'bot1')
-{
-    if($keyboard != null){
-        Telegram::bot($bot)->sendMessage([
-            'chat_id' => $chatID,
-            'parse_mode' => 'HTML',
-            'text' => $message,
-            'reply_markup' => json_encode(['inline_keyboard' => $keyboard]) ,
-        ]);
-    }
-    else{
-        Telegram::bot($bot)->sendMessage([
-            'chat_id' => $chatID,
-            'parse_mode' => 'HTML',
-            'text' => $message,
-        ]);
-    }
-    
-}
+
 function telegramSendMessageWithPhoto($chatID, $message, $photoPath, $keyboard = null, $bot = 'bot1')
 {    
     if($keyboard !== null){

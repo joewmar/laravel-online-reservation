@@ -35,17 +35,6 @@ class SystemNotification extends Notification
     {
         return ['database'];
     }
-    public function toTelegram($notifiable)
-    {
-        if(isset($notifiable->telegram_chatID)){
-            if(isset($notifiable->telegram_chatID)) {
-                return telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $notifiable->telegram_chatID), $text, null, $bot);
-
-            }
-
-        }
-
-    }
     /**
      * Get the array representation of the notification.
      *

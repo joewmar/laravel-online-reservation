@@ -1,8 +1,4 @@
 @php
-    $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
-    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
-    $arrPayment = ['Walk-in', 'Other Online Booking', 'Gcash', 'Paypal'];
-    $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Check-out'];
     $TourInfo = [
         "rt" => request()->has('rt') ? request('rt') : null,
         "rm" => request()->has('rm') ? request('rm') : null,

@@ -12,6 +12,11 @@
             <div class="flex flex-col space-y-4">
                 <div>
                     <h2 class="text-2xl font-semibold">{{$systemUser->name()}}</h2>
+                    <span class="flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-user w-4 h-4"></i>
+                        <span class="text-neutral">{{$systemUser->role()}}</span>
+                    </span>
+
                 </div>
                 <div class="space-y-1">
                     <span class="flex items-center space-x-2">

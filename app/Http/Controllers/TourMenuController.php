@@ -245,26 +245,17 @@ class TourMenuController extends Controller
 
     }
     public function destroyPrice (Request $request){
-        $system_user = auth()->guard('system')->user();
-        if($system_user->type === 0){
-            $priceid = decrypt($request->priceid);
-            $list_id = decrypt($request->id);
-            $validated = $request->validate([
-                'passcode' =>  ['required', 'numeric', 'digits:4'],
-            ]);
-
-            if (Hash::check($validated['passcode'], $system_user->passcode)) {
-                $tour_menu = TourMenu::findOrFail($priceid);
-                $tour_menu->delete();
-                return redirect()->route('system.menu.show', encrypt($list_id))->with('success', $tour_menu->type .' was Deleted');
-            } 
-            else{
-                return back()->with('error', 'Passcode Invalid');
-            }
+        $this->authorize('admin');
+        $priceid = decrypt($request->priceid);
+        $list_id = decrypt($request->id);
+        $tour_menu = TourMenu::findOrFail($priceid);
+        if($tour_menu) {
+            if($tour_menu->delete()) return redirect()->route('system.menu.show', encrypt($list_id))->with('success', $tour_menu->tourMenu->title . ' - ' . $tour_menu->type .' was removed');
+            else return back();
         }
         else{
-            abort(404);
+            return back();
         }
+        
     }
-
 }

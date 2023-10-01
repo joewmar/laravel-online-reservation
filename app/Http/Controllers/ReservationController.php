@@ -14,6 +14,7 @@ use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
 use Illuminate\Validation\Rule;
+use App\Jobs\SendTelegramMessage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Mail;
 use App\Notifications\SystemNotification;
@@ -71,7 +72,7 @@ class ReservationController extends Controller
                 ];
             }
             foreach($systems as $system){
-                if(isset($system->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard);
+                if(isset($system->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard, 'bot2'));
             }
             Notification::send($systems, new SystemNotification(Str::limit($text, 10), $text, route('system.notifications')));
     }

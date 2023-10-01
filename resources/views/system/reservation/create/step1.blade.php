@@ -1,4 +1,9 @@
 @php
+    $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
+    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
+    $arrPayment = ['Walk-in', 'Other Online Booking', 'Gcash', 'Paypal'];
+    $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Check-out'];
+
     $roomInfo = [
         'at' =>    request('at')  ? decrypt(request('at')) : old('accommodation_type'),
         'px' =>    request('px')  ? decrypt(request('px')): old('pax'),
@@ -10,6 +15,11 @@
         'tpx' =>   request('tpx') ? decrypt(request('tpx')) : old('tour_pax'),
         'st' =>   request('st') ? decrypt(request('st')) : old('status'),
     ];
+    if(auth('system')->user()->type == 2){
+        $arrPayment = ['Walk-in', 'Gcash', 'Paypal'];
+        $arrStatus = ['Check-in', 'Check-out'];
+        $roomInfo['cin'] = request('cin') ? decrypt(request('cin')) : (old('check_in') ?? Carbon\Carbon::now('Asia/Manila')->format('Y-m-d'));
+    }
     if(session()->has('nwrinfo')){
         $roomInfo = [
             'at' => isset(session('nwrinfo')['at']) ? decrypt(session('nwrinfo')['at']) : old('accommodation_type'),
@@ -73,11 +83,16 @@
                 <template x-if="at === 'Day Tour' || at === 'Overnight'">
                     <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$roomInfo['tpx']}}" />
                 </template>
-                <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one" value="{{$roomInfo['cin'] }}"/>
-                <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{$roomInfo['cout']}}" />
+                @if(auth('system')->user()->type == 2)
+                    <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-room-today" value="{{$roomInfo['cin'] }}"/>
+                    <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-room-today" value="{{$roomInfo['cout']}}" />
+                @else
+                    <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one" value="{{$roomInfo['cin'] }}"/>
+                    <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{$roomInfo['cout']}}" />
+                @endif
 
-                  <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$roomInfo['py']}}"/>
-                  <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[$roomInfo['st']] ?? ''}}"/>
+                <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$roomInfo['py']}}"/>
+                <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[$roomInfo['st']] ?? ''}}"/>
             </div>
 
             <div x-data="{rooms: {{$roomInfo['rm'] ? '[' . implode(',', array_keys($roomInfo['rm'])) .']' : '[]'}}}" class="flex justify-center flex-wrap gap-5 w-full">

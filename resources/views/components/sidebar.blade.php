@@ -38,13 +38,36 @@
             ],
         ];
    }
+   elseif(auth('system')->user()->type === 1){
+        $arrSideBarItems = 
+            [
+                "Home" => [
+                    "icon" => "fa-solid fa-gauge",
+                    "link" => route('system.home')
+                ],
+                "Reservation" => [
+                    "icon" => "fa-sharp fa-solid fa-book",
+                    "link" => route('system.reservation.home'),
+                ],
+                "Rooms" => [
+                    "icon" => "fa-solid fa-hotel",
+                    "link" => route('system.rooms.home'),
+                ],
+                "Analytics" => [
+                    "icon" => "fa-solid fa-chart-simple",
+                    "link" => route('system.analytics.home'),
+                ],
+
+                "Feedback" => [
+                    "icon" => "fa-solid fa-comments",
+                    "link" => route('system.feedback.home'),
+                ],
+
+            ];
+    }
    else{
-    $arrSideBarItems = 
-        [
-            "Home" => [
-                "icon" => "fa-solid fa-gauge",
-                "link" => route('system.home')
-            ],
+        $arrSideBarItems = 
+            [
             "Reservation" => [
                 "icon" => "fa-sharp fa-solid fa-book",
                 "link" => route('system.reservation.home'),
@@ -57,19 +80,11 @@
                 "icon" => "fa-solid fa-chart-simple",
                 "link" => route('system.analytics.home'),
             ],
-
-            "Feedback" => [
-                "icon" => "fa-solid fa-comments",
-                "link" => route('system.feedback.home'),
-            ],
-
         ];
    }
 @endphp
 <div id="sidebar" :class="!open ? 'w-56 md:w-[5rem]' : 'w-56'" class="sidebar z-[100] hidden md:block h-full overflow-hidden bg-base-100 menu" x-cloak>
-    <div class="flex h-screen flex-col justify-center pt-2 pb-6 w-56 p-0">
-
-
+    <div class="flex h-screen flex-col justify-evenly pt-2 pb-6 w-56 p-0">
         <ul class="sbList mt-6 space-y-2">
             @foreach ($arrSideBarItems as $name => $item)
                 @if ($active == $name)

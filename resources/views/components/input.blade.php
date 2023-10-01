@@ -21,7 +21,7 @@
     <label class="label">
         <span class="label-text-alt">
             @error($name)
-                <span class="mb-5 label-text-alt text-error">{{$message}}</span>
+                <span class="mb-5 label-text-alt text-red-500">{{$message}}</span>
             @enderror
         </span>
     </label>

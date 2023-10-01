@@ -82,7 +82,6 @@ class MyReservationController extends Controller
         $other_addons = [];
         $rate = [];
         $total = 0;
-
         if($reservation->roomid){
             foreach($reservation->roomid as $item){
                 $room = Room::find($item);
@@ -133,8 +132,9 @@ class MyReservationController extends Controller
         unset($count);
         return view('users.reservation.show',  ['activeNav' => 'My Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'rooms' => implode(',', $rooms), 'rate' => $rate, 'total' => $total, 'other_addons' => $other_addons]);
     }
-    public function edit($id){
-        dd($id);
+    public function showOnlinePayment($id){
+        $reservation = Reservation::findOrFail(decrypt($id));
+        return view('users.reservation.show-payment',  ['activeNav' => 'My Reservation', 'r_list' => $reservation]);
     }
     public function cancel(Request $request, $id) {
         $validate = Validator::make($request->all('cancel_message'), [
@@ -294,22 +294,20 @@ class MyReservationController extends Controller
                 $rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
                 $rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
             }
-            if (strpos($key, 'OA') !== false && is_array($item)) {
+            if (strpos($key, 'OA') !== false) {
                 $OAID = (int)str_replace('OA','', $key);
-                foreach($item as $key => $dataAddons){
-                    $other_addons[$count+$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
-                    $other_addons[$count+$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
-                    $other_addons[$count+$key]['pcs'] = $reservation->transaction['OA'.$OAID][$key]['pcs'];
-                    $other_addons[$count+$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
-                }
+                $other_addons[$count]['title'] = $reservation->transaction['OA'.$OAID]['title'];
+                $other_addons[$count]['price'] = $reservation->transaction['OA'.$OAID]['price'];
+                $other_addons[$count]['pcs'] = $reservation->transaction['OA'.$OAID]['pcs'];
+                $other_addons[$count]['amount'] = $reservation->transaction['OA'.$OAID]['amount'];
+                
             }
-            if (strpos($key, 'TA') !== false && is_array($item)) {
+            if (strpos($key, 'TA') !== false) {
                 $TAID = (int)str_replace('TA','', $key);
-                foreach($item as $key => $tourAddons){
-                    $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
-                    $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
-                    $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
-                }
+                $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID]['title'];
+                $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID]['price'];
+                $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID]['amount'];
+                
             }
             $count++;
         }
@@ -465,7 +463,7 @@ class MyReservationController extends Controller
         }
         foreach($validated['tour_menu'] as $item){
             $tours = TourMenu::find($item);
-            $transaction['TA'.$item][] = [
+            $transaction['TA'.$item] = [
                 'title' => $tours->tourMenu->title . ' ' . $tours->type . '('.$tours->pax.' pax)',
                 'price' => $tours->price ?? 0,
                 'amount' => ((double)$tours->price ?? 0) * (int)$validated['new_pax'],

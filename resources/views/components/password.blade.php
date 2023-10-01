@@ -31,35 +31,39 @@
   @enderror
 </div>
 @if ($validation)
-  <script>
-    function passwordValidator{{Str::camel($id)}}() {
-      return {
-        {{Str::camel($id)}}: "",
-        validationMessage{{Str::camel($id)}}: "",
-
-        validatePassword{{Str::camel($id)}} () {
-          const {{Str::camel($id)}} = this.{{Str::camel($id)}};
-
-          // Define your password requirements
-          const symbolRegex{{Str::camel($id)}} = /[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]/;
-          const minLength{{Str::camel($id)}} = 8;
-          const numberRegex{{Str::camel($id)}} = /\d/;
-
-          // Check if the password meets the requirements
-          const hasSymbol{{Str::camel($id)}} = symbolRegex{{Str::camel($id)}}.test({{Str::camel($id)}});
-          const isMinLength{{Str::camel($id)}} = {{Str::camel($id)}}.length >= minLength{{Str::camel($id)}};
-          const hasNumber{{Str::camel($id)}} = numberRegex{{Str::camel($id)}}.test({{Str::camel($id)}});
-
-          if (hasSymbol{{Str::camel($id)}} && isMinLength{{Str::camel($id)}} && hasNumber{{Str::camel($id)}}) {
-            this.validationMessage{{Str::camel($id)}} = "";
-          }
-          else{
-            this.validationMessage{{Str::camel($id)}} = "The password must requires at least 8 characters, one symbol, and one number.";
-          }
-        },
-      };
-    }
-  </script>
+  @push('scripts')
+    <script>
+      function passwordValidator{{Str::camel($id)}}() {
+        return {
+          {{Str::camel($id)}}: "",
+          validationMessage{{Str::camel($id)}}: "",
+    
+          validatePassword{{Str::camel($id)}} () {
+            const {{Str::camel($id)}} = this.{{Str::camel($id)}};
+    
+            // Define your password requirements
+            const symbolRegex{{Str::camel($id)}} = /[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]/;
+            const minLength{{Str::camel($id)}} = 8;
+            const numberRegex{{Str::camel($id)}} = /\d/;
+            const letterRegex{{Str::camel($id)}} = /[a-zA-Z]/; // Add this regex for at least one letter
+    
+            // Check if the password meets the requirements
+            const hasSymbol{{Str::camel($id)}} = symbolRegex{{Str::camel($id)}}.test({{Str::camel($id)}});
+            const isMinLength{{Str::camel($id)}} = {{Str::camel($id)}}.length >= minLength{{Str::camel($id)}};
+            const hasNumber{{Str::camel($id)}} = numberRegex{{Str::camel($id)}}.test({{Str::camel($id)}});
+            const hasLetter{{Str::camel($id)}} = letterRegex{{Str::camel($id)}}.test({{Str::camel($id)}});
+    
+            if (hasSymbol{{Str::camel($id)}} && isMinLength{{Str::camel($id)}} && hasNumber{{Str::camel($id)}} && hasLetter{{Str::camel($id)}}) {
+              this.validationMessage{{Str::camel($id)}} = "";
+            }
+            else{
+              this.validationMessage{{Str::camel($id)}} = "The password must require at least 8 characters, one symbol, one number, and one letter.";
+            }
+          },
+        };
+      }
+    </script>
+  @endpush
   </div>
 @endif
 

@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\System;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Jobs\SendTelegramMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Notifications\SystemNotification;
+use Illuminate\Support\Facades\Notification;
 
 class SystemController extends Controller
 {
@@ -15,6 +19,23 @@ class SystemController extends Controller
     public function __construct()
     {
         $this->system_user = auth('system');
+    }
+    private function systemNotification($text, $link = null){
+        if($this->system_user->user()->type != 0){
+            $systems = System::whereBetween('type', [0, 1])->get();
+            $keyboard = null;
+            if(isset($link)){
+                $keyboard = [
+                    [
+                        ['text' => 'View', 'url' => $link],
+                    ],
+                ];
+            }
+            foreach($systems as $system){
+                if(isset($system->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard, 'bot2'));
+            }
+            Notification::send($systems, new SystemNotification(Str::limit($text, 10), $text, route('system.notifications')));
+        }
     }
     public function index(Request $request){
         $employees  = System::paginate(5);
@@ -151,6 +172,7 @@ class SystemController extends Controller
         // guard('your_guard_created') Attempt to log the user in (If user credentials are correct)
         if(Auth::guard('system')->attempt($validated)){
             $request->session()->regenerate(); //Regenerate Session ID
+            $this->systemNotification(Auth::guard('system')->user()->name() . " was logged in");
             return redirect()->intended(route('system.home'));
         }
         else{
@@ -166,6 +188,7 @@ class SystemController extends Controller
         return redirect()->back();
     }
     public function logout(Request $request){
+        $this->systemNotification(Auth::guard('system')->user()->name() . " was logged out");
         Auth::guard('system')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

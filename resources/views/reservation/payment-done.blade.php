@@ -77,16 +77,8 @@
                             @endforelse
                         </swiper-container>
                     </div>
-                    <div class="flex justify-start md:justify-end mt-5">
-                        <a href="{{route('home')}}" class="btn btn-primary">Go Home</a>
-                    </div>
-                </div>
-                <div class="mockup-phone">
-                    <div class="camera"></div> 
-                    <div class="display">
-                    <div class="artboard artboard-demo phone-1"> 
-                        <img src="{{asset('images/payment/paypal-logo.png')}}" />
-                    </div>
+                    <div class="flex justify-center mt-5">
+                        <a href="{{route('home')}}" class="btn btn-primary">Back Homepage</a>
                     </div>
                 </div>
             </div>
