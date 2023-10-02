@@ -111,7 +111,7 @@ class TourMenuController extends Controller
                         $tour_list = TourMenuList::create([
                             'title' => $validated['title'],
                             'category' => $validated['category'],
-                            'inclusion' => $validated['inclusion'] ?? null,
+                            'inclusion' => implode("(..)",$validated['inclusion']) ?? null,
                             'no_day' =>  $validated['no_day'],
 
 
@@ -167,6 +167,7 @@ class TourMenuController extends Controller
             ]);
 
             if (Hash::check($validated['passcode'], $system_user->passcode)) {
+                $validated['inclusion'] = implode("(..)",$validated['inclusion']) ?? null;
 
                 $tour = TourMenuList::findOrFail($id);
                 $tour->update($validated);

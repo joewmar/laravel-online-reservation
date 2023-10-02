@@ -44,7 +44,7 @@ Route::middleware(['auth.image'])->group(function () {
 // Route::middleware(['auth.dbBackup'])->group(function () {
 //     Route::get('/private/backup/{filename}', [HomeController::class,'accessBackup'])->name('private.image');
 // });
-Route::view('/auth/privacy-policies', 'privacy-policy');
+Route::view('/privacy-policy', 'privacy-policy');
 // Route::get('/bot/getUpdates',[LandingController::class, 'teleUpdates'])->name('home');
 Route::controller(LandingController::class)->group(function (){
     Route::get('/', 'index')->name('home');
@@ -67,7 +67,8 @@ Route::middleware(['guest:web'])->group(function(){
     Route::view('/register', 'users.register')->name('register');
     Route::post('/register', [UserController::class, 'create'])->name('create');
     Route::get('/register/verify', [UserController::class, 'verify'])->name('register.verify');
-    Route::post('/register/verify', [UserController::class, 'verifyStore'])->name('register.verify.store');
+    Route::get('/register/verify/resend', [UserController::class, 'resend'])->name('register.verify.resend');
+    Route::post('/register/verify/store', [UserController::class, 'verifyStore'])->name('register.verify.store');
     Route::post('/check', [UserController::class, 'check'])->name('check');
     Route::view('/forgot-password','auth.passwords.email')->name('forgot.password');
     

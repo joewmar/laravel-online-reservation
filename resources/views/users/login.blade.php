@@ -1,7 +1,7 @@
 
 <x-landing-layout noFooter>
   <div class="flex items-center justify-center h-screen bg-transparent md:bg-base-100">
-    <div class="flex justify-center rounded-box shadow-none md:shadow-2xl w-[90%] md:w-[65%] lg:w-[65%] bg-transparent md:bg-base-100">
+    <div class="flex justify-center rounded-box shadow-none md:shadow-2xl max-w-full md:max-w-5xl bg-transparent md:bg-base-100">
       <div class="card hidden md:flex rounded-l-box w-full h-auto">
         <img src="{{asset('images/main-hero3.jpg')}}" class="rounded-l-box object-cover h-full w-full"/>
       </div>

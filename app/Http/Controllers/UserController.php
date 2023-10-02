@@ -25,7 +25,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth:web'])->except(['check', 'create', 'verify', 'verifyStore', 'fillupGoogle', 'fillupGoogleUpdate', 'fillupFacebook', 'fillupFacebookUpdate', 'fillupFacebookVerify', 'fillupFacebookStore']);
+        $this->middleware(['auth:web'])->except(['check', 'create', 'verify','resend', 'verifyStore', 'fillupGoogle', 'fillupGoogleUpdate', 'fillupFacebook', 'fillupFacebookUpdate', 'fillupFacebookVerify', 'fillupFacebookStore']);
     }
     public function index(){
         $user = User::findOrFail(auth('web')->user()->id);
@@ -123,21 +123,35 @@ class UserController extends Controller
             'required' => 'Need to fill up your :attribute',
         ]);
         if($validator->fails()){
-            return redirect()->route('register')->withErrors($validator)->withInput();
+            return redirect()->route('register')->withErrors($validator)->withInput($request->all());
         }
         $validated = $validator->validated();
         
         if($validated){
             // Hash password
             $validated['password'] = bcrypt($validated['password']);
+            $otp = mt_rand(1111,9999);
+            $details = [
+                'name' => $validated['first_name'] . ' ' . $validated['last_name'],
+                'title' => "Let's Verify your Email",
+                'body' => 'Verification Code: ' . $otp,
+            ];
+            Mail::to($validated['email'])->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
+            $validated['otp'] = $otp;
             session(['uinfo' => $validated]);
 
-            // // Create User
             return redirect()->route('register.verify');
 
         }
     }
     public function verify(){
+        return view('users.register.verify', ['email' => session('uinfo')['email']]);
+    }
+    public function resend(){
+        if(!session()->has('uinfo')){
+            session()->forget('uinfo');
+            return redirect()->route('register');
+        }
         $otp = mt_rand(1111,9999);
         $user_info = session('uinfo');
         $details = [
@@ -148,29 +162,26 @@ class UserController extends Controller
         Mail::to(session('uinfo')['email'])->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
         $user_info['otp'] = $otp;
         session(['uinfo' => $user_info]);
-        return view('users.register.verify', ['email' => session('uinfo')['email']]);
+        return redirect()->route('register.verify');
     }
     public function verifyStore(Request $request){
         $validated = $request->validate([
             'code' => ['required', 'digits:4', 'numeric'],
         ]);
-
-        if(session()->has('uinfo')){
-            if(!$validated['code'] == session('uinfo')['otp']){
-                session()->forget('uinfo');
-                return redirect()->route('register')->with('error', 'Invalid Code')->withInputs(session('uinfo') ?? []);
-            }
-            unset(session('uinfo')['otp']);
-            $user = User::create(session('uinfo'));
-            auth('web')->login($user);
-            session()->forget('uinfo');
-            return redirect()->intended(route('home'))->with('success', 'Welcome ' . auth('web')->user()->name());
-            
-        }
-        else{
+        if(!session()->has('uinfo')){
             session()->forget('uinfo');
             return redirect()->route('register');
         }
+        if(!((int)$validated['code'] === (int)session('uinfo')['otp'])) return back()->with('error', 'Invalid Code')->withInputs($validated);
+        
+        unset(session('uinfo')['otp']);
+        $user = User::create(session('uinfo'));
+        auth('web')->login($user);
+        $request->session()->regenerate(); //Regenerate Session ID
+
+        session()->forget('uinfo');
+        return redirect()->intended(route('home'))->with('success', 'Welcome ' . auth('web')->user()->name());
+        
     }
     // Verify login
     public function check(Request $request){
@@ -233,6 +244,7 @@ class UserController extends Controller
             if($newUser){
                 session()->forget('ginfo');
                 Auth::guard('web')->login($newUser);
+                $request->session()->regenerate(); //Regenerate Session ID
                 return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
             }
             else{
@@ -290,6 +302,7 @@ class UserController extends Controller
                 if($newUser){
                         session()->forget('ginfo');
                         Auth::guard('web')->login($newUser);
+                        $request->session()->regenerate(); //Regenerate Session ID
                         return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
                     }
                     else{
@@ -329,6 +342,7 @@ class UserController extends Controller
             unset(session('fbubser')['otp']);
             $user = User::create(session('fbubser'));
             auth('web')->login($user);
+            $request->session()->regenerate(); //Regenerate Session ID
             session()->forget('fbubser');
             return redirect()->intended(route('home'))->with('success', 'Welcome ' . auth('web')->user()->name());
             
@@ -342,6 +356,8 @@ class UserController extends Controller
         $user = User::findOrFail(decrypt($id));
         $validated = $request->validate(['password' => 'required'], ['password.required' => 'Required to Enter Password']);
         if(!Hash::check($validated['password'], $user->password)) return back()->with('error', 'Invalid Credential');
+        if(isset($user->valid_id)) deleteFile($user->valid_id);
+        if(isset($user->avatar)) deleteFile($user->avatar);
         if($user->delete()){
             Auth::guard('web')->logout();
             $request->session()->invalidate();

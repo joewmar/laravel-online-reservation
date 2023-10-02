@@ -18,7 +18,7 @@
                         <div>Resend after: <span x-text="countdown" class="text-lg"></span> sec</div>
                     </template>
                     <div x-init="setInterval (() => { countdown -= 1; if(countdown <= 0) countdown = 0}, 1000)" class="modal-action">
-                        <a href="{{route('register.verify')}}" class="btn btn-ghost" :disabled="countdown != 0">Resend</a>
+                        <a href="{{route('register.verify.resend')}}" class="btn btn-ghost" :disabled="countdown != 0">Resend</a>
                         <button class="btn btn-primary">Verify</button>
                     </div>
                 </form>

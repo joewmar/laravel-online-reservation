@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Providers\RouteServiceProvider;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
+
 
 class LoginController extends Controller
 {
@@ -47,12 +49,13 @@ class LoginController extends Controller
         return Socialite::driver('google')->redirect();
 
     }
-    public function handleGoogleCallback(){
+    public function handleGoogleCallback(Request $request){
         try {
             $user = Socialite::driver('google')->user();
             $finduser = User::where('google_id', $user->id)->orWhere('email', $user->email)->first();
             if($finduser){
                 Auth::login($finduser);
+                $request->session()->regenerate(); //Regenerate Session ID
                 return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
             }
             else{
@@ -76,12 +79,13 @@ class LoginController extends Controller
     public function redirectToFacebook(){
         return Socialite::driver('facebook')->redirect();
     }
-    public function handleFacebookCallback(){
+    public function handleFacebookCallback(Request $request){
         try {
             $user = Socialite::driver('facebook')->user();
             $finduser = User::where('facebook_id', $user->id)->orWhere('email', $user->email)->first();
             if($finduser){
                 Auth::login($finduser);
+                $request->session()->regenerate(); //Regenerate Session ID
                 return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
             }
             else{

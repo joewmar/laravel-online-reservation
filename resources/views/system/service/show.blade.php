@@ -4,9 +4,16 @@
         <div class="w-full md:w-96">
           <article class="prose">
             <h1>{{$tour_list->title}}</h1>
-            <p class="text-lg"><span class="font-bold">Category:</span> {{$tour_list->description === null ? 'None': $tour_list->description}}</p>
+            <p class="text-lg"><span class="font-bold">Category:</span> {{$tour_list->category === null ? 'None': $tour_list->category}}</p>
             <p class="text-lg"><span class="font-bold">Number of Day:</span> {{$tour_list->no_day === null ? 'None': $tour_list->no_day}}</p>
-            <p class="text-lg"><span class="font-bold">Inclusion:</span> {{$tour_list->inclusion === null ? 'None': str_replace("(..)", ". ",$tour_list->inclusion)}}</p>
+            <p class="text-lg"><span class="font-bold">Inclusion:</span> {{$tour_list->inclusion === null ? 'None': ""}}</p>
+            @if($tour_list->inclusion !== null )
+              <ul class="marker:text-neutral">
+                @foreach (explode("(..)",$tour_list->inclusion) as $item)
+                    <li>{{$item}}</li>
+                @endforeach
+              </ul>
+            @endif
             <p class="text-lg">
               <div class="space-x-4">
                 <span class="font-bold">Price</span>
