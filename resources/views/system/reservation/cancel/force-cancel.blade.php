@@ -2,9 +2,9 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="" back=true>
         {{-- User Details --}}
-       <div class="px-0 md:px-20">
+       <div class="px-3 md:px-20">
         <div class="w-full sm:flex sm:space-x-6">
-            <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
+            <div class="hidden md:flex flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
                 @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
                     <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
                 @elseif($r_list->userReservation->avatar ?? false)

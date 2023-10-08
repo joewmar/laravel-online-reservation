@@ -6,7 +6,6 @@ use App\Models\Reservation;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Intervention\Image\Facades\Image;
-use Telegram\Bot\FileUpload\InputFile;
 use Illuminate\Support\Facades\Storage;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
@@ -94,7 +93,7 @@ function checkAvailRooms(int $pax, $check_in, $check_out)
     $vacantAll = 0;
     if(Room::checkAllAvailable()){
         foreach($rooms as $value){
-            $vacantAll += $value->getVacantPax();
+            $vacantAll += $value->getVacantPax($check_in, $check_out);
         }
         $isFull = !($vacantAll >= $pax);
 
@@ -107,7 +106,7 @@ function checkAvailRooms(int $pax, $check_in, $check_out)
                       $query->where('check_in', '<=', $check_in)
                             ->where('check_out', '>=', $check_out);
                   });
-        })->pluck('id');
+        })->whereBetween('status', [1, 2])->pluck('id');
 
         $count_paxes = 0;
         foreach($r_lists as $r_list){
@@ -126,26 +125,6 @@ function checkAvailRooms(int $pax, $check_in, $check_out)
 
 }
 
-function telegramSendMessageWithPhoto($chatID, $message, $photoPath, $keyboard = null, $bot = 'bot1')
-{    
-    if($keyboard !== null){
-        Telegram::bot($bot)->sendPhoto([
-            'chat_id' => $chatID,
-            'photo' => InputFile::create($photoPath),
-            'caption' => $message,
-            'parse' => 'HTML',
-            'reply_markup' => json_encode(['inline_keyboard' => $keyboard]) ,
-        ]);
-    }
-    else{
-        Telegram::bot($bot)->sendPhoto([
-            'chat_id' => $chatID,
-            'parse' => 'HTML',
-            'photo' => InputFile::create($photoPath),
-            'caption' => $message,
-        ]);
-    }
-}
 function saveImageWithJPG(Request $request, $fieldName, $folderName,$option = 'public', $specificKey = null)
 {   
     $savedImagePaths = null; // To store paths of saved images

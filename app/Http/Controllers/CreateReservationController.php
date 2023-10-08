@@ -471,6 +471,7 @@ class CreateReservationController extends Controller
                     $tour_menu = TourMenu::find($tour_id);
                     $transaction['tm'. $tour_id] = [
                         'title' => $tour_menu->tourMenu->title . ' ' . $tour_menu->type . '('.$tour_menu->pax.' pax)',
+                        'tpx' => (int)$decrypted['tpx'],
                         'price' => (double)$tour_menu->price,
                         'amount' => (double)$tour_menu->price * (int)$decrypted['tpx']
                     ];

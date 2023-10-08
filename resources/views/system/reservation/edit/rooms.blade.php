@@ -4,10 +4,10 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Edit Room Assign" back>
         {{-- User Details --}}
-        <div x-data="{force: false, rooms: {{$r_list->roomid ? '[' . implode(',', $r_list->roomid) .']' : '[]'}} }" class="mt-5 w-full">
+        <div x-data="{force: false, rooms: {{$r_list->roomid ? '[' . implode(',', $r_list->roomid) .']' : '[]'}} }" class="mt-5 px-5 w-full">
             <div class="flex justify-between">
                 <div>
-                    <h2 class="text-2xl font-semibold">Choose the room for {{$r_list->userReservation->name()}} ({{$r_list->pax}} guest)</h2>
+                    <h2 class="text-2xl font-semibold">Change Assign for {{$r_list->userReservation->name()}} ({{$r_list->pax}} guest)</h2>
                     <div class="text-sm mt-5"><span class="font-medium">Check-in:</span> {{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_in )->format('F j, Y') ?? 'None'}}</div>
                     <div class="text-sm mb-5"><span class="font-medium">Check-out:</span> {{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out )->format('F j, Y') ?? 'None'}}</div>
                 </div>
@@ -31,44 +31,13 @@
                     </div>
                 </div>
             </div>
-            <form id="reservation-form" action="{{route('system.reservation.edit.rooms.update', encrypt($r_list->id))}}" method="post">
+            <form id="changeroom-form" action="{{route('system.reservation.edit.rooms.update', encrypt($r_list->id))}}" method="post">
                 @csrf
                 @method('PUT')
-                <label for="ckforce" class="flex items-center">
+                <label for="ckforce" class="flex items-center mb-5">
                     <input id="ckforce" type="checkbox" checked="checked" name="force" x-model="force" class="checkbox checkbox-primary" x-on:checked="force = true" x-effect="if(!force) rooms = {{$r_list->roomid ? '[' . implode(',', $r_list->roomid) .']' : '[]'}}" />
                     <span class="font-bold ml-3">Force Assign</span> 
-                </label>
-                <div class="form-control w-full mt-5">
-                    <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
-                            <select name="room_rate" id="room_rate" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
-                            <option value="" disabled selected>Please select</option>
-                            @foreach ($rates as $key => $rate)
-                            @php
-                                try {
-                                    $rateID = decrypt($rate->id);
-                                } catch (Exception $e) {
-                                    $rateID = $rate->id;
-                                }
-                            @endphp
-                                @if(old('room_rate') == $rateID || $rateID == $rateid || $r_list->pax === $rate->occupancy || $r_list->pax > $rate->occupancy);
-                                    <option value="{{encrypt($rate->id)}}" selected>{{$rate->name}} ({{$rate->occupancy}} pax)</option>
-                                @else
-                                    <option value="{{encrypt($rate->id)}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
-                                @endif
-                            @endforeach
-                        </select>        
-                        <span id="room_rate" class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-neutral transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                            Room Type
-                        </span>
-                    </label>
-                    <label class="label">
-                        <span class="label-text-alt">
-                            @error('room_rate')
-                                <span class="label-text-alt text-error">{{$message}}</span>
-                            @enderror
-                        </span>
-                    </label>
-                </div>          
+                </label>        
                 <div class="flex flex-wrap flex-auto justify-center justify-self-stretch gap-5 w-full">
                     @forelse ($rooms as $key => $item)
                         <div :id="!force ? '' : '{{in_array($item->id, $reserved) ? 'disabledAll' : ''}}' " x-data="{reserved{{$loop->index+1}}: {{in_array($item->id, $reserved) ? 'true' : 'false'}} }">
@@ -78,7 +47,7 @@
                                     <span class="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center" :class="!force ? '{{in_array($item->id, $reserved) ? 'bg-red-600 h-full' : 'bg-primary h-3'}}' : 'bg-primary h-3'">
                                         <h3 :class="!force ? '{{in_array($item->id, $reserved) ? 'block' : 'hidden'}}' : 'hidden' " class="text-base-100 block font-medium w-full text-center">Full</h3>
                                         <h4 class="text-primary-content hidden font-medium w-full text-center" >Room No. {{$item->room_no}} Selected</h4> 
-                                        <div x-data="{count: {{in_array($item->id, $r_list->roomid) ? (int)$item->customer[$r_list->id] : 1}}}" class="join hidden">
+                                        <div x-data="{count: {{in_array($item->id, $r_list->roomid ?? []) ? (int)$item->customer[$r_list->id] : 1}}}" class="join hidden">
                                             <button  @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
                                             <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$item->room->max_occupancy}}"  readonly/>
                                             <button  @click="count < {{$item->room->max_occupancy}} || force  ? count++ : count = {{$item->room->max_occupancy}}"  type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
@@ -89,10 +58,10 @@
                                             <h3 class="text-lg font-bold text-neutral sm:text-xl">Room No. {{$item->room_no}}</h3>
                                             <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->name}}</p>
                                             <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->max_occupancy}} capacity</p>
-                                            @if($item->getAllPax() === (int)$item->room->max_occupancy - 1)
-                                                <p class="mt-1 text-xs font-bold text-error">There is only {{$item->getAllPax()}} guest</p>
+                                            @if($item->getAllPax($r_list->check_in, $r_list->check_out, $r_list->id) === (int)$item->room->max_occupancy - 1)
+                                                <p x-show="!force" class="mt-1 text-xs font-bold text-error">There is only {{$item->getVacantPax($r_list->check_in, $r_list->check_out, $r_list->id)}} guest</p>
                                             @else
-                                                <p class="mt-1 text-sm font-medium ">{{$item->getAllPax() > 0 ? $item->getAllPax() . ' guest availed' : 'No guest'}} </p>
+                                                <p x-show="!force" class="mt-1 text-sm font-medium ">{{$item->getAllPax($r_list->check_in, $r_list->check_out, $r_list->id) > 0 ? $item->getAllPax($r_list->check_in, $r_list->check_out, $r_list->id) . ' guest availed' : 'No guest'}} </p>
                                             @endif
                                         </div>
                                     </div>
@@ -103,7 +72,7 @@
                         <p class="text-2xl font-semibold">No Room Found</p>
                     @endforelse
                 </div>
-                <x-passcode-modal title="Enter the correct passcode to change assign for {{$r_list->userReservation->name()}}" id="rooms_modal" formId="reservation-form" />
+                <x-passcode-modal title="Enter the correct passcode to change assign for {{$r_list->userReservation->name()}}" id="rooms_modal" formId="changeroom-form" />
             </form>
         </div>
         <div class="mt-5 flex justify-end space-x-1">

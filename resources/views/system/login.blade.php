@@ -2,7 +2,7 @@
     <div class="flex items-center justify-center h-screen bg-base-100 md:bg-base-200">
       <div class="flex shadow-none md:shadow-2xl bg-base-100">
         <div class="card hidden md:flex rounded-l-box w-96 h-96">
-          <img src="{{asset('images/main-hero3.jpg')}}" class="object-cover h-full w-full"/>
+          <img loading="lazy" src="{{asset('images/main-hero3.jpg')}}" class="object-cover h-full w-full"/>
         </div>
         <div class="card flex rounded-box w-96 h-96">
           <div class="card-body">

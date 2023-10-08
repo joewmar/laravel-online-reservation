@@ -1,5 +1,5 @@
 @props(['id' => 'checkin', 'name', 'datas' => ''])
-<x-modal  id="{{$id}}" title="Check-in for {{$name}}">
+<x-modal  id="{{$id}}" title="Check-in for {{$name}}" noBottom>
     @if( ((int)str_replace('-', '', \Carbon\Carbon::now()->format('Y-m-d'))) >=  ((int)str_replace('-', '', $datas['check_in'])))
         <article>
             <h1>Sorry, </h1>
@@ -26,13 +26,13 @@
                 <li><strong>Check-out: </strong> {{Carbon\Carbon::createFromFormat('Y-m-d', $datas['check_out'])->format('l, F j, Y') ?? 'None'}}</li>
             </ul>
             <div class="p-5">
-                <p class="text-lg"><strong>Total: </strong>₱ {{number_format($total ?? 0, 2)}}</p>
-                <p class="text-lg"><strong>Downpayment: </strong>₱ {{number_format($downpayment ?? 0, 2)}}</p>
+                <p class="text-lg"><strong>Total: </strong>₱ {{number_format($datas->getTotal() ?? 0, 2)}}</p>
+                <p class="text-lg"><strong>Downpayment: </strong>₱ {{number_format($datas->downpayment() ?? 0, 2)}}</p>
                 <p class="text-lg"><strong>Balance: </strong>{{$datas->balance() != 0 ? '₱ ' . number_format($datas->balance(), 2) : 'No Balance'}}</p>
                 <p class="text-lg"><strong>Refund: </strong>{{$datas->refund() != 0 ? '₱ ' . number_format($datas->refund(), 2) : 'No Refund'}}</p>
             
-                <div x-data="{pay: '', senior: false}" class="py-3 space-x-2">
-                    <form action="{{route('system.reservation.show.checkin', encrypt($datas->id))}}" method="post">
+                <div x-data="{pay: '', senior: false }" class="py-3 space-x-2">
+                    <form id="cinf" action="{{route('system.reservation.show.checkin', encrypt($datas->id))}}" method="post">
                         @csrf
                         @method('PUT')
                         @if(!empty($datas->downpayment()) && $datas->downpayment() >= 1000)
@@ -58,8 +58,12 @@
                                 </template>
                             </div>
                             <div x-show="pay != ''" class="modal-action">
-                                <button @click="loader = true" class="btn btn-primary">Go</button>
+                                <label for="cinmld" class="btn btn-primary">Proceed</label>
+  
                             </div>
+                            <x-modal id="cinmld" title="Do you want to change to check-in" type="YesNo" formID="cinf">
+                            </x-modal>
+
                         @else
                             <div class="my-3">
                                 <span class="text-red-500">Sorry, the downpayment has not been paid yet</span>

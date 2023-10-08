@@ -41,5 +41,7 @@
    </div>
   @vite('resources/js/app.js')
   @stack('scripts')
+  <script src="{{Vite::asset("resources/js/passcode.js")}}"></script>
+
 </body>
 </html>

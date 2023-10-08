@@ -31,6 +31,7 @@
                                     <button class="btn btn-error btn-xs" type="button" x-show="!(tourMenu.length === 0)" x-transition>Remove</button>
                                 </th>
                                 <th>Tour</th>
+                                <th>Quantity</th>
                                 <th>Price</th>
                                 <th>Amount</th>
                             </thead>
@@ -43,6 +44,7 @@
                                             </label>
                                         </th>
                                         <td>{{$item['title']}}</td>
+                                        <td>{{$item['tpx']}} guest</td>
                                         <td>₱ {{number_format($item['price'], 2)}}</td>
                                         <td>₱ {{number_format($item['amount'], 2)}}</td>
                                     </tr>

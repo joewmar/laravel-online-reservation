@@ -29,17 +29,17 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
         // Should return TRUE or FALSE
         Gate::define('admin', function(System $system_user) {
-            return $system_user->type === 0 
+            return $system_user->role() === "Admin" 
             ? Response::allow()
             : Response::denyWithStatus(404);
         });
         Gate::define('manager', function(System $system_user) {
-            return $system_user->type === 1 
+            return $system_user->role() === "Manager" 
             ? Response::allow()
             : Response::denyWithStatus(404);
         });
         Gate::define('front-desk', function(System $system_user) {
-            return $system_user->type === 2 
+            return $system_user->role() === "Front Desk" 
             ? Response::allow()
             : Response::denyWithStatus(404);
         });

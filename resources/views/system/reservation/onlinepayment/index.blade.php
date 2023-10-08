@@ -29,26 +29,27 @@
                 </div>
             </div>
         </div>
-        <div class="flex justify-between">
+        <div class="flex px-8 justify-between">
             <h1 class="font-bold text-xl">Payment: <span class="font-normal text-xl">{{$r_list->payment_method}}</span></h1>
-            <label for="forcePayment_modal" class="btn btn-warning btn-sm">
+            <label for="fpmdl" class="btn btn-warning btn-sm">
                 Force Payment
             </label>
-            <x-modal id="forcePayment_modal" title="Force payment for {{$r_list->userReservation->name()}}">
-                <form method="POST" action="{{route('system.reservation.online.payment.forcepayment.update', encrypt($r_list->id))}}" >
+            <x-modal id="fpmdl" title="Force payment for {{$r_list->userReservation->name()}}">
+                <form id="frcpf" method="POST" action="{{route('system.reservation.online.payment.forcepayment.update', encrypt($r_list->id))}}" >
                     @csrf
                     @method('PUT')
                     <x-input type="number" name="amount" id="amount" placeholder="Amount" value="{{old('amount') ?? ''}}" />
                     <div class="modal-action">
-                        <button @click="loader = true" class="btn btn-primary">
+                        <label for="pssmdl" class="btn btn-primary">
                             Force Payment
-                        </button>
+                        </label>
                     </div>
+                    <x-passcode-modal title="Force Payment Confirmation" id="pssmdl" formId="frcpf" loader/>        
+
                 </form>
             </x-modal >
-
         </div>
-        <div class="divider"></div>
+        <div class="divider px-8"></div>
         <div class="block">
             <article class="text-md tracking-tight text-neutral my-5 p-5 w-auto">
                 @php $total = 0 @endphp
@@ -60,42 +61,65 @@
                                     @if($item->approval === 1)
                                         <div class="text-4xl text-primary flex items-center space-x-3">
                                             <span><i class="fa-regular fa-face-smile"></i></span>
-                                            <span class="text-xl font-bold">Approve</span>
+                                            <span class="text-xl font-bold">Approved</span>
                                         </div>
                                     @endif
                                     @if($item->approval === 0)
                                     <div class="text-4xl text-error flex items-center space-x-3">
                                         <span><i class="fa-regular fa-face-frown"></i></i></span>
-                                            <span class="text-xl font-bold">Disaprove</span>
+                                            <span class="text-xl font-bold">Disapproved</span>
                                         </div>
                                     @endif
-                                    <p class="text-neutral font-bold text-2xl">Payment information {{$loop->index+1}}</p>
+                                    @if($item->approval === 3)
+                                    <div class="text-4xl text-error flex items-center space-x-3">
+                                        <span><i class="fa-regular fa-face-frown"></i></i></span>
+                                            <span class="text-xl font-bold">Partial Approve</span>
+                                        </div>
+                                    @endif
+                                    <div class="flex justify-between items-center">
+                                        <p class="text-neutral font-bold text-2xl">Payment information {{$loop->index+1}}</p>
+                                        <div class="dropdown dropdown-end">
+                                            <label tabindex="0" class="btn btn-circle btn-ghost btn-xs text-blue-500">
+                                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-4 h-4 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            </label>
+                                            <div tabindex="0" class="card compact dropdown-content z-[1] shadow bg-base-100 rounded-box w-64">
+                                              <div class="card-body">
+                                                <h2 class="card-title text-sm">Payment information {{$loop->index+1}}</h2> 
+                                                <p class="text-xs">This payment information will be automatically deleted on {{Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $item->created_at)->addMonth(1)->format('M j, Y')}}</p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                    </div>
                                     <div class="mt-5">
                                         <p class="text-neutral text-xl"><strong>Payer Name: </strong>{{$item->payment_name}}</p>
                                         <p class="text-neutral text-xl"><strong>Reference No.: </strong>{{$item->reference_no}}</p>
                                         <p class="text-neutral text-xl"><strong>Amount: </strong>{{$item->amount}}</p>
                                     </div>
                                     <div class="flex space-x-1 mt-5" id="{{!empty($item->approval) ? 'disabledAll' : ''}}">
-                                        @if(!empty($item->approval))
-                                            <label class="btn btn-info btn-sm" disabled>Approve</label>
-                                            <label class="btn btn-error btn-sm" disabled>Disaprove</label>
-                                        @else
-                                            <label for="approve{{$item->id}}" class="btn btn-info btn-sm">Approve</label>
-                                            <label for="disaprove{{$item->id}}"class="btn btn-error btn-sm" >Disaprove</label>
+                                            <label for="approve{{$item->id}}" class="btn btn-info btn-sm" {{!empty($item->approval) ? 'disabled' : ''}}>Approve</label>
+                                            <label for="disaprove{{$item->id}}"class="btn btn-error btn-sm" {{!empty($item->approval) ? 'disabled' : ''}}>Disapprove</label>
+                                        @if(empty($item->approval))       
+                                            <x-modal id="approve{{$item->id}}" title="Approve for Payment Name: {{$item->payment_name}}" type="YesNo" formID="approve-form{{$item->id}}" noBottom>
+                                                <h1 class="text-xl text-neutral">Verified?</h1>
+                                                <form id="approve-form{{$item->id}}" action="{{route('system.reservation.online.payment.store', encrypt($item->id))}}" method="POST">
+                                                    @csrf
+                                                    <div x-data="{category: '{{$item->amount > 1000 ? 'full' : 'partial'}}'}" class="my-3">
+                                                        <input id="cat1" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="partial" />
+                                                        <label :aria-checked="category == 'downpayment'" :class="category == 'downpayment' ? 'mr-5 text-primary' : 'mr-5'" for="cat1" class="my-5">Partial Approve</label>  
+                                                        <input id="cat2" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="full" />
+                                                        <label :aria-checked="category == 'cinpayment'" :class="category == 'cinpayment' ? 'mr-5 text-primary' : 'mr-5'" for="cat2" class="my-5">Full Approve</label>  
+                                                      </div>
+                                                    <x-input type="number" name="amount" id="amount" placeholder="Total Amount Approve" value="{{$total}}" />
+                                                </form>
+                                            </x-modal>
+                                            <form id="disaprove-form{{$item->id}}" action="{{route('system.reservation.online.payment.disaprove', encrypt($item->id))}}" method="POST" >
+                                                @csrf
+                                                <x-modal id="disaprove{{$item->id}}" title="Why disapprove of Payment Name: {{$item->payment_name}}?" formID="disaprove-form{{$item->id}}" type="YesNo" loader=true noBottom>
+                                                    <x-textarea type="text" name="reason" id="reason" placeholder="Reason" />
+                                                </x-modal>
+                                            </form>
+
                                         @endif
-                                        <x-modal id="approve{{$item->id}}" title="Approve for Payment Name: {{$item->payment_name}}" type="YesNo" formID="approve-form{{$item->id}}" >
-                                            <h1 class="text-xl text-neutral mb-5">Verified?</h1>
-                                            <form id="approve-form{{$item->id}}" action="{{route('system.reservation.online.payment.store', encrypt($item->id))}}" method="POST">
-                                                @csrf
-                                                <x-input type="number" name="amount" id="amount" placeholder="Total Amount" value="{{$total}}" />
-                                            </form>
-                                        </x-modal>
-                                        <x-modal id="disaprove{{$item->id}}" title="Why disapprove of Payment Name: {{$item->payment_name}}?" type="YesNo" loader=true>
-                                            <form id="approve-form{{$item->id}}" action="{{route('system.reservation.online.payment.store', encrypt($item->id))}}" method="POST">
-                                                @csrf
-                                                <x-textarea type="text" name="reason" id="reason" placeholder="Reason" />
-                                            </form>
-                                        </x-modal>
                                     </div>
                                 </div>
                                 <div class="w-72 rounded">

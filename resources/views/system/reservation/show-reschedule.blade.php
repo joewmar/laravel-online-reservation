@@ -21,9 +21,9 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="" back=true>
         {{-- User Details --}}
-       <div class="px-0 md:px-20">
+       <div class="px-3 md:px-20">
         <div class="w-full sm:flex sm:space-x-6">
-            <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
+            <div class="hidden md:flex flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
                 @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
                     <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
                 @elseif($r_list->userReservation->avatar ?? false)
@@ -50,9 +50,29 @@
                 </div>
             </div>
         </div>
+        <div class="my-5 flex justify-between items-center">
+            <h2 class="text-xl md:text-2xl font-bold">Reschedule Request<sup class="text-sm text-primary">{{$r_list->status === 5 ? ' *Approved' : ''}}</sup></h2>
+            <label for="frsch_mdl" class="btn btn-error btn-sm" {{$r_list->status < 1 ? 'disabled' : ''}}>Force Reschedule</label>
+            @if(!($r_list->status < 1))
+                <x-modal title="Before Proceed, Choose date to force reschedule" id="frsch_mdl">
+                    <form action="{{route('system.reservation.force.reschedule', encrypt($r_list->id))}}" method="GET">
+                        @csrf
+                        <p><span class="font-bold">Previous Check-in:</span> {{Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_in)->format('F j, Y')}}</p>
+                        <p><span class="font-bold">Previous Check-out:</span> {{Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out)->format('F j, Y')}}</p>
+                        <div class="mt-5">
+                            <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" />
+                            <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" />
+                        </div>
+                        <div class="modal-action">
+                            <button class="btn btn-primary">Proceed</button>
+                        </div>
+                    </form>
+                </x-modal>
+            @endif
+        </div>
         <div class="divider"></div>
         <div class="w-full">
-            <article class="text-md tracking-tight text-neutral my-5 w-auto">
+            {{-- <article class="text-md tracking-tight text-neutral my-5 w-auto">
                 <h2 class="text-2xl mb-5 font-bold">Details</h2>
                 <p class="my-1"><strong>Number of Guest: </strong>{{$r_list->pax . ' guest' ?? 'None'}}</p>
                 @if(!empty($r_list->tour_pax))
@@ -64,20 +84,25 @@
                 <p class="my-1"><strong>Check-out: </strong>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out )->format('l, F j, Y') ?? 'None'}}</p>
                 <p class="my-1"><strong>Payment Method: </strong>{{ $r_list->payment_method ?? 'None'}}</p>
                 <p class="my-1"><strong>Status: </strong>{{ $r_list->status() ?? 'None'}}</p>
-            </article>
+            </article> --}}
             <article>
-                <h2 class="text-2xl mb-5 font-bold">Reschedule Request<sup class="text-sm text-error">{{$r_list->status === 5 ? ' *Reservation Canceled' : ''}}</sup></h2>
                 <div class="grid grid-flow-row md:grid-flow-col">
-                    <div>
-                        <h2 class="text-lg font-bold">Message</h2>
-                        <p class="text-md">{{$r_list->message['reschedule']['message'] ?? 'None'}}</p>
-                        <div class="my-5">
-                            <span class="text-lg font-bold">Check-in Request:</span>
-                            <span class="text-md">{{($r_list->message['reschedule']['check_in'] ?? false) ? \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->message['reschedule']['check_in'])->format('l, F j, Y') : 'None'}}</span><br>
-                            <span class="text-lg font-bold">Check-out Request:</span>
-                            <span class="text-md">{{($r_list->message['reschedule']['check_out'] ?? false)? \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->message['reschedule']['check_out'])->format('l, F j, Y') : 'None'}}</span><br>
+                    @if(!($r_list->status === 5 || !isset($r_list->message['reschedule'])))
+                        <div>
+                            <h2 class="text-lg font-bold">Message</h2>
+                            <p class="text-md">{{$r_list->message['reschedule']['message'] ?? 'None'}}</p>
+                            <div class="my-5">
+                                <span class="text-lg font-bold">Check-in Request:</span>
+                                <span class="text-md">{{($r_list->message['reschedule']['check_in'] ?? false) ? \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->message['reschedule']['check_in'])->format('l, F j, Y') : 'None'}}</span><br>
+                                <span class="text-lg font-bold">Check-out Request:</span>
+                                <span class="text-md">{{($r_list->message['reschedule']['check_out'] ?? false)? \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->message['reschedule']['check_out'])->format('l, F j, Y') : 'None'}}</span><br>
+                            </div>
                         </div>
-                    </div>
+                    @else
+                        <div>
+                            <h2 class="text-lg font-medium text-center">No Request</h2>
+                        </div>
+                    @endif
                 </div>
                 @if($r_list->message['reschedule']['check_in'] ?? false )
                     <article class="text-md tracking-tight text-neutral my-5 w-auto">
@@ -142,73 +167,99 @@
         <div class="divider"></div>
         <div class="flex justify-end space-x-2">
             <label for="approve_modal" class="btn btn-sm btn-primary" {{$r_list->status === 5 || !isset($r_list->message['reschedule']) ? 'disabled' : ''}}>Approve</label>
-            <form id="approve-form" action="{{route('system.reservation.reschedule.update', encrypt($r_list->id))}}" method="post">
+            @if(!($r_list->status === 5 || !isset($r_list->message['reschedule'])))
                 <x-modal title="Before Approve: Change Room Assign" id="approve_modal">
+                    <form id="approve-form" action="{{route('system.reservation.reschedule.update', encrypt($r_list->id))}}" method="post">
+                                @csrf
+                                @method('PUT')
+                                <div x-data="{rooms: []}" class="flex flex-wrap justify-center md:justify-normal flex-grow gap-5 w-full">
+                                    @forelse ($rooms as $key => $item)
+                                        <div>
+                                            <input x-ref="RoomRef" x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" x-on:checked="rooms.includes({{$item->id}})" />
+                                            <label for="RoomNo{{$item->room_no}}">
+                                                <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 border-primary cursor-pointer'">
+                                                    <span class="absolute inset-x-0 bottom-0 h-3 bg-primary flex flex-col items-center justify-center">
+                                                        <h4 class="text-primary-content hidden font-medium w-full text-center">Room No. {{$item->room_no}} Selected</h4> 
+                                                            <div x-data="{count: {{isset(old('room_pax')[$item->id]) ? (int)old('room_pax')[$item->id] : 1}}}" class="join hidden">
+                                                            <button  @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
+                                                            <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$item->room->max_occupancy}}"  readonly/>
+                                                            <button  @click="count < {{$item->room->max_occupancy}} || force  ? count++ : count = {{$item->room->max_occupancy}}"  type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
+                                                        </div>
+                                                    </span>
+                                                    <div class="sm:flex sm:justify-between sm:gap-4">
+                                                        <div>
+                                                            <h3 class="text-lg font-bold text-neutral sm:text-xl">Room No. {{$item->room_no}}</h3>
+                                                            <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->name}}</p>
+                                                            <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->min_occupancy}} up to {{$item->room->max_occupancy}} capacity</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    @empty
+                                        <p class="text-2xl font-semibold">No Room Found</p>
+                                    @endforelse
+                                </div>
+                                <div class="modal-action">
+                                    <label for="approve" class="btn btn-primary">Save</label>
+                                </div>
+                            
+                        <x-passcode-modal title="Approve Confirmation" id="approve" formId="approve-form" />        
+                    </form>                    
+                
+                </x-modal>
+            @endif
+
+            <label for="disaprove_modal" class="btn btn-sm btn-error" {{$r_list->status === 5 || !isset($r_list->message['reschedule']) ? 'disabled' : ''}}>Dissaprove</label>
+            @if(!($r_list->status === 5 || !isset($r_list->message['reschedule'])))
+                <x-modal id="disaprove_modal" title="Why Disapprove Reschedule">
+                    <form x-data="{resched: ''}" action="{{route('system.reservation.update.reschedule.disaprove', encrypt($r_list->id))}}" method="POST">
                         @csrf
                         @method('PUT')
-                        <div x-data="{rooms: []}" class="flex flex-wrap justify-center md:justify-normal flex-grow gap-5 w-full">
-                            @forelse ($rooms as $key => $item)
-                                <div>
-                                    <input x-ref="RoomRef" x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" x-on:checked="rooms.includes({{$item->id}})" />
-                                    <label for="RoomNo{{$item->room_no}}">
-                                        <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 border-primary cursor-pointer'">
-                                            <span class="absolute inset-x-0 bottom-0 h-3 bg-primary flex flex-col items-center justify-center">
-                                                <h4 class="text-primary-content hidden font-medium w-full text-center">Room No. {{$item->room_no}} Selected</h4> 
-                                                    <div x-data="{count: {{isset(old('room_pax')[$item->id]) ? (int)old('room_pax')[$item->id] : 1}}}" class="join hidden">
-                                                    <button  @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
-                                                    <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$item->room->max_occupancy}}"  readonly/>
-                                                    <button  @click="count < {{$item->room->max_occupancy}} || force  ? count++ : count = {{$item->room->max_occupancy}}"  type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
-                                                </div>
-                                            </span>
-                                            <div class="sm:flex sm:justify-between sm:gap-4">
-                                                <div>
-                                                    <h3 class="text-lg font-bold text-neutral sm:text-xl">Room No. {{$item->room_no}}</h3>
-                                                    <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->name}}</p>
-                                                    <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->min_occupancy}} up to {{$item->room->max_occupancy}} capacity</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </label>
-                                </div>
-                            @empty
-                                <p class="text-2xl font-semibold">No Room Found</p>
-                            @endforelse
+                        <div class="flex flex-col gap-2 my-3">
+                            <label class="space-x-2" for="reason1">
+                                <input type="radio" x-model="resched" class="radio radio-primary" name="reason" id="reason1" value="No Room Available">
+                                <span>No Room Available</span>
+                            </label>
+                            <label class="space-x-2" for="reason2">
+                                <input type="radio" x-model="resched" class="radio radio-primary" name="reason" id="reason2" value="No Room Available">
+                                <span>Invalid Reason</span>
+                            </label>
+                            <label class="space-x-2" for="reason3">
+                                <input type="radio" x-model="resched" class="radio radio-primary" id="reason3" value="Other">
+                                <span>Other</span>
+                            </label>
                         </div>
+                        <template x-if="resched === 'Other' ">
+                            <x-textarea placeholder="Reason Message" name="reason" id="reason" />
+                        </template>
                         <div class="modal-action">
-                            <label for="approve" class="btn btn-primary">Save</label>
+                            <button class="btn btn-sm btn-error">Proceed Disapprove</button>
                         </div>
-                    
+                    </form>
                 </x-modal>
-                <x-passcode-modal title="Approve Confirmation" id="approve" formId="approve-form" />        
-            </form>
-            <label for="disaprove_modal" class="btn btn-sm btn-error" {{$r_list->status === 5 || !isset($r_list->message['reschedule']) ? 'disabled' : ''}}>Dissaprove</label>
-            <x-modal id="disaprove_modal" title="Why Disapprove Reschedule">
-                <form x-data="{resched: ''}" action="{{route('system.reservation.update.reschedule.disaprove', encrypt($r_list->id))}}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="flex flex-col gap-2 my-3">
-                        <label class="space-x-2" for="reason1">
-                            <input type="radio" x-model="resched" class="radio radio-primary" name="reason" id="reason1" value="No Room Available">
-                            <span>No Room Available</span>
-                        </label>
-                        <label class="space-x-2" for="reason2">
-                            <input type="radio" x-model="resched" class="radio radio-primary" name="reason" id="reason2" value="No Room Available">
-                            <span>Invalid Reason</span>
-                        </label>
-                        <label class="space-x-2" for="reason3">
-                            <input type="radio" x-model="resched" class="radio radio-primary" id="reason3" value="Other">
-                            <span>Other</span>
-                        </label>
-                    </div>
-                    <template x-if="resched === 'Other' ">
-                        <x-textarea placeholder="Reason Message" name="reason" id="reason" />
-                    </template>
-                    <div class="modal-action">
-                        <button class="btn btn-sm btn-error">Proceed Disapprove</button>
-                    </div>
-                </form>
-            </x-modal>
+            @endif
         </div>
        </div>
     </x-system-content>
+    @if(!($r_list->status < 1))
+        @push('scripts')
+            <script>
+                @if(isset($operation->from) && isset($operation->to))
+                const mop = {
+                    from: '{{$operation->from}}',
+                    to: '{{$operation->to}}'
+                };
+                @else
+                const mop = '2001-15-30';
+                @endif
+                const md = '{{Carbon\Carbon::now()->addDays(2)->format('Y-m-d')}}';
+                const mrsh = {
+                    from: '{{$r_list->check_in}}',
+                    to: '{{$r_list->check_out}}'
+                };
+            </script>
+            <script type="module" src="{{Vite::asset('resources/js/flatpickr.js')}}"></script>
+        @endpush
+    @endif
 </x-system-layout>

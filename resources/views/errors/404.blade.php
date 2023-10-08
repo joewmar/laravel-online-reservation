@@ -1,3 +1,8 @@
+@php
+  $link = "/";
+  if(auth('system')->check()) $link = route('system.home');
+@endphp
+
 <x-landing-layout noFooter>
     <section class="bg-gray-50">
         <div x-data="{loader = false}" class="mx-auto max-w-screen-xl px-4 py-32 lg:flex lg:h-screen lg:items-center" >
@@ -13,7 +18,7 @@
 
             <p class="mt-4">
               <div class="flex flex-wrap justify-center gap-4">
-                <a @click="loader = true" class="btn btn-primary" href="/">
+                <a class="btn btn-primary" href="{{$link}}">
                   Back to homepage
                 </a>
               </div>

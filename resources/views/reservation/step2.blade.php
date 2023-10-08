@@ -271,7 +271,7 @@
                                         </div>
                                     </label>
                                     {{-- Modal Tour Details --}}                                  
-                                    <x-modal id="{{Str::camel($list->title)}}" title="{{$list->title}}" alpinevar="price">
+                                    <x-modal id="{{Str::camel($list->title)}}" title="{{$list->title}}" alpinevar="price" noBottom>
                                       <article>
                                         <ul role="list" class="marker:text-primary list-disc pl-5 space-y-3 text-neutral">
                                           <li><strong>Number of days: </strong> {{$list->no_day <= 1 ? $list->no_day . ' day' : $list->no_day . ' days' }}</li>

@@ -86,10 +86,10 @@
                                             <h3 class="text-lg font-bold text-neutral sm:text-xl">Room No. {{$item->room_no}}</h3>
                                             <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->name}}</p>
                                             <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->max_occupancy}} capacity</p>
-                                            @if($item->getAllPax() === (int)$item->room->max_occupancy - 1)
-                                                <p class="mt-1 text-xs font-bold text-error">There is only {{$item->getAllPax()}} guest</p>
+                                            @if($item->getAllPax($r_list->check_in, $r_list->check_out) === (int)$item->room->max_occupancy - 1)
+                                                <p x-show="!force" class="mt-1 text-xs font-bold text-error">There is only {{$item->getVacantPax($r_list->check_in, $r_list->check_out)}} guest</p>
                                             @else
-                                                <p class="mt-1 text-sm font-medium ">{{$item->getAllPax() > 0 ? $item->getAllPax() . ' guest availed' : 'No guest'}} </p>
+                                                <p x-show="!force" class="mt-1 text-sm font-medium ">{{$item->getAllPax($r_list->check_in, $r_list->check_out) > 0 ? $item->getAllPax($r_list->check_in, $r_list->check_out) . ' guest availed' : 'No guest'}} </p>
                                             @endif
                                         </div>
                                     </div>

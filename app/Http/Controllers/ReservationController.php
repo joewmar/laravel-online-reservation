@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\System;
@@ -14,6 +15,7 @@ use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
 use Illuminate\Validation\Rule;
+use App\Notifications\UserNotif;
 use App\Jobs\SendTelegramMessage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Mail;
@@ -26,27 +28,13 @@ use AmrShawky\LaravelCurrency\Facade\Currency;
 
 class ReservationController extends Controller
 {
-    private $user;
+    private $customer;
     // private $ruleRoomOnly = []
     public function __construct()
     {
-        $this->user = auth('web');
+        $this->customer = auth('web');
         if(Str::contains(URL::previous(), route('home')) || Str::contains(URL::previous(), route('system.home'))) session()->forget('rinfo');
 
-        $this->middleware(function ($request, $next) {
-            // dd($this->user->user()->id);
-            $existingReservation = Reservation::where(function ($query){
-                $query->where('user_id', $this->user->user()->id);
-                $query->whereBetween('status', [1, 2, 3, 7, 8]);
-            })->first();
-
-            if ($existingReservation) {
-                session(['ck' => false]);
-                session()->forget('rinfo');
-                return redirect()->route('home')->with('error', "Sorry, you can only make one reservation.");
-            }
-            return $next($request);
-        });
     }
     private function replaceRInfo(array $values, bool $isEncrypt = false){
         if(session()->has('rinfo')){
@@ -62,19 +50,19 @@ class ReservationController extends Controller
         else return false;
     }
     private function systemNotification($text, $link = null){
-            $systems = System::whereBetween('type', [0, 1])->get();
-            $keyboard = null;
-            if(isset($link)){
-                $keyboard = [
-                    [
-                        ['text' => 'View', 'url' => $link],
-                    ],
-                ];
-            }
-            foreach($systems as $system){
-                if(isset($system->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard, 'bot2'));
-            }
-            Notification::send($systems, new SystemNotification(Str::limit($text, 10), $text, route('system.notifications')));
+        $systems = System::whereBetween('type', [0, 1])->get();
+        $keyboard = null;
+        if(isset($link)){
+            $keyboard = [
+                [
+                    ['text' => 'View', 'url' => $link],
+                ],
+            ];
+        }
+        foreach($systems as $system){
+            if(isset($system->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard));
+        }
+        Notification::send($systems, new SystemNotification(Str::limit($text, 10), $text, route('system.notifications')));
     }
     private function reservationValidation(Request $request, string $view = null, bool $haveTpx = false, $havePy = false){
         if(str_contains($request['check_in'], 'to')){
@@ -328,7 +316,6 @@ class ReservationController extends Controller
             $reservationInfo = encryptedArray($reservationInfo);
             session(['rinfo' => $reservationInfo]);
         }
-
         return redirect()->route('reservation.details');
 
     }
@@ -361,13 +348,7 @@ class ReservationController extends Controller
         $user = User::find(auth('web')->user()->id);
         if(empty($user)) return back()->wtih('error', 'Sorry, you are not register the account');
         $unfo = [
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
             'age' => $user->age(),
-            'country' => $user->country,
-            'nationality' => $user->nationality,
-            'contact' => $user->contact,
-            'email' => $user->email,
         ];
         if(!$this->replaceRInfo($unfo, true)){
             $unfo = encryptedArray($unfo);
@@ -418,8 +399,8 @@ class ReservationController extends Controller
         if($decrypted_uinfo['at'] === 'Room Only' || !session()->has('rinfo')) return back();
         $id = decrypt($request['id']);
         $tm = $decrypted_uinfo['tm'];
+        $newTm = [];
         if(!empty($tm)){
-            $newTm = [];
             foreach($tm as $item){
                 if($item == $id) continue;
                 else $newTm[] = $item;
@@ -440,10 +421,11 @@ class ReservationController extends Controller
             session(['rinfo' => $encrypted_uinfo]);
             return back()->with('success', TourMenu::find($id)->tourMenu->title . ' was Removed');
         }
+
     }
     public function storeReservation(Request $request){
+    //    try{
         $user = User::findOrFail(auth('web')->user()->id);
-        $systemUser = System::all()->where('type', '>=', 0)->where('type', '<=', 1);
         $uinfo = decryptedArray(session('rinfo')) ?? '';
         $validated = $request->validate([
             'valid_id' => Rule::when(!isset($user->valid_id), ['required' ,'image', 'mimes:jpeg,png,jpg', 'max:5024']), 
@@ -454,43 +436,31 @@ class ReservationController extends Controller
             'mimes' => 'The image must be of type: jpeg, png, jpg',
             'max' => 'The image size must not exceed 5 MB',
         ]);
-        $reserve_info = null;
+        $reserve_info = [
+            'user_id' => $user->id,
+            'pax' => $uinfo['px'] ?? '',
+            'age' => $uinfo['age'] ?? '',
+            'check_in' => $uinfo['cin'] ?? '',
+            'check_out' => $uinfo['cout'] ?? '',
+            'accommodation_type' => $uinfo['at'] ?? '',
+            'payment_method' => $uinfo['py'] ?? '',
+        ];
         if($uinfo['at'] !== 'Room Only'){
             foreach(decryptedArray($validated['tour']) as $key => $tour_id) {
                 $tour_menu = TourMenu::find($tour_id);
                 $tours['tm'. $tour_id] = [
                     'title' => $tour_menu->tourMenu->title . ' ' . $tour_menu->type . '('.$tour_menu->pax.' pax)',
                     'price' => (double)$tour_menu->price,
+                    'tpx' => $uinfo['tpx'],
                     'amount' => (double)$tour_menu->price * (int)$uinfo['tpx']
                 ];
             }
-            $reserve_info = Reservation::create([
-                'user_id' => $user->id,
-                'pax' => $uinfo['px'] ?? '',
-                'tour_pax' => $uinfo['tpx'],
-                'age' => $uinfo['age'] ?? '',
-                'payment_method' => $uinfo['py'] ?? '',
-                'accommodation_type' => $uinfo['at'] ?? '',
-                'check_in' => $uinfo['cin'] ?? '',
-                'check_out' => $uinfo['cout'] ?? '',
-                'transaction' => $tours,
-                
-            ]);
-            
-            
+            $reserve_info['tour_pax'] = $uinfo['tpx'];
+            $reserve_info['transaction'] = $tours;
         }
-        else{
-            $reserve_info = Reservation::create([
-                'user_id' => $user->id,
-                'pax' => $uinfo['px'] ?? '',
-                'tour_pax' => $uinfo['px'],
-                'age' => $uinfo['age'] ?? '',
-                'check_in' => $uinfo['cin'] ?? '',
-                'check_out' => $uinfo['cout'] ?? '',
-                'accommodation_type' => $uinfo['at'] ?? '',
-                'payment_method' => $uinfo['py'] ?? '',
-            ]);
-        }
+
+        $reserve_info = Reservation::create($reserve_info);
+
         if($request->hasFile('valid_id')){  
             $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
             $user->update(['valid_id' => $validated['valid_id']]);
@@ -508,15 +478,19 @@ class ReservationController extends Controller
         $details = [
             'name' => $reserve_info->userReservation->name(),
             'title' => 'Reservation Complete',
-            'body' => 'Your Reservation are done, We just send email for the approve or disapprove confirmation'
+            'body' => 'Your Reservation are done, We just send email for the approval'
         ];
-        Mail::to(env('SAMPLE_EMAIL') ?? $reserve_info->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
-        session()->forget('rinfo');
-        session()->forget('ck');
-        $this->systemNotification($text, route('system.reservation.show', encrypt($reserve_info->id)));
 
+        session()->forget(['rinfo', 'ck']);
+        $reserve_info->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'pending'])) ,$details['body'], $details, 'reservation.mail')));
+        $this->systemNotification($text, route('system.reservation.show', encrypt($reserve_info->id)));
         unset($text, $keyboard, $details, $uinfo);
         return redirect()->route('reservation.done', ['id' => encrypt($reserve_info->id)]);
+    //    }
+    //    catch(Exception $e){
+    //         session()->forget(['rinfo', 'ck']);
+    //         return redirect()->route('reservation.date');
+    //    }
     }
     public function done($id){
         $reserve_info = Reservation::findOrFail(decrypt($id));

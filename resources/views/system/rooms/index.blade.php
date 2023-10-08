@@ -1,15 +1,15 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Rooms">
         <fieldset class="w-full space-y-1 text-neutral">
-          <div x-data="{type: '{{request('date') ? 'date' : 'name'}}'}" class="flex justify-between items-center mt-5 w-full">
+          <div x-data="{type: '{{request('search') ? 'name' : 'date'}}'}" class="flex justify-between items-start mt-5 w-full">
             <form action="{{route('system.rooms.home')}}" method="POST">
               @csrf
               <div>
-                <span class="text-lg">Search by: </span>
-                <input x-model="type" id="name" class="my-2 radio radio-primary" type="radio" value="name" />
-                <label :aria-checked="type == 'name'" :class="type == 'name' ? 'mr-5 text-primary' : 'mr-5'" for="name" class="my-5">Name</label>  
+                <span class="md:text-lg mr-2">Search by: </span>
                 <input x-model="type" id="date" class="my-2 radio radio-primary" type="radio" value="date" />
                 <label :aria-checked="search == 'date'" :class="type == 'date' ? 'mr-5 text-primary' : 'mr-5'" for="date" class="my-5">Date</label>
+                <input x-model="type" id="name" class="my-2 radio radio-primary" type="radio" value="name" />
+                <label :aria-checked="type == 'name'" :class="type == 'name' ? 'mr-5 text-primary' : 'mr-5'" for="name" class="my-5">Name</label>  
               </div>
                 <div x-show="type == 'name'">
                   <div class="join mt-3">
@@ -36,10 +36,9 @@
           <h2 class="{{request('search') ? 'hidden' : 'block'}}  mt-8 text-xl font-bold">Date: {{Carbon\Carbon::createFromFormat('Y-m-d', request('date') ?? Carbon\Carbon::now('Asia/Manila')->format('Y-m-d'))->format('F j, Y')}}</h2>
           <h2 class="{{request('search') ? 'block' : 'hidden'}} mt-8 text-xl font-bold">Name: {{request('name') ?? 'None'}}</h2>
           <div class="mt-3 grid grid-flow-row md:grid-cols-3 gap-8">
-            @if (request('search'))
+          @if (request('search'))
               @foreach ($rooms ?? [] as $room)
-                @php $isFound = false; @endphp
-
+                @php $isFound = true; @endphp
                   @foreach ((array)$room->customer as $key => $item)
                       @php 
                         $reservation = \App\Models\Reservation::find($key) ?? []; 
@@ -80,21 +79,20 @@
                           @break
                       @else
                         @php $isFound = false; @endphp
-                        @break
+
                       @endif
                   @endforeach
                   @if (!$isFound)
-                  <h2 class="mt-4 text-xl font-bold text-neutral col-span-full w-full text-center">No Room found</h2>
-
-                  @break
-                @endif
+                    <h2 class="mt-4 text-xl font-bold text-neutral col-span-full w-full text-center">No Room found</h2>
+                    @break
+                  @endif
               @endforeach
             @else
               @forelse ($rooms as $room)
                   <label for="room_modal{{$room->id}}" class="block rounded-xl border border-neutral-content p-8 shadow-md transition  {{in_array($room->id, $reserved) ? 'bg-red-500 text-white hover:border-neutral' :'text-neutral hover:border-primary'}}">
                     <h2 class="mt-4 text-xl font-bold">Room No. {{$room->room_no}}</h2>
                     <h5 class="text-md font-medium">{{$room->room->name}} Room ({{$room->room->max_occupancy}} Capacity)</h5>
-                    <h5 class="text-md font-bold">{{count($reservedIDS) > 0 ? $room->getAllPax() . ' guest reserved' : 'No Guest'}} </h5>
+                    <h5 class="text-md font-bold">{{$room->getAllPax(request('date'), request('date')) > 0 ? $room->getAllPax(request('date'), request('date')) . ' guest reserved' : 'No Guest'}} </h5>
                   </label>
                   <x-modal id="room_modal{{$room->id}}" title="Who guest on Room No. {{$room->room_no}}">
                     @forelse((array)$room->customer as $key => $item)

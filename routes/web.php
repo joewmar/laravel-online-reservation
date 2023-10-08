@@ -23,6 +23,7 @@ use App\Http\Controllers\CreateReservationController;
 use App\Http\Controllers\EditReservationController;
 use App\Http\Controllers\ReservationTwoController;
 use App\Http\Controllers\SystemReservationController;
+use App\Http\Controllers\SystemReservationTwoController;
 use App\Notifications\SystemNotification;
 
 /*
@@ -160,10 +161,6 @@ Route::prefix('system')->name('system.')->group(function(){
         Route::get('/notifications/mark-as-read', [SystemController::class, 'markAsRead'])->name('notifications.mark-as-read');
 
         Route::get('/', [SystemHomeController::class, 'index'])->name('home');
-        // Route::get('/', function(){
-        //     System::find(Auth::user()->id)->notify(new SystemNotification('NOtification successful;l'));
-        //     dd('Good sa notification');
-        // })->name('home');
         Route::prefix('reservation')->name('reservation.')->group(function(){
 
             Route::controller(CreateReservationController::class)->group(function (){
@@ -181,41 +178,56 @@ Route::prefix('system')->name('system.')->group(function(){
 
                 Route::get('/{id}/edit/information', 'information')->name('edit.information');
                 Route::put('/{id}/edit/information', 'updateInfo')->name('edit.information.update');
+                
+                Route::get('/{id}/edit/information/room', 'changeRoom')->name('edit.information.room');
+                Route::put('/{id}/edit/information/room', 'updateInfoRoom')->name('edit.information.room.update');
+
 
                 Route::get('/{id}/edit/rooms', 'rooms')->name('edit.rooms');
                 Route::put('/{id}/edit/rooms', 'updateRooms')->name('edit.rooms.update');
 
                 Route::get('/{id}/edit/services', 'services')->name('edit.tour');
                 Route::put('/{id}/edit/services', 'updateServices')->name('edit.tour.update');
+
+                Route::get('/{id}/edit/payment', 'payment')->name('edit.payment');
+                Route::put('/{id}/edit/payment/downpayment', 'updateDY')->name('update.downpayment');
+                Route::put('/{id}/edit/payment/cinpayment', 'updateCINP')->name('update.cinpayment');
+
             });
             Route::controller(SystemReservationController::class)->group(function (){
                 Route::get('/', 'index')->name('home');
-                Route::post('/search', 'search')->name('search');
+                Route::get('/search', 'search')->name('search');
                 Route::get('/calendar', 'event')->name('event');
                 Route::get('/{id}/show', 'show')->name('show');
-                Route::get('/{id}/show/extend', 'showExtend')->name('show.extend');
-                Route::get('/{id}/show/addons', 'showAddons')->name('show.addons');
-                Route::put('/{id}/show/addons/update', 'updateAddons')->name('addons.update');
-                Route::put('/{id}/show/extend/update', 'updateExtend')->name('extend.update');
-                Route::get('/{id}/show/online-payment', 'showOnlinePayment')->name('show.online.payment');
-                Route::post('/{id}/online-payment/create', 'storeOnlinePayment')->name('online.payment.store');
-                Route::post('/{id}/online-payment/disaprove', 'disaproveOnlinePayment')->name('online.payment.disaprove');
-                Route::put('/{id}/online-payment/force-payment', 'storeForcePayment')->name('online.payment.forcepayment.update');
-                Route::get('/{id}/show/room', 'showRooms')->name('show.rooms');
-                Route::get('/{id}/disaprove', 'disaprove')->name('disaprove');
-                Route::post('/{id}/disaprove', 'disaproveStore')->name('disaprove.store');
-                Route::put('/{id}/show/room', 'updateReservation')->name('show.rooms.update');
-                Route::put('/{id}/show/checkin', 'updateCheckin')->name('show.checkin');
-                Route::put('/{id}/show/checkout', 'updateCheckout')->name('show.checkout');
                 Route::get('/{id}/show/cancel', 'showCancel')->name('show.cancel');
-                Route::get('/{id}/show/cancel/force', 'forceCancel')->name('force.cancel');
                 Route::get('/{id}/show/reschedule', 'showReschedule')->name('show.reschedule');
                 Route::put('/{id}/show/cancel/approve', 'updateCancel')->name('update.cancel');
                 Route::put('/{id}/show/cancel/disaprove', 'updateDisaproveCancel')->name('update.cancel.disaprove');
+                Route::get('/{id}/show/cancel/force', 'forceCancel')->name('force.cancel');
+                Route::get('/{id}/show/reschedule/force', 'forceReschedule')->name('force.reschedule');
                 Route::put('/{id}/show/cancel/force', 'updateForceCancel')->name('force.cancel.update');
-                Route::put('/{id}/show/reschedule/disaprove', 'updateDisaproveReschedule')->name('update.reschedule.disaprove');
-                Route::get('/{id}/show/reschedule/approve', 'approveReschedule')->name('reschedule.approve');
+                Route::put('/{id}/show/reschedule/force', 'updateForceReschedule')->name('force.reschedule.update');
                 Route::put('/{id}/show/reschedule/approve', 'updateReschedule')->name('reschedule.update');
+            });
+            Route::controller(SystemReservationTwoController::class)->group(function (){
+                Route::put('/{id}/show/reschedule/disaprove', 'updateDisaproveReschedule')->name('update.reschedule.disaprove');
+                Route::get('/{id}/show/room', 'showRooms')->name('show.rooms');
+                Route::put('/{id}/show/room', 'updateReservation')->name('show.rooms.update');
+                Route::put('/{id}/show/checkin', 'updateCheckin')->name('show.checkin');
+                Route::put('/{id}/show/checkout', 'updateCheckout')->name('show.checkout');
+                Route::get('/{id}/disaprove', 'disaprove')->name('disaprove');
+                Route::post('/{id}/disaprove', 'disaproveStore')->name('disaprove.store');
+                Route::get('/{id}/show/online-payment', 'showOnlinePayment')->name('show.online.payment');
+                Route::post('/{id}/online-payment/approve', 'storeOnlinePayment')->name('online.payment.store');
+                Route::post('/{id}/online-payment/disapprove', 'disaproveOnlinePayment')->name('online.payment.disaprove');
+                Route::put('/{id}/online-payment/force-payment', 'storeForcePayment')->name('online.payment.forcepayment.update');
+                Route::get('/{id}/show/addons', 'showAddons')->name('show.addons');
+                Route::put('/{id}/show/addons/update', 'updateAddons')->name('addons.update');
+                Route::get('/{id}/show/extend', 'showExtend')->name('show.extend');
+                Route::put('/{id}/show/extend/update', 'updateExtend')->name('extend.update');
+
+                
+
             });
 
         });

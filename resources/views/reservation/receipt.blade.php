@@ -254,6 +254,7 @@ tr:hover .cut { opacity: 1; }
 					<thead>
 						<tr>
 							<th><span >Tour</span></th>
+							<th><span >Quantity</span></th>
 							<th><span >Price</span></th>
 							<th><span >Amount</span></th>
 						</tr>
@@ -262,6 +263,7 @@ tr:hover .cut { opacity: 1; }
 						@foreach ($tours as $item)
 							<tr>
 								<td><span >{{$item['title']}}</span></td>
+								<td><span>{{ $item['tpx'] }} guest</span></td>
 								<td><span data-prefix>₱ </span><span>{{ number_format($item['price'], 2)}}</span></td>
 								<td><span data-prefix>₱ </span><span>{{ number_format($item['amount'], 2)}}</span></td>
 							</tr>

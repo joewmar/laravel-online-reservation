@@ -76,9 +76,8 @@ class ReservationTwoController extends Controller
                     "Total Amount " . number_format($validated['amount'], 2) ."\n" . 
                     "Reference No: " . $validated['reference_no'];
                     // Send Notification 
-                    $this->systemNotification($text, encrypt($reservation->id));
+                    $this->systemNotification($text, route('system.reservation.show.online.payment', encrypt($reservation->id)));
                     $text = null;
-                    $keyboard = null;
                     return redirect()->route('reservation.payment.done', encrypt($sended->id));
                 }
             }

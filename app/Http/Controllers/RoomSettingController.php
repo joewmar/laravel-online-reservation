@@ -18,7 +18,11 @@ class RoomSettingController extends Controller
     public function __construct()
     {
         $this->system_user = auth('system'); 
-        $this->authorize('admin');
+        $this->middleware(function ($request, $next){
+            if(!($this->system_user->user()->type === 0)) abort(404);
+            return $next($request);
+
+        });
     }
     // Show All Rooms View
     public function index(Request $request){

@@ -1,4 +1,4 @@
-<x-landing-layout>
+<x-landing-layout DOMLoading btnTop>
   <x-navbar :activeNav="$activeNav" type="plain" />
   <div class="hero min-h-screen bg-base-200">
     <div class="hero-content text-center">
@@ -9,6 +9,7 @@
       </div>
     </div>
   </div>
+
   <x-full-content id="story">
     <article class="mx-auto prose-lg p-10 w-full md:w-[60%]" >
       <h2 class="text-center font-extrabold">Our Story</h2>
@@ -47,4 +48,7 @@
       </div>
     </article>
   </x-full-content> --}}
+  @push('scripts')
+
+  @endpush
 </x-landing-layout>

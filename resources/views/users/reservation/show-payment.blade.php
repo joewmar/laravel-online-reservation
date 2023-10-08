@@ -7,7 +7,7 @@
             <a href="{{URL::previous()}}" class="btn btn-ghost btn-circle">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
-            <div class="px-0 md:px-20">
+            <div class="px-3 md:px-20">
 
                 <div class="w-full sm:flex sm:space-x-6">
                     <div class="hidden md:flex flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">

@@ -13,31 +13,29 @@ class DatabaseBackup extends Command
      *
      * @var string
      */
-    protected $signature = 'app:db-backup';
+    protected $signature = 'db:backup';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Automating Daily Backups';
+    protected $description = 'Create Database Backups';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        if (! Storage::exists('private/backup')) {
-            Storage::makeDirectory('private/backup');
+        if (! Storage::exists('app/backup')) {
+            Storage::makeDirectory('app/backup');
         }
 
-        $filename = "backup-" . Carbon::now()->format('Y-m-d') . ".gz";
+        $filename = "backup-" . strtotime(now()) . ".sql";
     
+        // $command = "mysqldump --user=" . env('DB_USERNAME') ." --password=" . env('DB_PASSWORD') . " --host=" . env('DB_HOST') . " " . env('DB_DATABASE') . "  | gzip > " . storage_path() . "/app/backup/" . $filename;
         $command = "mysqldump --user=" . env('DB_USERNAME') ." --password=" . env('DB_PASSWORD') . " --host=" . env('DB_HOST') . " " . env('DB_DATABASE') . "  | gzip > " . storage_path() . "/app/backup/" . $filename;
-  
-        $returnVar = NULL;
-        $output  = NULL;
 
-        exec($command, $output, $returnVar);
+        exec($command);
     }
 }

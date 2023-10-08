@@ -20,43 +20,33 @@
                 <div class="tabs md:tabs-boxed md:bg-transparent flex justify-center md:justify-start">
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list']) )}}" class="tab {{!request()->has('tab') && request()->has('rtab') ? 'tab-active font-bold text-primary' : ''}}">All</a> 
                     @if(!auth('system')->user()->type == 2)
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'pending']) )}}" class="tab {{request('tab') == 'pending' ? 'tab-active font-bold text-primary' : ''}}">Pending</a> 
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'confirmed']))}}" class="tab {{request('tab') == 'confirmed' ? 'tab-active font-bold text-primary' : ''}}">Confirmed</a> 
+                        <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'pending']) )}}" class="tab {{request('tab') == 'pending' ? 'tab-active font-bold text-primary' : ''}}">Pending</a> 
+                        <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'confirmed']))}}" class="tab {{request('tab') == 'confirmed' ? 'tab-active font-bold text-primary' : ''}}">Confirmed</a> 
                     @endif
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cin']))}}" class="tab {{request('tab') == 'cin' ? 'tab-active font-bold text-primary' : ''}}">Check-in</a> 
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cout']))}}" class="tab {{request('tab') == 'cout' ? 'tab-active font-bold text-primary' : ''}}">Check-out</a> 
                     @if(!auth('system')->user()->type == 2)
                         <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cancel']))}}" class="tab {{request('tab') == 'cancel' ? 'tab-active font-bold text-primary' : ''}}">Cancel</a> 
-                        <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'reshedule']))}}" class="tab {{request('tab') == 'reshedule' ? 'tab-active font-bold text-primary' : ''}}">Reschedule</a>
+                        <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'reschedule']))}}" class="tab {{request('tab') == 'reschedule' ? 'tab-active font-bold text-primary' : ''}}">Reschedule</a>
+                        <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'walkin']))}}" class="tab {{request('tab') == 'walkin' ? 'tab-active font-bold text-primary' : ''}}">Walk-in</a>
+                        <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'othbook']))}}" class="tab {{request('tab') == 'othbook' ? 'tab-active font-bold text-primary' : ''}}">Other Booking</a>
                     @endif
-                    <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'previous']))}}" class="tab {{request('tab') == 'previous' ? 'tab-active font-bold text-primary' : ''}}">Previous</a>
+
                 </div>
                 <div class="mt-10">
-                    <div class="flex justify-end w-full gap-5 -z-[100]">
-                        {{-- <form action="{{route('system.reservation.search', Arr::query(['rtab' => 'list', 'tab' => 'list']))}}" method="POST">
-                            @csrf
-                            <div class="join">
-                                <div>
-                                <div>
-                                    <input class="input input-sm input-primary join-item placeholder:text-sm" name="search" placeholder="Search Full Name..." value="{{request('search') ?? ""}}" />
-                                </div>
-                                </div>
-                                <button class="btn btn-sm join-item btn-primary">Search</button>
-                            </div>
-                        </form> --}}
-                    </div>
                     <div class="overflow-x-auto w-full">
                         <table class="table table-xs md:table-md">
                             <!-- head -->
                             <thead>
                                 <tr>
-                                    <th></th>
+                                    <th>
+                                        <x-search endpoint="{{route('system.reservation.search')}}" />
+                                    </th>
                                     <th>Name</th>
                                     <th>Age</th>
                                     <th>Nationality</th>
                                     <th>Status</th>
                                     <th>Created</th>
-                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -81,35 +71,12 @@
                                         <td>{{$list->age ?? ''}} years old</td>
                                         <td>{{$list->userReservation->country ?? ''}}</td>
                                         <td>{{$list->status()}}</td>
-                                        <td>{{ \Carbon\Carbon::parse($list->created_at)->format('M j, Y g:i A')}}</td>
+                                        <td>{{ \Carbon\Carbon::parse($list->created_at, 'Asia/Manila')->format('M j, Y g:i A')}}</td>
     
                                         <th class="w-auto">
-                                            <div class="join">
-                                                @if(!auth('system')->user()->type == 2)
-                                                    <a href="{{route('system.reservation.show.rooms', encrypt($list->id))}}" class="btn btn-secondary btn-xs join-item {{$list->status < 0 ? 'btn-disabled"' : ''}}">Confirm</a>
-                                                @endif
-                                                <label for="checkin" class="btn btn-success btn-xs join-item" {{$list->status < 2 ? 'disabled' : ''}}>Check-in</label>
-                                                <label for="checkout" class="btn btn-info btn-xs join-item" {{$list->status < 3 ? 'disabled' : ''}}>Check-out</label>
-                                                @if($list->status() == "Confirmed")
-                                                    <x-checkin name="{{$list->userReservation->name() ?? ''}}" :datas="$list" />
-                                                @elseif($list->status() == "Check-in")
-                                                    <x-checkout name="{{$list->userReservation->name() ?? ''}}" :datas="$list" />
-                                                @endif
-                                                <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs join-item">View</a>
-                                                @if(!auth('system')->user()->type == 2)
-                                                    @if (!($list->status >= 3 && $list->status <= 6))
-                                                        <div class="dropdown dropdown-left dropdown-end">
-                                                            <label tabindex="0" class="btn join-item btn-xs">                                                        
-                                                                <i class="fa-solid fa-ellipsis"></i>
-                                                            </label>
-                                                            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                                                                <li><a href="{{route('system.reservation.show.cancel', encrypt($list->id))}}" class="text-error">Cancel</a></li>
-                                                                <li><a href="{{route('system.reservation.show.reschedule', encrypt($list->id))}}" class="text-accent-content">Reschedule</a></li>
-                                                            </ul>
-                                                        </div>
-                                                    @endif
-                                                @endif
-                                            </div>
+                                            <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-ghost btn-sm btn-circle hover:btn-primary">
+                                                <i class="fa-solid fa-ellipsis"></i>
+                                            </a>
                                         </th>
                                     </tr>
                                 @empty
@@ -129,8 +96,8 @@
                 <style>
                     /* Base styles for the calendar */
                     #calendar {
-                    width: 100%;
-                    margin: 0 auto;
+                        width: 100%;
+                        margin: 0 auto;
                     }
 
                     /* Mobile-specific styles */
@@ -142,8 +109,47 @@
                     }
                 </style>
             @endpush
-            <div class="my-5 p-5 w-full">
-                <div id='calendar' class=""></div>
+            <div class=" p-5 w-full">
+                <div class="flex justify-end">
+                    <div class="dropdown dropdown-end">
+                        <label tabindex="0" class="btn btn-circle btn-ghost btn-xs text-blue-500">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-4 h-4 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </label>
+                        <ul tabindex="0" class="menu w-56 rounded-box dropdown-content z-[100] shadow bg-base-100">
+                            <li>                    
+                                <div class="flex items-center space-x-2">
+                                    <label class="h-8 w-8 rounded-full bg-[#2a5adf] shadow-sm" ></label>
+                                    <p class="font-medium">Pending</p>
+                                </div>
+                            </li>
+                            <li>                    
+                                <div class="flex items-center space-x-2">
+                                    <label class="h-8 w-8 rounded-full bg-[#22c55e] shadow-sm" ></label>
+                                    <p class="font-medium">Confirmed</p>
+                                </div>
+                            </li>
+                            <li>                    
+                                <div class="flex items-center space-x-2">
+                                    <label class="h-8 w-8 rounded-full bg-[#eab308] shadow-sm" ></label>
+                                    <p class="font-medium">Check-in</p>
+                                </div>
+                            </li>
+                            <li>                    
+                                <div class="flex items-center space-x-2">
+                                    <label class="h-8 w-8 rounded-full bg-[#64748b] shadow-sm" ></label>
+                                    <p class="font-medium">Check-out</p>
+                                </div>
+                            </li>
+                            <li>                    
+                                <div class="flex items-center space-x-2">
+                                    <label class="h-8 w-8 rounded-full bg-[#fb7185] shadow-sm" ></label>
+                                    <p class="font-medium">Cancel</p>
+                                </div>
+                            </li>
+                        </ul>
+                      </div>
+                </div>
+                <div id='calendar' class="my-5"></div>
             </div> 
             @push('scripts')
                 <script type="module" src='{{Vite::asset("resources/js/reservation-calendar.js")}}'></script>

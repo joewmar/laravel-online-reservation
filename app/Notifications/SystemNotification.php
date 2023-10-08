@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notification;
 use Telegram\Bot\Laravel\Facades\Telegram;
 use Telegram\Bot\Objects\Message;
 
-class SystemNotification extends Notification
+class SystemNotification extends Notification implements ShouldQueue
 {
     use Queueable;
     protected $title,$message, $link, $telegramBot, $telegramText, $telegramLink, $telegramButton; 

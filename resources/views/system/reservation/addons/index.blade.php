@@ -93,7 +93,11 @@
         </div>
         <div class="flex justify-between items-center space-x-1 px-20">
             <div>
-              <div class="text-neutral"><strong>Number of days reminder: </strong>{{$user_days > 1 ? $user_days . ' days' : $user_days . ' day'}}</div>
+              @if(request()->has('tab') && request('tab') === 'TA')
+                <div class="text-neutral"><strong>Number of guest will be going to tour: </strong>{{$r_list->tour_pax}} pax</div>
+              @else
+                <div class="text-neutral"><strong>Number of Pax: </strong>{{$r_list->pax}} pax</div>
+              @endif
             </div>
             <div class="tabs tabs-boxed bg-transparent items-center">
                 <a href="{{route('system.reservation.show.addons', [encrypt($r_list->id), 'tab=TA'])}}" class="tab {{request()->has('tab') && request('tab') === 'TA' ? 'tab-active' : ''}}">Tour Addons</a> 
@@ -224,7 +228,7 @@
                                           </div>
                                       </label>
                                       {{-- Modal Tour Details --}}                                  
-                                      <x-modal id="{{Str::camel($list->title)}}" title="{{$list->title}}" alpinevar="price">
+                                      <x-modal id="{{Str::camel($list->title)}}" title="{{$list->title}}" alpinevar="price" noBottom>
                                         <article>
                                           <ul role="list" class="marker:text-primary list-disc pl-5 space-y-3 text-neutral">
                                             <li><strong>Number of days: </strong> {{$list->no_day <= 1 ? $list->no_day . ' day' : $list->no_day . ' days' }}</li>
@@ -303,7 +307,7 @@
                 @method('PUT')
                 <h2 class="text-2xl mb-5 font-bold">Add-ons</h2>
                 <x-select name="addons" id="addons" placeholder="Add-on" :value="$addonsIDS" :title="$addonsTitle" selected="{{$addonsTitle[old('addons')] ?? ''}}" />
-                <x-input name="pcs" id="pcs" placeholder="How many pcs" value="{{old('pcs') ?? ''}}" /> 
+                <x-input name="pcs" id="pcs" placeholder="How many pcs" value="{{old('pcs') ?? ''}}" max="{{$r_list->pax}}" /> 
                 <x-passcode-modal title="Other Add-ons Confirmation" id="other_modal" formId="other-form" />
                 <label for="other_modal" class="btn btn-primary btn-block">Add</label>
             </form>

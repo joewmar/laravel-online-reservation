@@ -14,19 +14,16 @@
     <div class="card w-full max-w-xl bg-base-100 rounded-box my-10">
       <div class="card-body">
         <h2 class="mb-1 font-bold text-xl md:text-3xl text-center">Let's Create Account!</h2>
-        <div class="flex justify-center gap-5">
-          <div class="tooltip" data-tip="Sign up with Google">
-            <a href={{route('google.redirect')}} class="btn btn-circle btn-outline btn-error">
-              <i class="fa-brands fa-google"></i>
-            </a>
-          </div>
-          <div class="tooltip" data-tip="Sign in with Facebook">
-            <a href={{route('facebook.redirect')}} class="btn btn-circle btn-outline btn-neutral">
-              <i class="fa-brands fa-facebook"></i>
-            </a>
-          </div>
+        <div class="flex flex-col justify-center gap-5">
+          <a href={{route('google.redirect')}} class="btn btn-block btn-outline btn-error">
+            <i class="fa-brands fa-google mr-4"></i>
+            Sign up with Google
+          </a>
+          {{-- <a href={{route('facebook.redirect')}} class="btn btn-block border-blue-500 text-neutral hover:bg-blue-500 hover:text-base-100">
+            <i class="fa-brands fa-facebook mr-2"></i>
+          </a> --}}
         </div>
-        <div class="divider">Sign up with social accounts</div>
+        <div class="divider">OR</div>
       @if(request()->exists('cin', 'cout', 'at', 'px', 'ck'))
         <form action="{{ route('create', $reservation) }}" method="post">
       @else

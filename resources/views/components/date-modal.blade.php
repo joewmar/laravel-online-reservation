@@ -11,8 +11,8 @@
       <section class="w-full text-red-500 mb-8">
         <h2 class="text-sm md:text-lg">Note: Before making reservations, we must prepare the following:</h2>
         <ul type="disc" class="text-xs md:text-sm list-disc pl-10">
-          <li>Downpayment through PayPal or Gcash.</li>
-          <li>Present of Valid ID (Government ID)</li>
+          <li>Downpayment through PayPal, Gcash or Bank Transfer</li>
+          <li>Present of Government ID or Any Validation ID</li>
           @if(isset($operation['from']) && isset($operation['to']))
             <li>In {{\Carbon\Carbon::createFromFormat('Y-m-d', $operation['from'] )->format('F j, Y (l)')}} up to {{\Carbon\Carbon::createFromFormat('Y-m-d', $operation['to'] )->format('F j, Y (l)')}} reservations will not be allowed due to {{$operation['reason']}}</li>
           @endif
@@ -38,8 +38,8 @@
     <script>
         @if(isset($operation['from']) && isset($operation['to']))
           const mop = {
-              from: '{{\Carbon\Carbon::createFromFormat('Y-m-d', $operation['from'])->format('Y-m-d')}}',
-              to: '{{\Carbon\Carbon::createFromFormat('Y-m-d', $operation['to'])->format('Y-m-d')}}'
+              from: '{{$operation['from']}}',
+              to: '{{$operation['to']}}'
           };
         @else
           const mop = '2001-15-30';

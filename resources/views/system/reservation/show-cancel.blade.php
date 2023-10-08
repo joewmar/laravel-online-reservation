@@ -30,17 +30,24 @@
                 </div>
             </div>
         </div>
-        <div class="flex justify-end">
+        <div class="my-5 flex justify-between items-center">
+            <h2 class="text-xl md:text-2xl  font-bold">Cancellation Request<sup class="text-sm text-error">{{$r_list->status === 5 ? ' *Reservation Canceled' : ''}}</sup></h2>
             <a href="{{route('system.reservation.force.cancel', encrypt($r_list->id))}}" class="btn btn-error btn-sm" {{$r_list->status < 1 ? 'disabled' : ''}}>Force Cancel</a>
         </div>
         <div class="divider"></div>
         <div class="w-full">
-            <h2 class="text-2xl mb-5 font-bold">Cancellation Request<sup class="text-sm text-error">{{$r_list->status === 5 ? ' *Reservation Canceled' : ''}}</sup></h2>
             <div class="grid grid-flow-row md:grid-flow-col">
-                <div>
-                    <h2 class="text-lg font-bold">Message</h2>
-                    <p class="text-md">{{$r_list->message['cancel']['message'] ?? 'None'}}</p>
-                </div>
+                @if(!($r_list->status === 4 || $r_list->status === 5 || !isset($r_list->message['cancel'])))
+                    <div>
+                        <h2 class="text-lg font-bold">Message</h2>
+                        <p class="text-md">{{$r_list->message['cancel']['message'] ?? 'None'}}</p>
+                    </div>
+                @else
+                    <div>
+                        <h2 class="text-lg font-medium text-center">No Request</h2>
+                    </div>
+                @endif
+
             </div>
         </div>
         <div class="divider"></div>

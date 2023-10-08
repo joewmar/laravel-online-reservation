@@ -97,6 +97,7 @@ class MyReservationController extends Controller
                 $tour_menuID = (int)str_replace('tm','', $key);
                 $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
                 $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'];
+                $tour_menu[$count]['tpx'] = $reservation->transaction['tm'.$tour_menuID]['tpx'];
                 $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
                 $total += (double)$tour_menu[$count]['amount'];
             }
@@ -111,21 +112,36 @@ class MyReservationController extends Controller
                 }
             }
             if (strpos($key, 'OA') !== false && is_array($item)) {
-                $OAID = (int)str_replace('OA','', $key);
-                foreach($item as $key => $dataAddons){
-                    $other_addons[$count+$key]['title'] = $reservation->transaction['OA'.$OAID][$key]['title'];
-                    $other_addons[$count+$key]['pcs'] = $reservation->transaction['OA'.$OAID][$key]['pcs'];
-                    $other_addons[$count+$key]['price'] = $reservation->transaction['OA'.$OAID][$key]['price'];
-                    $other_addons[$count+$key]['amount'] = $reservation->transaction['OA'.$OAID][$key]['amount'];
+                if(is_array($item)){
+                    foreach($item as $key => $value){
+                        $other_addons[$count.'-'.$key]['title'] = $value['title'];
+                        $other_addons[$count.'-'.$key]['pcs'] = $value['pcs'];
+                        $other_addons[$count.'-'.$key]['price'] = $value['price'];
+                        $other_addons[$count.'-'.$key]['amount'] = $value['amount'];
+                    }
                 }
+                else{
+                    $other_addons[$count]['title'] = $item['title'];
+                    $other_addons[$count]['pcs'] = $item['pcs'];
+                    $other_addons[$count]['price'] = $item['price'];
+                    $other_addons[$count]['amount'] = $item['amount'];
+                }
+
             }
             if (strpos($key, 'TA') !== false && is_array($item)) {
-                $TAID = (int)str_replace('TA','', $key);
-                foreach($item as $key => $tourAddons){
-                    $tour_menu[$count]['title'] = $reservation->transaction['TA'.$TAID][$key]['title'];
-                    $tour_menu[$count]['price'] = $reservation->transaction['TA'.$TAID][$key]['price'];
-                    $tour_menu[$count]['amount'] = $reservation->transaction['TA'.$TAID][$key]['amount'];
+                if(is_array($item)){
+                    foreach($item as $key => $value){
+                        $tour_menu[$count.'-'.$key]['title'] = $value['title'];
+                        $tour_menu[$count.'-'.$key]['price'] = $value['price'];
+                        $tour_menu[$count.'-'.$key]['amount'] = $value['amount'];
+                    }
                 }
+                else{
+                    $tour_menu[$count]['title'] = $item['title'];
+                    $tour_menu[$count]['price'] = $item['price'];
+                    $tour_menu[$count]['amount'] = $item['amount'];
+                }
+
             }
             $count++;
         }
@@ -284,6 +300,7 @@ class MyReservationController extends Controller
             if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
                 $tour_menuID = (int)str_replace('tm','', $key);
                 $tour_menu[$count]['title'] = $item['title'];
+                $tour_menu[$count]['tpx'] = $item['tpx'];
                 $tour_menu[$count]['price'] = $item['price'];
                 $tour_menu[$count]['amount'] = $item['amount'];
             }
@@ -295,19 +312,37 @@ class MyReservationController extends Controller
                 $rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
             }
             if (strpos($key, 'OA') !== false) {
-                $OAID = (int)str_replace('OA','', $key);
-                $other_addons[$count]['title'] = $reservation->transaction['OA'.$OAID]['title'];
-                $other_addons[$count]['price'] = $reservation->transaction['OA'.$OAID]['price'];
-                $other_addons[$count]['pcs'] = $reservation->transaction['OA'.$OAID]['pcs'];
-                $other_addons[$count]['amount'] = $reservation->transaction['OA'.$OAID]['amount'];
+                if(is_array($item)){
+                    foreach($item as $key => $value){
+                        $other_addons[$count.'-'.$key]['title'] = $value['title'];
+                        $other_addons[$count.'-'.$key]['pcs'] = $value['pcs'];
+                        $other_addons[$count.'-'.$key]['price'] = $value['price'];
+                        $other_addons[$count.'-'.$key]['amount'] = $value['amount'];
+                    }
+                }
+                else{
+                    $other_addons[$count]['title'] = $item['title'];
+                    $other_addons[$count]['pcs'] = $item['pcs'];
+                    $other_addons[$count]['price'] = $item['price'];
+                    $other_addons[$count]['amount'] = $item['amount'];
+                }
                 
             }
             if (strpos($key, 'TA') !== false) {
-                $TAID = (int)str_replace('TA','', $key);
-                $tour_addons[$count]['title'] = $reservation->transaction['TA'.$TAID]['title'];
-                $tour_addons[$count]['price'] = $reservation->transaction['TA'.$TAID]['price'];
-                $tour_addons[$count]['amount'] = $reservation->transaction['TA'.$TAID]['amount'];
-                
+                if(is_array($item)){
+                    foreach($item as $key => $value){
+                        $tour_addons[$count.'-'.$key]['title'] = $value['title'];
+                        $tour_addons[$count.'-'.$key]['tpx'] = $value['tpx'];
+                        $tour_addons[$count.'-'.$key]['price'] = $value['price'];
+                        $tour_addons[$count.'-'.$key]['amount'] = $value['amount'];
+                    }
+                }
+                else{
+                    $tour_addons[$count]['title'] = $item['title'];
+                    $tour_addons[$count]['tpx'] = $value['tpx'];
+                    $tour_addons[$count]['price'] = $item['price'];
+                    $tour_addons[$count]['amount'] = $item['amount'];
+                }
             }
             $count++;
         }

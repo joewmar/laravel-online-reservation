@@ -44,23 +44,54 @@ class Room extends Model
         unset($countOccupancy);
         return $isFull;
     }
-    public function getAllPax(){
+    public function getAllPax($check_in = null, $check_out = null, $id = null){
         $countPax = 0;
-        if(isset($this->attributes['customer'])){
-            foreach (json_decode($this->attributes['customer'], true) as $key => $item) {
-                $countPax += $item;
+        if(isset($check_in) && isset($check_out)){
+            $r_lists = Reservation::where(function ($query) use ($check_in, $check_out) {
+                $query->whereBetween('check_in', [$check_in, $check_out])
+                      ->orWhereBetween('check_out', [$check_in, $check_out])
+                      ->orWhere(function ($query) use ($check_in, $check_out) {
+                          $query->where('check_in', '<=', $check_in)
+                                ->where('check_out', '>=', $check_out);
+                      });
+            })->whereBetween('status', [1, 2]);
+            if(isset($id)) $r_lists = $r_lists->where('id', '!=', $id)->pluck('id');
+            else $r_lists = $r_lists->pluck('id');
+
+            if(isset($this->attributes['customer'])){
+                foreach($r_lists as $list){
+                    $customer = json_decode($this->attributes['customer'], true);
+                    if(array_key_exists($list, $customer)) $countPax += $customer[$list];
+                }
             }
+           
         }
+        if($countPax >= $this->room->max_occupancy) $countPax = $this->room->max_occupancy;
+
         return $countPax;
     }
-    public function getVacantPax(){
+    public function getVacantPax($check_in = null, $check_out = null, $id = null){
         $countPax = 0;
         $vacant = $this->room->max_occupancy;
-        if(isset($this->attributes['customer'])){
-            foreach (json_decode($this->attributes['customer'], true) as $key => $item) {
-                $countPax += $item;
+        if(isset($check_in) && isset($check_out)){
+            $r_lists = Reservation::where(function ($query) use ($check_in, $check_out) {
+                $query->whereBetween('check_in', [$check_in, $check_out])
+                      ->orWhereBetween('check_out', [$check_in, $check_out])
+                      ->orWhere(function ($query) use ($check_in, $check_out) {
+                          $query->where('check_in', '<=', $check_in)
+                                ->where('check_out', '>=', $check_out);
+                      });
+            })->whereBetween('status', [1, 2]);
+            if(isset($id)) $r_lists = $r_lists->where('id', '!=', $id)->pluck('id');
+            else $r_lists = $r_lists->pluck('id');
+            if(isset($this->attributes['customer'])){
+                foreach($r_lists as $list){
+                    $customer = json_decode($this->attributes['customer'], true);
+                    if(array_key_exists($list, $customer)) $countPax += $customer[$list];
+                }
             }
-            $vacant = abs($countPax - $this->room->max_occupancy);
+            if($countPax < $vacant) $vacant = abs($countPax - $vacant);
+            else $vacant = 0;
         }
         return $vacant;
     }

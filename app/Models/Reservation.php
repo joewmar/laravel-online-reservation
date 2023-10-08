@@ -29,12 +29,41 @@ class Reservation extends Model
         'transaction',
         'message',
     ];
+
+    protected $primaryKey = 'id'; // Set the custom ID as the primary key.
+    public $incrementing = false; // Disable auto-incrementing.
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            // Generate a custom ID with a prefix, date, and time-based increment.
+            $prefix = 'aar-'; // Customize the prefix based on your needs
+            $dateTime = now()->format('Ymd'); // Get the date and time in the format YmdHis (e.g., 20231005123456)
+
+            // Find the highest increment value for the current date and time
+            $latestRecord = static::where('id', 'like', $prefix . $dateTime . '%')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            if ($latestRecord) {
+                $latestIncrement = intval(substr($latestRecord->id, strlen($prefix . $dateTime)));
+            } else {
+                $latestIncrement = 0;
+            }
+
+            $newIncrement = $latestIncrement + 1;
+
+            // Build the custom ID
+            $customId = $prefix . $dateTime . str_pad($newIncrement, 3, '0', STR_PAD_LEFT);
+
+            $model->id = $customId;
+        });
+    }
     public function userReservation(){
         if(!empty($this->attributes['offline_user_id'])) return $this->belongsTo(UserOffline::class, 'offline_user_id');
         else return $this->belongsTo(User::class, 'user_id');
-    }
-    public function other_rooms(){
-        return $this->hasOne(RoomReserve::class, 'id');
     }
     public function room(){
         return $this->hasMany(Room::class, 'roomid');
@@ -163,18 +192,23 @@ class Reservation extends Model
             $paymentCustomer += $allPaid['payment']['cinpay'] ?? 0;
             $paymentCustomer += $allPaid['payment']['downpayment'] ?? 0;
         }
-        return abs($this->getTotal() - $paymentCustomer) ?? 0;
+        if($this->getTotal() > $paymentCustomer){
+            return abs($this->getTotal() - $paymentCustomer);
+        }
+        else return 0;
     }
     public function refund()
     {
         $refund = 0;
-        $customerPayment = 0;
+        $paymentCustomer = 0;
         $allPaid = json_decode($this->attributes['transaction'], true); 
         if(isset($allPaid['payment'])){
-            $customerPayment += $allPaid['payment']['cinpay'] ?? 0;
-            $customerPayment += $allPaid['payment']['downpayment'] ?? 0;
+            $paymentCustomer += $allPaid['payment']['cinpay'] ?? 0;
+            $paymentCustomer += $allPaid['payment']['downpayment'] ?? 0;
         }
-        if($this->getTotal() < $customerPayment) $refund =  abs($customerPayment - $this->getTotal());
+        if($this->getTotal() < $paymentCustomer){
+            $refund = abs($this->getTotal() - $paymentCustomer);
+        }
         return $refund;
     }
     public function checkedOut()

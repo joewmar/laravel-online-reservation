@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('reservations', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->string('id')->unique()->primary(); // Define the custom_id field as the primary key.
             $table->foreignId('user_id')->nullable()->constrained('users', 'id')->onDelete('cascade');
             $table->foreignId('offline_user_id')->nullable()->constrained('user_offlines', 'id')->onDelete('cascade');
             $table->json('roomid')->nullable();

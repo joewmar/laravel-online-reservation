@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class UserNotif extends Notification
+class UserNotif extends Notification implements ShouldQueue
 {
     use Queueable;
     private $link, $message, $emailDetails, $view;

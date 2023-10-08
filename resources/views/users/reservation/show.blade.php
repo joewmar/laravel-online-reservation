@@ -24,7 +24,7 @@
             <a href="{{URL::previous()}}" class="btn btn-ghost btn-circle">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
-            <div class="px-0 md:px-20">
+            <div class="px-3 md:px-20">
 
                 <div class="w-full sm:flex sm:space-x-6">
                     <div class="hidden md:flex flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
@@ -228,8 +228,8 @@
                                                     <i class="fa-solid fa-pen-to-square"></i>
                                                 </a>
                                             </td>
-                                            <td>Guest</td>
                                             <td>Price</td>
+                                            <td>Quantity</td>
                                             <td>Amount</td>
                                         </tr>
                                     </thead>
@@ -238,8 +238,8 @@
                                         @foreach ($menu as $key => $item)
                                             <tr>
                                                 <td>{{$item['title']}}</td> 
-                                                <td>{{$r_list->tour_pax}}</td> 
                                                 <td>₱ {{number_format($item['price'], 2)}}</td> 
+                                                <td class="text-center">{{$item['tpx']}} guest</td> 
                                                 <td>₱ {{number_format($item['amount'], 2)}}</td> 
                                             </tr>
                                             @php $amount += $item['amount']; @endphp
@@ -248,7 +248,7 @@
                                         <tr class="font-bold">
                                             <td></td> 
                                             <td></td> 
-                                            <td>Total</td> 
+                                            <td class="text-right">Total</td> 
                                             <td >₱ {{number_format($amount , 2)}}</td> 
                                         </tr>
                                     </tbody>
@@ -271,20 +271,28 @@
                                         <thead>
                                             <tr>
                                                 <th>Addons</th>
-                                                <th>Pcs</th>
+                                                <th>Quantity</th>
                                                 <th>Price</th>
                                                 <th>Amount</th>
                                             </tr>
                                         </thead>
                                         <tbody>
+                                            @php $totalAddons = 0 @endphp
                                             @foreach ($other_addons as $key => $addon)
                                                 <tr>
                                                     <td>{{$addon['title']}}</td> 
-                                                    <td>{{$addon['pcs'] ?? 0}} pcs</td> 
+                                                    <td>{{$addon['pcs'] ?? 0}}</td> 
                                                     <td>₱ {{number_format($addon['price'], 2)}}</td> 
                                                     <td>₱ {{number_format($addon['amount'], 2)}}</td> 
+                                                    @php $totalAddons += $addon['amount'] @endphp
                                                 </tr>
                                             @endforeach
+                                            <tr class="bg-base-200">
+                                                <td></td> 
+                                                <td></td> 
+                                                <td class="font-bold">Total</td> 
+                                                <td class="font-bold">₱ {{number_format($totalAddons, 2)}}</td> 
+                                            </tr>
                                         </tbody>
                                         </table>
                                     </div>

@@ -1,4 +1,4 @@
-<x-landing-layout>
+<x-landing-layout DOMLoading btnTop>
   @push('styles')
     <style>
       swiper-container {
@@ -21,7 +21,7 @@
     </style>
   @endpush
     <x-navbar :activeNav="$activeNav" />
-        
+
       <section class="bg-base-200 text-neutral overflow-x-hidden">
         @if (isset($tours))
           <swiper-container class="mySwiper h-screen rounded" keyboard="true" space-between="30" pagination="true" pagination-clickable="true" navigation="true" rewind="true" effect="fade">
@@ -251,8 +251,21 @@
         </div>
       </section>
       @push('scripts')
+        <script>
+          // In your JavaScript file
+          document.addEventListener("DOMContentLoaded", function () {
+              // Simulate a delay (you can replace this with your actual loading logic)
+              setTimeout(function () {
+                  // Hide the loading screen
+                  document.getElementById("loading-screen").style.display = "none";
+    
+                  // Show the main content
+                  document.getElementById("main-content").style.display = "block";
+              }, 2000); // Replace 2000 with your desired loading time in milliseconds
+          });
+    
+        </script>
         <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-element-bundle.min.js"></script>
         <script src="{{Vite::asset("resources/js/navbar.js")}}"></script>
-
       @endpush
     </x-landing-layout>

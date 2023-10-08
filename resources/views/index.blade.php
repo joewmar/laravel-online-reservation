@@ -1,5 +1,5 @@
 
-<x-landing-layout>
+<x-landing-layout DOMLoading btnTop>
   @push('styles')
   <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-element-bundle.min.js"></script>  
 
@@ -63,6 +63,10 @@
     </section>
 </swiper-container>
 
+  <button onclick="window.scrollTo(0, 0);" type="button" id="backTop" class="hidden bottom-5 right-5 z-[100] btn btn-primary btn-circle transition-all ease-in-out">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
 {{-- @include('news'); --}}
   @if (isset($announcements) && count($announcements) !== 0)
     <section class="text-neutral" >
@@ -119,7 +123,7 @@
     </section>
   @endif
 
-  <section class="h-screen overflow-hidden" data-aos="fade-down" data-aos-anchor-placement="center-bottom">
+  <section class="h-auto md:h-screen overflow-hidden" data-aos="fade-down" data-aos-anchor-placement="center-bottom">
     <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
       <div class="max-w-3xl">
         <h2 class="text-3xl font-bold sm:text-4xl">
@@ -202,7 +206,6 @@
   @include('gallery', ['gallery' => $web_contents->gallery ?? []])
 
   
-
   <x-date-modal id="reservation" :operation="['operation' => $web_contents->operation ?? true, 'from' => $web_contents->from ?? null, 'to' => $web_contents->to, 'reason' => $web_contents->reason]" />
 
   @push('scripts')

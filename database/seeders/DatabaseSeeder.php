@@ -91,7 +91,7 @@ class DatabaseSeeder extends Seeder
             'check_in' => Carbon::now()->addDays(16)->toDateTimeString(),
             'check_out' => Carbon::now()->addDays(18)->toDateTimeString(),
             'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-            'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'amount' => 2100.00 * 4]],
+            'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'tpx' => 4, 'amount' => 2100.00 * 4]],
         ]);
 
         \App\Models\System::factory()->create([

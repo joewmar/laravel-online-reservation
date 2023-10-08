@@ -1,6 +1,7 @@
 @props(['activeNav' => '', 'type' => ''])
 <div id="navbar" class="navbar transition duration-700 ease-in-out {{$type == 'plain' ? 'bg-base-100 shadow-md' : 'bg-transparent'}} fixed z-10">
     <div class="navbar-start">
+      {{-- sm screen size --}}
       <div class="dropdown">
         <label tabindex="0" class="btn btn-ghost lg:hidden {{$type == 'plain' ? 'text-neutral' : 'text-white toggleColour'}}">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" /></svg>
@@ -22,17 +23,18 @@
         <x-logo />
       </a>
     </div>
+    {{-- md screen size --}}
     <div class="navbar-center hidden lg:flex">
       <ul class="{{$type == 'plain' ? 'text-neutral' : 'toggleColour text-white'}} menu menu-horizontal px-1">
         @foreach ($landingNavbar as $key => $item)
             @if ($key === $activeNav)
-                <li><a class="text-primary font-semibold" href="{{$item}}">{{$key}}</a></li>
+                <li><a id="actLink" class="{{$type == 'plain' ? 'text-primary' : 'text-success'}} font-semibold hover:text-primary-content hover:bg-primary" href="{{$item}}">{{$key}}</a></li>
             @else
-                <li><a href="{{$item}}">{{$key}}</a></li>
+                <li><a href="{{$item}}" class="hover:text-primary-content hover:bg-primary">{{$key}}</a></li>
             @endif
         @endforeach
         @auth
-          <li><a href="{{route('user.reservation.home')}}" class="{{$activeNav === 'My Reservation' ? 'text-primary' : ''}}">My Reservation</a></li>  
+          <li><a id="actLink" href="{{route('user.reservation.home')}}" class="{{$activeNav === 'My Reservation' ? ($type == 'plain' ? 'text-primary font-semibold hover:text-primary-content hover:bg-primary' : 'text-success font-semibold hover:text-primary-content hover:bg-primary') : 'hover:text-primary-content hover:bg-primary'}}">My Reservation</a></li>  
         @endauth
       </ul>
     </div>

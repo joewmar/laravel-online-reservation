@@ -72,7 +72,7 @@
             <a href="{{URL::previous()}}" class="btn btn-ghost btn-circle">
               <i class="fa-solid fa-arrow-left"></i>
             </a>
-            <div class="px-0 md:px-20">
+            <div class="px-3 md:px-20">
                 <div class="w-full sm:flex sm:space-x-6">          
                     <div class="flex flex-col space-y-4">
                         <div>

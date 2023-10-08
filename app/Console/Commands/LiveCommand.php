@@ -3,12 +3,15 @@
 namespace App\Console\Commands;
 
 use Carbon\Carbon;
-use App\Models\Reservation;
-use App\Mail\ReservationMail;
-use App\Models\OnlinePayment;
 use App\Models\System;
 use App\Models\WebContent;
+use App\Models\Reservation;
+use Illuminate\Support\Arr;
+use App\Mail\ReservationMail;
+use App\Models\OnlinePayment;
 use Illuminate\Console\Command;
+use App\Notifications\UserNotif;
+use App\Jobs\SendTelegramMessage;
 use Illuminate\Support\Facades\Mail;
 
 class LiveCommand extends Command
@@ -59,9 +62,9 @@ class LiveCommand extends Command
                             ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reservations->id))],
                         ],
                     ];
-                    Mail::to(env('SAMPLE_EMAIL') ?? $item->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+                    $item->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab' => 'canceled'])) ,$details['body'], $details, 'reservation.mail')));
                     foreach($system_user as $user){
-                        if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
+                        if(!empty($user->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text, $keyboard));
                     }
                     $this->info('Cancel due downpayment');
     
@@ -93,16 +96,16 @@ class LiveCommand extends Command
                 //         ['text' => 'View Log', 'url' => route('system.reservation.show', encrypt($item->id))],
                 //     ],
                 // ];
-                Mail::to(env('SAMPLE_EMAIL') ?? $item->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
+                $item->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab' => 'canceled'])) ,$details['body'], $details, 'reservation.mail')));
                 foreach($system_user as $user){
-                    if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text);
+                    if(!empty($user->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text, $keyboard));
                 }
                 $this->info('Show up of customer');
             }
         }
         // Automatic Delete After One Month
         foreach($online_payments as $item){
-            if(Carbon::createFromFormat('Y-m-d', $item->check_in)->addMonth()->timestamp <= Carbon::now('Asia/Manila')->timestamp){
+            if(Carbon::createFromFormat('Y-m-d H:i:s', $item->created_at)->addMonth(1)->timestamp <= Carbon::now('Asia/Manila')->timestamp){
                 $item->delete();
             }
         }

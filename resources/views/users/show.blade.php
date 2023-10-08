@@ -42,12 +42,17 @@
                                 <x-phone-input value="{{$user->contact}}"/>
                                 <x-input type="email" name="email" id="email" placeholder="Contact Email" value="{{$user->email}}" />
                             </div>
-                            <label for="user_info_modal" class="btn btn-primary btn-sm">Save</label> 
-                            <x-modal id="user_info_modal" title="Do you want to save your information?" type="YesNo" formID="user_info_form" loader>
-                            </x-modal> 
+                            @if(!$isPending)
+                                <label for="user_info_modal" class="btn btn-primary btn-sm">Save</label> 
+                                <x-modal id="user_info_modal" title="Do you want to save your information?" type="YesNo" formID="user_info_form" loader>
+                                </x-modal> 
+                            @else
+                                <p class="text-xs text-red-500 mb-5">* You cannot change your personal information that you still have some pending reservation</p>
+                                <label class="btn btn-primary btn-sm" disabled>Save</label> 
+                            @endif
                         </form>
                         <div class="divider"></div>
-                        <form action="{{route('profile.update.password', encrypt($user->id))}}" method="POST">
+                        <form id="passf" action="{{route('profile.update.password', encrypt($user->id))}}" method="POST">
                             @csrf
                             @method('PUT')
                             <h2 class="text-2xl font-bold mb-5">Password</h2>
@@ -56,32 +61,40 @@
                                 <x-password name="current_password" id="current_password" placeholder="Current Password" />
                                 <x-password name="new_password" id="new_password" placeholder="New Password" validation/>
                                 <x-input type="password" name="new_password_confirmation" id="new_password_confirmation" placeholder="Confirm New Password" />
-                                <button @click="loader = true" class="btn btn-warning btn-sm">Change</button>  
+                                <label for="passmdl" class="btn btn-warning btn-sm">Change</label>  
+                                <x-modal id="passmdl" title="Do you want to change your password?" type="YesNo" formID="passf" loader>
+                                </x-modal> 
                             </div>
 
                         </form>
                         <div class="divider"></div>
-                        <h2 class="text-2xl font-bold mb-5">Valid ID</h2>
+                        <h2 class="text-2xl font-bold {{!$isPending ? 'mb-5' : ''}}">Valid ID</h2>
+                        @if ($isPending)
+                            <p class="text-xs text-red-500 {{$isPending ? 'mb-5' : ''}}">* You cannot change your valid ID because you still have pending reservation information.</p>
+                        @endif
+
                         <div class="join mt-5">
                             <label for="show_id_modal" class="btn btn-sm join-item">Show</label> 
-                            <label for="{{$isPending ? '' : 'edit_id_modal'}}" class="btn btn-primary btn-sm join-item" {{$isPending ? 'disabled' : ''}}>Change</label> 
+                            @if(!$isPending)
+                                <label for="edit_id_modal'" class="btn btn-primary btn-sm join-item">Change</label> 
+                                <x-modal id="edit_id_modal" title="Change Valid ID" loader>
+                                    <form action="{{route('profile.update.validid', encrypt($user->id))}}" method="POST" enctype="multipart/form-data" >
+                                        @csrf
+                                        @method('PUT')
+                                        <x-drag-drop name="valid_id" id="valid_id" />
+                                        <div class="modal-action">
+                                            <button type="submit" class="btn btn-primary" @click="loader = true">Save</button>
+                                        </div>
+                                    </form>
+                                </x-modal>
+                            @else
+                                <label class="btn btn-primary btn-sm join-item" disabled>Change</label> 
+                            @endif
                         </div>
-                        <x-modal id="edit_id_modal" title="Change Valid ID" loader>
-                            <form action="{{route('profile.update.validid', encrypt($user->id))}}" method="POST" enctype="multipart/form-data" >
-                                @csrf
-                                @method('PUT')
-                                <x-drag-drop name="valid_id" id="valid_id" />
-                                <div class="modal-action">
-                                    <button type="submit" class="btn btn-primary" @click="loader = true">Save</button>
-                                </div>
-                            </form>
-                        </x-modal>
+
                         <x-modal id="show_id_modal" title="Valid ID" loader>
                             @if(isset($user->valid_id))
                                 <div class="w-full rounded">
-                                    @if($isPending)
-                                        <p class="text-xs text-center text-error mb-3">You cannot change your valid ID because you still have pending reservation information.</p>
-                                    @endif
                                     <img src="{{route('private.image', ['folder' => explode('/', $user->valid_id)[0], 'filename' => explode('/', $user->valid_id)[1]])}}" alt="Valid ID of {{$user->name()}}">
                                 </div>
                             @else
@@ -89,12 +102,10 @@
                             @endif
                         </x-modal>
                         <div class="divider"></div>
-                        <h2 class="text-2xl font-bold mb-5">Account</h2>
-                        @if ($isPending)
-                            <x-tooltip title="You cannot delete your account that you still have pending reservation information." color="error" position="right md:tooltip-top">
-                                <label for="{{$isPending ? '' : 'delete_acc_modal'}}" class="btn btn-primary btn-sm" {{$isPending ? 'disabled' : ''}}>Delete Account</label> 
-        
-                            </x-tooltip>
+                        <h2 class="text-2xl font-bold {{!$canDelAcc ? 'mb-5' : ''}}">Account</h2>
+                        @if ($canDelAcc)
+                            <p class="text-xs text-red-500 {{$canDelAcc ? 'mb-5' : ''}}">* You cannot delete your account that you still have some pending reservation</p>
+                            <label class="btn btn-primary btn-sm" disabled>Delete Account</label> 
                         @else
                             <label for="delete_acc_modal" class="btn btn-error btn-sm">Delete Account</label> 
                             <x-modal id="delete_acc_modal" title="Delete Account Confirmation" loader>

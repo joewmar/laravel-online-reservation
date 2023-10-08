@@ -57,7 +57,6 @@ class System extends Authenticatable
         if($this->attributes['type'] === 0) $role = "Admin";
         elseif ($this->attributes['type'] === 1)  $role = "Manager";
         elseif ($this->attributes['type'] === 2)  $role = "Front Desk";
-        elseif ($this->attributes['type'] === 3)  $role = "Staff";
         return $role ?? $this->attributes['type'];
     }
     public function name(){

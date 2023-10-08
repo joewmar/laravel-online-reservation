@@ -30,9 +30,14 @@ class UserController extends Controller
     public function index(){
         $user = User::findOrFail(auth('web')->user()->id);
         $isPending = Reservation::whereBetween('status', [1, 2])->where('user_id', $user->id)->get();
+        $canDelAcc = Reservation::whereBetween('status', [0, 1, 2])->where('user_id', $user->id)->get();
         if($isPending->count() !== 0) $isPending = true;
         else $isPending = false;
-        return view('users.show', ['activeNav' => 'Profile','user' => $user, 'isPending' => $isPending]);
+
+        if($canDelAcc->count() !== 0) $canDelAcc = true;
+        else $canDelAcc = false;
+
+        return view('users.show', ['activeNav' => 'Profile','user' => $user, 'isPending' => $isPending, 'canDelAcc' => $canDelAcc]);
     }
     public function updateAvatar(Request $request, $id){
         $user = User::findOrFail(decrypt($id));
