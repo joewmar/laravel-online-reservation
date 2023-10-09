@@ -9,9 +9,9 @@
       </div>
     </div>
   </div>
-
-  <x-full-content id="story">
+  <x-full-content >
     <article class="mx-auto prose-lg p-10 w-full md:w-[60%]" >
+      <div id="story"></div>
       <h2 class="text-center font-extrabold">Our Story</h2>
       <img src="{{asset('images/AlvinAngiePlace.jpg')}}" alt="Alvin and Angie Guest House Location" class="rounded-md">
       <p class="text-justify">

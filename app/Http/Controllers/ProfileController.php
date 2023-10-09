@@ -6,6 +6,7 @@ use App\Models\System;
 use Illuminate\Http\Request;
 use Laravel\Ui\Presets\React;
 use Illuminate\Validation\Rule;
+use App\Jobs\SendTelegramMessage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -42,7 +43,7 @@ class ProfileController extends Controller
         }
 
         $updated = $system_user->update($validated);
-        if($system_user->telegram_chatID && $updated) telegramSendMessage($system_user->telegram_chatID, "Hello there, " . $system_user->name() . " Your username was updated", null, 'bot2');
+        if($system_user->telegram_chatID && $updated) dispatch(new SendTelegramMessage($system_user->telegram_chatID, "Hello there, " . $system_user->name() . " Your username was updated", null, 'bot2'));
         if($updated) return redirect()->route('system.profile.edit')->with('success', 'Your Profile was updated');
     }
     public function updateAvatar(Request $request, $id){

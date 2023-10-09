@@ -64,9 +64,7 @@
               <li>No Notifications</li>
             @endforelse 
           </ul>
-          <div class="card-actions flex justify-between">
-            {{-- <a href="{{route('system.notifications')}}" class="btn btn-primary btn-block">See All</a> --}}
-          </div>
+          <a href="{{route('user.notifications')}}" class="btn btn-primary btn-block">See All</a>
         </div>
       </div>
     </div>

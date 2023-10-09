@@ -8,12 +8,12 @@
                 <h1 class="font-semibold text-xl md:text-2xl hidden md:block">Sales Report</h1>
                 <div class="tabs tabs-boxed bg-transparent">
                     <a href="{{route('system.analytics.home')}}" class="{{request()->has('tab') ? 'tab' : 'tab tab-active'}}">Daily</a> 
-                    <a href="{{route('system.analytics.home', 'tab=weekly')}}" class="{{request()->has('tab') && request('tab') === 'weekly' ? 'tab tab-active' : 'tab '}}">Weekly</a> 
-                    <a href="{{route('system.analytics.home', 'tab=monthly')}}" class="{{request()->has('tab') && request('tab') === 'monthly' ? 'tab tab-active' : 'tab '}}">Monthly</a>
-                    <a href="{{route('system.analytics.home', 'tab=yearly')}}" class="{{request()->has('tab') && request('tab') === 'yearly' ? 'tab tab-active' : 'tab '}}">Yearly</a>
+                    <a href="{{route('system.analytics.home', ['type=sales', 'tab=weekly'])}}" class="{{(request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'weekly' ? 'tab tab-active' : 'tab '}}">Weekly</a> 
+                    <a href="{{route('system.analytics.home', ['type=sales', 'tab=monthly'])}}" class="{{(request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'monthly' ? 'tab tab-active' : 'tab '}}">Monthly</a>
+                    <a href="{{route('system.analytics.home', ['type=sales', 'tab=yearly'])}}" class="{{(request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'yearly' ? 'tab tab-active' : 'tab '}}">Yearly</a>
                 </div>
             </div>
-            @if(request()->has('tab') && request('tab') === 'weekly')
+            @if((request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'weekly')
                 <div class="h-96">
                     <canvas id="weeklyChart"></canvas>
                     <script>
@@ -35,12 +35,20 @@
                             },
                             options: {
                                 responsive: true,
-                                maintainAspectRatio: false
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        min: 1000,     // I-set ang minimum value sa 0
+                                        ticks: {
+                                            stepSize: 2,  // Ang step size para sa mga ticks
+                                        }
+                                    }
+                                }
                             }
                         });
                     </script>
                 </div>
-            @elseif(request()->has('tab') && request('tab') === 'monthly' )
+            @elseif((request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'monthly' )
                 <div class="h-96">
                     <canvas id="monthlyChart"></canvas>
                     <script>
@@ -69,12 +77,20 @@
                             },
                             options: {
                                 responsive: true,
-                                maintainAspectRatio: false
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        min: 1000,     // I-set ang minimum value sa 0
+                                        ticks: {
+                                            stepSize: 2,  // Ang step size para sa mga ticks
+                                        }
+                                    }
+                                }
                             }
                         });
                     </script>
                 </div>
-            @elseif(request()->has('tab') && request('tab') === 'yearly')
+            @elseif((request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'yearly')
                 <div class="h-96">
                     <canvas id="yearlyChart"></canvas>
                     <script>
@@ -97,7 +113,15 @@
                             },
                             options: {
                                 responsive: true,
-                                maintainAspectRatio: false
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        min: 1000,     // I-set ang minimum value sa 0
+                                        ticks: {
+                                            stepSize: 2,  // Ang step size para sa mga ticks
+                                        }
+                                    }
+                                }
                             }
                         });
                     </script>
@@ -124,15 +148,23 @@
                             },
                             options: {
                                 responsive: true,
-                                maintainAspectRatio: false
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        min: 1000,     // I-set ang minimum value sa 0
+                                        ticks: {
+                                            stepSize: 1000,  // Ang step size para sa mga ticks
+                                        }
+                                    }
+                                }
                             }
                         });
                     </script>
                 </div>
             @endif
             <div class="divider"></div>
+            <h1 class="text-xl md:text-2xl font-semibold mb-5">Total of Customer: Nationality</h1>
             <div class="flex flex-col items-center justify-center">
-                <h1 class="text-xl md:text-2xl font-semibold mb-5">Nationality</h1>
                 <div class="w-full">
                     <canvas id="nationalityChart" width="400" height="400"></canvas>
                 </div>
@@ -167,6 +199,49 @@
                                 }
                             },
                         },
+                    });
+                </script>
+            </div>
+            <div class="flex justify-between my-5 w-full">
+                <h1 class="text-xl md:text-2xl font-semibold mb-5">Total of Customer: Today</h1>
+                <div class="tabs tabs-boxed bg-transparent">
+                    <a href="{{route('system.analytics.home')}}" class="{{ request()->has('type') && request('type') === 'customer' && request()->has('tab') ? 'tab' : 'tab tab-active'}}">Daily</a> 
+                    <a href="{{route('system.analytics.home', ['type=customer', 'tab=weekly'])}}" class="{{ (request()->has('type') && request('type') === 'customer') && (request()->has('tab') && request('tab') === 'weekly') ? 'tab tab-active' : 'tab'}}">Weekly</a> 
+                    <a href="{{route('system.analytics.home', ['type=customer', 'tab=monthly'])}}" class="{{ (request()->has('type') && request('type') === 'customer') && (request()->has('tab') && request('tab')) === 'monthly' ? 'tab tab-active' : 'tab'}}">Monthly</a>
+                    <a href="{{route('system.analytics.home', ['type=customer', 'tab=yearly'])}}" class="{{ (request()->has('type') && request('type') === 'customer') && (request()->has('tab') && request('tab'))=== 'yearly' ? 'tab tab-active' : 'tab'}}">Yearly</a>
+                </div>
+            </div>
+            <div class="h-96">
+                <canvas id="dailyChartCount"></canvas>
+                <script>
+                    var ctx = document.getElementById('dailyChartCount').getContext('2d');
+                    var dailyData = {!! json_encode($customerCount) !!};
+                    
+                    var labels = dailyData.map(item => item.formatted_date);
+                    var count = dailyData.map(item => item.customer_count);
+            
+                    var chart = new Chart(ctx, {
+                        type: 'bar', // Pumili ng tamang uri ng tsart (line, bar, etc.)
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Customer',
+                                data: count,
+                                backgroundColor: '#409122'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    min: 0,     // I-set ang minimum value sa 0
+                                    ticks: {
+                                        stepSize: 1,  // Ang step size para sa mga ticks
+                                    }
+                                }
+                            }
+                        }
                     });
                 </script>
             </div>

@@ -340,7 +340,7 @@
                                 </tr>
                                 <tr>
                                     <th>Senior Guest</th>
-                                    <td>₱ {{$dscPerson ?? 0}} Guest</td>
+                                    <td>{{$dscPerson ?? 0}} Guest</td>
                                 </tr>
                                 <tr>
                                     <th>Discount</th>

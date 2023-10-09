@@ -103,7 +103,7 @@ class SystemController extends Controller
         }
     
         $systemUser = System::create($validated);
-        telegramSendMessage($systemUser->telegram_chatID, "Hello there, " . $systemUser->first_name . " Your username was verified", null, 'bot2');
+        dispatch(new SendTelegramMessage($systemUser->telegram_chatID, "Hello there, " . $systemUser->first_name . " Your username was verified", null, 'bot2'));
         return redirect()->route('system.setting.accounts.accounts')->with('success', $systemUser->name() . ' was Created');
 
     }
@@ -185,7 +185,7 @@ class SystemController extends Controller
     }
     public function markAsRead(){
         Auth::guard('system')->user()->unreadNotifications->markAsRead();
-        return redirect()->back();
+        return back();
     }
     public function logout(Request $request){
         $this->systemNotification(Auth::guard('system')->user()->name() . " was logged out");

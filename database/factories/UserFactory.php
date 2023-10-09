@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -15,6 +16,7 @@ class UserFactory extends Factory
      *
      * @return array<string, mixed>
      */
+    
     public function definition(): array
     {
         $arrNationality = array(
@@ -163,16 +165,28 @@ class UserFactory extends Factory
             "Qatari",
             "Romanian",
             "Russian",
-            );
+        );
+        $first_name = fake()->firstName();
+        $birthday = fake()->date('Y-m-d');
+        $password = str_replace(' ', '', $first_name) . '@' . str_replace('-', '', $birthday);
+
+        $emails = [
+            'joemarieportacio00@gmail.com',
+            'armanescoto0@gmail.com',
+            'aniellaygee@gmail.com',
+            'aquinovinel@gmail.com',
+            'schooltabelisma@gmail.com',
+        ];
         return [
-            'first_name' => fake()->firstName(),
+            'first_name' => $first_name,
             'last_name' => fake()->lastName(),
+            'birthday' => $birthday,
             'nationality' =>fake()->randomElement($arrNationality),
             'country' => fake()->country(),
             'contact' => fake()->e164PhoneNumber(),
-            'email' => fake()->unique()->safeEmail(),
+            'email' => fake()->randomElement($emails),
             'email_verified_at' => now(),
-            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+            'password' => Hash::make($password), // password
             'remember_token' => Str::random(10),
         ];
     }

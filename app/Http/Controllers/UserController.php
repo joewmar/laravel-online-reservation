@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
+use Laravel\Ui\Presets\React;
 use Illuminate\Validation\Rule;
 use Mockery\CountValidator\AtMost;
 use Illuminate\Support\Facades\Auth;
@@ -17,9 +18,9 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
-use Laravel\Ui\Presets\React;
 use Propaganistas\LaravelPhone\PhoneNumber;
 use Propaganistas\LaravelPhone\Rules\Phone;
+use Illuminate\Notifications\DatabaseNotification;
 
 class UserController extends Controller
 {
@@ -368,6 +369,30 @@ class UserController extends Controller
             $request->session()->invalidate();
             $request->session()->regenerateToken();
             return redirect('/')->with('success', 'Your Account was permanent delete');
+        }
+    }
+    public function notifications(){
+        return view('users.notifications', ['activeNav' => 'Notifications','myNotif' => auth('web')->user()->unreadNotifications ?? []]);
+    }
+    public function userMarkReads(){
+        Auth::guard('web')->user()->unreadNotifications->markAsRead();
+        return back();
+    }
+    public function deleteOneNotif($id){
+        $user = Auth::user();
+        // Find the notification you want to delete by its ID
+        $notification = DatabaseNotification::find(decrypt($id));
+        
+        // Check if the notification belongs to the user before deleting it
+        if ($notification && $notification->notifiable_id === $user->id) {
+            $notification->delete();
+            
+            // Optionally, you can also mark it as read
+            // $notification->markAsRead();
+            
+            return back();
+        } else {
+            return back()->with('success', "Notification not found or you don't have permission to delete it");
         }
     }
     

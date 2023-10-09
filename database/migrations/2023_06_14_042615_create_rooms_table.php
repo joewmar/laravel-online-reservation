@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('rooms', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('roomid')->constrained('room_lists', 'id')->onDelete('cascade');
+            $table->foreignId('roomid')->nullable()->constrained('room_lists', 'id')->onDelete('cascade');
             $table->integer('room_no');
             $table->boolean('availability')->default(false);
             $table->json('customer')->nullable(); // Ex. customerID-pax ({'reservationID' : 'pax'})

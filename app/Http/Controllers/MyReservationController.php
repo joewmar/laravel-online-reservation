@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendTelegramMessage;
 use App\Models\Room;
 use App\Models\System;
 use App\Models\Archive;
@@ -32,7 +33,8 @@ class MyReservationController extends Controller
             ];
         }
         foreach($systems as $system){
-            if(isset($system->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard);
+            if(isset($system->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $system->telegram_chatID, $text, $keyboard));
+
         }
 
         Notification::send($systems, new SystemNotification('Employee Action from '.auth()->guard('system')->user()->name().': ' . Str::limit($text, 10, '...'), $text, route('system.notifications')));
@@ -180,10 +182,10 @@ class MyReservationController extends Controller
             "Why to Cancel: " .$validate['cancel_message']; 
             $keyboard = [
                 [
-                    ['text' => 'View Cancel Request', 'url' => route('system.reservation.show.cancel', encrypt($reservation->id))],
+                    ['text' => 'View', 'url' => route('system.reservation.show.cancel', encrypt($reservation->id))],
                 ],
             ];
-            foreach($systemUser as $user) if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
+            foreach($systemUser as $user) if(!empty($user->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text, $keyboard));
             return redirect()->route('user.reservation.home')->with('success', 'Cancel Request was succesfull to send. Just Wait Send Email or any Contact for Approval Request');
         }
     }
@@ -278,7 +280,7 @@ class MyReservationController extends Controller
                     ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reservation->id))],
                 ],
             ];
-            foreach($systemUser as $user) if(!empty($user->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $user->telegram_chatID), $text, $keyboard, 'bot1');
+            foreach($systemUser as $user) if(!empty($user->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text, $keyboard));
             return redirect()->route('user.reservation.home')->with('success', 'Reschedule Request was succesfull to send. Just Wait Send Email or any Contact for Approval Request');
         }
     }
@@ -484,7 +486,7 @@ class MyReservationController extends Controller
             'new_pax.required' => 'Required to fill up number of guest ',
             'new_pax.numeric' => 'Number of guest should be number only',
             'new_pax.min' => 'Number of guest should be 1 and above',
-            'new_pax.max' => 'INumber of guest should be '.$reservation->pax.' guest below',
+            'new_pax.max' => 'Number of guest should be '.$reservation->pax.' guest below',
         ]);     
         if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput();
         
@@ -492,14 +494,15 @@ class MyReservationController extends Controller
 
         // Remove All Tours
         foreach($transaction ?? [] as $key => $item){
-            if (strpos($key, 'TA') !== false || strpos($key, 'tm') !== false) {
+            if (strpos($key, 'tm') !== false) {
                 unset($transaction[$key]);
             }
         }
         foreach($validated['tour_menu'] as $item){
             $tours = TourMenu::find($item);
-            $transaction['TA'.$item] = [
+            $transaction['tm'.$item] = [
                 'title' => $tours->tourMenu->title . ' ' . $tours->type . '('.$tours->pax.' pax)',
+                'tpx' => (int)$validated['new_pax'],
                 'price' => $tours->price ?? 0,
                 'amount' => ((double)$tours->price ?? 0) * (int)$validated['new_pax'],
             ];

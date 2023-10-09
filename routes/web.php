@@ -93,6 +93,10 @@ Route::middleware(['guest:web'])->group(function(){
 // Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
 Route::middleware(['auth:web', 'preventBackhHistory'])->controller(UserController::class)->group(function(){
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
+    Route::get('/notifications', [UserController::class, 'notifications'])->name('user.notifications');
+    Route::get('/notifications/mark-as-read', [UserController::class, 'userMarkReads'])->name('user.notifications.mark-as-read');
+    Route::delete('/notifications/{id}/delete', [UserController::class, 'deleteOneNotif'])->name('user.notifications.destroy');
+
     Route::prefix('profile')->name('profile.')->group(function (){
         Route::get('/', 'index')->name('home');
         Route::put('/{id}/update/avatar', 'updateAvatar')->name('update.avatar');

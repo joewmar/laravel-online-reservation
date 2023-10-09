@@ -103,12 +103,23 @@ class EditReservationController extends Controller
         }
         return $roomCustomer; 
     }
+    private function deleteInfo(Reservation $r_list){   
+        foreach(Room::all() as $room) $room->removeCustomer($r_list->id);
+        $transaction = $r_list->transaction;
+        foreach($transaction as $key => $item){
+            if (strpos($key, 'rid') !== false) unset($transaction[$key]);
+            if (strpos($key, 'payment') !== false) unset($transaction[$key]);
+        }
+        $updated = $r_list->update(['roomid' => null, 'roomrateid' => null, 'transaction' => $transaction]);
+        return $updated;
+    }
     public function information($id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
         return view('system.reservation.edit.information', ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
     public function updateInfo(Request $request, $id){
+        $system_user = $this->system_user->user();
         $reservation = Reservation::findOrFail(decrypt($id));
         $validate = Validator::make($request->all(), [
             'age' => ['required', 'numeric'],
@@ -125,10 +136,10 @@ class EditReservationController extends Controller
         
         if($validate->fails()) return back()->with('error', $validate->errors()->all());
         $validate = $validate->validate();
+
         if($reservation->pax == $validate['pax'] && $reservation->status == $validate['status']){
-            dd('Working One');
-            if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
-            unset($validate['room_pax'], $validate['room_rate'], $validate['passcode']);
+            if(!Hash::check($validate['passcode'], $system_user->passcode)) return back()->with('error', 'Invalid Passcode');
+            unset($validate['passcode']);
             $updated = $reservation->update($validate);
             if($updated) return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . ' Information was Updated');
         }
@@ -142,22 +153,30 @@ class EditReservationController extends Controller
                 'py' => $validate['payment_method'],
                 'st' => $validate['status'],
             ]);
-            // dd($encrypted);
-            if($reservation->pax != $validate['pax'] || $validate['status'] == 1){
+            // dd($reservation->downpayment());
+            if($reservation->pax != $validate['pax'] || $validate['status'] == 1 || $validate['status'] == 2 ){
                 return redirect()->route('system.reservation.edit.information.room', ['id' => encrypt($reservation->id), Arr::query($encrypted)]);
             }
-            if($reservation->status == 0){
+            if($validate['status'] == 0){
+                $this->deleteInfo($reservation);
                 $transaction = $reservation->transaction;
-                foreach($transaction ?? [] as $key => $item){
-                    if (strpos($key, 'rid') !== false ) unset($transaction[$key]);
-                    if (strpos($key, 'payment') !== false ) unset($transaction[$key]);
+                foreach($transaction as $key => $item){
+                    if (strpos($key, 'TA') !== false) unset($transaction[$key]);
+                    if (strpos($key, 'OA') !== false) unset($transaction[$key]);
                 }
-                $validate['roomid'] = [];
-                $validate['roomrateid'] = [];
                 $validate['transaction'] = $transaction;
-                $updated = $reservation->update($validate);
-                foreach(Room::all() ?? [] as $item) $item->removeCustomer($reservation->id);
-                if($updated) return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . ' Information was Updated');
+            }
+
+            $updated = $reservation->update($validate);
+            if($updated) {
+                $details = [
+                    'name' => $reservation->userReservation->name(),
+                    'title' => "Edit Information",
+                    'body' => "Your Reservation was updated by " . $system_user->name(). '. If you have Concern Please Contact us',
+                ];
+                $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail')));
+                $this->employeeLogNotif('Update Reservation for ' . $reservation->userReservation->name(), route('system.reservation.show', $id));
+                return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . ' Information was Updated');
             }
         }
 
@@ -166,6 +185,8 @@ class EditReservationController extends Controller
     public function changeRoom(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
         $save = decryptedArray($request->query());
+        if(empty($save)) abort(404);
+        if(!($reservation->pax != $save['px']  || $save['st']  == 1 || $save['st'] == 2 )) abort(404);
         $rooms = Room::all();
         $rate = RoomRate::all();
         $rateID = null;
@@ -199,61 +220,98 @@ class EditReservationController extends Controller
     }
     public function updateInfoRoom(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
-        dd($request->all());
+        $info = decryptedArray($request->query());
+        if(empty($info)) abort(404);
+        $system_user = $this->system_user->user();
+
+        $isNotPending = $reservation->pax != $info['px'] || $info['st'] == 1 || $info['st'] == 2;
         $validate = Validator::make($request->all(), [
             'force' => Rule::when(isset($request['force']), ['required']),
             'passcode' => Rule::when(isset($request['passcode']) && $reservation->pax == $request['pax'], ['required', 'digits:4']),
-            'room_rate' => Rule::when($reservation->pax != $request['pax'], ['required']),
-            'room_pax' => Rule::when($reservation->pax != $request['pax'], ['required']),
+            'room_rate' => Rule::when($isNotPending, ['required']),
+            'room_pax' => Rule::when($isNotPending, ['required']),
+            'senior_count' => Rule::when($info['st'] == 2 && isset($request['hs']) && $request['hs'] == 'on', ['required', 'numeric']),
+            'cnpy' => Rule::when($info['st'] == 2, ['required']),
+            'amountdy' => Rule::when($info['st'] == 1, ['required', 'numeric', 'min:1000']),
+            'amountcinp' => Rule::when($info['st'] == 2 && (isset($request['cnpy']) && $request['cnpy'] == 'partial'), ['required', 'numeric', 'min:1']),
         ], [
             'required' => 'Required (:attribute)',
+            'cnpy.required' => 'Required (Check-in Payment Selection)',
+            'amountdy.required' => 'Required (Check-in Downpayment)',
+            'amountcinp.required' => 'Required (Check-in Payment Selection)',
         ]);
         
         if($validate->fails()) return back()->with('error', $validate->errors()->all());
         $validate = $validate->validate();
-
         $rp = 0;
-        foreach($validate['room_pax'] as $newPax){
+        foreach($validate['room_pax'] ?? [] as $newPax){
             $rp += (int)$newPax;
-            if($rp > $validate['pax'] && $rp < $validate['pax']) return back()->with('error', 'Guest you choose ('.$rp.' pax) does not match on Customer Guest ('.$validate['pax'].' pax)')->withInput($validate);
+            if($rp > $info['px'] && $rp < $info['px']) return back()->with('error', 'Guest you choose ('.$rp.' pax) does not match on Customer Guest ('.$validate['pax'].' pax)')->withInput($validate);
         }
-
-        $transaction = $reservation->transaction;
         $roomCustomer = $this->roomAssign($validate['room_pax'], $reservation, $validate, ($request['force'] === 'on' ? true : false), true);
-        // dd($roomCustomer);
-
         if(!is_array($roomCustomer)) return $roomCustomer;
-        foreach(Room::all() as $room) $room->removeCustomer($reservation->id);
-        foreach($roomCustomer as $roomid => $pax){
-            $room = Room::find($roomid);
-            $room->addCustomer($reservation->id, $pax);
-        }
-        $rate = RoomRate::find(decrypt($validate['room_rate']));
-        foreach($transaction ?? [] as $key => $item){
-            if (strpos($key, 'rid') !== false ) unset($transaction[$key]);
-        }
-        if($rate){
+        
+    
+        $this->deleteInfo($reservation);
+        $transaction = $reservation->transaction;
+
+        $rate = RoomRate::find(decrypt($validate['room_rate'])) ?? [];
+
+        if(!empty($rate)){
             $transaction['rid'.$rate->id]['title'] = $rate->name;
             $transaction['rid'.$rate->id]['price'] = $rate->price;
             $transaction['rid'.$rate->id]['amount'] = $rate->price * $reservation->getNoDays();
-            if(isset($transaction['payment']['discountPerson'])){
-                $discounted = null;
-                $discounted = (20 / 100) * (int)$transaction['payment']['discountPerson'];
-                $discounted = (double)($transaction['rid'.$rate->id]['amount'] * $discounted);
-                $discounted = (double)($transaction['rid'.$rate->id]['amount'] - $discounted);
-                $transaction['rid'.$rate->id]['orig_amount'] = $transaction['rid'.$rate->id]['amount'];
-                $transaction['rid'.$rate->id]['amount'] = $discounted;
-            }
-
         }
+        if(isset($validate['senior_count'])) {
+            $transaction['payment']['discountPerson'] = $validate['senior_count'];
+            $discounted = (20 / 100) * (int)$validate['senior_count'];
+            $discounted = (double)($transaction['rid'.$rate->id]['amount'] * $discounted);
+            $discounted = (double)($transaction['rid'.$rate->id]['amount'] - $discounted);
+            $transaction['rid'.$rate->id]['orig_amount'] = $transaction['rid'.$rate->id]['amount'];
+            $transaction['rid'.$rate->id]['amount'] = $discounted;
+        } 
+        $reservation->transaction = $transaction;
+
+        $reservation->save();
+        if($info['st'] == 2) {
+            if($validate['cnpy'] == 'partial') $transaction['payment']['cinpay'] = $validate['amountcinp'];
+            else $transaction['payment']['cinpay'] = $reservation->balance();
+        };
+        if($info['st'] == 1) $transaction['payment']['downpayment'] = $validate['amountdy'];
+
         unset($validate['room_pax'], $validate['passcode'], $validate['room_rate']);
         if(isset($validate['force'])) unset($validate['force']);
-        $validate['roomid'] = array_keys($roomCustomer);
-        $validate['roomrateid'] = $rate->id;
-        
-        $updated = $reservation->update($validate);
-    
-        if($updated) return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . ' Information was Updated');
+
+        $info = [
+            'roomid' => array_keys($roomCustomer),
+            'roomrateid' => $rate->id,
+            'age' => $info["age"],
+            'check_in' => $info["cin"],
+            'check_out' => $info["cout"],
+            'accommodation_type' => $info["at"],
+            'pax' => $info["px"],
+            'tour_pax' => $reservation->pax > $info["px"] ? $info["px"] : $reservation->pax,
+            'payment_method' => $info["py"],
+            'status' => $info["st"],
+            'transaction' => $transaction,
+        ];
+
+        $updated = $reservation->update($info);
+
+        if($updated) {
+            foreach($roomCustomer as $roomid => $pax){
+                $room = Room::find($roomid);
+                $room->addCustomer($reservation->id, $pax);
+            }
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => "Edit Information",
+                'body' => "Your Reservation was updated by " . $system_user->name(). '. If you have Concern Please Contact of Owner',
+            ];
+            $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail')));
+            $this->employeeLogNotif('Update Reservation for ' . $reservation->userReservation->name(), route('system.reservation.show', $id));
+            return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . ' Information was Updated');
+        }
     }
     public function services($id){
         $reservation = Reservation::findOrFail(decrypt($id));

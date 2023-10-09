@@ -45,20 +45,24 @@
                                 @endif
                                 <a href="{{route('user.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs join-item" >More Details</a>
                               </div>
-                              @if ($list->status !== 5 || $list->status !== 4)
+                              @if ($list->status !== 5 || $list->status !== 4 )
                                 <x-modal id="{{isset($list->message['cancel']) ? 'disabledALl' : 'cancel_modal'}}" title="Why do you want to cancel?"> 
-                                  <form action="{{route('user.reservation.cancel', encrypt($list->id))}}" method="POST">
+                                  <form id="cancelfrm" action="{{route('user.reservation.cancel', encrypt($list->id))}}" method="POST">
                                     @csrf
                                     @method('PUT')
                                     <x-textarea name="cancel_message" id="cancel_message" placeholder="Reason" />
                                     <div class="modal-action">
-                                      <button class="btn btn-error">Cancel Now</button>
+                                      <label for="cnclmdl" class="btn btn-error">Cancel Now</label>
                                     </div>
+
                                   </form>
                                 </x-modal> 
                                 
+                                <x-modal id="cnclmdl" title="Do you want to Cancel?" type='YesNo' formID="cancelfrm">
+                                </x-modal>
+
                                 <x-modal id="reschedule_modal" title="Why do you want to reschedule?"> 
-                                  <form action="{{route('user.reservation.reschedule', encrypt($list->id))}}" method="POST">
+                                  <form id="rcshmdlfrm" action="{{route('user.reservation.reschedule', encrypt($list->id))}}" method="POST">
                                     @csrf
                                     @method('PUT')
                                     <p class="my-5">
@@ -68,14 +72,15 @@
                                     <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$list->check_in  ?? ''}}"/>
                                     <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation flatpickr-input2" value="{{$list->check_out  ?? ''}}" />
                                     <div class="modal-action">
-                                      <button class="btn btn-warning">Reschedule Now</button>
+                                      <label for="rcshmdl" class="btn btn-warning">Reschedule Now</label>
                                     </div>
+
                                   </form>
                                 </x-modal> 
+                                <x-modal id="rcshmdl" title="Do you want to Cancel?" type='YesNo' formID="rcshmdlfrm">
+                                </x-modal>
                               @endif
-
                             </th>
-
                           </tr>
                         @empty
                           <tr>

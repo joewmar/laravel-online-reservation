@@ -549,6 +549,8 @@ class SystemReservationController extends Controller
         if($updated){
             if(isset($message['reschedule']['message'])) unset($message['reschedule']['message']);
             $message['reschedule']['prev_status'] = 4; // For User Resevation List
+            $message['open_at'] = Carbon::now()->addDay()->format('Y-m-d H:i:s');
+            
             $reservation->update([
                 'message' => $message,
                 'roomid' => array_keys($roomCustomer),

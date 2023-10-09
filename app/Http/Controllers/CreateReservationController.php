@@ -17,12 +17,13 @@ use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
 use Illuminate\Validation\Rule;
+use App\Jobs\SendTelegramMessage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Mail;
+use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Validator;
 use Propaganistas\LaravelPhone\PhoneNumber;
 use Propaganistas\LaravelPhone\Rules\Phone;
-use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Notification;
 
 class CreateReservationController extends Controller
@@ -123,7 +124,8 @@ class CreateReservationController extends Controller
                 ];
             }
             foreach($admins as $admin){
-                if(isset($admin->telegram_chatID)) telegramSendMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $admin->telegram_chatID), $text, $keyboard, 'bot2');
+                if(!empty($admin->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $admin->telegram_chatID, $text, $keyboard, 'bot2'));
+
             }
             Notification::send($admins, new SystemNotification('Employee Action from '.auth()->guard('system')->user()->name().': ' . Str::limit($action, 10, '...'), $text, route('system.notifications')));
         }

@@ -17,7 +17,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
 
         User::factory()->create([
             'first_name' => 'Juan',
@@ -31,17 +30,8 @@ class DatabaseSeeder extends Seeder
             'valid_id' => 'valid_id/Valid_ID.sample.jpg',
         ]);
 
-        User::factory()->create([
-            'first_name' => 'John',
-            'last_name' => 'Doe',
-            'birthday' => '1999-12-25',
-            'nationality' => 'American',
-            'country' => 'Canada',
-            'contact' => '123456897',
-            'email'=> 'recelestino1111@gmail.com',
-            'password' => Hash::make('123456789'),
-            'valid_id' => 'valid_id/Valid_ID.sample.jpg',
-        ]);
+        if(env('FORCE_CREATE_USER') ?? false) User::factory(10)->create();
+        
         \App\Models\RoomRate::create([
             'name' => 'Single Room',
             'occupancy' => 1,
@@ -88,18 +78,18 @@ class DatabaseSeeder extends Seeder
             'accommodation_type' => 'Overnight',
             'payment_method' => 'Bank Transfer',
             'age' => User::findOrfail(1)->age(),
-            'check_in' => Carbon::now()->addDays(16)->toDateTimeString(),
-            'check_out' => Carbon::now()->addDays(18)->toDateTimeString(),
+            'check_in' => Carbon::now('Asia/Manila')->addDays(16)->toDateTimeString(),
+            'check_out' => Carbon::now('Asia/Manila')->addDays(18)->toDateTimeString(),
             'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
             'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'tpx' => 4, 'amount' => 2100.00 * 4]],
         ]);
 
         \App\Models\System::factory()->create([
-            'first_name' => 'Hello',
-            'last_name' => 'World',
+            'first_name' => 'Alvin',
+            'last_name' => 'Bognot',
             'contact' => '09987456321',
-            'email'=> 'helloworld@email.com',
-            'username'=> 'hello.123',
+            'email'=> 'alvinbognot@email.com',
+            'username'=> 'AlvinAdminBognot',
             'password' => Hash::make('987654321'),
             'type' => '0',
             'passcode' => Hash::make('2255'),
@@ -108,24 +98,24 @@ class DatabaseSeeder extends Seeder
 
         ]);
         \App\Models\System::factory()->create([
-            'first_name' => 'Panis',
-            'last_name' => 'Doe',
+            'first_name' => 'Angelita',
+            'last_name' => 'Bognot',
             'contact' => '09987456321',
-            'email'=> 'joew@email.com',
-            'username'=> 'joewmar',
-            'password' => Hash::make('123456789'),
+            'email'=> 'angelitabognot@email.com',
+            'username'=> 'angelitaBognotadmin',
+            'password' => Hash::make('147258369'),
             'type' => '1',
             'passcode' => Hash::make('5566'),
             'telegram_username' => 'joewmar',
             'telegram_chatID' => '5870248478'
         ]);
         \App\Models\System::factory()->create([
-            'first_name' => 'Python',
+            'first_name' => 'Raul',
             'last_name' => 'David',
             'contact' => '09987456321',
-            'email'=> 'Python@email.com',
-            'username'=> 'pydavid',
-            'password' => Hash::make('147258369'),
+            'email'=> 'raulDavid@email.com',
+            'username'=> 'raulDavidManager',
+            'password' => Hash::make('123789456'),
             'type' => '2',
             'passcode' => Hash::make('1234'),
             'telegram_username' => 'joewmar',
