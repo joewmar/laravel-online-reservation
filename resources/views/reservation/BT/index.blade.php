@@ -2,14 +2,14 @@
     <x-full-content>
         <form action="{{route('reservation.payment.store', encrypt($reservation->id))}}" method="POST" enctype="multipart/form-data">
             @csrf
-            <div x-data="{all: true, step1: false, step2: false, step3: false, paypalName: '', refNo: '', amount: ''}" x-cloak>
+            <div x-data="{all: true, step1: false, step2: false, step3: false, paypalName: '', refNo: '', amount: ''}" x-cloak class="w-full px-5">
                 <div x-show="all" class="flex flex-col-reverse md:flex-row justify-center items-center w-full h-screen space-y-2 md:space-x-3 py-10">
                     <div  class="rounded text-sm md:text-xl mt-5">
                         <p class="text-neutral"><span class="font-bold">Step 1: </span>Make your payment at the nearest or preferred bank location. Don't forget to keep your receipt.</p>
                         <p class="text-neutral"><span class="font-bold">Step 2: </span>Send Your Screenshot of your Receipt</p>
                         <p class="text-neutral"><span class="font-bold">Step 3: </span>Fill up the information for verify your payment</p>
                         <div class="flex justify-start md:justify-end mt-5">
-                            <button type="button" @click="all = false, step2 = true" class="btn btn-primary">Proceed</button>
+                            <button type="button" @click="all = false, step2 = true" class="btn btn-primary btn-sm md:btn-md">Proceed</button>
                         </div>
                     </div>
                 </div>
@@ -35,15 +35,15 @@
                             <x-input xModel="paypalName" placeholder="Payer" name="payment_name" id="payment_name" />
                         </div>
                         <div class="flex justify-start md:justify-end mt-5 space-x-1">
-                            <button type="button" @click="all = true, step2 = false" class="btn btn-ghost btn-primary">Back</button>
-                            <button id="done" type="button" @click="step2 = false, step3 = true" class="btn btn-primary">Go Step 2</button>
+                            <button type="button" @click="all = true, step2 = false" class="btn btn-ghost btn-primary btn-sm md:btn-md">Back</button>
+                            <button id="done" type="button" @click="step2 = false, step3 = true" class="btn btn-primary btn-sm md:btn-md">Go Step 2</button>
                         </div>
                     </div>
                     <div class="mockup-phone">
                         <div class="camera"></div> 
                         <div class="display">
                             <div class="artboard artboard-demo phone-1"> 
-                                <img src="{{asset('images/payment/bank-transfer.png')}}" class="show_img" />
+                                <img src="{{asset('images/payment/bank-transfer.png')}}" class="show_img w-full object-center" />
                             </div>
                         </div>
                     </div>
@@ -55,8 +55,8 @@
                         <p class="text-neutral"><span class="font-bold">Transaction ID: </span><span x-text="refNo">None</p>
                         <p class="text-neutral"><span class="font-bold">Total Amount </span><span x-text="amount">None</p>
                         <div class="flex justify-start md:justify-end mt-5 space-x-1">
-                            <button type="button" @click="step3 = false, step2 = true" class="btn btn-ghost btn-primary">Back</button>
-                            <button @click="loader = true" type="submit" class="btn btn-primary">Send Now</button>
+                            <button type="button" @click="step3 = false, step2 = true" class="btn btn-ghost btn-primary btn-sm md:btn-md">Back</button>
+                            <button @click="loader = true" type="submit" class="btn btn-primary btn-sm md:btn-md">Send Now</button>
                         </div>
                         <x-loader />
                     </div>
@@ -64,7 +64,7 @@
                         <div class="camera"></div> 
                         <div class="display">
                             <div class="artboard artboard-demo phone-1"> 
-                                <img src="{{asset('images/payment/bank-transfer.png')}}" class="show_img" />
+                                <img src="{{asset('images/payment/bank-transfer.png')}}" class="show_img w-full object-center" />
                             </div>
                         </div>
                     </div>

@@ -305,7 +305,7 @@
             <form id="other-form" action="{{route('system.reservation.addons.update', encrypt($r_list->id))}}" method="POST" class="w-96">
                 @csrf
                 @method('PUT')
-                <h2 class="text-2xl mb-5 font-bold">Add-ons</h2>
+                <h2 class="text-xl md:text-2xl mb-5 font-bold">Add-ons</h2>
                 <x-select name="addons" id="addons" placeholder="Add-on" :value="$addonsIDS" :title="$addonsTitle" selected="{{$addonsTitle[old('addons')] ?? ''}}" />
                 <x-input name="pcs" id="pcs" placeholder="How many pcs" value="{{old('pcs') ?? ''}}" max="{{$r_list->pax}}" /> 
                 <x-passcode-modal title="Other Add-ons Confirmation" id="other_modal" formId="other-form" />

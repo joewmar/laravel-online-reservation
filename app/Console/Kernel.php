@@ -12,10 +12,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('app:live')->everyMinute();
-        $schedule->command('db:backup')->daily();
-        $schedule->command('queue:retry all')->everyMinute();
-        $schedule->command('queue:flush')->everyMinute();
+        // $schedule->command('app:live')->everyMinute();
+        // $schedule->command('backup:run --only-db')->daily();
+        // $schedule->command('queue:retry all')->everyMinute();
+        // $schedule->command('queue:flush')->everyMinute();
         // $schedule->command('job:clean-completed-jobs')->daily();
     }
 

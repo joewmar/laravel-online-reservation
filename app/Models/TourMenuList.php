@@ -13,9 +13,13 @@ class TourMenuList extends Model
         'title',
         'category',
         'inclusion',
-        'no_day',
+        'atpermit',
     ];
     public function tourMenuLists(){
         return $this->hasMany(TourMenu::class, 'menu_id');
+    }
+    public function atStatus(){
+        if($this->attributes['atpermit'] === 1) return "Day Tour";
+        else return "All";
     }
 }

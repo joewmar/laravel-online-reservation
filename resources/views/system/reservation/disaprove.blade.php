@@ -27,7 +27,7 @@
         </div>
         <div class="divider"></div>
             <article class="text-md tracking-tight text-neutral my-5 w-auto">
-                <h2 class="text-2xl mb-5 font-bold">Details</h2>
+                <h2 class="text-xl md:text-2xl mb-5 font-bold">Details</h2>
                 <div class="overflow-x-auto">
                     <table class="table">
                       <!-- head -->
@@ -94,7 +94,7 @@
             <article x-data="{reason: '{{old('reason')}}'}" class="text-md tracking-tight text-neutral my-5 w-auto">
                 <form id="disaprove-form" action="{{route('system.reservation.disaprove.store', encrypt($r_list->id))}}" method="post">
                     @csrf
-                <h2 class="text-2xl mb-5 font-bold">Why Disapprove Request of {{$r_list->userReservation->name()}}</h2>
+                <h2 class="text-xl md:text-2xl mb-5 font-bold">Why Disapprove Request of {{$r_list->userReservation->name()}}</h2>
                 <div class="form-control w-full">
                     <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
                         <select x-model="reason" name="reason" id="reason" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>

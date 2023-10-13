@@ -22,35 +22,9 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="" back=true>
         {{-- User Details --}}
-       <div class="px-10 md:px-20">
-        <div class="w-full sm:flex sm:space-x-6">
-            <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
-                @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
-                    <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @elseif($r_list->userReservation->avatar ?? false)
-                    <img src="{{asset('storage/'. $r_list->userReservation->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @else
-                    <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @endif
-            </div>            
-            <div class="flex flex-col space-y-4">
-                <div>
-                    <h2 class="text-2xl font-semibold">{{$r_list->userReservation->name()}}</h2>
-                    <span class="block text-sm text-neutral">{{$r_list->userReservation->age()}} years old from {{$r_list->userReservation->country}}</span>
-                    <span class="text-sm text-neutral">{{$r_list->userReservation->nationality}}</span>
-                </div>
-                <div class="space-y-1">
-                    <span class="flex items-center space-x-2">
-                        <i class="fa-regular fa-envelope w-4 h-4"></i>
-                        <span class="text-neutral">{{$r_list->userReservation->email}}</span>
-                    </span>
-                    <span class="flex items-center space-x-2">
-                        <i class="fa-solid fa-phone w-4 h-4"></i>
-                        <span class="text-neutral">{{$r_list->userReservation->contact}}</span>
-                    </span>
-                </div>
-            </div>
-        </div>
+       <div class="px-3 md:px-20">
+        <x-profile :rlist="$r_list" />
+
         @if (!auth('system')->user()->type == 2)
             <div class="flex md:hidden justify-end">
                 <div class="dropdown dropdown-top dropdown-end">
@@ -58,7 +32,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
                     </label>
                     <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                        @if(isset($r_list->payment_cutoff))
+                        @if(!($r_list->status > 1 && $r_list->status < 3))
                             <li>
                                 <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}">
                                     Online Payment
@@ -95,7 +69,7 @@
                 </div>
             </div>
             <div class="w-full hidden md:flex justify-end space-x-1">
-                @if(isset($r_list->payment_cutoff))
+                @if(!($r_list->status > 1 && $r_list->status < 3))
                     <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}" class="btn btn-info btn-sm">
                         <i class="fa-solid fa-credit-card"></i>
                         Online Payment
@@ -167,9 +141,9 @@
         <div class="divider"></div>
         <div class="block">
             <article class="text-md tracking-tight text-neutral my-5 w-auto">
-                <h2 class="text-2xl mb-5 font-bold">Details</h2>
+                <h2 class="text-xl md:text-2xl mb-5 font-bold">Details</h2>
                 <div class="overflow-x-auto">
-                    <table class="table">
+                    <table class="table table-xs md:table-sm">
                       <!-- head -->
                       <tbody>
                         <!-- row 1 -->
@@ -234,7 +208,7 @@
                 @if(isset($tours))
                     <div class="w-auto">
                         <div class="overflow-x-auto">
-                            <table class="table">
+                            <table class="table table-xs md:table-sm w-full">
                             <!-- head -->
                             <thead>
                                 <tr class="text-neutral font-bold">
@@ -272,11 +246,11 @@
         @if(!empty($other_addons))
             <div class="divider"></div>
             <article>
-                <h1 class="my-1 text-xl "><strong>Additional Request: </strong></h1>
+                <h1 class="my-1 text-lg md:text-xl "><strong>Additional Request: </strong></h1>
                 @if(!empty($other_addons))
                     <div class="my-5 w-full">
                         <div class="overflow-x-auto">
-                            <table class="table">
+                            <table class="table table-xs md:table-sm">
                                 <!-- head -->
                                 <thead>
                                     <tr>
@@ -313,9 +287,9 @@
         @endif
         <div class="divider"></div>
             <article class="text-md tracking-tight text-neutral my-5 w-auto">
-                <h2 class="text-2xl mt-5 font-bold">Transaction</h2>
+                <h2 class="text-xl md:text-2xl mt-5 font-bold">Transaction</h2>
                 <div class="overflow-x-auto">
-                    <table class="table">
+                    <table class="table table-xs md:table-sm">
                         <thead>
                             <th></th>
                             <th></th>
@@ -411,7 +385,7 @@
         <div class="divider"></div>
         <div x-data="{show: false}" class=" w-full">
             <div class="flex items-start space-x-2">
-                <h2 class="text-2xl mb-5 font-bold">Valid ID</h2> 
+                <h2 class="text-xl md:text-2xl mb-5 font-bold">Valid ID</h2> 
                 <button @click="show = !show" type="button" x-text="show ? 'Hide' : 'Show' " class="btn btn-primary btn-sm"></button>
             </div>
             <template x-if="show">
@@ -426,7 +400,7 @@
         </div>
         <div class="divider"></div>
         <div class="w-full">
-            <h2 class="text-2xl mb-5 font-bold">Messages</h2>
+            <h2 class="text-xl md:text-2xl mb-5 font-bold">Messages</h2>
             <div class="flow-root p-3">
                 <dl class="-my-3 divide-y divide-gray-100 text-sm">
                   <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4">
@@ -449,10 +423,10 @@
         </div>
         <div class="divider"></div>
         @if($r_list->status >= 0 && $r_list->status < 1 && $r_list->user_id)
-            <article class="text-md tracking-tight text-neutral my-5 w-auto">
-                <h2 class="text-2xl mb-5 font-bold">Conflict Schedule of {{$r_list->userReservation->name()}}</h2>
+            <article class="tracking-tight text-neutral my-5 w-auto">
+                <h2 class="text-xl md:text-2xl mb-5 font-bold">Conflict Schedule of {{$r_list->userReservation->name()}}</h2>
                 <div class="overflow-x-auto w-full">
-                    <table class="table w-full">
+                    <table class="table table-xs md:table-sm w-full">
                         <!-- head -->
                         <thead>
                             <tr>
@@ -462,7 +436,7 @@
                                 <th>Check-out</th>
                                 <th>Status</th>
                                 <th>Created</th>
-                                <th>Action</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -490,7 +464,9 @@
                                     <td>{{ \Carbon\Carbon::parse($list->created_at)->format('M j, Y g:i A')}}</td>
 
                                     <th class="w-auto">
-                                        <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-info btn-xs" >View</a>
+                                        <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-ghost btn-sm btn-circle hover:btn-primary" >
+                                            <i class="fa-solid fa-ellipsis"></i>
+                                        </a>
                                     </th>
                                 
                                 </tr>
@@ -510,8 +486,8 @@
                 @if(!auth('system')->user()->type == 2)
                     <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-xs join-item {{!($r_list->status >= 0 && $r_list->status <= 0)  ? 'btn-disabled' : ''}}">Confirm</a>
                 @endif
-                <label for="checkin" class="btn btn-success btn-xs join-item" {{!($r_list->status >= 1 && $r_list->status <= 1) ? 'disabled' : ''}}>Check-in</label>
-                <label for="checkout" class="btn btn-info btn-xs join-item" {{!($r_list->status >= 2 && $r_list->status <= 2) ? 'disabled' : ''}}>Check-out</label>
+                <label for="checkin" class="btn btn-success btn-xs join-item" {{$r_list->status() == "Confirmed" ? '' : 'disabled'}}>Check-in</label>
+                <label for="checkout" class="btn btn-info btn-xs join-item" {{$r_list->status() == "Check-in" ? '' : 'disabled'}}>Check-out</label>
                 @if($r_list->status() == "Confirmed")
                     <x-checkin name="{{$r_list->userReservation->name() ?? ''}}" :datas="$r_list" />
                 @elseif($r_list->status() == "Check-in")
@@ -526,8 +502,8 @@
                 @if(!auth('system')->user()->type == 2)
                     <a href="{{route('system.reservation.show.rooms', encrypt($r_list->id))}}" class="btn btn-secondary btn-xs join-item {{!($r_list->status >= 0 && $r_list->status <= 0) ? 'btn-disabled' : ''}}">Confirm</a>
                 @endif
-                <label for="checkin" class="btn btn-success btn-xs join-item" {{!($r_list->status >= 1 && $r_list->status <= 1) ? 'disabled' : ''}}>Check-in</label>
-                <label for="checkout" class="btn btn-info btn-xs join-item" {{!($r_list->status >= 2 && $r_list->status <= 2) ? 'disabled' : ''}}>Check-out</label>
+                <label for="checkin" class="btn btn-success btn-xs join-item" {{$r_list->status() == "Confirmed" ? '' : 'disabled'}}>Check-in</label>
+                <label for="checkout" class="btn btn-info btn-xs join-item" {{$r_list->status() == "Check-in" ? '' : 'disabled'}}>Check-out</label>
                 @if($r_list->status() == "Confirmed")
                     <x-checkin name="{{$r_list->userReservation->name() ?? ''}}" :datas="$r_list" />
                 @elseif($r_list->status() == "Check-in")

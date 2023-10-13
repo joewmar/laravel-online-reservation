@@ -13,6 +13,7 @@
     {{-- <script src="//unpkg.com/alpinejs" defer></script> --}}
 </head>
 <body class="bg-white h-screen">
+  @stack('top')
   @if(session()->has('success'))
     @if(is_array(session('success')))
       <x-alert type="success" :message="session('success')"/>
@@ -34,7 +35,7 @@
     <main class="main flex flex-grow flex-col transition-all duration-150 ease-in-out md:ml-0 overflow-y-auto h-full">
       <div id="overlay" class="transition ease-in-out duration-300 hidden fixed w-full h-full bg-primary bg-opacity-70 z-50"></div>
       <x-system-navbar />
-      <div class="mt-10 md:mt-24">
+      <div class="sysContent mt-10 md:mt-24">
         {{$slot}}
       </div>
     </main>

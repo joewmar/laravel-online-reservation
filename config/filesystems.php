@@ -35,6 +35,12 @@ return [
             'root' => storage_path('app'),
             'throw' => false,
         ],
+        'backup' => [
+            'driver' => 'local',
+            'root' => storage_path('app/backups'),
+            'throw' => false,
+        ],
+
         'private' => [
             'driver' => 'local',
             'root' => storage_path('app/private'), // Specify the directory path for private storage

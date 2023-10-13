@@ -100,7 +100,7 @@ class TourMenuController extends Controller
                     'title' => ['required', Rule::unique('tour_menu_lists', 'title')],
                     'category' =>  ['required'],
                     'inclusion' => ['nullable'],
-                    'no_day' =>  ['required', 'numeric', 'min:1', Rule::when(($request['tour_type'] === 'Day Tour'), ['min:1', 'max:1']), Rule::when(($request['tour_type'] === 'Overnight'), ['min:2'])],
+                    'atpermit' =>  ['required'],
                     'pax' => ['required', 'numeric'],
                     'type' => ['required'],
                     'price' =>  ['required', 'numeric', 'decimal:0,2'],
@@ -111,6 +111,7 @@ class TourMenuController extends Controller
                         $tour_list = TourMenuList::create([
                             'title' => $validated['title'],
                             'category' => $validated['category'],
+                            'atpermit' => $validated['atpermit'],
                             'inclusion' => implode("(..)",$validated['inclusion']) ?? null,
                             'no_day' =>  $validated['no_day'],
 
@@ -162,7 +163,7 @@ class TourMenuController extends Controller
                 'title' => ['required'],
                 'category' =>  ['required'],
                 'inclusion' => ['nullable'],
-                'no_day' =>  ['required', 'numeric', 'min:1', Rule::when(($request['tour_type'] === 'Day Tour'), ['min:1', 'max:1']), Rule::when(($request['tour_type'] === 'Overnight'), ['min:2'])],
+                'atpermit' =>  ['required'],
                 'passcode' =>  ['required', 'numeric', 'digits:4'],
             ]);
 

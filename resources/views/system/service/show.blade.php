@@ -5,7 +5,7 @@
           <article class="prose">
             <h1>{{$tour_list->title}}</h1>
             <p class="text-lg"><span class="font-bold">Category:</span> {{$tour_list->category === null ? 'None': $tour_list->category}}</p>
-            <p class="text-lg"><span class="font-bold">Number of Day:</span> {{$tour_list->no_day === null ? 'None': $tour_list->no_day}}</p>
+            <p class="text-lg"><span class="font-bold">Accommodation Type: </span> {{$tour_list->atStatus() === null ? 'None': $tour_list->atStatus()}}</p>
             <p class="text-lg"><span class="font-bold">Inclusion:</span> {{$tour_list->inclusion === null ? 'None': ""}}</p>
             @if($tour_list->inclusion !== null )
               <ul class="marker:text-neutral">

@@ -26,7 +26,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth:web'])->except(['check', 'create', 'verify','resend', 'verifyStore', 'fillupGoogle', 'fillupGoogleUpdate', 'fillupFacebook', 'fillupFacebookUpdate', 'fillupFacebookVerify', 'fillupFacebookStore']);
+        $this->middleware(['auth:web'])->except(['check', 'create', 'verify','resend', 'verifyStore', 'fillupGoogle', 'fillupGoogleUpdate', 'fillupFacebook', 'fillupFacebookUpdate', 'fillupFacebookVerify', 'fillupFacebookStore', 'login', 'register', 'forgotPass']);
     }
     public function index(){
         $user = User::findOrFail(auth('web')->user()->id);
@@ -39,6 +39,15 @@ class UserController extends Controller
         else $canDelAcc = false;
 
         return view('users.show', ['activeNav' => 'Profile','user' => $user, 'isPending' => $isPending, 'canDelAcc' => $canDelAcc]);
+    }
+    public function login(){
+        return view('users.login');
+    }
+    public function register(){
+        return view('users.register');
+    }
+    public function forgotPass(){
+        return view('auth.passwords.email');
     }
     public function updateAvatar(Request $request, $id){
         $user = User::findOrFail(decrypt($id));
@@ -144,14 +153,14 @@ class UserController extends Controller
             ];
             Mail::to($validated['email'])->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
             $validated['otp'] = $otp;
-            session(['uinfo' => $validated]);
+            session(['uinfo' => encryptedArray($validated)]);
 
             return redirect()->route('register.verify');
 
         }
     }
     public function verify(){
-        return view('users.register.verify', ['email' => session('uinfo')['email']]);
+        return view('users.register.verify', ['email' => decrypt(session('uinfo')['email'])]);
     }
     public function resend(){
         if(!session()->has('uinfo')){
@@ -159,13 +168,14 @@ class UserController extends Controller
             return redirect()->route('register');
         }
         $otp = mt_rand(1111,9999);
+        $otp = encrypt($otp);
         $user_info = session('uinfo');
         $details = [
-            'name' => $user_info['first_name'] . ' ' . $user_info['last_name'],
+            'name' => decrypt($user_info['first_name']) . ' ' . decrypt( $user_info['last_name']),
             'title' => "Let's Verify your Email",
-            'body' => 'Verification Code: ' . $otp,
+            'body' => 'Verification Code: ' . decrypt($otp),
         ];
-        Mail::to(session('uinfo')['email'])->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
+        Mail::to(decrypt(session('uinfo')['email']))->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
         $user_info['otp'] = $otp;
         session(['uinfo' => $user_info]);
         return redirect()->route('register.verify');
@@ -178,10 +188,10 @@ class UserController extends Controller
             session()->forget('uinfo');
             return redirect()->route('register');
         }
-        if(!((int)$validated['code'] === (int)session('uinfo')['otp'])) return back()->with('error', 'Invalid Code')->withInputs($validated);
+        if(!((int)$validated['code'] === (int)decrypt(session('uinfo')['otp']))) return back()->with('error', 'Invalid Code')->withInputs($validated);
         
         unset(session('uinfo')['otp']);
-        $user = User::create(session('uinfo'));
+        $user = User::create(decryptedArray(session('uinfo')));
         auth('web')->login($user);
         $request->session()->regenerate(); //Regenerate Session ID
 
@@ -364,7 +374,10 @@ class UserController extends Controller
         if(!Hash::check($validated['password'], $user->password)) return back()->with('error', 'Invalid Credential');
         if(isset($user->valid_id)) deleteFile($user->valid_id);
         if(isset($user->avatar)) deleteFile($user->avatar);
+        $userID = $user->id;
         if($user->delete()){
+            $r_lists = Reservation::where('user_id', $userID);
+            foreach ($r_lists ?? [] as $list) $list->delete();
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

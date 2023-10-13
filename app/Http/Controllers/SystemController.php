@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Notifications\DatabaseNotification;
 
 class SystemController extends Controller
 {
@@ -19,6 +20,8 @@ class SystemController extends Controller
     public function __construct()
     {
         $this->system_user = auth('system');
+        $this->middleware(['auth:system'])->except(['check', 'login']);
+
     }
     private function systemNotification($text, $link = null){
         if($this->system_user->user()->type != 0){
@@ -179,6 +182,9 @@ class SystemController extends Controller
             return back()->withErrors(['username' => 'Invalid Credentials'])->onlyInput('username');
         }
     }
+    public function login(){
+        return view('system.login');
+    }
     public function notifications(){
 
         return view('system.notification', ['activeSb' => 'Notification', 'notifs' => auth('system')->user()->unreadNotifications]);
@@ -186,6 +192,23 @@ class SystemController extends Controller
     public function markAsRead(){
         Auth::guard('system')->user()->unreadNotifications->markAsRead();
         return back();
+    }
+    public function deleteOneNotif($id){
+        $user = Auth::guard('system')->user();
+        // Find the notification you want to delete by its ID
+        $notification = DatabaseNotification::find(decrypt($id));
+        
+        // Check if the notification belongs to the user before deleting it
+        if ($notification && $notification->notifiable_id === $user->id) {
+            $notification->delete();
+            
+            // Optionally, you can also mark it as read
+            // $notification->markAsRead();
+            
+            return back();
+        } else {
+            return back()->with('success', "Notification not found or you don't have permission to delete it");
+        }
     }
     public function logout(Request $request){
         $this->systemNotification(Auth::guard('system')->user()->name() . " was logged out");

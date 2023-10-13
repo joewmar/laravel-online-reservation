@@ -4,8 +4,7 @@
       'category' => '',
       'inclusion' => '',
       'tour_type' => '',
-      'no_day' => '',
-      'hrs' => '',
+      'atpermit' => '',
     ];
     if(request()->has(['tl', 'rpl'])){
       $arrTl = [
@@ -14,11 +13,10 @@
         'category' => $tl['category'],
         'inclusion' => $tl['inclusion'],
         'tour_type' => $tl['tour_type'],
-        'no_day' => $tl['no_day'],
-        'hrs' => $tl['hrs'],
+        'atpermit' => $tl['atpermit'],
       ];
     }
-    $arrTrType = ['All', 'Day Tour', 'Overnight'];
+    $arrTrType = ['All', 'Day Tour'];
 
 @endphp
 
@@ -49,15 +47,15 @@
           @if(request()->has('rpl'))
               <x-input type="text" id="title" placeholder="Title" value="{{$arrTl['title'] ?? ''}}" disabled=true/>
               <x-datalist-input id="category"  placeholder="Category" :lists="$category" value="{{$arrTl['category'] ?? ''}}" disabled=true/>
-              <x-input type="number" id="no_day" placeholder="Number of days" min="0.0" value="{{$arrTl['no_day'] ?? ''}}" disabled=true/>
+              <x-select name="atpermit" id="atpermit" placeholder="Accommodation Type to Allow" :value="$arrTrType" :title="$arrTrType" disabled=true />
               <input type="hidden" name="menu_id" value="{{$arrTl['id']}}">
               <div x-init="$el.scrollIntoView();" class="border border-primary mb-8 rounded-md shadow-md p-8">
           @else
               <x-input type="text" id="title" name="title" placeholder="Title"  />
               <x-datalist-input id="category" name="category"  placeholder="Category" :lists="$category" />
-              <x-input type="number" id="no_day" name="no_day" placeholder="Number of days" min="0.0" />
+              <x-select name="atpermit" id="atpermit" placeholder="Accommodation Type to Allow" :value="array_keys($arrTrType)" :title="$arrTrType" />
               <div class="form-control w-full pb-5">
-                <textarea id="listTextarea" class="w-full rounded-lg border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary p-3 text-sm" rows="5" x-model="inputText" x-on:keydown.enter.prevent="addListItem" placeholder="Inclusion (Use Enter Key to Add Item)"></textarea>
+                <textarea id="listTextarea" class="w-full rounded-lg border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary p-3 text-sm" rows="2" x-model="inputText" x-on:keydown.enter.prevent="addListItem" placeholder="Inclusion (Use Enter Key to Add Item)"></textarea>
                 <div id="listOutput" class="mt-2 py-2 border-t" :class="listItems.length == 0 ? 'hidden' : 'block' ">
                     <template x-for="(item, index) in listItems" :key="index">
                         <div class="flex items-center justify-between">
@@ -71,7 +69,7 @@
 
                     </template>
                 </div>
-            </div>
+              </div>
               <div class="border border-primary mb-8 rounded-md shadow-md p-8">
           @endif
             <h3 class="text-xl font-medium mb-4">Price Details</h3>

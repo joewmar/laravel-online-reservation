@@ -21,7 +21,7 @@
 @endphp
 <x-landing-layout noFooter>
     <x-full-content>
-        <div class="flex flex-col justify-center items-center w-full h-screen">
+        <div x-data="{at: '{{$dateInfo['at']}}'}" class="flex flex-col justify-center items-center w-full h-screen">
             @if(session()->has('ck') && session('ck') === true)
                 <form action="{{ route('reservation.date.check.store')}}" method="post">
             @else
@@ -32,10 +32,12 @@
                     <h2 class="font-bold text-3xl uppercase">Choose your Date</h2>
                 </div>
                 <div class="mt-8">
-                    <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" selected="{{$dateInfo['at']}}" />
-                    <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-3">
+                    <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" xModel="at" />
+                    <div class="w-full grid grid-cols-1 gap-1 md:gap-3" :class="!(at == 'Day Tour') ? 'md:grid-cols-3' : 'md:grid-cols-2' " x-transition>
                         <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$dateInfo['cin']}}"/>
-                        <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" value="{{$dateInfo['cout']}}" />
+                        <div x-show="!(at == 'Day Tour')" x-transaction>
+                            <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" value="{{$dateInfo['cout']}}" />
+                        </div>
                         <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$dateInfo['px']}}"/>
                     </div>
                 </div>

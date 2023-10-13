@@ -2,8 +2,7 @@
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
     $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
     $arrPayment = ['Walk-in', 'Other Online Booking', 'Gcash', 'Paypal'];
-    $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Check-out'];
-
+    $arrStatus = [1 => 'Confirmed', 2 => 'Check-in', 3 =>'Check-out'];
     $roomInfo = [
         'at' =>    request('at')  ? decrypt(request('at')) : old('accommodation_type'),
         'px' =>    request('px')  ? decrypt(request('px')): old('pax'),
@@ -83,16 +82,15 @@
                 <template x-if="at === 'Day Tour' || at === 'Overnight'">
                     <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$roomInfo['tpx']}}" />
                 </template>
-                @if(auth('system')->user()->type == 2)
-                    <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-room-today" value="{{$roomInfo['cin'] }}"/>
-                    <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-room-today" value="{{$roomInfo['cout']}}" />
-                @else
-                    <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one" value="{{$roomInfo['cin'] }}"/>
-                    <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{$roomInfo['cout']}}" />
-                @endif
+                <div :class="at === 'Day Tour' ? 'col-span-2' : '' ">
+                    <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-month" value="{{$roomInfo['cin'] }}"/>
 
+                </div>
+                <template x-if="!(at === 'Day Tour')">
+                    <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-month" value="{{$roomInfo['cout']}}" />
+                </template>
                 <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$roomInfo['py']}}"/>
-                <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[$roomInfo['st']] ?? ''}}"/>
+                <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="array_values($arrStatus)" selected="{{$arrStatus[$roomInfo['st']] ?? ''}}"/>
             </div>
 
             <div x-data="{rooms: {{$roomInfo['rm'] ? '[' . implode(',', array_keys($roomInfo['rm'])) .']' : '[]'}}}" class="flex justify-center flex-wrap gap-5 w-full">

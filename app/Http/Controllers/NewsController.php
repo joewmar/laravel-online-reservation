@@ -28,16 +28,6 @@ class NewsController extends Controller
         return view('system.news.create',  ['activeSb' => 'News']);
     }
     public function store(Request $request){
-        if(str_contains($request['date_from'], 'to')){
-            $dateSeperate = explode('to', $request['date_from']);
-            $request['date_from'] = trim($dateSeperate[0]);
-            $request['date_to'] = trim ($dateSeperate[1]);
-        }
-        // Check out convertion word to date format
-        if(str_contains($request['date_to'], ', ')){
-            $date = Carbon::createFromFormat('F j, Y', $request['date_to']);
-            $request['date_to'] = $date->format('Y-m-d');
-        }
         $validated = $request->validate([
             'passcode' => ['required', 'numeric', 'digits:4'],
             'title' => ['required'],
@@ -148,16 +138,6 @@ class NewsController extends Controller
         return view('system.news.announcement.create',  ['activeSb' => 'News']);
     }
     public function storeAnnouncement(Request $request){
-        if(str_contains($request['date_from'], 'to')){
-            $dateSeperate = explode('to', $request['date_from']);
-            $request['date_from'] = trim($dateSeperate[0]);
-            $request['date_to'] = trim ($dateSeperate[1]);
-        }
-        // Check out convertion word to date format
-        if(str_contains($request['date_to'], ', ')){
-            $date = Carbon::createFromFormat('F j, Y', $request['date_to']);
-            $request['date_to'] = $date->format('Y-m-d');
-        }
         $validated = $request->validate([
             'passcode' => ['required', 'numeric', 'digits:4'],
             'title' => ['required'],

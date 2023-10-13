@@ -16,7 +16,7 @@
         </div>
         @if(request('rtab') === 'list')
             {{-- Table  --}}
-            <div class="mt-20 w-full">
+            <div class="mt-20 w-full" x-cloak>
                 <div class="tabs md:tabs-boxed md:bg-transparent flex justify-center md:justify-start">
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list']) )}}" class="tab {{!request()->has('tab') && request()->has('rtab') ? 'tab-active font-bold text-primary' : ''}}">All</a> 
                     @if(!auth('system')->user()->type == 2)
@@ -142,8 +142,20 @@
                             </li>
                             <li>                    
                                 <div class="flex items-center space-x-2">
+                                    <label class="h-8 w-8 rounded-full bg-[#77611e] shadow-sm" ></label>
+                                    <p class="font-medium">Pending Reschedule</p>
+                                </div>
+                            </li>
+                            <li>                    
+                                <div class="flex items-center space-x-2">
                                     <label class="h-8 w-8 rounded-full bg-[#fb7185] shadow-sm" ></label>
-                                    <p class="font-medium">Cancel</p>
+                                    <p class="font-medium">Pending Cancel</p>
+                                </div>
+                            </li>
+                            <li>                    
+                                <div class="flex items-center space-x-2">
+                                    <label class="h-8 w-8 rounded-full bg-[#f43f5e] shadow-sm" ></label>
+                                    <p class="font-medium">Canceled</p>
                                 </div>
                             </li>
                         </ul>

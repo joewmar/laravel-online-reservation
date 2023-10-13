@@ -14,16 +14,20 @@
           <li>Downpayment through PayPal, Gcash or Bank Transfer</li>
           <li>Present of Government ID or Any Validation ID</li>
           @if(isset($operation['from']) && isset($operation['to']))
-            <li>In {{\Carbon\Carbon::createFromFormat('Y-m-d', $operation['from'] )->format('F j, Y (l)')}} up to {{\Carbon\Carbon::createFromFormat('Y-m-d', $operation['to'] )->format('F j, Y (l)')}} reservations will not be allowed due to {{$operation['reason']}}</li>
+            <li>In Philippine Time {{\Carbon\Carbon::createFromFormat('Y-m-d', $operation['from'] )->format('F j, Y (l)')}} up to {{\Carbon\Carbon::createFromFormat('Y-m-d', $operation['to'] )->format('F j, Y (l)')}} reservations will not be allowed due to {{$operation['reason']}}</li>
           @endif
+          <li>Required to input your information (*)</li>
         </ul>
       </section>
-      <form class="relative " id="reservation-form" action=" {{ route('reservation.date.check') }}" method="POST">
+      <form x-data="{at: ''}" class="relative " id="reservation-form" action=" {{ route('reservation.date.check') }}" method="POST">
         @csrf
-        <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" />
-        <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-1 md:gap-3" x-transition>
+        <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" xModel="at" />
+        <div class="w-full grid grid-cols-1 gap-1 md:gap-3" :class="!(at == 'Day Tour') ? 'md:grid-cols-3' : 'md:grid-cols-2' " x-transition>
           <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{ Carbon\Carbon::now()->addDays(2)->format('Y-m-d')}}" />
-          <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation " />
+          <div x-show="!(at == 'Day Tour')" x-transaction>
+            <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation " />
+          </div>
+
           <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" min="1" value="1" />
         </div> 
       </form>

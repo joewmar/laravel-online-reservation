@@ -55,8 +55,8 @@
       <div class="hero-overlay bg-opacity-70"></div>
       <div class="hero-content text-center text-white ">
         <div class="max-w-lg">
-          <h1 class="mb-5 text-3xl font-bold uppercase">Alvin and Angie Mt. Pinatubo Guesthouse and Tours</h1>
-          <p class="mb-5 max-w-lg capitalize">Discover the Perfect Blend of Comfort and Adventure by Reserving Your Ideal Guesthouse Stay and Guided Tour with Us. Every Moment Becomes a Cherished Memory.</p>
+          <h1 class="mb-5 text-xl md:text-3xl font-bold uppercase">Alvin and Angie Mt. Pinatubo Guesthouse and Tours</h1>
+          <p class="mb-5 max-w-lg capitalize text-sm md:text-lg">Discover the Perfect Blend of Comfort and Adventure by Reserving Your Ideal Guesthouse Stay and Guided Tour with Us. Every Moment Becomes a Cherished Memory.</p>
           <label for="reservation" class="btn btn-primary">Let's Book</label>
         </div>
       </div>
@@ -76,23 +76,38 @@
         </div>
         <div class="mt-8 flex justify-center w-full">
           @foreach ($announcements as $announcement)
-            <article data-aos="fade-down" class="flex gap-4 items-center w-9/12 h-auto rounded-lg bg-primary border border-gray-100 bg-white p-4 shadow-lg sm:p-6" >
-              <span class="inline-block rounded bg-primary p-2 text-primary-content">
-                <i class="fa-solid fa-bullhorn"></i>
-              </span>
-              <a href="#">
-                <h3 class="mt-0.5 text-lg font-medium text-neutral">
-                  {{$announcement->title}}
-                </h3>
-              </a>
-            </article>
+            @if((isset($announcement->from) && isset($announcement->to)))
+              @if((Carbon\Carbon::createFromFormat('Y-m-d', $announcement->from)->timestamp <= Carbon::now()->timestamp) && !(Carbon\Carbon::createFromFormat('Y-m-d', $announcement->to)->timestamp <= Carbon::now()->addDay()->timestamp))
+                <article data-aos="fade-down" class="flex gap-4 items-center w-9/12 h-auto rounded-lg bg-primary border border-gray-100 bg-white p-4 shadow-lg sm:p-6" >
+                  <span class="inline-block rounded bg-primary p-2 text-primary-content">
+                    <i class="fa-solid fa-bullhorn"></i>
+                  </span>
+                  <a href="#">
+                    <h3 class="mt-0.5 text-lg font-medium text-neutral">
+                      {{$announcement->title}}
+                    </h3>
+                  </a>
+                </article>
+              @endif
+            @else
+              <article data-aos="fade-down" class="flex gap-4 items-center w-9/12 h-auto rounded-lg bg-primary border border-gray-100 bg-white p-4 shadow-lg sm:p-6" >
+                <span class="inline-block rounded bg-primary p-2 text-primary-content">
+                  <i class="fa-solid fa-bullhorn"></i>
+                </span>
+                <a href="#">
+                  <h3 class="mt-0.5 text-lg font-medium text-neutral">
+                    {{$announcement->title}}
+                  </h3>
+                </a>
+              </article>
+            @endif
           @endforeach
         </div>
       </div>
     </section>
   @endif
   @if (isset($news) && count($news) !== 0)
-    <section class="text-neutral w-full" >
+    <section class="text-neutral w-full">
       <div data-aos="fade-down" class="mx-auto max-w-screen-xl px-4 py-8 sm:py-12 sm:px-6 lg:py-16 lg:px-8" >
         <div class="mx-auto max-w-lg text-center">
           <h2 class="text-3xl font-bold sm:text-4xl">News</h2>
@@ -100,6 +115,27 @@
     
         <div class="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3 place-items-center w-full">
           @foreach ($news as $new)
+            @if((isset($new->from) && isset($new->to)))
+              @if(Carbon\Carbon::createFromFormat('Y-m-d', $new->from, 'Asia/Manila')->timestamp <= Carbon\Carbon::now('Asia/Manila')->timestamp)
+                <div data-aos="flip-right" for="news{{$loop->index+1}}" class="card w-96 bg-base-100 shadow-xl">
+                  <figure><img src="{{$new->image ? asset('storage/'.$new->image) : asset('images/logo2.png')}}" alt="Shoes" class="w-52" /></figure>
+                  <div class="card-body">
+                    <h2 class="card-title">{{$new->title}}</h2>
+                    <p>{{Str::limit($new->description, 200)}}</p>
+                    <div class="card-actions justify-start">
+                      <label class="link-hover font-medium cursor-pointer" onclick="news{{$loop->index+1}}.showModal()" for="news{{$loop->index+1}}">See More</label>
+                    </div>
+                  </div>
+                </div>
+                <dialog id="news{{$loop->index+1}}" class="modal modal-bottom sm:modal-middle">
+                  <form method="dialog" class="modal-box">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                    <h3 class="font-bold text-lg">{{$new->title}}</h3>
+                    <p>{{$new->description}}</p>                  
+                  </form>
+                </dialog>
+              @endif
+            @else
               <div data-aos="flip-right" for="news{{$loop->index+1}}" class="card w-96 bg-base-100 shadow-xl">
                 <figure><img src="{{$new->image ? asset('storage/'.$new->image) : asset('images/logo2.png')}}" alt="Shoes" class="w-52" /></figure>
                 <div class="card-body">
@@ -117,6 +153,7 @@
                   <p>{{$new->description}}</p>                  
                 </form>
               </dialog>
+            @endif
           @endforeach
         </div>
       </div>

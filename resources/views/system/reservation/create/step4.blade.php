@@ -1,6 +1,6 @@
 @php
   $totalPrice = 0;
-  $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Previous', 'Previous', 'Reshedule', 'Cancel', 'Disaprove'];
+  $arrStatus = [1 => 'Confirmed', 2 => 'Check-in', 3 =>'Check-out'];
 @endphp
 <x-system-layout :activeSb="$activeSb">
   <x-system-content title="Add Book" back=true>
@@ -174,23 +174,55 @@
                     <div class="col-span-6">
                       @php
                         $pyType = "";
-                        if(!auth('system'->user()->type === 2)) $pyType = "cinpayment";
+                        if(!auth('system')->user()->type === 2) $pyType = "cinpayment";
                         else $pyType = "downpayment";
                         
-                        if($other_info['st'] == 2)$pyType = "cinpayment";
-                        elseif($other_info['st'] == 3) $pyType = "coutpayment";
+                        if($other_info['st'] == 1) $pyType = "downpayment";
+                        if($other_info['st'] == 2) $pyType = "cinpayment";
                       @endphp
-                      <div class="w-full" x-data="{category: '{{$pyType}}'}">
+                      <div  class="w-full" x-data="{category: '{{$pyType}}', pay: '', senior: false}">
                         <h2 class="text-lg font-bold">Payment Type</h2>
                         <div class="my-3">
-                          <input id="cat1" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="downpayment" />
+                          <input id="cat1" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="downpayment" {{$other_info['st'] == 1 ? '' : 'disabled'}} />
                           <label :aria-checked="category == 'downpayment'" :class="category == 'downpayment' ? 'mr-5 text-primary' : 'mr-5'" for="cat1" class="my-5">Downpayment</label>  
-                          <input id="cat2" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="cinpayment" />
-                          <label :aria-checked="category == 'cinpayment'" :class="category == 'cinpayment' ? 'mr-5 text-primary' : 'mr-5'" for="cat2" class="my-5">Check-in</label>  
-                          <input id="cat3" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="coutpayment" />
-                          <label  :aria-checked="category == 'coutpayment'" :class="category == 'coutpayment' ? 'mr-5 text-primary' : 'mr-5'" for="cat3" class="my-5">Check-out</label>  
+                          <input id="cat2" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="cinpayment" {{$other_info['st'] == 2 ? '' : 'disabled'}} />
+                          <label :aria-checked="category == 'cinpayment'" :class="category == 'cinpayment' ? 'mr-5 text-primary' : 'mr-5'" for="cat2" class="my-5">Check-in</label>   
                         </div>
-                        <x-input type="number" name="payment_amount" id="payment_amount" min="1000" placeholder="Payment Amount" />
+                        @error('type')
+                            <span>{{$message}}</span>
+                        @enderror
+                        <template x-if="category == 'downpayment'">
+                            <div class="border p-5 shadow-md">
+                              <x-input type="number" name="dyamount" id="downpayment" min="1000" placeholder="Amount" />
+                            </div>
+                        </template>
+                        <template x-if="category == 'cinpayment'">
+                          <div class="border p-5 shadow-md">
+                            <div class="mb-5">
+                              <input id="discount" x-model="senior" name="hs" type="checkbox" class="checkbox checkbox-secondary" />
+                              <label for="discount" class="ml-4 font-semibold">Have Senior Citizen?</label>
+                            </div>
+                            <template x-if="senior">
+                                <div class="mt-3">
+                                    <x-input type="number" name="senior_count" id="senior_count" placeholder="Count of Senior Guest" value="{{$r_list->transaction['payment']['discountPerson'] ?? 0}}" />
+                                </div>
+                            </template>
+                            <div class="py-3 space-x-2">
+                                <input type="radio" x-model="pay" id="partial" name="cnpy" class="radio radio-primary" value="partial" />
+                                <label for="partial">Partial</label>
+                                <input type="radio" x-model="pay" id="full_payment" name="cnpy" class="radio radio-primary" value="fullpayment" />
+                                <label for="full_payment">Full Payment</label>
+                                @error('cnpy')
+                                  <span>{{$message}}</span>
+                                @enderror
+                                <template x-if="pay == 'partial'">
+                                    <div class="my-3">
+                                        <x-input name="cinamount" id="amountcinp" placeholder="Amount"  /> 
+                                    </div>
+                                </template>
+                            </div>
+                          </div>
+                        </template>
 
                       </div>                    
                     </div>

@@ -439,13 +439,12 @@ class EditReservationController extends Controller
             $reservation = Reservation::findOrFail(decrypt($id));
             if(!($reservation->status >= 1 && $reservation->status <= 2)) abort(404);
             $validated = Validator::make($request->all(), [
-                'amount' => ['required', 'numeric', 'min:1000', 'max:'.$reservation->getTotal()],
+                'amount' => ['required', 'numeric', 'max:'.$reservation->getTotal()],
                 'passcode' => ['required', 'numeric', 'digits:4'],
             ], [
                 'passcode.required' => 'Required to fill up (Passcode)', 
                 'amount.required' => 'Required to fill up (Downpayment)', 
                 'amount.numeric' => 'Number only',
-                'amount.min' => 'The amount must be ₱ 1,000 above',
                 'amount.max' => 'The amount must exact ₱ '.number_format($reservation->getTotal(), 2).' below',
             ]);
             if($validated->fails()){

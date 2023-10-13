@@ -16,6 +16,7 @@
     <title>{{ str_replace('_', ' ', config('app.name'))}}</title>
 </head>
 <body {{$DOMLoading ? 'id="main-content"' : ''}} class="bg-base-100 selection:bg-primary selection:text-base-100">
+  @stack('top')
   @if(session()->has('success'))
     @if(is_array(session('success')))
       <x-alert type="success" :message="session('success')"/>
@@ -52,7 +53,7 @@
       <i class="fa-solid fa-arrow-up"></i>
     </button>
   @endif
-  @stack('top')
+  
   {{$slot}}
   @if (!$noFooter)
     @include('partials.footer')
@@ -64,13 +65,16 @@
       document.addEventListener("DOMContentLoaded", function () {
           // Simulate a delay (you can replace this with your actual loading logic)
           let mainContent = document.getElementById("main-content");
-
+          let body = document.body;
+          body.style = 'overflow-y: hidden';
           setTimeout(function () {
               // Hide the loading screen
               document.getElementById("loading-screen").style.display = "none";
+              body.style = 'overflow-y: auto';
 
               // Show the main content
               mainContent.style.display = "block";
+
               mainContent.classList.add('transition-all');
               mainContent.classList.add('duration-500');
           }, 1000); // Replace 2000 with your desired loading time in milliseconds

@@ -2,21 +2,20 @@
     $addons = isset(session('nwrinfo')['qty']) ? decrypt(session('nwrinfo')['qty']) : old('qty');
 @endphp
 <x-system-layout :activeSb="$activeSb">
-  <x-system-content title="Add Book" back=true>
+  <x-system-content title="Add Book (Addons)" back=true>
     <section x-data="{loader: false}" class="my-10 p-5">
       <x-loader />
       <div>
         <h1 class="sr-only">Checkout</h1>
         <form id="reservation-form" action="{{ route('system.reservation.store.step.three')}}" method="POST">
           @csrf
-          <h1 class="text-xl font-bold">Addons <sup class="text-error text-sm"> *Optional</sup></h1>
           <div class="overflow-x-auto">
               <table class="table">
               <!-- head -->
               <thead>
                   <tr>
                   <th></th>
-                  <th>Addons</th>
+                  <th>Item</th>
                   <th>Price</th>
                   <th>Quantity</th>
                   </tr>

@@ -29,32 +29,16 @@
                     <span class="h-10 w-10 rounded-full bg-primary"></span>
                     <h2 class="font-medium text-neutral">Reservation Information</h2>
                   </div>
-                  @if($uinfo['at'] !== 'Room Only')
-                    <div class="flex items-center gap-4">
-                          <div class="join">
-                            <select x-model="currency" class="select select-bordered select-primary select-sm join-item text-xs">
-                              @foreach ($currencyKey as $item)
-                                @if ((old('cur') ?? 'PHP') === $item || (request('cur') ?? 'PHP') === $item)
-                                  <option value="{{$item}}" selected>{{$item}}</option>
-                                @else
-                                  <option value="{{$item}}">{{$item}}</option>
-                                @endif
-                              @endforeach
-                            </select>
-                            <div>
-                              <button @click="loader = true; event.preventDefault(); document.getElementById('convertion-from').submit();" class="btn join-item btn-primary btn-sm">Convert</button>
-                            </div>
-                        </div>
-                    </div>
-                  @endif
                 </div>
                 <div class="space-y-1 md:space-y-3">
                   <p class="text-md font-medium tracking-tight text-neutral">
                     <strong>Check-in: </strong> {{ \Carbon\Carbon::createFromFormat('Y-m-d', $uinfo['cin'])->format('l F j, Y')}}
-                  </p>                      
-                  <p class="text-md font-medium tracking-tight text-neutral">
-                    <strong>Check-out: </strong> {{ \Carbon\Carbon::createFromFormat('Y-m-d', $uinfo['cout'])->format('l F j, Y')}}
-                  </p>       
+                  </p>              
+                  @if($uinfo['at'] !== 'Day Tour')        
+                    <p class="text-md font-medium tracking-tight text-neutral">
+                      <strong>Check-out: </strong> {{ \Carbon\Carbon::createFromFormat('Y-m-d', $uinfo['cout'])->format('l F j, Y')}}
+                    </p>  
+                  @endif     
                   <p class="text-md font-medium tracking-tight text-neutral">
                     <strong>Number of Guest: </strong> {{$uinfo['px'] > 1 ? $uinfo['px'] . ' guests' : $uinfo['px'] . ' guest' }}
                   </p>         
@@ -73,7 +57,7 @@
                 <div>
                     <div class="flow-root">
                           @if($uinfo['at'] !== 'Room Only')
-                          <div class="overflow-x-auto mt-5">
+                          <div class="w-full overflow-x-auto mt-5">
                             <table class="table table-zebra table-xs">
                               <!-- head -->
                               <thead>
@@ -94,13 +78,12 @@
                                           <td>{{$item['title']}}</td>
                                           <td>{{$item['type']}}</td>
                                           <td>{{$uinfo['tpx']}}</td>
-                                          {{-- <td>{{$item['pax']}}</td> --}}
                                           <td>
                                               <input type="hidden" name="tour[]" value="{{encrypt($item['id'])}}">
-                                              {{$currencies[request('cur')] ?? '₱'}} {{ number_format($item['price'], 2) }}
+                                              ₱ {{ number_format($item['price'], 2) }}
                                           </td>
                                           <td>
-                                            {{$currencies[request('cur')] ?? '₱'}} {{ number_format($item['amount'], 2) }}
+                                            ₱ {{ number_format($item['amount'], 2) }}
                                           </td>
                                           <td>
                                             <label for="remove-tour" class="btn btn-ghost btn-circle btn-sm text-error">
@@ -128,7 +111,7 @@
                           </div>
                           <div class="flex justify-end mb-5">
                             <p class="text-md font-medium tracking-tight text-neutral">
-                              Total Cost: {{$currencies[request('cur')] ?? '₱'}} {{ number_format($totalPrice, 2) }}
+                              Total Cost: ₱ {{ number_format($totalPrice, 2) }}
                             </p>
                           </div>
                           @endif
@@ -229,5 +212,4 @@
       </div>
     </section>
   </x-full-content>
-
 </x-landing-layout>

@@ -1,5 +1,5 @@
 @php
-    $arrTrType = ['All', 'Day Tour', 'Overnight'];
+    $arrTrType = ['All', 'Day Tour'];
 @endphp
 <x-system-layout :activeSb="$activeSb">
   <x-system-content title="Edit {{$service_menu->title}}" back=true>
@@ -10,7 +10,8 @@
         <div class="w-full md:w-96">
           <x-input type="text" id="title" name="title" placeholder="Title" value="{{$service_menu->title}}"/>
           <x-datalist-input id="category" name="category" placeholder="Category" :lists="$category" value="{{$service_menu->category}}"/>
-          <x-input type="number" id="no_day" name="no_day" placeholder="Number of days" value="{{$service_menu->no_day}}" />
+          <x-select name="atpermit" id="atpermit" placeholder="Accommodation Type to Allow" :value="array_keys($arrTrType)" :title="$arrTrType" selected="{{$arrTrType[$service_menu->atpermit]}}" />
+
             <div class="form-control w-full pb-5">
               <textarea id="listTextarea" class="w-full rounded-lg border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary p-3 text-sm" rows="2" x-model="inputText" x-on:keydown.enter.prevent="addListItem" placeholder="Inclusion (Use Enter Key to Add Item)"></textarea>
               <div id="listOutput" class="w-full mt-2 py-2 border-t" :class="listItems.length == 0 ? 'hidden' : 'block' ">

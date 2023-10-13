@@ -1,53 +1,32 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="">
         {{-- User Details --}}
-        <div class="w-full p-8 sm:flex sm:space-x-6">
-            <div class="flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
-                @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
-                    <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @elseif($r_list->userReservation->avatar ?? false)
-                    <img src="{{asset('storage/'. $r_list->userReservation->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @else
-                    <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @endif
-            </div>
-            <div class="flex flex-col space-y-4">
-                <div>
-                    <h2 class="text-2xl font-semibold">{{$r_list->userReservation->name()}}</h2>
-                    <span class="block text-sm text-neutral">{{$r_list->userReservation->age()}} years old from {{$r_list->userReservation->country}}</span>
-                    <span class="text-sm text-neutral">{{$r_list->userReservation->nationality}}</span>
-                </div>
-                <div class="space-y-1">
-                    <span class="flex items-center space-x-2">
-                        <i class="fa-regular fa-envelope w-4 h-4"></i>
-                        <span class="text-neutral">{{$r_list->userReservation->email}}</span>
-                    </span>
-                    <span class="flex items-center space-x-2">
-                        <i class="fa-solid fa-phone w-4 h-4"></i>
-                        <span class="text-neutral">{{$r_list->userReservation->contact}}</span>
-                    </span>
-                </div>
-            </div>
-        </div>
+        <x-profile :rlist="$r_list" />
         <div class="flex px-8 justify-between">
             <h1 class="font-bold text-xl">Payment: <span class="font-normal text-xl">{{$r_list->payment_method}}</span></h1>
-            <label for="fpmdl" class="btn btn-warning btn-sm">
-                Force Payment
-            </label>
-            <x-modal id="fpmdl" title="Force payment for {{$r_list->userReservation->name()}}">
-                <form id="frcpf" method="POST" action="{{route('system.reservation.online.payment.forcepayment.update', encrypt($r_list->id))}}" >
-                    @csrf
-                    @method('PUT')
-                    <x-input type="number" name="amount" id="amount" placeholder="Amount" value="{{old('amount') ?? ''}}" />
-                    <div class="modal-action">
-                        <label for="pssmdl" class="btn btn-primary">
-                            Force Payment
-                        </label>
-                    </div>
-                    <x-passcode-modal title="Force Payment Confirmation" id="pssmdl" formId="frcpf" loader/>        
+            @if(!($r_list->downpayment() >= 1000))
+                <label for="fpmdl" class="btn btn-warning btn-sm">
+                    Force Payment
+                </label>
+            @else
+                <div class="text-error text-xs md:text-sm">Unable because your downpayment is more than ₱ 1,000.</div>
 
-                </form>
-            </x-modal >
+            @endif
+            @if (!($r_list->downpayment() >= 1000))
+                <x-modal id="fpmdl" title="Force payment for {{$r_list->userReservation->name()}}">
+                    <form id="frcpf" method="POST" action="{{route('system.reservation.online.payment.forcepayment.update', encrypt($r_list->id))}}" >
+                        @csrf
+                        @method('PUT')
+                        <x-input type="number" name="amount" id="amount" placeholder="Amount" value="{{old('amount') ?? ''}}" />
+                        <div class="modal-action">
+                            <label for="pssmdl" class="btn btn-primary">
+                                Force Payment
+                            </label>
+                        </div>
+                    <x-passcode-modal title="Force Payment Confirmation" id="pssmdl" formId="frcpf" loader noBottom />        
+                    </form>
+                </x-modal > 
+            @endif
         </div>
         <div class="divider px-8"></div>
         <div class="block">

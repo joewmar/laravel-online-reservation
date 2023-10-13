@@ -10,8 +10,8 @@
             <p>
               <form action=" {{route('system.check')}} " method="post">
                 @csrf
-              <x-input type="text" id="username" name="username" placeholder="Username" />
-              <x-input type="password" id="password" name="password" placeholder="Password" />
+              <x-input type="text" id="username" name="username" placeholder="Username" noRequired />
+              <x-input type="password" id="password" name="password" placeholder="Password" noRequired />
               <div class="form-control mt-6">
                 <button type="submit" class="btn btn-primary">Login</button>
               </div>

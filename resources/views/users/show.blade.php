@@ -5,7 +5,7 @@
             <div class="container flex flex-col mx-auto space-y-12 ng-untouched ng-pristine ng-valid">
                 <fieldset class="w-full grid grid-cols-1 md:grid-cols-6 gap-10 md:gap-2 p-6 rounded-md">
                     <div class="col-span-6 md:col-span-2 space-y-5 flex flex-col items-center">
-                        <div class="flex-shrink-0 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
+                        <div class="flex-shrink-0 h-52 sm:h-32 w-52 sm:w-32 sm:mb-0">
                             @if(filter_var($user->avatar ?? '', FILTER_VALIDATE_URL))
                                 <img src="{{$user->avatar}}" alt="{{$user->name()}} Profile Pic" class="object-cover object-center w-full h-full rounded">
                             @elseif($user->avatar ?? false)
@@ -108,11 +108,11 @@
                             <label class="btn btn-primary btn-sm" disabled>Delete Account</label> 
                         @else
                             <label for="delete_acc_modal" class="btn btn-error btn-sm">Delete Account</label> 
-                            <x-modal id="delete_acc_modal" title="Delete Account Confirmation" loader>
+                            <x-modal id="delete_acc_modal" title="Enter your password to confirm delete your account" loader>
                                 <form action="{{route('profile.destroy.account', encrypt($user->id))}}" method="POST">
                                     @csrf
                                     @method('DELETE')
-                                    <p class="mb-3">Enter your password to confirm delete your account</p>
+                                    <p class="mb-3 text-error">When you delete your account, the reservation information you have created will also be deleted.</p>
                                     <x-password />
                                     <div class="modal-action">
                                         <button class="btn btn-error">Delete Account</button>

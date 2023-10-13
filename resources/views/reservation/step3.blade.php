@@ -3,6 +3,12 @@
   if(request()->has('details') && request('details') === "update"){
     $update = true;
   }
+  $TourInfoEncrypted = [
+      'cin' => session('rinfo')['cin'],
+      'cout' => session('rinfo')['cout'],
+      'at' => session('rinfo')['at'],
+      'px' => session('rinfo')['px'],
+  ];
 
 @endphp
 <x-landing-layout noFooter>
@@ -35,7 +41,7 @@
             <x-loader />
           </div>
 
-          <div class="rounded-lg bg-white p-8 shadow-2xl lg:col-span-3 lg:p-12 {{$update ? 'border border-primary border-s-4 border-e-4' : '' }}">
+          <div class="rounded-lg bg-white p-8 shadow-none md:shadow-2xl lg:col-span-3 lg:p-12 {{$update ? 'border border-primary border-s-4 border-e-4' : '' }}">
             
             <div class="mt-4 flex justify-end gap-5">
                 @if(!$update)
@@ -81,7 +87,7 @@
                         Save
                       </button>
                   @else
-                    <a href="{{URL::previous()}}" class="btn btn-ghost gap-2">
+                    <a href="{{route('reservation.choose', Arr::query($TourInfoEncrypted))}}" class="btn btn-ghost gap-2">
                       <i class="fa-solid fa-arrow-left"></i>            
                       Back
                     </a>

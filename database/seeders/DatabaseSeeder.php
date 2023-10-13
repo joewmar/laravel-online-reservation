@@ -69,20 +69,20 @@ class DatabaseSeeder extends Seeder
         //     'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'amount' => 2100.00 * 4]],
         // ]);
 
-        \App\Models\Reservation::factory()->create([
-            'user_id' => 1,
-            // 'roomid' => 1,
-            // 'roomrateid' => 1,
-            'pax' => 4,
-            'tour_pax' => 4,
-            'accommodation_type' => 'Overnight',
-            'payment_method' => 'Bank Transfer',
-            'age' => User::findOrfail(1)->age(),
-            'check_in' => Carbon::now('Asia/Manila')->addDays(16)->toDateTimeString(),
-            'check_out' => Carbon::now('Asia/Manila')->addDays(18)->toDateTimeString(),
-            'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-            'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'tpx' => 4, 'amount' => 2100.00 * 4]],
-        ]);
+        // \App\Models\Reservation::factory()->create([
+        //     'user_id' => 1,
+        //     // 'roomid' => 1,
+        //     // 'roomrateid' => 1,
+        //     'pax' => 4,
+        //     'tour_pax' => 4,
+        //     'accommodation_type' => 'Overnight',
+        //     'payment_method' => 'Bank Transfer',
+        //     'age' => User::findOrfail(1)->age(),
+        //     'check_in' => Carbon::now('Asia/Manila')->addDays(16)->toDateTimeString(),
+        //     'check_out' => Carbon::now('Asia/Manila')->addDays(18)->toDateTimeString(),
+        //     'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
+        //     'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'tpx' => 4, 'amount' => 2100.00 * 4]],
+        // ]);
 
         \App\Models\System::factory()->create([
             'first_name' => 'Alvin',
@@ -128,7 +128,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
             'inclusion' => 'Duration: 1 hr. to 1.5 hrs.(..)Free trek meal, parking space and bottled water',
-            'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
             'menu_id' => 1,
@@ -148,7 +147,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'ATV Tambo Lake and San Marcos Lake Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
             'inclusion' => 'Duration: 2 hrs. to 2.5 hrs(..)Free trek meal, parking space and bottled water',
-            'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
             'menu_id' => 2,
@@ -167,7 +165,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'ATV Combo Trail without Pinatubo Crater Hike',
             'category' => 'Rent ATV',
             'inclusion' => 'Duration: 5 hrs(..)Destination: Lahar Canyons, Tambo Lake, Aeta Village, Bulacan',
-            'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
             'menu_id' => 3,
@@ -186,7 +183,6 @@ class DatabaseSeeder extends Seeder
             'title' => 'ATV Long Trail (going to Pinatubo drop point car)',
             'category' => 'Rent ATV',
             'inclusion' => 'Free trek meal, parking space and bottled water',
-            'no_day' => '1',
         ]);
         \App\Models\TourMenu::factory()->create([
             'menu_id' => 4,
@@ -198,9 +194,9 @@ class DatabaseSeeder extends Seeder
         // Mt. Pinatubo 4x4 rate day tour //
         \App\Models\TourMenuList::factory()->create([
             'title' => 'Mt. Pinatubo 4x4 Ride',
-            'category' => '4x4 Ride Rate',
+            'category' => '4x4 Ride Rate Day Tour',
             'inclusion' => 'Local guide(..)All mandatory fees (conservation fees, tourism fees)(..)Trek meal (packed lunch)(..)Use of toilet & shower facilities(..)Parking facilities',
-            'no_day' => '1',
+            'atpermit' => 1,
         ]);
         \App\Models\TourMenu::factory()->create([
             'menu_id' => 5,

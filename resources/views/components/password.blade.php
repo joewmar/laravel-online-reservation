@@ -1,4 +1,4 @@
-@props(['id' => 'password', 'name' => 'password', 'placeholder' => 'Password', 'value' => '', 'validation' => false])
+@props(['id' => 'password', 'name' => 'password', 'placeholder' => 'Password', 'value' => '', 'validation' => false, 'noRequired' => false])
 @if ($validation)
   <div x-data="passwordValidator{{Str::camel($id)}}()">
 @endif
@@ -10,7 +10,7 @@
       <input :type="show{{Str::camel($id)}} ? 'password' : 'text'" id="{{Str::camel($id)}}" name="{{$name}}" class="input input-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0" placeholder="{{$placeholder}}" value="{{$value ?? ''}}" {{ $attributes }} />
     @endif
     <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs" >
-      {{$placeholder}}
+      {{$placeholder}} @if(!$noRequired) <span class="text-error">*</span> @endif
     </span>
     <span class="absolute inset-y-0 end-0 grid w-10 place-content-center">
       <button type="button" @click="show{{Str::camel($id)}} = !show{{Str::camel($id)}}" class="rounded-full bg-transparent p-0.5 text-neutral hover:text-primary" >

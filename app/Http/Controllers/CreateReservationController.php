@@ -32,11 +32,10 @@ class CreateReservationController extends Controller
     public function __construct()
     {
         $this->system_user = auth()->guard('system');
-        if(Str::contains(URL::previous(), route('home')) || Str::contains(URL::previous(), route('system.home'))) session()->forget('nwrinfo');
-
     }
     private function reservationValidation(Request $request){
         // Check in (startDate to endDate) trim convertion
+        if($request->has('accommodation_type') && $request['accommodation_type'] === 'Day Tour') $request['check_out'] = $request['check_in'];
         $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
         $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
 
@@ -431,9 +430,12 @@ class CreateReservationController extends Controller
             'first_name' => ['required', 'min:1'],
             'last_name' => ['required', 'min:1'],
             'age' => ['required', 'numeric','min:8'],
-            'payment_amount' => ['required', 'numeric','min:1000'],
             'country' => ['required', 'min:1'],
             'type' => ['required'],
+            'dyamount' => Rule::when($request->has('type') && $request['type'] == 'downpayment',['required', 'numeric','min:1000']),
+            'cnpy' => Rule::when($request->has('type') && $request['type'] == 'cinpayment',['required']),
+            'senior_count' => Rule::when($request->has('hs') && $request['hs'] == 'on', ['required']),
+            'cinamount' => Rule::when($request->has('cnpy') && $request['cnpy'] == 'partial', ['required', 'numeric']),
             'nationality' => ['required'],
             'contact_code' => ['required'],
             'contact' => ['required', (new Phone)->international()->country(Str::upper($request['contact_code']))],
@@ -444,7 +446,7 @@ class CreateReservationController extends Controller
             'image' => 'The file must be an image of type: jpeg, png, jpg',
             'mimes' => 'The image must be of type: jpeg, png, jpg',
             'max' => 'The image size must not exceed 5 MB',
-            'payment_amount.min' => 'The amount must be ₱ 1,000 above',
+            'dyamount.min' => 'The amount must be ₱ 1,000 above',
         ]);
         $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
         $validated['contact'] = $phone->formatInternational(); 
@@ -497,11 +499,17 @@ class CreateReservationController extends Controller
                     'price' => (double)$rate->price,
                     'amount' => (double)$rate->price * (int)$decrypted['px']
                 ];
+                if(isset($validated['hs']) && isset($validated['senior_count'])){                    
+                    $discounted = (20 / 100) * $validated['senior_count'];
+                    $discounted = (double)($transaction['rid'. $rate->id]['amount'] * $discounted);
+                    $discounted = (double)($transaction['rid'. $rate->id]['amount'] - $discounted);
+                    $transaction['rid'. $rate->id]['orig_amount'] = $transaction['rid'. $rate->id]['amount'];
+                    $transaction['rid'. $rate->id]['amount'] = $discounted;
+                }
             }
 
-            if($validated['type'] == 'cinpayment') $transaction['payment']['cinpay'] = $validated['payment_amount'];
-            elseif($validated['type'] == 'coutpayment') $transaction['payment']['coutnpay'] = $validated['payment_amount'];
-            else $transaction['payment']['downpayment'] = $validated['payment_amount'];
+            if($validated['type'] == 'cinpayment') $transaction['payment']['cinpay'] = $validated['cinamount'];
+            elseif($validated['type'] == 'downpayment') $transaction['payment']['downpayment'] = $validated['dyamount'];
 
             $reserved = Reservation::create([
                 'offline_user_id' => $created->id,

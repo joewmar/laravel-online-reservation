@@ -19,42 +19,13 @@
 <x-landing-layout noFooter>
     <x-navbar :activeNav="$activeNav" type="plain"/>
     <x-full-content>
-        <section class="px-10 md:px-20 pt-24">
+        <section class="px-5 md:px-20 pt-24">
             {{-- User Details --}}
             <a href="{{URL::previous()}}" class="btn btn-ghost btn-circle">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
             <div class="px-3 md:px-20">
-
-                <div class="w-full sm:flex sm:space-x-6">
-                    <div class="hidden md:flex flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
-                        @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
-                            <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
-                        @elseif($r_list->userReservation->avatar ?? false)
-                            <img src="{{asset('storage/'. $r_list->userReservation->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
-                        @else
-                            <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
-                        @endif
-                    </div>            
-                    <div class="flex flex-col space-y-4">
-                        <div>
-                            <h2 class="text-2xl font-semibold">{{$r_list->userReservation->name()}}</h2>
-                            <span class="block text-sm text-neutral">{{$r_list->userReservation->age()}} years old from {{$r_list->userReservation->country}}</span>
-                            <span class="text-sm text-neutral">{{$r_list->userReservation->nationality}}</span>
-                        </div>
-                        <div class="space-y-1">
-                            <span class="flex items-center space-x-2">
-                                <i class="fa-regular fa-envelope w-4 h-4"></i>
-                                <span class="text-neutral">{{$r_list->userReservation->email}}</span>
-                            </span>
-                            <span class="flex items-center space-x-2">
-                                <i class="fa-solid fa-phone w-4 h-4"></i>
-                                <span class="text-neutral">{{$r_list->userReservation->contact}}</span>
-                            </span>
-                        </div>
-                    </div>
-
-                </div>
+                <x-profile :rlist="$r_list" />
                 <div class="flex md:hidden justify-end">
                     <div class="dropdown dropdown-top dropdown-end">
                         <label tabindex="0" class="btn btn-ghost btn-circle">
@@ -114,9 +85,8 @@
                 <div class="divider"></div>
                 <div class="block">
                     <article class="text-md tracking-tight text-neutral my-5 w-auto">
-                        
                             <div class="flex gap-4 mb-5 items-center" >
-                                <h2 class="text-2xl font-bold">Details</h2>
+                                <h2 class="text-xl md:text-2xl font-bold">Details</h2>
                                     <label for="edit_modal" class="btn btn-sm btn-primary" {{$r_list->status > 0 ? 'disabled' : ''}}>Change</label>
                                 @if($r_list->status > 0)
                                     <x-modal title="Change Information" id="edit_modal">
@@ -215,10 +185,10 @@
                         
                     </article>
                     <article>
-                        @if($r_list->accommodation_type !== 'Room Only')
+                        @if(!empty($menu))
                             <div class="w-auto">
                                 <div class="overflow-x-auto">
-                                    <table class="table table-zebra">
+                                    <table class="table table-zebra table-xs md:table-md">
                                     <!-- head -->
                                     <thead>
                                         <tr class="text-neutral font-bold">
@@ -262,48 +232,46 @@
                     <div class="divider"></div>
                     <article>
                         <h1 class="my-1 text-xl "><strong>Additional Request: </strong></h1>
-                        @if(!empty($other_addons))
-                            <div class="my-5 w-full">
-                                <div class="w-auto">
-                                    <div class="overflow-x-auto">
-                                        <table class="table table-zebra table-sm">
-                                        <!-- head -->
-                                        <thead>
+                        <div class="my-5 w-full">
+                            <div class="w-auto">
+                                <div class="overflow-x-auto">
+                                    <table class="table table-zebra table-sm">
+                                    <!-- head -->
+                                    <thead>
+                                        <tr>
+                                            <th>Addons</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php $totalAddons = 0 @endphp
+                                        @foreach ($other_addons as $key => $addon)
                                             <tr>
-                                                <th>Addons</th>
-                                                <th>Quantity</th>
-                                                <th>Price</th>
-                                                <th>Amount</th>
+                                                <td>{{$addon['title']}}</td> 
+                                                <td>{{$addon['pcs'] ?? 0}}</td> 
+                                                <td>₱ {{number_format($addon['price'], 2)}}</td> 
+                                                <td>₱ {{number_format($addon['amount'], 2)}}</td> 
+                                                @php $totalAddons += $addon['amount'] @endphp
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            @php $totalAddons = 0 @endphp
-                                            @foreach ($other_addons as $key => $addon)
-                                                <tr>
-                                                    <td>{{$addon['title']}}</td> 
-                                                    <td>{{$addon['pcs'] ?? 0}}</td> 
-                                                    <td>₱ {{number_format($addon['price'], 2)}}</td> 
-                                                    <td>₱ {{number_format($addon['amount'], 2)}}</td> 
-                                                    @php $totalAddons += $addon['amount'] @endphp
-                                                </tr>
-                                            @endforeach
-                                            <tr class="bg-base-200">
-                                                <td></td> 
-                                                <td></td> 
-                                                <td class="font-bold">Total</td> 
-                                                <td class="font-bold">₱ {{number_format($totalAddons, 2)}}</td> 
-                                            </tr>
-                                        </tbody>
-                                        </table>
-                                    </div>
+                                        @endforeach
+                                        <tr class="bg-base-200">
+                                            <td></td> 
+                                            <td></td> 
+                                            <td class="font-bold">Total</td> 
+                                            <td class="font-bold">₱ {{number_format($totalAddons, 2)}}</td> 
+                                        </tr>
+                                    </tbody>
+                                    </table>
                                 </div>
                             </div>
-                        @endif
+                        </div>
                     </article>
                 @endif
                 <div class="divider"></div>
                     <article class="text-md tracking-tight text-neutral my-5 w-auto">
-                        <h2 class="text-2xl mt-5 font-bold">Transaction</h2>
+                        <h2 class="text-xl md:text-2xl mt-5 font-bold">Transaction</h2>
                         <div class="overflow-x-auto">
                             <table class="table">
                                 <thead>
@@ -385,7 +353,7 @@
                 <div class="divider"></div>
                 <div x-data="{show: false}" class=" w-full">
                     <div class="flex items-start space-x-2">
-                        <h2 class="text-2xl mb-5 font-bold">Valid ID</h2> 
+                        <h2 class="text-xl md:text-2xl mb-5 font-bold">Valid ID</h2> 
                         <div class="join">
                             <button @click="show = !show" type="button" x-text="show ? 'Hide' : 'Show' " class="btn btn-sm join-item"></button>
                             <label for="edit_id_modal" class="btn btn-primary btn-sm join-item" {{$r_list->status > 0 ? 'disabled' : ''}}>Change</label> 
@@ -410,9 +378,9 @@
                 <div class="divider"></div>
 
                 <div class="w-full mb-10">
-                    <h2 class="text-2xl mb-5 font-bold">Message</h2>
+                    <h2 class="text-xl md:text-2xl mb-5 font-bold">Message</h2>
                     <div tabindex="0" class="collapse collapse-arrow border border-base-300 bg-base-200">
-                        <div class="collapse-title text-xl font-medium">
+                        <div class="collapse-title text-lg md:text-xl font-medium">
                             <span>Request Message</span>
                             <label for="edit_service" class="btn btn-sm btn-ghost btn-circle btn-primary" {{!isset($r_list->message['request']) ? 'disabled' : ''}}>
                                 <i class="fa-solid fa-pen-to-square"></i>
@@ -423,7 +391,7 @@
                         </div>
                     </div>
                     <div tabindex="0" class="collapse collapse-arrow border border-base-300 bg-base-200">
-                        <div class="collapse-title text-xl font-medium">
+                        <div class="collapse-title text-lg md:text-xl font-medium">
                             <span>Cancel Request</span>
                             <label for="edit_cancel" class="btn btn-sm btn-ghost btn-circle btn-primary" {{!isset($r_list->message['cancel']) ? 'disabled' : ''}}>
                                 <i class="fa-solid fa-pen-to-square"></i>
@@ -434,7 +402,7 @@
                         </div>
                     </div>
                     <div tabindex="0" class="collapse collapse-arrow border border-base-300 bg-base-200">
-                        <div class="collapse-title text-xl font-medium">
+                        <div class="collapse-title text-lg md:text-xl font-medium">
                             <span>Reschedule Request</span>
                             <label for="edit_reschedule" class="btn btn-sm btn-ghost btn-circle btn-primary" {{!isset($r_list->message['reschedule']) ? 'disabled' : ''}}>
                                 <i class="fa-solid fa-pen-to-square"></i>

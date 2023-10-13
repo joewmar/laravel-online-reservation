@@ -33,7 +33,18 @@ class ReservationController extends Controller
     public function __construct()
     {
         $this->customer = auth('web');
-        if(Str::contains(URL::previous(), route('home')) || Str::contains(URL::previous(), route('system.home'))) session()->forget('rinfo');
+        $this->middleware(function ($request, $next) {
+            // dd($this->user->user()->id);
+            $existingReservation = Reservation::where('user_id', $this->customer->user()->id)->where('status', '<', 3)->first();
+
+            if ($existingReservation) {
+                session(['ck' => false]);
+                return redirect()->route('home')->with('error', "Sorry, you still have pending your reservation");
+            }
+
+            return $next($request);
+        })->except(['done', 'storeMessage']); // You can specify the specific method where this middleware should be applied.
+
 
     }
     private function replaceRInfo(array $values, bool $isEncrypt = false){
@@ -65,16 +76,7 @@ class ReservationController extends Controller
         Notification::send($systems, new SystemNotification(Str::limit($text, 10), $text, route('system.notifications')));
     }
     private function reservationValidation(Request $request, string $view = null, bool $haveTpx = false, $havePy = false){
-        if(str_contains($request['check_in'], 'to')){
-            $dateSeperate = explode('to', $request['check_in']);
-            $request['check_in'] = trim($dateSeperate[0]);
-            $request['check_out'] = trim ($dateSeperate[1]);
-        }
-        // Check out convertion word to date format
-        if(str_contains($request['check_out'], ', ')){
-            $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
-            $request['check_out'] = $date->format('Y-m-d');
-        }
+        if($request->has('accommodation_type') && $request['accommodation_type'] === 'Day Tour') $request['check_out'] = $request['check_in'];
 
         $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
         $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
@@ -149,20 +151,20 @@ class ReservationController extends Controller
         }
         else{
             session(['ck' => false]);
-            if(isset($view)) return redirect()->route($view)->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput($request->all());
-            return back()->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput($request->all());
+            if(isset($view)) return redirect()->route($view)->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput($validator->getData());
+            return back()->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput($validator->getData());
         }
         if ($validator->fails()) {            
             session(['ck' => false]);
             if(isset($view)) {
                 return redirect()->route($view)
                 ->withErrors($validator)
-                ->withInput($request->all());
+                ->withInput($validator->getData());
             }
             else{
                 return back()
                 ->withErrors($validator)
-                ->withInput($request->all());
+                ->withInput($validator->getData());
             }
 
         }
@@ -175,14 +177,12 @@ class ReservationController extends Controller
     }
     public function dateCheck(Request $request){
         session()->forget('ck');
-        // Check in (startDate to endDate) trim convertion
 
         $validator = $this->reservationValidation($request, 'reservation.date');
         if(!is_array($validator)) return $validator;
-        
         if($validator){
             session(['ck' => true]);
-            return redirect()->route('reservation.date')->with('success',"Your choose date is now available, Let s proceed if you will make reservation")->withInput($request->all());
+            return redirect()->route('reservation.date')->with('success',"Your choose date is now available, Let s proceed if you will make reservation")->withInput($validator);
         }
     }
     // Date Store
@@ -297,7 +297,6 @@ class ReservationController extends Controller
                 "px" =>  $request['px']?? '',
                 "py" =>   $request['py'] ?? '',
             ];
-            $getParam = encryptedArray($getParam);
             return redirect()->route('reservation.choose', [Arr::query($getParam), '#tour-menu'])
             ->with('error', 'You have not selected anything in the cart yet. Please make a selection first.');
         }
@@ -348,7 +347,13 @@ class ReservationController extends Controller
         $user = User::find(auth('web')->user()->id);
         if(empty($user)) return back()->wtih('error', 'Sorry, you are not register the account');
         $unfo = [
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
             'age' => $user->age(),
+            'country' => $user->country,
+            'nationality' => $user->nationality,
+            'contact' => $user->contact,
+            'email' => $user->email,
         ];
         if(!$this->replaceRInfo($unfo, true)){
             $unfo = encryptedArray($unfo);
@@ -361,23 +366,13 @@ class ReservationController extends Controller
         $uinfo = decryptedArray(session('rinfo')) ?? '';
         if(empty($uinfo['tm']) && $uinfo['at'] !== 'Room Only') return redirect()->route('reservation.choose', Arr::query(['cin' => session()->get('rinfo')['cin'], 'cout' => session()->get('rinfo')['cout'], 'px' => session()->get('rinfo')['px'], 'tpx' => session()->get('rinfo')['tpx'], 'py' => session()->get('rinfo')['py'], 'at' => session()->get('rinfo')['at']], '#tourMenu'))->with('info', 'Your Tour Menu was empty');
         $user_menu = [];
-        if($uinfo['at'] !== 'Room Only' && isset($uinfo['tm'])){
+        if(isset($uinfo['tm'])){
             foreach($uinfo['tm'] as $key => $item){
                 $tour = TourMenu::findOrFail($item);
                 $user_menu[$key]['id'] = $tour->id;
-                if($request->has('cur') && !empty($request['cur'])){
-                    $converted = Currency::convert()->from('PHP')->to($request['cur'])->amount($tour->price)->get();
-                    $user_menu[$key]['price'] = $converted;
-                    $user_menu[$key]['orig_price'] = $tour->price;
-                    $user_menu[$key]['amount'] = (int)$uinfo['tpx'] * (double)$user_menu[$key]['price'];
+                $user_menu[$key]['price'] = $tour->price;
+                $user_menu[$key]['amount'] = (int)$uinfo['tpx'] * $tour->price;
 
-                }
-                else{
-                    $user_menu[$key]['price'] = $tour->price;
-                    $user_menu[$key]['orig_price'] = $tour->price;
-                    $user_menu[$key]['amount'] = (int)$uinfo['tpx'] * $tour->price;
-
-                }
                 $user_menu[$key]['title'] = $tour->tourMenu->title;
                 $user_menu[$key]['type'] = $tour->type;
                 $user_menu[$key]['pax'] = $tour->pax . ' guest';

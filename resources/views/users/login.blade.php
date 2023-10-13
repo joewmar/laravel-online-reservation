@@ -10,8 +10,8 @@
           <h2 class="font-bold text-3xl text-center mb-10">Let's Login!</h2>
             <form action="{{ route('check') }}" method="post">
             @csrf
-            <x-input type="email" name="email" placeholder="Email"/>
-            <x-password />
+            <x-input type="email" name="email" placeholder="Email" noRequired />
+            <x-password noRequired />
             <label class="label">
               <span class="label-text-alt">
                   <span class="label-text-alt flex items-center space-x-2 cursor-pointer">

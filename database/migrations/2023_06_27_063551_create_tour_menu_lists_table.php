@@ -16,8 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->string('category');
             $table->text('inclusion');
-            $table->string('tour_type')->default('all');
-            $table->integer('no_day');
+            $table->tinyInteger('atpermit')->default(0); /* 0 => All, 1 => 'Day Tour */
             $table->timestamps();
         });
     }

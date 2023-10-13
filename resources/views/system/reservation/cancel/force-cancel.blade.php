@@ -3,41 +3,14 @@
     <x-system-content title="" back=true>
         {{-- User Details --}}
        <div class="px-3 md:px-20">
-        <div class="w-full sm:flex sm:space-x-6">
-            <div class="hidden md:flex flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
-                @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
-                    <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @elseif($r_list->userReservation->avatar ?? false)
-                    <img src="{{asset('storage/'. $r_list->userReservation->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @else
-                    <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @endif
-            </div>            
-            <div class="flex flex-col space-y-4">
-                <div>
-                    <h2 class="text-2xl font-semibold">{{$r_list->userReservation->name()}}</h2>
-                    <span class="block text-sm text-neutral">{{$r_list->userReservation->age()}} years old from {{$r_list->userReservation->country}}</span>
-                    <span class="text-sm text-neutral">{{$r_list->userReservation->nationality}}</span>
-                </div>
-                <div class="space-y-1">
-                    <span class="flex items-center space-x-2">
-                        <i class="fa-regular fa-envelope w-4 h-4"></i>
-                        <span class="text-neutral">{{$r_list->userReservation->email}}</span>
-                    </span>
-                    <span class="flex items-center space-x-2">
-                        <i class="fa-solid fa-phone w-4 h-4"></i>
-                        <span class="text-neutral">{{$r_list->userReservation->contact}}</span>
-                    </span>
-                </div>
-            </div>
-        </div>
+        <x-profile :rlist="$r_list" />
         <div class="divider"></div>
         <article x-data="{reason: '{{old('reason')}}'}" class="text-md tracking-tight text-neutral my-5 w-auto">
             <form id="force-cancel-form" action="" method="post">
                 @csrf
                 @method('PUT')
                 {{-- route('system.reservation.force.cancel.update', encrypt($r_list->id) --}}
-            <h2 class="text-2xl mb-5 font-bold">Reason To Cancel</h2>
+            <h2 class="text-xl md:text-2xl mb-5 font-bold">Reason To Cancel</h2>
             <div class="form-control w-full">
                 <label for="cancel" class="w-full relative flex justify-start rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ">
                     <select x-model="reason" name="reason" id="reason" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>

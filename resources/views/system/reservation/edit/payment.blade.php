@@ -52,7 +52,7 @@
                 <form id="cinpform" action="{{route('system.reservation.update.cinpayment', encrypt($r_list->id))}}" method="POST" class="w-96">
                     @csrf
                     @method('PUT')
-                    <h2 class="text-2xl mb-5 font-bold">Edit Check-in Payment</h2>
+                    <h2 class="text-xl md:text-2xl mb-5 font-bold">Edit Check-in Payment</h2>
                     <div class="mb-5">
                         <input id="discount" x-model="senior" name="hs" type="checkbox" class="checkbox checkbox-secondary" />
                         <label for="discount" class="ml-4 font-semibold">Have Senior Citizen?</label>
@@ -82,7 +82,7 @@
             <form id="dyform" action="{{route('system.reservation.update.downpayment', encrypt($r_list->id))}}" method="POST" class="w-96">
                 @csrf
                 @method('PUT')
-                <h2 class="text-2xl mb-5 font-bold">Edit Downpayment</h2>
+                <h2 class="text-xl md:text-2xl mb-5 font-bold">Edit Downpayment</h2>
                 <x-input name="amount" id="amountdy" placeholder="Amount" value="{{$r_list->downpayment() ?? ''}}" min="1000" max="{{$r_list->balance()}}" /> 
                 <label for="dymdl" class="btn btn-primary btn-block">Save</label>
                 <x-passcode-modal title="Edit Downpayment Confirmation" id="dymdl" formId="dyform" />

@@ -32,8 +32,8 @@
                 @enderror
               </div>
               <div x-show="deadline == 'limit'" x-transition.500ms>
-                <x-datetime-picker name="date_from" id="date_from" placeholder="Date From" class="flatpickr-reservation" value="{{old('date_from') ?? $new->from}}"/>
-                <x-datetime-picker name="date_to" id="date_to" placeholder="Date To" class="flatpickr-reservation flatpickr-input2" value="{{old('date_to') ?? $new->to}}" />
+                <x-datetime-picker name="date_from" id="date_from" placeholder="Date From" class="flatpickr-room-today" value="{{old('date_from') ?? $new->from}}"/>
+                <x-datetime-picker name="date_to" id="date_to" placeholder="Date To" class="flatpickr-room-today" value="{{old('date_to') ?? $new->to}}" />
               </div>
               <label for="edit_modal" class="btn btn-primary w-full">Save</label>
               <x-passcode-modal title="Edit Announcement Confirmation" id="edit_modal" formId="update-form" />        

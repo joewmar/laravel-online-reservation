@@ -9,35 +9,7 @@
             </a>
             <div class="px-3 md:px-20">
 
-                <div class="w-full sm:flex sm:space-x-6">
-                    <div class="hidden md:flex flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
-                        @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
-                            <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
-                        @elseif($r_list->userReservation->avatar ?? false)
-                            <img src="{{asset('storage/'. $r_list->userReservation->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
-                        @else
-                            <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
-                        @endif
-                    </div>            
-                    <div class="flex flex-col space-y-4">
-                        <div>
-                            <h2 class="text-2xl font-semibold">{{$r_list->userReservation->name()}}</h2>
-                            <span class="block text-sm text-neutral">{{$r_list->userReservation->age()}} years old from {{$r_list->userReservation->country}}</span>
-                            <span class="text-sm text-neutral">{{$r_list->userReservation->nationality}}</span>
-                        </div>
-                        <div class="space-y-1">
-                            <span class="flex items-center space-x-2">
-                                <i class="fa-regular fa-envelope w-4 h-4"></i>
-                                <span class="text-neutral">{{$r_list->userReservation->email}}</span>
-                            </span>
-                            <span class="flex items-center space-x-2">
-                                <i class="fa-solid fa-phone w-4 h-4"></i>
-                                <span class="text-neutral">{{$r_list->userReservation->contact}}</span>
-                            </span>
-                        </div>
-                    </div>
-
-                </div>
+                <x-profile :rlist="$r_list" />
                 <div class="divider"></div>
                 <article class="text-md tracking-tight text-neutral my-5 w-auto">
                     @php $total = 0 @endphp

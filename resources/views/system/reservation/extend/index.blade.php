@@ -35,7 +35,7 @@
             @method('PUT')
             <article class="w-full flex justify-center">
                 <div class="w-96">
-                    <h2 class="text-2xl mb-5 font-bold">Extend days</h2>
+                    <h2 class="text-xl md:text-2xl mb-5 font-bold">Extend days</h2>
                     <x-input name="no_days" id="no_days" placeholder="How many days to extend" value="{{old('no_days') ?? ''}}" /> 
                     <x-passcode-modal title="Extend Confirmation" id="extend_modal" formId="extend-form" />
                     <label for="extend_modal" class="btn btn-primary btn-block">Extend</label for="extend_modal">

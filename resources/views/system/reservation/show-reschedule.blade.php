@@ -22,34 +22,7 @@
     <x-system-content title="" back=true>
         {{-- User Details --}}
        <div class="px-3 md:px-20">
-        <div class="w-full sm:flex sm:space-x-6">
-            <div class="hidden md:flex flex-shrink-0 mb-6 h-15 sm:h-32 w-15 sm:w-32 sm:mb-0">
-                @if(filter_var($r_list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
-                    <img src="{{$r_list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @elseif($r_list->userReservation->avatar ?? false)
-                    <img src="{{asset('storage/'. $r_list->userReservation->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @else
-                    <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
-                @endif
-            </div>            
-            <div class="flex flex-col space-y-4">
-                <div>
-                    <h2 class="text-2xl font-semibold">{{$r_list->userReservation->name()}}</h2>
-                    <span class="block text-sm text-neutral">{{$r_list->userReservation->age()}} years old from {{$r_list->userReservation->country}}</span>
-                    <span class="text-sm text-neutral">{{$r_list->userReservation->nationality}}</span>
-                </div>
-                <div class="space-y-1">
-                    <span class="flex items-center space-x-2">
-                        <i class="fa-regular fa-envelope w-4 h-4"></i>
-                        <span class="text-neutral">{{$r_list->userReservation->email}}</span>
-                    </span>
-                    <span class="flex items-center space-x-2">
-                        <i class="fa-solid fa-phone w-4 h-4"></i>
-                        <span class="text-neutral">{{$r_list->userReservation->contact}}</span>
-                    </span>
-                </div>
-            </div>
-        </div>
+        <x-profile :rlist="$r_list" />
         <div class="my-5 flex justify-between items-center">
             <h2 class="text-xl md:text-2xl font-bold">Reschedule Request<sup class="text-sm text-primary">{{$r_list->status === 5 ? ' *Approved' : ''}}</sup></h2>
             <label for="frsch_mdl" class="btn btn-error btn-sm" {{$r_list->status < 1 ? 'disabled' : ''}}>Force Reschedule</label>
@@ -106,7 +79,7 @@
                 </div>
                 @if($r_list->message['reschedule']['check_in'] ?? false )
                     <article class="text-md tracking-tight text-neutral my-5 w-auto">
-                        <h2 class="text-2xl mb-5 font-bold">Who Availed on {{$r_list->message['reschedule']['check_in'] ? \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->message['reschedule']['check_in'])->format('l, F j, Y') : 'None'}}</h2>
+                        <h2 class="text-xl md:text-2xl mb-5 font-bold">Who Availed on {{$r_list->message['reschedule']['check_in'] ? \Carbon\Carbon::createFromFormat('Y-m-d', $r_list->message['reschedule']['check_in'])->format('l, F j, Y') : 'None'}}</h2>
                         <div class="overflow-x-auto w-full">
                             <table class="table w-full">
                                 <!-- head -->

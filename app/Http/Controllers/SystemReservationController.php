@@ -191,7 +191,7 @@ class SystemReservationController extends Controller
     }
     public function event(){
         if(!Auth::guard('system')->check()) abort(404);
-        $reservations = Reservation::all();
+        $reservations = Reservation::whereIn('status', [0, 1, 2, 3])->orWhereIn('status', [7, 8])->get();
         $arrEvent = [];
         foreach($reservations as $reservation){
             $color = '';
@@ -200,9 +200,9 @@ class SystemReservationController extends Controller
             if($reservation->status() == 'Check-in') $color = '#eab308';
             if($reservation->status() == 'Check-out') $color = '#64748b';
             if($reservation->status() == 'Previous') $color = '#64748b';
-            if($reservation->status() == 'Cancel') $color = '#fb7185';
-            if($reservation->status() == 'Disaprove') $color = '#C70039';
-            if($reservation->status() == 'Reshedule') $color = '#f7e488';
+            if($reservation->status() == 'Cancel') $color = '#f43f5e';
+            if($reservation->status() == 'Pending Reschedule') $color = '#eab308';
+            if($reservation->status() == 'Pending Cancel') $color = '#fb7185';
             /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => done, 4 => canceled, 5 => disaprove, 6 => reshedule*/
             $arrEvent[] = [
                 'title' =>  $reservation->userReservation->name() . ' from '. $reservation->userReservation->country . ' (' . $reservation->status() . ')', 
@@ -257,6 +257,7 @@ class SystemReservationController extends Controller
                 }
             }
             if (strpos($key, 'OA') !== false) {
+                dd(is_array($item));
                 if(is_array($item)){
                     foreach($item as $key => $value){
                         $other_addons[$count.'-'.$key]['title'] = $value['title'];

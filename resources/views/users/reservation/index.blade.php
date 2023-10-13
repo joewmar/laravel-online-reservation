@@ -29,7 +29,7 @@
                       <!-- row 1 -->
                         @forelse ($reservation as $list)
                           <tr>
-                            <td>{{$list->id}}</td>
+                            <td>{{str_replace('aar-', '', $list->id)}}</td>
                             <td>{{$list->pax}} guest</td>
                             <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $list->check_in )->format('l, F j, Y') ?? 'None'}}</td>
                             <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $list->check_out )->format('l, F j, Y') ?? 'None'}}</td>

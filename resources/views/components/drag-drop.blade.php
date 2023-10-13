@@ -1,7 +1,7 @@
-@props(['id', 'name', 'title' => null, 'fileValue' => null])
+@props(['id', 'name', 'title' => null, 'fileValue' => null, 'noRequired' => false])
 <div>
 <div class="flex flex-col md:flex-row w-full my-3 justify-between items-center">
-  <h3 class="text-md">{{$title}}</h3>
+  <h3 class="text-md">{{$title}}</h3> @if(!$noRequired) <span class="text-error">*</span> @endif
 </div>
   @error($name)
   <p class="mb-5 label-text-alt text-error">{{$message}}</p>

@@ -1,5 +1,5 @@
 @props(['id' => 'checkin', 'name', 'datas' => ''])
-<x-modal  id="{{$id}}" title="Check-in for {{$name}}" noBottom>
+<x-modal  id="{{$id}}" title="Check-in for {{$name}}">
     @if( ((int)str_replace('-', '', \Carbon\Carbon::now()->format('Y-m-d'))) >=  ((int)str_replace('-', '', $datas['check_in'])))
         <article>
             <h1>Sorry, </h1>
@@ -61,7 +61,7 @@
                                 <label for="cinmld" class="btn btn-primary">Proceed</label>
   
                             </div>
-                            <x-modal id="cinmld" title="Do you want to change to check-in" type="YesNo" formID="cinf">
+                            <x-modal id="cinmld" title="Do you want to change to check-in" type="YesNo" formID="cinf" noBottom>
                             </x-modal>
 
                         @else
@@ -74,7 +74,6 @@
                 </div>
             </div>
         </article>
-
     @endif
 
 </x-modal>

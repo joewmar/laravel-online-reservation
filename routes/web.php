@@ -49,6 +49,7 @@ Route::view('/privacy-policy', 'privacy-policy');
 // Route::get('/bot/getUpdates',[LandingController::class, 'teleUpdates'])->name('home');
 Route::controller(LandingController::class)->group(function (){
     Route::get('/', 'index')->name('home');
+    // Route::get('/testing', 'testing')->name('home');
     Route::get('/tour', 'services')->name('services');
     Route::get('/aboutus', 'aboutus')->name('about.us');
     Route::get('/contact', 'contact')->name('contact');
@@ -64,14 +65,14 @@ Route::prefix('reservation')->name('reservation.')->group(function (){
 
 // Route::middleware(['guest:web'])->group(function(){
 Route::middleware(['guest:web'])->group(function(){
-    Route::view('/login', 'users.login')->name('login');
-    Route::view('/register', 'users.register')->name('register');
+    Route::get('/login', [UserController::class, 'login'])->name('login');
+    Route::get('/register', [UserController::class, 'register'])->name('register');
     Route::post('/register', [UserController::class, 'create'])->name('create');
     Route::get('/register/verify', [UserController::class, 'verify'])->name('register.verify');
     Route::get('/register/verify/resend', [UserController::class, 'resend'])->name('register.verify.resend');
     Route::post('/register/verify/store', [UserController::class, 'verifyStore'])->name('register.verify.store');
     Route::post('/check', [UserController::class, 'check'])->name('check');
-    Route::view('/forgot-password','auth.passwords.email')->name('forgot.password');
+    Route::get('/forgot-password', [UserController::class, 'forgotPass'])->name('forgot.password');
     
     Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('google.redirect');
     Route::get('/auth/google/callback', [LoginController::class, 'handleGoogleCallback'])->name('google.callback');
@@ -91,7 +92,7 @@ Route::middleware(['guest:web'])->group(function(){
 });
 
 // Route::middleware(['auth:web', 'preventBackhHistory'])->group(function(){
-Route::middleware(['auth:web', 'preventBackhHistory'])->controller(UserController::class)->group(function(){
+Route::middleware(['auth:web', 'preventBackhHistory', 'session.delete'])->controller(UserController::class)->group(function(){
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::get('/notifications', [UserController::class, 'notifications'])->name('user.notifications');
     Route::get('/notifications/mark-as-read', [UserController::class, 'userMarkReads'])->name('user.notifications.mark-as-read');
@@ -156,13 +157,14 @@ Route::middleware(['auth:web', 'preventBackhHistory'])->controller(UserControlle
 //For System Users Auth (System Panel)
 Route::prefix('system')->name('system.')->group(function(){
     Route::middleware(['guest:system'])->group(function(){
-       Route::view('/login', 'system.login')->name('login');
+       Route::get('/login', [SystemController::class, 'login'])->name('login');
        Route::post('/check', [SystemController::class, 'check'])->name('check');
     });
-    Route::middleware(['auth:system','preventBackhHistory'])->group(function(){
+    Route::middleware(['auth:system','preventBackhHistory', 'session.delete'])->group(function(){
         Route::post('/logout', [SystemController::class, 'logout'])->name('logout');
         Route::get('/notifications', [SystemController::class, 'notifications'])->name('notifications');
         Route::get('/notifications/mark-as-read', [SystemController::class, 'markAsRead'])->name('notifications.mark-as-read');
+        Route::delete('/notifications/{id}/delete', [SystemController::class, 'deleteOneNotif'])->name('notifications.delete');
 
         Route::get('/', [SystemHomeController::class, 'index'])->name('home');
         Route::prefix('reservation')->name('reservation.')->group(function(){

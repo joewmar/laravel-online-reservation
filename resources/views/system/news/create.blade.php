@@ -34,8 +34,8 @@
                 @enderror
               </div>
               <div x-show="deadline == 'limit'" x-transition.500ms>
-                <x-datetime-picker name="date_from" id="date_from" placeholder="Date From" class="flatpickr-reservation" value="{{old('date_from')}}"/>
-                <x-datetime-picker name="date_to" id="date_to" placeholder="Date To" class="flatpickr-reservation flatpickr-input2" value="{{old('date_to')}}" />
+                <x-datetime-picker name="date_from" id="date_from" placeholder="Date From" class="flatpickr-room-today" value="{{old('date_from')}}"/>
+                <x-datetime-picker name="date_to" id="date_to" placeholder="Date To" class="flatpickr-room-today" value="{{old('date_to')}}" />
               </div>
               <label for="add_modal" class="btn btn-primary w-full">Add News</label>
               <x-passcode-modal title="Add News Confirmation" id="add_modal" formId="add-form" />        

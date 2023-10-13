@@ -69,5 +69,6 @@ class Kernel extends HttpKernel
         // 'role' => \App\Http\Middleware\SystemRoleMiddleware::class,
         'auth.image' => \App\Http\Middleware\AuthenticateImageAccess::class,
         'auth.dbBackup' => \App\Http\Middleware\AuthenticateDatabaseBackup::class,
+        'session.delete' => \App\Http\Middleware\DeleteSessionMiddleware::class,
     ];
 }

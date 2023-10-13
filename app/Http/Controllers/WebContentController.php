@@ -61,7 +61,7 @@ class WebContentController extends Controller
         return view('system.webcontent.hero.show', ['activeSb' => 'Website Content', 'key' => $key, 'hero' => $webcontents->hero]);
     }
     public function updateHero(Request $request, $key){
-        $web_content = WebContent::all()->first();
+        $web_content = WebContent::all()->firstOrFail();
         // dd($request->all());
         $validate = Validator::make($request->all('hero_one'), [
             'hero_one' =>  ['required', 'image', 'mimes:jpeg,png,jpg'],
@@ -92,7 +92,7 @@ class WebContentController extends Controller
         if($created) return redirect()->route('system.webcontent.home', '#hero')->with('success', 'Hero Images was updated');
     }
     public function destroyHero(Request $request){
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         // dd($request->all());
         $validated = $request->validate([
             'remove_hero.*' =>  ['required'],
@@ -161,7 +161,7 @@ class WebContentController extends Controller
         return view('system.webcontent.gallery.show', ['activeSb' => 'Website Content', 'key' => $key, 'gallery' => $webcontents->gallery]);
     }
     public function updateGallery(Request $request, $key){
-        $web_content = WebContent::all()->first();
+        $web_content = WebContent::all()->firstOrFail();
         // dd($request->all());
         $validate = Validator::make($request->all('gallery_one'), [
             'gallery_one' =>  ['required', 'image', 'mimes:jpeg,png,jpg'],
@@ -192,7 +192,7 @@ class WebContentController extends Controller
         if($created) return redirect()->route('system.webcontent.home', '#gallery')->with('success', 'Hero Images was updated');
     }
     public function destroyGalleryOne($key){
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         // dd($request->all());
         $key = decrypt($key);
         $gallery = $webcontents->gallery ?? [];
@@ -206,7 +206,7 @@ class WebContentController extends Controller
         if($removed) return redirect()->route('system.webcontent.home', '#gallery')->with('success', 'Hero Image was removed');
     }
     public function destroyGallery(Request $request){
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         // dd($request->all());
         $validated = $request->validate([
             'remove_gallery.*' =>  ['required'],
@@ -251,7 +251,7 @@ class WebContentController extends Controller
             return back()->with('error', $validated->errors()->all())->withInput($validated->getData());
         }
         $validated = $validated->validate();
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         $contacts = $webcontents->contact ?? [];
         $contacts['other'][Str::camel($validated['person'])]['name'] = $validated['person'];
         $contacts['other'][Str::camel($validated['person'])]['contactno'][] = $validated['contact_no'];
@@ -292,7 +292,7 @@ class WebContentController extends Controller
         if($save) return redirect()->route('system.webcontent.home', '#contact')->with('success', 'Main Contact was added');
     }
     public function updateMainContact(Request $request){
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         if(!array_key_exists('main', $webcontents->contact)) abort(404);
         $validated = Validator::make($request->input(), [
             'contact' => ['required'],
@@ -437,7 +437,7 @@ class WebContentController extends Controller
         if($webcontents->update(['contact' => $contact])) return redirect()->route('system.webcontent.contact.show', encrypt($key))->with('success', $message);
     }
     public function destroyContact(Request $request){
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         // dd($request->all());
         $validated = $request->validate([
             'remove_contact.*' =>  ['required'],
@@ -548,7 +548,7 @@ class WebContentController extends Controller
     }
     public function updatePaymentGcash(Request $request, $key){
         $key = decrypt($key);
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
         $validate = Validator::make($request->all(), [
             'passcode' => ['required', 'numeric', 'digits:4'],
@@ -592,7 +592,7 @@ class WebContentController extends Controller
     }
     public function destroyPaymentGcash(Request $request, $key){
         $key = decrypt($key);
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
         $validate = Validator::make($request->all(), [
             'passcode' => ['required', 'numeric', 'digits:4'],
@@ -684,7 +684,7 @@ class WebContentController extends Controller
     }
     public function updatePaymentPayPal(Request $request, $key){
         $key = decrypt($key);
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
         $validate = Validator::make($request->all(), [
             'passcode' => ['required', 'numeric', 'digits:4'],
@@ -737,7 +737,7 @@ class WebContentController extends Controller
     }
     public function destroyPaymentPayPal(Request $request, $key){
         $key = decrypt($key);
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
         $validate = Validator::make($request->all(), [
             'passcode' => ['required', 'numeric', 'digits:4'],
@@ -771,7 +771,7 @@ class WebContentController extends Controller
         if($validate->fails()) return back()->with('error', $validate->errors()->all());
         $validate =$validate->validate();
         $key = decrypt($validate['priority']);
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         $payments = $webcontents->payment ?? [];
         if(!array_key_exists($key, $webcontents->payment['gcash'] ?? [])) abort(404);
             foreach($payments['gcash'] as $gcashID => $item){
@@ -795,7 +795,7 @@ class WebContentController extends Controller
         if($validate->fails()) return back()->with('error', $validate->errors()->all());
         $validate =$validate->validate();
         $key = decrypt($validate['priority']);
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         $payments = $webcontents->payment ?? [];
         if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
             foreach($payments['paypal'] as $paypalID => $item){
@@ -818,7 +818,7 @@ class WebContentController extends Controller
         if($validate->fails()) return back()->with('error', $validate->errors()->all());
         $validate =$validate->validate();
         $key = decrypt($validate['priority']);
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         $payments = $webcontents->payment ?? [];
         if(!array_key_exists($key, $webcontents->payment['bankTransfer'] ?? [])) abort(404);
             foreach($payments['bankTransfer'] as $btID => $item){
@@ -880,7 +880,7 @@ class WebContentController extends Controller
     }
     public function updatePaymentBT(Request $request, $key){
         $key = decrypt($key);
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         if(!array_key_exists($key, $webcontents->payment['bankTransfer'] ?? [])) abort(404);
         $validate = Validator::make($request->all(), [
             'passcode' => ['required', 'numeric', 'digits:4'],
@@ -906,7 +906,7 @@ class WebContentController extends Controller
     }
     public function destroyPaymentBT(Request $request, $key){
         $key = decrypt($key);
-        $webcontents = WebContent::all()->first();
+        $webcontents = WebContent::all()->firstOrFail();
         if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
         $validate = Validator::make($request->all(), [
             'passcode' => ['required', 'numeric', 'digits:4'],

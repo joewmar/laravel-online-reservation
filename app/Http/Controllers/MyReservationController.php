@@ -362,7 +362,7 @@ class MyReservationController extends Controller
             if(isset($view)) return redirect()->route($view)->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
             else return back()->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
         }
-        $web_contents = WebContent::all()->first();
+        $web_contents = WebContent::all()->firstOrFail();
         if(isset($web_contents->from) && isset($web_contents->to)){
             if(Carbon::createFromFormat('Y-m-d', $request['check_in'])->timestamp >= Carbon::createFromFormat('Y-m-d', $web_contents->from)->timestamp && Carbon::createFromFormat('Y-m-d', $request['check_in'])->timestamp <= Carbon::createFromFormat('Y-m-d', $web_contents->to)->timestamp) {
                 if(isset($view)) return redirect()->route($view)->with('error', 'Sorry, this date cannot be allowed due ' . $web_contents->reason)->withInput($request->input());

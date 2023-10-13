@@ -9,7 +9,6 @@
         <x-input type="text" id="title" name="title" placeholder="Title" value="{{$service_menu->title}}"/>
         <x-datalist-input id="type" name="type" placeholder="Type" value="{{$service_menu->type}}"/>, 
         <x-datalist-input id="category" name="category" placeholder="Category" value="{{$service_menu->category}}"/>
-        {{-- <x-multiple-input type="text" id="inclusion" name="inclusion" placeholder="Inclusion" /> --}}
         <x-textarea id="inclusion" name="inclusion" placeholder="Inclusion (Item 1, Item 2)" value="{{$service_menu->inclusion}}" />
         <x-input type="number" id="no_day" name="no_day" placeholder="Number of days" value="{{$service_menu->days}}" />
         <x-input type="number" id="hrs" name="hrs" placeholder="Number of hours" value="{{$service_menu->hrs}}" />
