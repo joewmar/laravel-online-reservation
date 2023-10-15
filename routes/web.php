@@ -34,6 +34,8 @@ use App\Notifications\SystemNotification;
 | Here is where you can register web routes for your application. These
 | routes are loaded by the RouteServiceProvider and all of them will
 | be assigned to the "web" middleware group. Make something great!
+
+Cancel and Reschedule disapprove are need to check
 |
 */
 
@@ -102,6 +104,9 @@ Route::middleware(['auth:web', 'preventBackhHistory', 'session.delete'])->contro
         Route::get('/', 'index')->name('home');
         Route::put('/{id}/update/avatar', 'updateAvatar')->name('update.avatar');
         Route::put('/{id}/update/user/info', 'updateUserInfo')->name('update.user.info');
+        Route::get('/{id}/update/user/info/email/verify', 'emailVerify')->name('update.user.info.email.verify');
+        Route::get('/{id}/update/user/info/email/resend', 'resendUpdateEmail')->name('update.user.info.email.resend');
+        Route::put('/{id}/update/user/info/email/verified', 'emailVerified')->name('update.user.info.email.verified');
         Route::put('/{id}/update/password', 'updatePassword')->name('update.password');
         Route::put('/{id}/update/valid-id', 'updateValidID')->name('update.validid');
         Route::delete('/{id}/delete/account', 'destroyAccount')->name('destroy.account');
@@ -134,7 +139,6 @@ Route::middleware(['auth:web', 'preventBackhHistory', 'session.delete'])->contro
             Route::put('/details/user/{id}/update', 'detailsUpdate')->name('details.update');
 
             Route::get('/confimation', 'confirmation')->name('confirmation');
-            Route::post('/confimation/convert', 'convert')->name('convert');
             Route::get('/confimation/tour/{id}/destroy', 'destroyTour')->name('tour.destroy');
             Route::post('/store', 'storeReservation')->name('store');
             Route::get('{id}/done', 'done')->name('done');
@@ -167,6 +171,7 @@ Route::prefix('system')->name('system.')->group(function(){
         Route::delete('/notifications/{id}/delete', [SystemController::class, 'deleteOneNotif'])->name('notifications.delete');
 
         Route::get('/', [SystemHomeController::class, 'index'])->name('home');
+
         Route::prefix('reservation')->name('reservation.')->group(function(){
 
             Route::controller(CreateReservationController::class)->group(function (){
@@ -251,6 +256,7 @@ Route::prefix('system')->name('system.')->group(function(){
 
             Route::prefix('addons')->name('addons.')->group(function (){
                 Route::get('/create', 'createAddons')->name('create');
+                Route::get('/search', 'searchAddons')->name('search');
                 Route::post('/create', 'storeAddons')->name('store');
                 Route::get('/{id}/edit', 'editAddons')->name('edit');
                 Route::put('/{id}/update', 'updateAddons')->name('update');

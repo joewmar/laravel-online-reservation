@@ -83,7 +83,7 @@
                             <div class="join">
         
                             </div>
-                            <form action="{{ route('system.reservation.show.addons', ['id' => encrypt($r_list->id)]) }}" method="get">
+                            <form action="{{ route('user.reservation.edit.tour', ['id' => encrypt($r_list->id)]) }}" method="get">
                               <div class="join">
                                   <div>
                                       <input type="number" name="gpax" placeholder="Number of Guests..." class="input input-bordered input-primary input-sm join-item" max="{{ $r_list->pax }}" value="{{ request('gpax') ?? $r_list->tour_pax }}" />
@@ -99,7 +99,7 @@
                           </div>
                           @if(request('gpax'))
         
-                            <form id="edit_tour_form" action="{{route('user.reservation.update.tour', encrypt($r_list->id))}}" method="post">
+                            <form x-init="if({{$r_list->tour_pax != request('gpax') ? 'true' : 'false'}}) carts = []" id="edit_tour_form" action="{{route('user.reservation.update.tour', encrypt($r_list->id))}}" method="post">
                               @csrf
                               @method('PUT')
                               <div class="flex justify-between mt-6">
@@ -139,7 +139,7 @@
                                                     <i class="fa-solid fa-x text-xl text-error"></i>
                                                   </label>
                                                   <input type="checkbox" :id="'removeCart' + index" class="modal-toggle" />
-                                                  <div class="modal">
+                                                  <div class="fixed modal">
                                                     <div class="modal-box">
                                                       <h3 class="font-bold text-lg">Do you want to remove: <span x-text="cart.title"></span></h3>
                                                       <div class="modal-action">
@@ -165,95 +165,7 @@
                                 </div>
                               </div>
                               <input type="hidden" name="new_pax"  value="{{request('gpax') ?? null}}">
-                              <div x-data="{category: null}" x-cloak>
-                                  @foreach ($tour_category as $category)
-                                    @if($loop->index === 0)
-                                      <input x-model="category" id="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-2 radio radio-primary" x-model="category" type="radio" value="{{Str::camel($category->category)}}" />
-                                      <label x-init="category = '{{Str::camel($category->category)}}'" :aria-checked="category == '{{Str::camel($category->category)}}'" :class="category == '{{Str::camel($category->category)}}' ? 'mr-5 text-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-5">{{$category->category}}</label>  
-                                    @else
-                                        <input x-model="category" id="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-2 radio radio-primary" x-model="category" type="radio" value="{{Str::camel($category->category)}}"/>
-                                        <label :aria-checked="category == '{{Str::camel($category->category)}}'" :class="category == '{{Str::camel($category->category)}}' ? 'mr-3 text-primary' : 'mr-3'" for="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-5">{{$category->category}}</label>  
-                                    @endif
-                        
-                                  @endforeach
-                      
-                                @foreach ($tour_category as $category)
-                                  @php $category_count = $loop->index + 1; @endphp
-                                  <div class="w-full" x-cloak>
-                                      <div class="grid grid-cols-1 md:grid-cols-3 place-items-center" x-data="{ price: '' }" :class="category == '{{Str::camel($category->category)}}' ? 'block' : 'hidden'">
-                                        {{-- Card List Tour --}}
-                                        @foreach ($tour_lists as $list)
-                                          @php $list_count = $loop->index + 1 ?? 1; @endphp
-        
-                                          @if ($category->category === $list->category)
-                                              <div class="place-self-stretch card my-3 w-80 bg-base-100 shadow-xl border border-primary hover:border-primary hover:bg-primary hover:text-base-100">
-                                                <label for="{{Str::camel($list->title)}}" tabindex="0">
-                                                    <div class="card-body">
-                                                      <h2 x-ref="titleRef{{$list_count}}" class="card-title">{{$list->title}} </h2> 
-                                                    </div>
-                                                </label>
-                                                {{-- Modal Tour Details --}}                                  
-                                                <x-modal id="{{Str::camel($list->title)}}" title="{{$list->title}}" alpinevar="price">
-                                                  <article>
-                                                    <ul role="list" class="marker:text-primary list-disc pl-5 space-y-3 text-neutral">
-                                                      <li><strong>Number of days: </strong> {{$list->no_day <= 1 ? $list->no_day . ' day' : $list->no_day . ' days' }}</li>
-                                                      <li><strong>Price Plan</strong></li>
-                                                    </ul>
-                                                  </article>
-                                                  <div class="grid gap-4 grid-cols-2 my-4">
-                                                      @foreach ($list->tourMenuLists as $menu)
-                                                          @php 
-                                                            $menu_count = $loop->index + 1; 
-                                                          @endphp
-                                                            @if(count($list->tourMenuLists) != 1)
-                                                              @if(request('gpax') > $menu->pax && $menu_count === count($list->tourMenuLists))
-                                                              <div class="w-full h-full">
-                                                                <input id="{{request('gpax') > $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
-                                                                <label for="{{request('gpax') > $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->id}}'" :class="price == '{{$menu->id}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
-                                                              @else
-                                                              <div id="{{request('gpax') != $menu->pax ? 'disabledAll' : ''}}" class="w-full h-full">
-                                                                <input id="{{request('gpax') == $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
-                                                                <label for="{{request('gpax') == $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->id}}'" :class="price == '{{$menu->id}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
-                                                              @endif
-                                                            @else
-                                                              <div class="w-full h-full">
-                                                                <input id="{{request('gpax') >= $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" class="peer hidden [&:checked_+_label_i]:block" type="radio" value="{{$menu->id}}"  x-model="price" />
-                                                                <label for="{{request('gpax') >= $menu->pax ? Str::camel($menu->type). '_' . $list->id : 'disabledAll' }}" :aria-checked="price == '{{$menu->id}}'" :class="price == '{{$menu->id}}' ? 'mr-5 relative border-primary ring-1 ring-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($menu->type))}}" class="block cursor-pointer rounded-lg border border-base-100 bg-base-100 p-4 text-sm font-medium shadow-sm hover:border-base-200 ">
-                                                            @endif
-                                                                  <div class="flex items-center justify-between">
-                                                                    <p class="text-neutral" x-ref="refType{{$menu->id}}">{{$menu->type}} ({{$menu->pax}} guest)</p>
-                                                                    <i class="hidden text-primary fa-solid fa-square-check"></i>
-                                                                  </div>
-                                                                  <p class="mt-1 text-neutral" x-ref="priceRef{{$menu->id}}">P {{number_format($menu->price, 2)}}</p>
-                                                                  @if(count($list->tourMenuLists) !== 1)
-                                                                    @if(request('gpax') > $menu->pax && $menu_count !== count($list->tourMenuLists))
-                                                                        <p class="absolute text-error text-xs">Invalid guest count for this price.</p>
-                                                                    @endif
-                                                                  @endif
-                                                                  @if(count($list->tourMenuLists) !== 1)
-                                                                    @if(request('gpax') < $menu->pax)
-                                                                        <p class="absolute text-error text-xs">Invalid guest count for this price.</p>
-                                                                    @endif
-                                                                  @endif
-                                                                </label>
-                                                              </div>
-      
-                                                        @endforeach
-                                                  </div>
-                                                    @foreach ($list->tourMenuLists as $menu)
-                                                      <template x-if="price == {{$menu->id}}">
-                                                        <label for="{{Str::camel($list->title)}}" @click=" addToCart(price, $refs.titleRef{{$list_count}}.innerText, $refs.priceRef{{$menu->id}}.innerText, '₱ {{number_format(($menu->price * request('gpax') ?? 1),2)}}')" class="btn btn-primary float-right">
-                                                          Add to Cart
-                                                        </label>
-                                                      </template>
-                                                    @endforeach
-                                                  </x-modal>
-                                              </div>
-                                          @endif
-                                        @endforeach
-                                    </div>
-                                  </div>
-                                @endforeach
+                              <x-tour :tourCategory="$tour_category" :tourLists="$tour_lists" tpx="{{request('gpax')}}" atpermit="{{$r_list->accommodation_type == 'Day Tour' ? 1 : 0 }}" />
                                 <div class="flex justify-end mb-5">
                                   <label for="tour_modal" class="btn btn-primary">Save</label>
                                   <x-modal title="Do you want to save?" type="YesNo" formID="edit_tour_form" id="tour_modal">

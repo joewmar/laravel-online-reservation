@@ -205,7 +205,7 @@
                 
             </article>
             <article>
-                @if(isset($tours))
+                @if(!empty($tours))
                     <div class="w-auto">
                         <div class="overflow-x-auto">
                             <table class="table table-xs md:table-sm w-full">

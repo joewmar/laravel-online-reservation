@@ -66,6 +66,7 @@ class LoginController extends Controller
                     'last_name' => $user['family_name'],
                     'email'=> $user->email,
                 ];
+                $users = encryptedArray($users);
                 session(['ginfo' => $users]);
                 return redirect()->route('google.fillup');
             }
@@ -75,33 +76,4 @@ class LoginController extends Controller
         }
     }
 
-    // Facebook Login
-    public function redirectToFacebook(){
-        return Socialite::driver('facebook')->redirect();
-    }
-    public function handleFacebookCallback(Request $request){
-        try {
-            $user = Socialite::driver('facebook')->user();
-            $finduser = User::where('facebook_id', $user->id)->orWhere('email', $user->email)->first();
-            if($finduser){
-                Auth::login($finduser);
-                $request->session()->regenerate(); //Regenerate Session ID
-                return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
-            }
-            else{
-                $users = [
-                    'facebook_id' => $user->id,
-                    'avatar' => $user->avatar,
-                    'first_name' => explode(' ', $user->name)[0],
-                    'last_name' => explode(' ', $user->name)[1],
-                    'email'=> $user->email,
-                ];
-                session(['fbubser' => $users]);
-                return redirect()->route('facebook.fillup');
-            }
-        } 
-        catch (Exception $e) {
-            return redirect()->route('facebook.redirect');
-        }
-    }
 }

@@ -141,43 +141,17 @@
         <div class="flex justify-end space-x-2">
             <label for="approve_modal" class="btn btn-sm btn-primary" {{$r_list->status === 5 || !isset($r_list->message['reschedule']) ? 'disabled' : ''}}>Approve</label>
             @if(!($r_list->status === 5 || !isset($r_list->message['reschedule'])))
-                <x-modal title="Before Approve: Change Room Assign" id="approve_modal">
+                <x-modal title="Before Approve: Change Room Assign" id="approve_modal" width noBottom>
                     <form id="approve-form" action="{{route('system.reservation.reschedule.update', encrypt($r_list->id))}}" method="post">
-                                @csrf
-                                @method('PUT')
-                                <div x-data="{rooms: []}" class="flex flex-wrap justify-center md:justify-normal flex-grow gap-5 w-full">
-                                    @forelse ($rooms as $key => $item)
-                                        <div>
-                                            <input x-ref="RoomRef" x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); });" type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" x-on:checked="rooms.includes({{$item->id}})" />
-                                            <label for="RoomNo{{$item->room_no}}">
-                                                <div class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 border-primary cursor-pointer'">
-                                                    <span class="absolute inset-x-0 bottom-0 h-3 bg-primary flex flex-col items-center justify-center">
-                                                        <h4 class="text-primary-content hidden font-medium w-full text-center">Room No. {{$item->room_no}} Selected</h4> 
-                                                            <div x-data="{count: {{isset(old('room_pax')[$item->id]) ? (int)old('room_pax')[$item->id] : 1}}}" class="join hidden">
-                                                            <button  @click="count > 1 ? count-- : count = 1" type="button" class="btn btn-accent btn-xs join-item rounded-l-full">-</button>
-                                                            <input x-model="count" type="number" :name="rooms.includes({{$item->id}}) ? 'room_pax[{{$item->id}}]' : '' " class="input input-bordered w-10 input-xs input-accent join-item" min="1" max="{{$item->room->max_occupancy}}"  readonly/>
-                                                            <button  @click="count < {{$item->room->max_occupancy}} || force  ? count++ : count = {{$item->room->max_occupancy}}"  type="button" class="btn btn-accent btn-xs last:-item rounded-r-full">+</button>
-                                                        </div>
-                                                    </span>
-                                                    <div class="sm:flex sm:justify-between sm:gap-4">
-                                                        <div>
-                                                            <h3 class="text-lg font-bold text-neutral sm:text-xl">Room No. {{$item->room_no}}</h3>
-                                                            <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->name}}</p>
-                                                            <p class="mt-1 text-xs font-medium text-gray-600">{{$item->room->min_occupancy}} up to {{$item->room->max_occupancy}} capacity</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    @empty
-                                        <p class="text-2xl font-semibold">No Room Found</p>
-                                    @endforelse
-                                </div>
-                                <div class="modal-action">
-                                    <label for="approve" class="btn btn-primary">Save</label>
-                                </div>
+                        @csrf
+                        @method('PUT')
+                        <x-rooms id="infomdl" :rooms="$rooms" :rlist="$r_list" :reserved="$reserved" />
+
+                        <div class="modal-action">
+                            <button class="btn btn-primary">Save</button>
+                        </div>
                             
-                        <x-passcode-modal title="Approve Confirmation" id="approve" formId="approve-form" />        
+                            
                     </form>                    
                 
                 </x-modal>

@@ -1,7 +1,7 @@
 @props(['id', 'name', 'title' => null, 'fileValue' => null, 'noRequired' => false])
 <div>
 <div class="flex flex-col md:flex-row w-full my-3 justify-between items-center">
-  <h3 class="text-md">{{$title}}</h3> @if(!$noRequired) <span class="text-error">*</span> @endif
+  <h3 class="text-md">{{$title}} @if(!$noRequired) <span class="text-error">*</span> @endif</h3>
 </div>
   @error($name)
   <p class="mb-5 label-text-alt text-error">{{$message}}</p>
@@ -19,6 +19,7 @@
             <p class="text-lg font-semibold">Drag & Drop an Image Here</p>
             <p class="text-gray-500">Or click to select a file</p>
             <input type="file" name="{{$name}}" id="{{$id}}" class="hidden" accept="image/*" x-ref="fileInput{{$id}}" x-on:change="fileSelected{{$id}}($refs.fileInput{{$id}})">
+            <input type="hidden" name="{{$name}}_clear" id="{{$id}}_clear" :value="$el.value = clearFile{{$id}}" />
           </div>
         </div>
         <div x-show="imageData{{$id}}" class="w-full flex flex-col items-center">
@@ -36,6 +37,7 @@
       return {
         isDragging: false,
         imageData{{$id}}: '{{$fileValue ?? ''}}',
+        clearFile{{$id}}: false,
         
         dragOver{{$id}}(event) {
           event.preventDefault();
@@ -56,6 +58,7 @@
         fileSelected{{$id}}(input) {
           const file = input.files[0];
           this.displayImage{{$id}}(file);
+          this.clearFile{{$id}} = false;
         },
         
         displayImage{{$id}}(file) {
@@ -64,10 +67,13 @@
             this.imageData{{$id}} = reader.result;
           };
           reader.readAsDataURL(file);
+          this.clearFile{{$id}} = false;
         },
         
         clearImage{{$id}}() {
           this.imageData{{$id}} = '';
+          this.clearFile{{$id}} = true;
+
         },
       };
     }

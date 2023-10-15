@@ -11,7 +11,7 @@
             </div>
             <x-file-input id="image" name="image" placeholder="Image" sup="*Optional"/>
           </div>
-          <div x-data="{deadline: '{{old('deadline')}}'}" class="w-full md:w-96">
+          <div x-data="{deadline: '{{old('deadline') ?? 'forever'}}'}" class="w-full md:w-96">
               <x-input type="text" id="title" name="title" placeholder="News Header"/>
               <x-textarea id="description" name="description" placeholder="Description"/>
               <div class="mb-5 space-x-3">

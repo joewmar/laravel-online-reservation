@@ -20,6 +20,31 @@ class TourMenuController extends Controller
         }
         return view('system.service.index', ['activeSb' => 'Tour Menu', 'tour_lists' => TourMenuList::all()]);
     }
+    
+    public function searchAddons(Request $request){
+        $search = $request->input('query');
+        // Perform your search logic here
+        // For example, querying the database
+        $names = [];
+        if(!empty($search)){
+            $results = Addons::where('title' . 'like', '%' . $search  . '%')->get();
+
+        }
+        else{
+            $results = Addons::all();
+        }
+        $results = Addons::where('title' . 'like', '%' . $search  . '%')->get();
+        foreach($results as $list){
+            $names[] = [
+                'title' => $list->userReservation->name(),
+                'link' => route('system.reservation.show', encrypt($list->id)),
+            ];
+        }
+        return response()->json($names);
+        
+        return response()->json($results);
+        
+    }
     public function create(Request $request){
         $category = TourMenuList::distinct()->get('category')->pluck('category');
         if($request->has('tl')){
@@ -32,7 +57,7 @@ class TourMenuController extends Controller
     }
     public function storeAddons(Request $request){
         $validated = $request->validate([
-            'title' => ['required'],
+            'title' => ['required', Rule::unique('addons', 'title')],
             'price' => ['required', 'numeric', 'min:1'],
             'passcode' => ['required', 'digits:4'],
         ]);
@@ -47,7 +72,7 @@ class TourMenuController extends Controller
     public function updateAddons(Request $request, $id){
         $addon = Addons::findOrFail(decrypt($id));
         $validated = $request->validate([
-            'title' => ['required'],
+            'title' => ['required', Rule::when($request['title'] != $addon->title, Rule::unique('addons', 'title'))],
             'price' => ['required', 'numeric', 'min:1'],
             'passcode' => ['required', 'digits:4'],
         ]);
@@ -113,8 +138,6 @@ class TourMenuController extends Controller
                             'category' => $validated['category'],
                             'atpermit' => $validated['atpermit'],
                             'inclusion' => implode("(..)",$validated['inclusion']) ?? null,
-                            'no_day' =>  $validated['no_day'],
-
 
                         ]);
                         TourMenu::create([
@@ -151,37 +174,34 @@ class TourMenuController extends Controller
     public function edit (Request $request){
         if(auth('system')->user()->type !== 0) abort(404);
         $id = decrypt($request->id);
-        $category = TourMenuList::distinct()->get('category')->pluck('category');
+        $category = TourMenuList::distinct()->get('category')->pluck('category')->toArray();
         return view('system.service.edit', ['activeSb' => 'Tour Menu', 'service_menu' => TourMenuList::findOrFail($id), 'category' => $category]);
 
     }
     public function update (Request $request){
         $system_user = auth('system')->user();
-        if($system_user->type === 0){
-            $id = decrypt($request->id);
-            $validated = $request->validate([
-                'title' => ['required'],
-                'category' =>  ['required'],
-                'inclusion' => ['nullable'],
-                'atpermit' =>  ['required'],
-                'passcode' =>  ['required', 'numeric', 'digits:4'],
-            ]);
+        $id = decrypt($request->id);
+        $tour = TourMenuList::findOrFail($id);
+        if(!($system_user->type === 0)) abort(404);
+        $validated = $request->validate([
+            'title' => ['required', Rule::when($request['title'] != $tour->title, Rule::unique('tour_menu_lists', 'title'))],
+            'category' =>  ['required'],
+            'inclusion' => ['nullable'],
+            'atpermit' =>  ['required'],
+            'passcode' =>  ['required', 'numeric', 'digits:4'],
+        ]);
 
-            if (Hash::check($validated['passcode'], $system_user->passcode)) {
-                $validated['inclusion'] = implode("(..)",$validated['inclusion']) ?? null;
+        if (Hash::check($validated['passcode'], $system_user->passcode)) {
+            $validated['inclusion'] = implode("(..)",$validated['inclusion']) ?? null;
 
-                $tour = TourMenuList::findOrFail($id);
-                $tour->update($validated);
+            $tour->update($validated);
 
-                return redirect()->route('system.menu.home')->with('success', $tour->title .' was Updated');
-            } 
-            else{
-                return back()->with('error', 'Passcode Invalid');
-            }
-        }
+            return redirect()->route('system.menu.home')->with('success', $tour->title .' was Updated');
+        } 
         else{
-            abort(404);
+            return back()->with('error', 'Passcode Invalid');
         }
+        
 
        
 
@@ -193,28 +213,24 @@ class TourMenuController extends Controller
     }
     public function updatePrice(Request $request){
         $system_user = auth()->guard('system')->user();
-        if($system_user->type === 0){
-            $priceid = decrypt($request->priceid);
-            $list_id = decrypt($request->id);
-            $validated = $request->validate([
-                'type' => ['required'],
-                'pax' =>  ['required', 'numeric'],
-                'price' =>  ['required', 'numeric', 'decimal:0,2'],
-                'passcode' =>  ['required', 'numeric', 'digits:4'],
-            ]);
+        if(!($system_user->type === 0)) abort(404);
+        $priceid = decrypt($request->priceid);
+        $tour_menu = TourMenu::findOrFail($priceid);
 
-            if (Hash::check($validated['passcode'], $system_user->passcode)) {
+        $list_id = decrypt($request->id);
+        $validated = $request->validate([
+            'type' => ['required', Rule::when($request['type'] != $tour_menu->type, Rule::unique('tour_menus', 'type'))],
+            'pax' =>  ['required', 'numeric'],
+            'price' =>  ['required', 'numeric', 'decimal:0,2'],
+            'passcode' =>  ['required', 'numeric', 'digits:4'],
+        ]);
 
-                $tour_menu = TourMenu::findOrFail($priceid);
-                $tour_menu->update($validated);
-                return redirect()->route('system.menu.show', encrypt($list_id))->with('success', $tour_menu->type .' was Updated');
-            } 
-            else{
-                return back()->with('error', 'Passcode Invalid');
-            }
-        }
+        if (Hash::check($validated['passcode'], $system_user->passcode)) {
+            $tour_menu->update($validated);
+            return redirect()->route('system.menu.show', encrypt($list_id))->with('success', $tour_menu->type .' was Updated');
+        } 
         else{
-            abort(404);
+            return back()->with('error', 'Passcode Invalid');
         }
 
     }

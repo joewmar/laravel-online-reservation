@@ -105,7 +105,7 @@ class EditReservationController extends Controller
     }
     private function deleteInfo(Reservation $r_list){   
         foreach(Room::all() as $room) $room->removeCustomer($r_list->id);
-        $transaction = $r_list->transaction;
+        $transaction = $r_list->transaction ?? [];
         foreach($transaction as $key => $item){
             if (strpos($key, 'rid') !== false) unset($transaction[$key]);
             if (strpos($key, 'payment') !== false) unset($transaction[$key]);
@@ -159,10 +159,15 @@ class EditReservationController extends Controller
             }
             if($validate['status'] == 0){
                 $this->deleteInfo($reservation);
-                $transaction = $reservation->transaction;
+                $transaction = $reservation->transaction ?? [];
                 foreach($transaction as $key => $item){
                     if (strpos($key, 'TA') !== false) unset($transaction[$key]);
                     if (strpos($key, 'OA') !== false) unset($transaction[$key]);
+                }
+                $message = $reservation->message ?? [];
+                foreach($message as $key => $item){
+                    if (strpos($key, 'cancel') !== false) unset($transaction[$key]);
+                    if (strpos($key, 'reschedule') !== false) unset($transaction[$key]);
                 }
                 $validate['transaction'] = $transaction;
             }

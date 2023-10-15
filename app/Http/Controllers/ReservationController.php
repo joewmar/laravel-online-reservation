@@ -51,6 +51,7 @@ class ReservationController extends Controller
         if(session()->has('rinfo')){
             $rinfo = session('rinfo');
             $v = $values;
+            if(isset($v['tpx']) && $v['tpx'] != $rinfo['tpx']) $v['otpx'] = $rinfo['tpx'];
             if($isEncrypt) $v = encryptedArray($values);
             foreach($v  as $key => $value){
                 $rinfo[$key] = $value;
@@ -384,10 +385,6 @@ class ReservationController extends Controller
             'uinfo' => $uinfo,
         ]);
     }
-    public function convert(Request $request){
-        $validated = $request->validate(['cur' => 'required']);
-        return redirect()->route('reservation.confirmation', ['cur' => $validated['cur']]);
-    }
     public function destroyTour(Request $request){
         $decrypted_uinfo = decryptedArray(session('rinfo')) ?? '';
         $encrypted_uinfo = session()->get('rinfo') ?? '';
@@ -419,7 +416,6 @@ class ReservationController extends Controller
 
     }
     public function storeReservation(Request $request){
-    //    try{
         $user = User::findOrFail(auth('web')->user()->id);
         $uinfo = decryptedArray(session('rinfo')) ?? '';
         $validated = $request->validate([
@@ -477,15 +473,10 @@ class ReservationController extends Controller
         ];
 
         session()->forget(['rinfo', 'ck']);
-        $reserve_info->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'pending'])) ,$details['body'], $details, 'reservation.mail')));
+        $reserve_info->userReservation->notify((new UserNotif(route('user.reservation.home') ,$details['body'], $details, 'reservation.mail')));
         $this->systemNotification($text, route('system.reservation.show', encrypt($reserve_info->id)));
         unset($text, $keyboard, $details, $uinfo);
         return redirect()->route('reservation.done', ['id' => encrypt($reserve_info->id)]);
-    //    }
-    //    catch(Exception $e){
-    //         session()->forget(['rinfo', 'ck']);
-    //         return redirect()->route('reservation.date');
-    //    }
     }
     public function done($id){
         $reserve_info = Reservation::findOrFail(decrypt($id));

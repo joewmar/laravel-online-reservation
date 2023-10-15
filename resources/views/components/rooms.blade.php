@@ -1,4 +1,4 @@
-@props(['id' => 'reservation', 'rooms', 'rlist', 'title' => null,'haveRate' => false, 'rates' => [], 'reserved' => [], 'includeID' => false])
+@props(['rooms', 'rlist', 'title' => null,'haveRate' => false, 'rates' => [], 'reserved' => [], 'includeID' => false])
 @php
     $roomOld = old('room_pax') ?? [];
     foreach ($rlist->roomid ?? [] as $id) {

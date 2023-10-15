@@ -9,13 +9,10 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Mail\ReservationMail;
-use Laravel\Ui\Presets\React;
 use Illuminate\Validation\Rule;
-use Mockery\CountValidator\AtMost;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use Propaganistas\LaravelPhone\PhoneNumber;
@@ -61,7 +58,7 @@ class UserController extends Controller
     }
     public function updateUserInfo(Request $request, $id){
         $user = User::findOrFail(decrypt($id));
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'first_name' => ['required', 'min:3'],
             'last_name' => ['required', 'min:3'],
             'birthday' => ['required', 'date'],
@@ -74,22 +71,69 @@ class UserController extends Controller
             'contact.min' => 'Contact number must be valid',
             'required' => 'Need to fill up your :attribute',
         ]);
-        if($validator->fails()){
-            return back()->withErrors($validator);
-        }
-        $validated = $validator->validated();
-        
         if($validated){
             // Hash password
             $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
 
             $validated['contact'] = $phone->formatInternational(); 
-
-            $updated = $user->update($validated);
+            if($user->email === $request['email']) $updated = $user->update($validated);
+            else{
+                $otp = mt_rand(1111,9999);
+                $details = [
+                    'name' => $user->name(),
+                    'title' => "New Email Verify ",
+                    'body' => 'Verification Code: ' . $otp,
+                ];
+                Mail::to($validated['email'])->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
+                $validated['otp'] = $otp;
+                session(['upuinfo' => encryptedArray($validated)]);
+                return redirect()->route('profile.update.user.info.email.verify', encrypt($user->id));
+            }
             // // Create User
             if($updated) return redirect()->route('profile.home')->with('success', 'Your Information was updated');
 
         }
+    }
+    public function emailVerify($id){
+        $user = User::findOrFail(decrypt($id));
+        if(!session()->has('upuinfo')) return redirect()->route('profile.home');
+        return view('users.verify-update', ['email' => decrypt(session('upuinfo')['email']), 'user' => $user]);
+    }
+    public function resendUpdateEmail($id){
+        $user = User::findOrFail(decrypt($id));
+        if(!session()->has('upuinfo')) return redirect()->route('profile.home');
+        $otp = mt_rand(1111,9999);
+        $otp = encrypt($otp);
+        $user_info = session('upuinfo');
+        $details = [
+            'name' => decrypt($user_info['first_name']) . ' ' . decrypt( $user_info['last_name']),
+            'title' => "Let's Verify your Email",
+            'body' => 'Verification Code: ' . decrypt($otp),
+        ];
+        Mail::to(decrypt(session('upuinfo')['email']))->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
+        $user_info['otp'] = $otp;
+        session(['upuinfo' => $user_info]);
+        return redirect()->route('profile.update.user.info.email.verify', encrypt($user->id));
+    }
+    public function emailVerified(Request $request, $id){
+        $user = User::findOrFail(decrypt($id));
+        $validated = $request->validate([
+            'code' => ['required', 'digits:4', 'numeric'],
+        ]);
+        if(!session()->has('upuinfo')){
+            session()->forget('upuinfo');
+            return redirect()->route('profile.home');
+        }
+        $user_info = decryptedArray(session('upuinfo'));
+        if(!((int)$validated['code'] === (int)$user_info['otp'])) return back()->with('error', 'Invalid Code')->withInputs($validated);
+        
+        unset($user_info['otp']);
+
+        $updated = $user->update($user_info);        
+
+        session()->forget('upuinfo');
+        if($updated) return redirect()->route('profile.home')->with('success', 'Your Information was updated');
+
     }
     public function updatePassword(Request $request, $id){
         $user = User::findOrFail(decrypt($id));
@@ -123,7 +167,7 @@ class UserController extends Controller
     public function create(Request $request){
         // Validate input
         // dd($request->all());
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'first_name' => ['required', 'min:3'],
             'last_name' => ['required', 'min:3'],
             'birthday' => ['required', 'date'],
@@ -137,13 +181,10 @@ class UserController extends Controller
             'contact.min' => 'Contact number must be valid',
             'required' => 'Need to fill up your :attribute',
         ]);
-        if($validator->fails()){
-            return redirect()->route('register')->withErrors($validator)->withInput($request->all());
-        }
-        $validated = $validator->validated();
-        
         if($validated){
-            // Hash password
+            $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
+            $validated['contact'] = $phone->formatInternational();    
+
             $validated['password'] = bcrypt($validated['password']);
             $otp = mt_rand(1111,9999);
             $details = [
@@ -160,6 +201,7 @@ class UserController extends Controller
         }
     }
     public function verify(){
+        if(!session()->has('uinfo')) return back();
         return view('users.register.verify', ['email' => decrypt(session('uinfo')['email'])]);
     }
     public function resend(){
@@ -227,7 +269,7 @@ class UserController extends Controller
     }
     public function fillupGoogle(){
         if(session()->has('ginfo')) {
-            $guser = session('ginfo');
+            $guser = decryptedArray(session('ginfo'));
             return view('users.google.fillup', ['guser' => $guser]);
         }
         else redirect()->route('google.redirect');
@@ -247,7 +289,7 @@ class UserController extends Controller
             ]);
 
 
-            $user = session('ginfo'); 
+            $user = decryptedArray(session('ginfo')); 
             $validated['google_id'] = $user['google_id'];
             $validated['avatar'] = $user['avatar'];
             $validated['first_name'] = $user['first_name'];
@@ -272,106 +314,14 @@ class UserController extends Controller
 
 
     }
-    public function fillupFacebook(){
-        if(session()->has('fbubser')) {
-            $fbubser = session('fbubser');
-            return view('users.facebook.fillup', ['fbuser' => $fbubser]);
-        }
-        else redirect()->route('facebook.redirect');
-    }
-    public function fillupFacebookUpdate(Request $request){
-        if(session()->has('fbubser')){
-            $validated = $request->validate([
-                'first_name' => ['required'],
-                'last_name' => ['required'],
-                'birthday' => ['required', ' date'],
-                'country' => ['required'],
-                'nationality' => ['required'],
-                'contact_code' => ['required'],
-                'contact' => ['required', (new Phone)->international()->country(Str::upper($request['contact_code']))],
-                'email' => [Rule::when(isset($request['email']), [Rule::unique('users', 'email')])],
-            ], [
-                'contact.min' => 'Contact number must be valid',
-                'required' => 'Need to fill up your :attribute',
-            ]);
-            $user = session('fbubser'); 
-            $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
-            $validated['contact'] = $phone->formatInternational(); 
-            if(isset($request['email'])){
-                $user['first_name'] = $validated['first_name'];
-                $user['last_name'] = $validated['last_name'];
-                $user['birthday'] = $validated['birthday'];
-                $user['country'] = $validated['country'];
-                $user['nationality'] = $validated['nationality'];
-                $user['contact'] = $validated['contact'];
-                $user['password'] = Str::password();
-                session(['fbubser' => $user]);
-                return redirect()->route('facebook.verify');
-
-            }
-            else{
-                $validated['facebook_id'] = $user['facebook_id'];
-                $validated['avatar'] = $user['avatar'];
-                $validated['email'] = $user['email'];
-                $validated['password'] = Str::password();
-                $newUser = User::create($validated);
-                if($newUser){
-                        session()->forget('ginfo');
-                        Auth::guard('web')->login($newUser);
-                        $request->session()->regenerate(); //Regenerate Session ID
-                        return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->name());
-                    }
-                    else{
-                        return back()->with('error', 'Something Wrong')->withInput( $validated);
-                    }   
-            }
-            
-        }
-        else redirect()->route('facebook.redirect');
-
-
-    }
-    public function fillupFacebookVerify(){
-        $otp = mt_rand(1111,9999);
-        $user_info = session('fbubser');
-        // dd($user_info);
-        $details = [
-            'name' => $user_info['first_name'] . ' ' . $user_info['last_name'],
-            'title' => "Let's Verify your Email",
-            'body' => 'Verification Code: ' . $otp,
-        ];
-        Mail::to(session('fbubser')['email'])->queue(new ReservationMail($details, 'reservation.mail', 'Email Verification'));
-        $user_info['otp'] = $otp;
-        session(['fbubser' => $user_info]);
-        return view('users.facebook.verify', ['email' => session('fbubser')['email']]);
-    }
-    public function fillupFacebookStore(Request $request){
-        $validated = $request->validate([
-            'code' => ['required', 'digits:4', 'numeric'],
-        ]);
-
-        if(session()->has('fbubser')){
-            if(!$validated['code'] == session('fbubser')['otp']){
-                session()->forget('fbubser');
-                return back()->with('error', 'Invalid Code')->withInputs(session('fbubser') ?? []);
-            }
-            unset(session('fbubser')['otp']);
-            $user = User::create(session('fbubser'));
-            auth('web')->login($user);
-            $request->session()->regenerate(); //Regenerate Session ID
-            session()->forget('fbubser');
-            return redirect()->intended(route('home'))->with('success', 'Welcome ' . auth('web')->user()->name());
-            
-        }
-        else{
-            session()->forget('fbubser');
-            return redirect()->route('facebook.redirect');
-        }
-    }
     public function destroyAccount(Request $request, $id){
         $user = User::findOrFail(decrypt($id));
-        $validated = $request->validate(['password' => 'required'], ['password.required' => 'Required to Enter Password']);
-        if(!Hash::check($validated['password'], $user->password)) return back()->with('error', 'Invalid Credential');
+        $validated = Validator::make($request->all(), ['dltpass' => 'required'], ['dltpass.required' => 'Required to Enter Password to Delete your Account']);
+        if($validated->fails()) return back()->with('error', $validated->errors()->all());
+
+        $validated = $validated->validate();
+
+        if(!Hash::check($validated['dltpass'], $user->password)) return back()->with('error', 'Invalid Credential');
         if(isset($user->valid_id)) deleteFile($user->valid_id);
         if(isset($user->avatar)) deleteFile($user->avatar);
         $userID = $user->id;

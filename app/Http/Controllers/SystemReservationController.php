@@ -38,7 +38,7 @@ use Illuminate\Support\Facades\Notification;
 
 class SystemReservationController extends Controller
 {
-    private $system_user;
+    private $system_user; // Walang employeeLogNotif sa mga functions
     public function __construct(){
         $this->system_user = auth('system');
         $this->middleware(function ($request, $next){
@@ -175,9 +175,14 @@ class SystemReservationController extends Controller
         // Perform your search logic here
         // For example, querying the database
         $names = [];
-        $results = Reservation::whereHas('userReservation', function ($query) use ($search) {
-            $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%$search%"]);
-        })->get();
+        if($search){
+            $results = Reservation::whereHas('userReservation', function ($query) use ($search) {
+                $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%$search%"]);
+            })->get();
+        }
+        else{
+            $results = Reservation::all();
+        }
         foreach($results as $list){
             $names[] = [
                 'title' => $list->userReservation->name(),
@@ -205,7 +210,7 @@ class SystemReservationController extends Controller
             if($reservation->status() == 'Pending Cancel') $color = '#fb7185';
             /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => done, 4 => canceled, 5 => disaprove, 6 => reshedule*/
             $arrEvent[] = [
-                'title' =>  $reservation->userReservation->name() . ' from '. $reservation->userReservation->country . ' (' . $reservation->status() . ')', 
+                'title' =>  $reservation->userReservation->name() . ' (' . $reservation->status() . ')', 
                 'start' => $reservation->check_in,
                 'end' => $reservation->check_out,        
                 'url' => route('system.reservation.show', encrypt($reservation->id)), // URL na ipapunta kapag na-click ang event
@@ -317,8 +322,22 @@ class SystemReservationController extends Controller
                   });
         })->where('id', '!=', $reservation->id)->whereBetween('status', [1, 2, 3])->get();
 
+        $roomReserved = [];
+        
+        foreach($rooms as $key => $room){
+            $count_paxes = 0;
+            foreach($availed as $r_list){
+                $rs= Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->where('id', $room->id)->get();
+                foreach($rs as $room) $count_paxes += $room->customer[$r_list];
+            }
+            if($count_paxes >= $room->room->max_occupancy) {
+                $roomReserved[] = $room->id;
+            }
+
+        }
+
         $web_contents = WebContent::all()->first() ?? [];
-        return view('system.reservation.show-reschedule',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'availed' => $availed, 'rooms' => $rooms, 'web_contents' => $web_contents]);
+        return view('system.reservation.show-reschedule',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'availed' => $availed, 'rooms' => $rooms, 'reserved' => $roomReserved, 'web_contents' => $web_contents]);
     }
     public function updateCancel(Request $request, $id){
         $id = decrypt($id);
@@ -351,7 +370,7 @@ class SystemReservationController extends Controller
                 'body' => 'Your Reservation Cancel Request are now approved. '
             ];
             $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab' => 'cancel'])) ,$details['body'], $details, 'reservation.mail')));
-            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Cancel Request of '.$reservation->userReservation->name().'was approved');
+            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Cancel Request of '.$reservation->userReservation->name().' was approved');
         }
     }
     public function updateDisaproveCancel(Request $request, $id){
@@ -513,13 +532,7 @@ class SystemReservationController extends Controller
         $reservation = Reservation::findOrFail(decrypt($request->id));
         if($reservation->status >= 2 && $reservation->status <= 3 || $reservation->status == 0) abort(404);
         $system_user = $this->system_user->user();
-        $validator = Validator::make($request->all('passcode'), [
-            'passcode' => ['required', 'digits:4', 'numeric'],
-        ]);
 
-        if($validator->fails()) return back ()->with('error', $validator->errors()->all());
-        $validator = $validator->validate();
-        if(!Hash::check($validator['passcode'], $system_user->passcode)) return back ()->with('error', 'Invalid Passcode');
         $admins = System::all()->where('type', 0);
 
         if(!$reservation->status == 7) abort(404);
@@ -565,6 +578,5 @@ class SystemReservationController extends Controller
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Reschedule Request of '.$reservation->userReservation->name().' was approved');
         }
     }
-
 
 }

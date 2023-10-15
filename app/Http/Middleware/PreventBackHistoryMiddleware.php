@@ -17,8 +17,10 @@ class PreventBackHistoryMiddleware
     {
         // To prevent Back HIstory When Logged in
         $response = $next($request);
-        return $response->header('Cache-Control', 'nocache,no-store,max-age=0;must-revalidate')
-                        ->header('Prgram', 'no-cache')
-                        ->header('Expire', 'Sun, 02 1990 00:00:00 GMT');
+        $response->headers->set('Cache-Control', 'nocache,no-store,max-age=0;must-revalidate');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expire', 'Sat, 02 2000 00:00:00 GMT');
+
+        return $response;
     }
 }

@@ -6,8 +6,8 @@
         <form id="update-form" action=" {{ route('system.menu.addons.update', encrypt($addon->id))}}" method="post">
           @csrf
           @method('PUT')
-          <x-input type="text" id="title" name="title" placeholder="Title" value="{{old('title') ?? $addon->title }}" />
-          <x-input type="number" id="price" name="price" placeholder="Price" value="{{old('price') ?? $addon->price }}" />
+          <x-input type="text" id="title" name="title" placeholder="Item" value="{{old('title') ?? $addon->title }}" noRequired />
+          <x-input type="number" id="price" name="price" placeholder="Price" value="{{old('price') ?? $addon->price }}" noRequired />
           <label for="update_modal" class="btn btn-primary w-full">Save</label>
           <x-passcode-modal title="Edit Add-on Confirmation" id="update_modal" formId="update-form" />        
         </form>

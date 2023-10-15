@@ -52,7 +52,7 @@ class RoomSettingController extends Controller
         $validated = $request->validate([
             'name' => ['required', Rule::unique('room_lists', 'name')],
             'max_occupancy' =>  ['required', 'numeric', 'min:1'],
-            'location' =>  ['required'],
+            'location' =>  ['nullable'],
             'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
             'many_room' =>  ['required', 'numeric', 'min:1'],
             'passcode' =>  ['required', 'numeric', 'digits:4'],
@@ -104,14 +104,19 @@ class RoomSettingController extends Controller
             'name' => ['required'],
             'max_occupancy' =>  ['required', 'numeric', 'min:1'],
             'location' =>  ['required'],
+            'image_clear' =>  ['required'],
             'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
             'many_room' =>  ['required', 'numeric', 'min:1'],
             'passcode' =>  ['required', 'numeric', 'digits:4'],
         ]);
-
         if($request->hasFile('image')){  
             if($room_list->image) deleteFile($room_list->image);
             $validated['image'] = saveImageWithJPG($request, 'image', 'rooms');
+        }
+        if($validated['image_clear']) {
+            deleteFile($room_list->image);
+            $room_list->image = null;
+            $room_list->save();
         }
 
         //Get the code if it match on system

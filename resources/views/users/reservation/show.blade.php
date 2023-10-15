@@ -99,18 +99,18 @@
                                             @method('PUT')
                                             <div class="mt-4 ">
                                               <div class="space-y-4 lg:block">
-                                                    <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$r_list->check_in}}"/>
-                                                    <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" value="{{$r_list->check_out }}" />
-                                                    <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" selected="{{$r_list->accommodation_type}}" />
+                                                    <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$r_list->check_in}}" noRequired />
+                                                    <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" value="{{$r_list->check_out }}" noRequired />
+                                                    <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" selected="{{$r_list->accommodation_type}}" noRequired />
                                                     {{-- Number of Guest --}}
-                                                    <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$r_list->pax}}"/>
+                                                    <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$r_list->pax}}" noRequired />
                                                     <template x-if="at === 'Day Tour' || at === 'Overnight'">
                                                         <x-tooltip title="If you want to make changes, you can do so in the tour information." color="info">
-                                                            <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$r_list->tour_pax?? ''}}" disabled />
+                                                            <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$r_list->tour_pax?? ''}}" disabled noRequired />
                                                         </x-tooltip>
                                                     </template>
                                                     {{-- Payment Method  --}}
-                                                    <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$r_list->payment_method}}"/>
+                                                    <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$r_list->payment_method}}" noRequired />
                                                     <div class="modal-action">
                                                         <button class="btn btn-primary">Save</button>
                                                     </div>
@@ -194,7 +194,7 @@
                                         <tr class="text-neutral font-bold">
                                             <td class="flex items-center gap-4">
                                                 <h2 class="font-bold ">Tour</h2>
-                                                <a href="{{route('user.reservation.edit.tour', ['id' => encrypt($r_list->id), 'gpax='.$r_list->tour_pax])}}" class="btn btn-sm btn-ghost btn-circle btn-primary" disabled="{{$r_list->status > 1 ? 'disabled' : ''}}">
+                                                <a href="{{route('user.reservation.edit.tour', ['id' => encrypt($r_list->id), 'gpax='.$r_list->tour_pax])}}" class="btn btn-sm btn-ghost btn-circle btn-primary {{$r_list->status > 1 ? 'btn-disabled' : ''}}">
                                                     <i class="fa-solid fa-pen-to-square"></i>
                                                 </a>
                                             </td>

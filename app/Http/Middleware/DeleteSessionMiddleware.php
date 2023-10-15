@@ -17,6 +17,8 @@ class DeleteSessionMiddleware
     {
         if(!($request->routeIs('reservation.*'))) session()->forget('rinfo');
         if(!($request->is('create/reservation/create/*'))) session()->forget('nwrinfo');
+        if(!($request->is('register/*'))) session()->forget('uinfo');
+        if(!($request->routeIs('profile.*'))) session()->forget('upuinfo');
         return $next($request);
     }
 }

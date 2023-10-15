@@ -77,16 +77,6 @@ class NewsController extends Controller
     }
     public function update(Request $request, $id){
         $new = News::findOrFail(decrypt($id));
-        if(str_contains($request['date_from'], 'to')){
-            $dateSeperate = explode('to', $request['date_from']);
-            $request['date_from'] = trim($dateSeperate[0]);
-            $request['date_to'] = trim ($dateSeperate[1]);
-        }
-        // Check out convertion word to date format
-        if(str_contains($request['date_to'], ', ')){
-            $date = Carbon::createFromFormat('F j, Y', $request['date_to']);
-            $request['date_to'] = $date->format('Y-m-d');
-        }
         $validated = $request->validate([
             'passcode' => ['required', 'numeric', 'digits:4'],
             'title' => ['required'],
@@ -120,6 +110,8 @@ class NewsController extends Controller
                 'image' => $validated['image'] ?? null,
                 'title' => $validated['title'],
                 'description' => $validated['description'],
+                'from' => null,
+                'to' => null,
             ]);
         }
         if($updated) return redirect()->route('system.news.home')->with('success', $new->title . ' News was Update');
@@ -130,6 +122,7 @@ class NewsController extends Controller
             'passcode' => ['required', 'numeric', 'digits:4'],
         ]);
         if(!Hash::check($validated['passcode'], $this->system_user->user()->passcode)) return back()->with('error', 'Invalid Passcode')->withInput($validated);
+        deleteFile($new->image);
         $deleted = $new->delete();
         if($deleted) return redirect()->route('system.news.home')->with('success', $new->title . ' News was Removed');
 
@@ -206,6 +199,8 @@ class NewsController extends Controller
         else{
             $updated = $new->update([
                 'title' => $validated['title'],
+                'from' => null,
+                'to' => null,
             ]);
         }
         if($updated) return redirect()->route('system.news.home', 'tab=announcement')->with('success', $new->title . ' Announcement was Update');

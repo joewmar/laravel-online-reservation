@@ -1,7 +1,7 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
     $arrPayment = ['Walk-in', 'Other Booking', 'Gcash', 'PayPal', 'Bank Transfer'];
-    $arrStatus = ['Pending', 'Confirmed', 'Check-in', 'Check-out', 'Cancel'];
+    $arrStatus = [0 => 'Pending', 1 => 'Confirmed', 2 => 'Check-in', 3 => 'Check-out', 5 => 'Cancel'];
 @endphp
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Reservation Information of {{$r_list->userReservation->name()}}" back=true>
@@ -17,7 +17,7 @@
                         <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{old('accommodation_type') ?? $r_list->accommodation_type}}" />
                         <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" xModel="newpax" />
                         <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{old('payment_method') ?? $r_list->payment_method}}"/>
-                        <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="$arrStatus" selected="{{$arrStatus[old('status')] ?? $arrStatus[$r_list->status]}}" xModel="status"  />
+                        <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="array_values($arrStatus)" selected="{{$arrStatus[old('status')] ?? $arrStatus[$r_list->status]}}" xModel="status"  />
                         <div x-show="status == '{{$r_list->status}}' && newpax == '{{$r_list->pax}}'">
                             <label for="infomdl" class="btn btn-primary btn-block">Save</label>
                             <x-passcode-modal title="Enter the correct passcode to save information for {{$r_list->userReservation->name()}}" id="infomdl" formId="edit-info" />

@@ -22,6 +22,7 @@
         "tpx" => old('tour_pax') ?? (request()->has('tpx') ? decrypt(request('tpx')) : $decrypted['tpx']  ),
         "at" => old('accommodation_type') ?? $decrypted['at'],
         "py" =>  old('payment_method') ?? $decrypted['py'],
+        "otpx" =>  $decrypted['otpx'] ?? 0,
         "ck" => request('ck') ?? '',
       ];
     }
@@ -174,7 +175,7 @@
                 2. Choose your menu wisely
               </p>
             </header>
-            <form id="tour-form" action="{{route('reservation.choose.check.all', Arr::query(encryptedArray($TourInfo)))}}" method="post">
+            <form x-init="if({{$TourInfo['tpx'] != (int)$TourInfo['otpx'] ? 'true' : 'false'}}) carts = []" id="tour-form" action="{{route('reservation.choose.check.all', Arr::query(encryptedArray($TourInfo)))}}" method="post">
               @csrf
               <div class="flex justify-between mt-6">
                 <h3 class="font-bold text-xl">Category</h3>

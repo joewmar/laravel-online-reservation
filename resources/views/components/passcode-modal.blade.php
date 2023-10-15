@@ -1,6 +1,6 @@
 @props(['id'=>'', 'formId'=> '', 'title'=> '', 'bottom' => false])
 @if($bottom)
-  @push('scripts')
+  @push('top')
     <input type="checkbox" id="{{$id}}" class="launch-checkbox modal-toggle" />
     <div x-data="{loader: false}" class="modal modal-bottom sm:modal-middle launch z-[100]" id="{{$id}}">
       <div class="modal-box">

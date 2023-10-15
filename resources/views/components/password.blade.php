@@ -5,9 +5,9 @@
 <div x-data="{ show{{Str::camel($id)}}: true }" class="form-control w-full mb-4">
   <label for="{{Str::camel($id)}}" class="relative flex rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error('password') ring-1 ring-error border-error @enderror" >
     @if ($validation)
-      <input :type="show{{Str::camel($id)}} ? 'password' : 'text'" id="{{Str::camel($id)}}" name="{{$name}}" class="input input-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0" placeholder="{{$placeholder}}" value="{{$value ?? ''}}" x-model="{{Str::camel($id)}}" @input="validatePassword{{Str::camel($id)}}" {{ $attributes }} />
+      <input :type="show{{Str::camel($id)}} ? 'password' : 'text'" id="{{Str::camel($id)}}" name="{{$name}}" class="input input-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0" placeholder="{{$placeholder}}" value="{{$value ?? ''}}" x-model="{{Str::camel($id)}}" @input="validatePassword{{Str::camel($id)}}" {{ $attributes }} onpaste="return false" oncopy="return false" />
     @else
-      <input :type="show{{Str::camel($id)}} ? 'password' : 'text'" id="{{Str::camel($id)}}" name="{{$name}}" class="input input-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0" placeholder="{{$placeholder}}" value="{{$value ?? ''}}" {{ $attributes }} />
+      <input :type="show{{Str::camel($id)}} ? 'password' : 'text'" id="{{Str::camel($id)}}" name="{{$name}}" class="input input-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0" placeholder="{{$placeholder}}" value="{{$value ?? ''}}" {{ $attributes }} onpaste="return false" oncopy="return false" />
     @endif
     <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs" >
       {{$placeholder}} @if(!$noRequired) <span class="text-error">*</span> @endif

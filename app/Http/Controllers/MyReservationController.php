@@ -40,15 +40,15 @@ class MyReservationController extends Controller
         Notification::send($systems, new SystemNotification('Employee Action from '.auth()->guard('system')->user()->name().': ' . Str::limit($text, 10, '...'), $text, route('system.notifications')));
     }
     public function index(Request $request){
-        $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 0)->latest()->paginate(5) ?? [];
+        $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 0)->latest()->first() ?? [];
         if($request['tab'] == 'confirmed'){
-            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 1)->latest()->paginate(5) ?? [];
+            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 1)->latest()->first() ?? [];
         }
         if($request['tab'] == 'cin'){
-            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 2)->latest()->paginate(5) ?? [];
+            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 2)->latest()->first() ?? [];
         }
         if($request['tab'] == 'cout'){
-            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 3)->latest()->paginate(5) ?? [];
+            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 3)->latest()->first() ?? [];
         }
         if($request['tab'] == 'reshedule'){
             $reservation = Reservation::where(function ($query) {
@@ -72,7 +72,7 @@ class MyReservationController extends Controller
         }
 
         if($request['tab'] == 'previous'){
-            $reservation = Reservation::with('previous')->where('user_id', auth('web')->user()->id)->latest()->paginate(5) ?? [];
+            $reservation = Reservation::with('previous')->where('user_id', auth('web')->user()->id)->where('status', 3)->latest()->paginate(5) ?? [];
         }
         return view('users.reservation.index', ['activeNav' => 'My Reservation', 'reservation' => $reservation]);
     }
@@ -180,12 +180,7 @@ class MyReservationController extends Controller
             "Type: " . $reservation->accommodation_type ."\n" . 
             "Pax: " . $reservation->pax ."\n" . 
             "Why to Cancel: " .$validate['cancel_message']; 
-            $keyboard = [
-                [
-                    ['text' => 'View', 'url' => route('system.reservation.show.cancel', encrypt($reservation->id))],
-                ],
-            ];
-            foreach($systemUser as $user) if(!empty($user->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text, $keyboard));
+            $this->systemNotification($text , route('system.reservation.show.cancel', $id));
             return redirect()->route('user.reservation.home')->with('success', 'Cancel Request was succesfull to send. Just Wait Send Email or any Contact for Approval Request');
         }
     }
@@ -275,12 +270,7 @@ class MyReservationController extends Controller
             "Reschedule Check-in: " . Carbon::createFromFormat('Y-m-d', $validator['check_in'])->format('F j, Y') ."\n" . 
             "Reschedule Check-out: " . Carbon::createFromFormat('Y-m-d', $validator['check_out'])->format('F j, Y') ."\n" . 
             "Why: " . $validator['reschedule_message'];
-            $keyboard = [
-                [
-                    ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($reservation->id))],
-                ],
-            ];
-            foreach($systemUser as $user) if(!empty($user->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text, $keyboard));
+            $this->systemNotification($text , route('system.reservation.show.cancel', $id));
             return redirect()->route('user.reservation.home')->with('success', 'Reschedule Request was succesfull to send. Just Wait Send Email or any Contact for Approval Request');
         }
     }
@@ -545,22 +535,9 @@ class MyReservationController extends Controller
         // dd($request->all());
         $reservation = Reservation::findOrFail(decrypt( $id));
         $messages = $reservation->message;
-        if(str_contains($request['check_in'], 'to')){
-            $dateSeperate = explode('to', $request['check_in']);
-            $request['check_in'] = trim($dateSeperate[0]);
-            $request['check_out'] = trim ($dateSeperate[1]);
-        }
-        // Check out convertion word to date format
-        if(str_contains($request['check_out'], ', ')){
-            $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
-            $request['check_out'] = $date->format('Y-m-d');
-        }
+
         $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
         $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
-
-        if(($request['check_in'] === $messages['reschedule']['check_in'] && $request['check_out'] === $messages['reschedule']['check_out'] )){
-            return back()->with('error', 'Your choose date does not change at all');
-        }
 
         $validator = null;
         if($reservation->accommodation_type == 'Day Tour'){
@@ -571,6 +548,7 @@ class MyReservationController extends Controller
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
+                'reschedule_message.required' => 'Required to explain reason of reschedule',
                 'required' => 'Need fill up first (:attribute)',
                 'date_equals' => 'Choose only one day (Day Tour)',
             ]);
@@ -583,6 +561,7 @@ class MyReservationController extends Controller
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
+                'reschedule_message.required' => 'Required to explain reason of reschedule',
                 'required' => 'Need fill up first (:attribute)',
                 'check_out.after_or_equal' => 'Choose within 2 or 3 days (Overnight)',
             ]);
@@ -595,7 +574,8 @@ class MyReservationController extends Controller
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
                 'check_in.after' => 'Choose date with 2 to 3 days',
-                'required' => 'Need fill up first',
+                'reschedule_message.required' => 'Required to explain reason of reschedule',
+                'required' => 'Need fill up first (:attribute)',
                 'after' => 'The :attribute was already chose from (Check-in)',
     
             ]);
@@ -603,17 +583,22 @@ class MyReservationController extends Controller
         if ($validator->fails()) {            
             return back()
             ->with('error', $validator->errors()->all())
-            ->withInput();
+            ->withInput($validator->getData());
         }
         $validator = $validator->validate();
-
+        if($validator['check_in'] === $reservation->check_in && $validator['check_out'] === $reservation->check_in ){
+            return back()->with('error', 'Your choose date does not change at all')->withInput($validator);
+        }
         $messages = $reservation->message;
         $messages['reschedule'] = [
             'message' => $validator['reschedule_message'],
             'check_in' => $validator['check_in'],
             'check_out' => $validator['check_out'],
         ];
-        if($reservation->update(['message' => $messages])) return redirect()->route('user.reservation.show', $id)->with('success', 'Reschedule Request was updated');
+        if($reservation->update(['message' => $messages])){
+            $this->systemNotification("", route('system.reservation.show.cancel', $id));
+             return redirect()->route('user.reservation.show', $id)->with('success', 'Reschedule Request was updated');
+        }
         
 
     }

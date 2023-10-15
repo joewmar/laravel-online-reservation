@@ -477,53 +477,36 @@ class SystemReservationTwoController extends Controller
         return view('system.reservation.disaprove',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu]);
     }
     public function disaproveStore(Request $request, $id){
-        try{
-            $reservation = Reservation::findOrFail(decrypt($id));
-            if($reservation->status >= 1) abort(404);
+        $reservation = Reservation::findOrFail(decrypt($id));
+        if($reservation->status >= 1) abort(404);
 
-            $system_user = $this->system_user->user();
+        $system_user = $this->system_user->user();
+        $validated = $request->validate([
+            'reason' => ['required'],
+            'message' => Rule::when($request['reason'] === 'Other', ['required']),
+            'passcode' => ['required', 'digits:4', 'numeric'],
+        ], [
+            'required' => 'Need to fill up this form'
+        ]);
 
-            if($request['reason'] === 'Other'){
-                $validated = $request->validate([
-                    'reason' => ['required'],
-                    'message' => ['required'],
-                    'passcode' => ['required', 'digits:4', 'numeric'],
-                ], [
-                    'required' => 'Need to fill up this form'
-                ]);
+        if(!Hash::check($validated['passcode'], $system_user->passcode))  return back()->with('error', 'Invalid Passcode, Try Again')->withInput($validated);
+        if(!($request['reason'] === 'Other')) $validated['message'] =  $validated['reason'];
+        
+        $updated = $reservation->update(['status' => 5]); 
+        if($updated){
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => 'Reservation Disapprove',
+                'body' => 'Your Reservation are disapproved due of ' . $validated['message']. 'Sorry for waiting. Please try again to make reservation in another dates',
+            ];
+            $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'canceled'])) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
 
-            }
-            else{
-                $validated = $request->validate([
-                    'reason' => ['required'],
-                    'passcode' => ['required', 'digits:4', 'numeric'],
-                ], [
-                    'required' => 'Need to fill up this form'
-                ]);
-                $validated['message'] =  $validated['reason'];
-            }
-            if(!Hash::check($validated['passcode'], $system_user->passcode))  return back()->with('error', 'Invalid Passcode, Try Again')->withInput($validated);
-            $messages = $reservation->message;
-            $messages['disaprove'] = $validated['message'];
-            $updated = $reservation->update(['status' => 5]); // delete on reservation
-            if($updated){
-                $details = [
-                    'name' => $reservation->userReservation->name(),
-                    'title' => 'Reservation Disapprove',
-                    'body' => 'Your Reservation are disapproved due of ' . $messages['disaprove']. 'Sorry for waiting. Please try again to make reservation in another dates',
-                ];
-                $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'canceled'])) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
-
-                unset($details, $text);
-                $this->employeeLogNotif('Chose to Disapprove of ' . $reservation->userReservation->name() . ' Reservation', route('system.reservation.show', encrypt($reservation->id)));
-                return redirect()->route('system.reservation.home')->with('success', 'Disapprove of ' . $reservation->userReservation->name() . ' was Successful');
-            }
-            else{
-                return back()->withInput($request->all());
-            }
+            unset($details, $text);
+            $this->employeeLogNotif('Chose to Disapprove of ' . $reservation->userReservation->name() . ' Reservation', route('system.reservation.show', encrypt($reservation->id)));
+            return redirect()->route('system.reservation.home')->with('success', 'Disapprove of ' . $reservation->userReservation->name() . ' was Successful');
         }
-        catch(Exception $e){
-            return redirect()->route('system.reservation.home');
+        else{
+            return back()->withInput($request->all());
         }
     }
     public function showOnlinePayment($id){

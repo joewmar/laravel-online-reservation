@@ -69,7 +69,7 @@
 
 {{-- @include('news'); --}}
   @if (isset($announcements) && count($announcements) !== 0)
-    <section class="text-neutral" >
+    <section x-data="{hacc: false}" x-show="hacc" class="text-neutral" >
       <div data-aos="fade-down" class="mx-auto max-w-screen-xl px-4 py-8 sm:py-12 sm:px-6 lg:py-16 lg:px-8" >
         <div class="mx-auto max-w-lg text-center">
           <h2 class="text-3xl font-bold sm:text-4xl">Announcements</h2>
@@ -77,8 +77,8 @@
         <div class="mt-8 flex justify-center w-full">
           @foreach ($announcements as $announcement)
             @if((isset($announcement->from) && isset($announcement->to)))
-              @if((Carbon\Carbon::createFromFormat('Y-m-d', $announcement->from)->timestamp <= Carbon::now()->timestamp) && !(Carbon\Carbon::createFromFormat('Y-m-d', $announcement->to)->timestamp <= Carbon::now()->addDay()->timestamp))
-                <article data-aos="fade-down" class="flex gap-4 items-center w-9/12 h-auto rounded-lg bg-primary border border-gray-100 bg-white p-4 shadow-lg sm:p-6" >
+              @if((Carbon\Carbon::createFromFormat('Y-m-d', $announcement->from)->timestamp <= Carbon\Carbon::now()->timestamp) && !(Carbon\Carbon::createFromFormat('Y-m-d', $announcement->to)->timestamp <= Carbon\Carbon::now()->addDay()->timestamp))
+                <article x-init="hacc = true" data-aos="fade-down" class="flex gap-4 items-center w-9/12 h-auto rounded-lg bg-primary border border-gray-100 bg-white p-4 shadow-lg sm:p-6" >
                   <span class="inline-block rounded bg-primary p-2 text-primary-content">
                     <i class="fa-solid fa-bullhorn"></i>
                   </span>
@@ -90,7 +90,7 @@
                 </article>
               @endif
             @else
-              <article data-aos="fade-down" class="flex gap-4 items-center w-9/12 h-auto rounded-lg bg-primary border border-gray-100 bg-white p-4 shadow-lg sm:p-6" >
+              <article x-init="hacc = true" data-aos="fade-down" class="flex gap-4 items-center w-9/12 h-auto rounded-lg bg-primary border border-gray-100 bg-white p-4 shadow-lg sm:p-6" >
                 <span class="inline-block rounded bg-primary p-2 text-primary-content">
                   <i class="fa-solid fa-bullhorn"></i>
                 </span>
@@ -107,7 +107,7 @@
     </section>
   @endif
   @if (isset($news) && count($news) !== 0)
-    <section class="text-neutral w-full">
+    <section x-data="{hide: false}" x-show="hide" class="text-neutral w-full">
       <div data-aos="fade-down" class="mx-auto max-w-screen-xl px-4 py-8 sm:py-12 sm:px-6 lg:py-16 lg:px-8" >
         <div class="mx-auto max-w-lg text-center">
           <h2 class="text-3xl font-bold sm:text-4xl">News</h2>
@@ -116,9 +116,9 @@
         <div class="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3 place-items-center w-full">
           @foreach ($news as $new)
             @if((isset($new->from) && isset($new->to)))
-              @if(Carbon\Carbon::createFromFormat('Y-m-d', $new->from, 'Asia/Manila')->timestamp <= Carbon\Carbon::now('Asia/Manila')->timestamp)
-                <div data-aos="flip-right" for="news{{$loop->index+1}}" class="card w-96 bg-base-100 shadow-xl">
-                  <figure><img src="{{$new->image ? asset('storage/'.$new->image) : asset('images/logo2.png')}}" alt="Shoes" class="w-52" /></figure>
+              @if(Carbon\Carbon::createFromFormat('Y-m-d', $new->from, 'Asia/Manila')->timestamp < Carbon\Carbon::now('Asia/Manila')->timestamp)
+                <div x-init="hide = true" data-aos="flip-right" for="news{{$loop->index+1}}" class="card w-96 bg-base-100 shadow-xl">
+                  <figure><img src="{{$new->image ? asset('storage/'.$new->image) : asset('images/logo2.png')}}" alt="Shoes" class="w-full object-cover" /></figure>
                   <div class="card-body">
                     <h2 class="card-title">{{$new->title}}</h2>
                     <p>{{Str::limit($new->description, 200)}}</p>
@@ -136,7 +136,7 @@
                 </dialog>
               @endif
             @else
-              <div data-aos="flip-right" for="news{{$loop->index+1}}" class="card w-96 bg-base-100 shadow-xl">
+              <div x-init="hide = true" data-aos="flip-right" for="news{{$loop->index+1}}" class="card w-96 bg-base-100 shadow-xl">
                 <figure><img src="{{$new->image ? asset('storage/'.$new->image) : asset('images/logo2.png')}}" alt="Shoes" class="w-52" /></figure>
                 <div class="card-body">
                   <h2 class="card-title">{{$new->title}}</h2>

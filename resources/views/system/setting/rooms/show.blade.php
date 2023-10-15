@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="">
+    <x-system-content title="" back>
       <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
         <div class="md:w-96 flex flex-col justify-center items-start">
           <div class="avatar">

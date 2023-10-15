@@ -22,7 +22,6 @@
                     <!-- head -->
                     <thead>
                       <tr>
-                        <th>ID</th>
                         <th>Title</th>
                         <th>Price</th>
                         <th>Action</th>
@@ -32,22 +31,23 @@
                     <!-- row  -->
                     @forelse ($addons_list as $list)
                       <tr class="hover">
-                        <td>{{$list->id}}</td>
                         <td>{{$list->title}}</td>
                         <td>₱ {{number_format($list->price, 2)}}</td>
                         <td class="space-x-5">
                           <a href="{{ route('system.menu.addons.edit', encrypt($list->id))}}" class="link font-bold link-primary">Edit</a>
-                          <label for="delete_modal{{$list->id}}" class="link font-bold link-error">Delete</label>      
-                          <form id="delete-form{{$list->id}}" action="{{route('system.menu.addons.destroy', encrypt($list->id))}}" method="post">
-                            @csrf 
-                            @method('DELETE')
-                            <x-modal title="Do you want to remove: {{$list->title}} for ₱ {{number_format($list->price, 2)}}" id="delete_modal{{$list->id}}">
-                              <div class="modal-action">
-                                <button class="btn btn-primary">Yes</button>
-                                <label for="delete_modal{{$list->id}}" class="btn btn-ghost">No</label>
-                              </div>
+                          <label for="adddl{{$list->id}}" class="link font-bold link-error">Delete</label>      
+
+                            <x-modal title="Do you want to remove: {{$list->title}} for ₱ {{number_format($list->price, 2)}}" id="adddl{{$list->id}}">
+                                <form id="delete-form{{$list->id}}" action="{{route('system.menu.addons.destroy', encrypt($list->id))}}" method="post">
+                                  @csrf 
+                                  @method('DELETE')
+                                <div class="modal-action">
+                                  <button type="submit" class="btn btn-primary">Yes</button>
+                                  <label for="adddl{{$list->id}}" class="btn btn-ghost">No</label>
+                                </div>
+                              </form>
                             </x-modal>
-                          </form>
+                          
                         </td> 
                       </tr>
                     @empty

@@ -34,13 +34,13 @@
                             @method('PUT')
                             <h2 class="text-2xl font-bold mb-5">Personal Information</h2>
                             <div class="my-5 grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
-                                <x-input name="first_name" id="first_name" placeholder="First Name" value="{{$user->first_name}}" />
-                                <x-input name="last_name" id="last_name" placeholder="First Name" value="{{$user->last_name}}" />
-                                <x-birthday-input value="{{$user->birthday}}" />
-                                <x-datalist-input name="nationality" id="nationality" placeholder="Nationality" :lists="$nationality" value="{{$user->nationality}}" />
-                                <x-datalist-input name="country" id="country" placeholder="Country" :lists="$countries" value="{{$user->country}}" />
-                                <x-phone-input value="{{$user->contact}}"/>
-                                <x-input type="email" name="email" id="email" placeholder="Contact Email" value="{{$user->email}}" />
+                                <x-input name="first_name" id="first_name" placeholder="First Name" value="{{$user->first_name}}"  noRequired/>
+                                <x-input name="last_name" id="last_name" placeholder="First Name" value="{{$user->last_name}}"  noRequired/>
+                                <x-birthday-input value="{{$user->birthday}}"  noRequired/>
+                                <x-datalist-input name="nationality" id="nationality" placeholder="Nationality" :lists="$nationality" value="{{$user->nationality}}"  noRequired/>
+                                <x-datalist-input name="country" id="country" placeholder="Country" :lists="$countries" value="{{$user->country}}"  noRequired/>
+                                <x-phone-input value="{{$user->contact}}" noRequired/>
+                                <x-input type="email" name="email" id="email" placeholder="Contact Email" value="{{$user->email}}"  noRequired/>
                             </div>
                             @if(!$isPending)
                                 <label for="user_info_modal" class="btn btn-primary btn-sm">Save</label> 
@@ -55,7 +55,7 @@
                         <form id="passf" action="{{route('profile.update.password', encrypt($user->id))}}" method="POST">
                             @csrf
                             @method('PUT')
-                            <h2 class="text-2xl font-bold mb-5">Password</h2>
+                            <h2 class="text-2xl font-bold mb-5">Change Password</h2>
                             <div x-data="{loader: false}" class="my-5 w-full md:w-96">
                                 <x-loader />
                                 <x-password name="current_password" id="current_password" placeholder="Current Password" />
@@ -112,8 +112,8 @@
                                 <form action="{{route('profile.destroy.account', encrypt($user->id))}}" method="POST">
                                     @csrf
                                     @method('DELETE')
-                                    <p class="mb-3 text-error">When you delete your account, the reservation information you have created will also be deleted.</p>
-                                    <x-password />
+                                    <p class="mb-3 text-error">When you delete your account, the previous reservation information will also be deleted.</p>
+                                    <x-password name="dltpass" />
                                     <div class="modal-action">
                                         <button class="btn btn-error">Delete Account</button>
                                     </div>
