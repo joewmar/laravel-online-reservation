@@ -14,7 +14,7 @@
     <div class="flex flex-col space-y-4">
         <div>
             <h2 class="text-2xl font-semibold">{{$rlist->userReservation->name() ?? 'None'}}</h2>
-            <span class="block text-sm text-neutral">{{($rlist->userReservation->age() . 'years old') ?? 'None'}} from {{$rlist->userReservation->country ?? 'None'}}</span>
+            <span class="block text-sm text-neutral">{{($rlist->userReservation->age() . ' years old') ?? 'None'}} from {{$rlist->userReservation->country ?? 'None'}}</span>
             <span class="text-sm text-neutral">{{$rlist->userReservation->nationality ?? 'None'}}</span>
         </div>
         <div class="space-y-1">

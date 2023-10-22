@@ -154,7 +154,7 @@ class SystemReservationTwoController extends Controller
                   });
         })->whereBetween('status', [1, 2])->where('id', '!=', $reservation->id)->pluck('id');
         
-        foreach($rooms as $key => $room){
+        foreach($rooms as $room){
             $count_paxes = 0;
             foreach($r_lists as $r_list){
                 $rs= Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->where('id', $room->id)->get();
@@ -179,7 +179,7 @@ class SystemReservationTwoController extends Controller
             $system_user = $this->system_user->user();
             $reservation = Reservation::findOrFail(decrypt($request->id));
             if($reservation->status >= 1) abort(404);
-            if(!Hash::check($validated['passcode'], $system_user->passcode)) return back()->with('error', 'Invalid Passcode');
+            if(!Hash::check($validated['passcode'], $system_user->passcode)) return back()->with('error', 'Invalid Passcode')->withInput($request->all());
             if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($request['room_pax']);
             else $validated['room_pax'] = $request['room_pax'];
             $rate = RoomRate::find($validated['room_rate']);
@@ -497,7 +497,7 @@ class SystemReservationTwoController extends Controller
             $details = [
                 'name' => $reservation->userReservation->name(),
                 'title' => 'Reservation Disapprove',
-                'body' => 'Your Reservation are disapproved due of ' . $validated['message']. 'Sorry for waiting. Please try again to make reservation in another dates',
+                'body' => 'The Reservation you request are disapproved due of ' . $validated['message']. '. Please try again to make reservation in another dates',
             ];
             $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'canceled'])) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
 
@@ -515,94 +515,75 @@ class SystemReservationTwoController extends Controller
         return view('system.reservation.onlinepayment.index', ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
     public function storeOnlinePayment(Request $request, $id){
-       try{
-            $validated = $request->validate([
-                'amount' => ['required', 'numeric'],
-                'type' => ['required'],
-            ]);
-            $online_payment = OnlinePayment::findOrFail(decrypt($id));
-            $reservation = Reservation::findOrFail($online_payment->reservation_id);
-            if($reservation->status >= 2) abort(404);
-            $downpayment = $reservation->transaction;
-            if(isset($downpayment['payment']['downpayment'])) $downpayment['payment']['downpayment'] += (double)$validated['amount'];
-            else $downpayment['payment']['downpayment'] = (double)$validated['amount'];
-            $reservation->update(['transaction' => $downpayment]);
-            $online_payment->approval = true;
-            $online_payment->save();
-
-            if($validated['type'] == "full"){
-                $reservation->payment_cutoff = null;
-                $reservation->save();
-                $details = [
-                    'name' => $reservation->userReservation->name(),
-                    'title' => 'Your online payment was approved',
-                    'body' => 'Downpayment: ₱' .  number_format($downpayment['payment']['downpayment'], 2),
-                ];
-                $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['title'] . ' ' . $details['body'], $details, 'reservation.mail'))->onQueue(null));
-            }
-            else{
-                $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s'); 
-                $reservation->save(); 
-
-                if($reservation->payment_method == "Gcash") $url = route('reservation.gcash', encrypt($reservation->id));
-                if($reservation->payment_method == "PayPal") $url = route('reservation.paypal', encrypt($reservation->id));
-                if($reservation->payment_method == "Bank Transfer") $url = route('reservation.bnktr', encrypt($reservation->id));
-                
-                $details = [
-                    'name' => $reservation->userReservation->name(),
-                    'title' => 'Your online payment was approved, but the amount you paid was insufficient. There is a chance for you to make another payment',
-                    'body' => 'Amount: ₱' .  number_format($downpayment['payment']['downpayment'], 2) .' but minimuim payment is 1000 philippine pesos',            
-                    'link' => $url,
-                    'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
-                ];
-                $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['title'] . '. ' . $details['body'], $details, 'reservation.online-payment-mail'))->onQueue(null));
-            }
-            $this->employeeLogNotif('Approve Downpayment of ' . $reservation->userReservation->name() . ' with Paid ₱' . number_format($downpayment['payment']['downpayment'], 2), route('system.reservation.show.online.payment', encrypt($reservation->id)));
-            unset($downpayment);
-            return redirect()->route('system.reservation.show.online.payment', encrypt($reservation->id))->with('success', 'Approved payment successful');
-       }
-       catch(Exception $e){
-            return redirect()->route('system.reservation.home');
-        }
-    }
-    public function disaproveOnlinePayment(Request $request, $id){
-        $validated = $request->validate(['reason' => ['required']]);
+        $validated = Validator::make($request->all(), [
+            'amount' => ['required', 'numeric'],
+            'type' => ['required'],
+        ], [
+            'amount.required' => "Required to Enter Legit Amount",
+            'type.required' => "Required to Choose Type of Approve",
+        ]);
+        if($validated->fails()) return back()->with('error', $validated->errors()->all());
+        $validated = $validated->validate();
         $online_payment = OnlinePayment::findOrFail(decrypt($id));
         $reservation = Reservation::findOrFail($online_payment->reservation_id);
-        $countDisapprove = OnlinePayment::where('reservation_id', $reservation->id)->where('approval', 0)->count();
-        if($countDisapprove >= 3){
+        if($reservation->status >= 2) abort(404);
+        $downpayment = $reservation->transaction;
+        if(isset($downpayment['payment']['downpayment'])) $downpayment['payment']['downpayment'] += (double)$validated['amount'];
+        else $downpayment['payment']['downpayment'] = (double)$validated['amount'];
+        $reservation->update(['transaction' => $downpayment]);
+        $online_payment->approval = true;
+        $online_payment->save();
+
+        if($validated['type'] == "full"){
             $reservation->payment_cutoff = null;
-            $reservation->update(['status' => 5]);
+            $reservation->save();
             $details = [
                 'name' => $reservation->userReservation->name(),
-                'title' => 'Reservation was Canceled',
-                'body' => 'Your reservation has been canceled because it has been disapproved 3 attempts, where the opportunity to pay properly. If you have any concerns, you can contact the owner or personnel'
+                'title' => 'Your online payment was approved',
+                'body' => 'Downpayment: ₱' .  number_format($downpayment['payment']['downpayment'], 2),
             ];
-            $text = 
-                "Cancel Reservation!\n" .
-                "Name: ". $reservation->userReservation->name() ."\n" . 
-                "Age: " . $reservation->age ."\n" .  
-                "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
-                "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y') ."\n" . 
-                "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y') ."\n" . 
-                "Type: " . $reservation->accommodation_type ;
-                // Send Notification to 
-            $keyboard = [
-                [
-                    ['text' => 'View', 'url' => route('system.reservation.show', encrypt($reservation->id))],
-                ],
-            ];
-            foreach(System::whereBetween('type', [0, 1]) as $user){
-                if(!empty($user->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text, $keyboard));
-            }
-            $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.online-payment-mail'))->onQueue(null));
-            $this->employeeLogNotif('Choose Disapprove on Downpayment of ' . $reservation->userReservation->name(), route('system.reservation.show.online.payment', encrypt($reservation->id)));
-            return redirect()->route('system.reservation.show.online.payment', encrypt($reservation->id))->with('success', 'Disapprove payment successful with Cancal Reservation');
+            $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['title'] . ' ' . $details['body'], $details, 'reservation.mail'))->onQueue(null));
         }
+        else{
+            $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s'); 
+            $reservation->save(); 
+
+            if($reservation->payment_method == "Gcash") $url = route('reservation.gcash', encrypt($reservation->id));
+            if($reservation->payment_method == "PayPal") $url = route('reservation.paypal', encrypt($reservation->id));
+            if($reservation->payment_method == "Bank Transfer") $url = route('reservation.bnktr', encrypt($reservation->id));
+            
+            $details = [
+                'name' => $reservation->userReservation->name(),
+                'title' => 'Your online payment was approved, but the amount you paid was insufficient. There is a chance for you to make another payment',
+                'body' => 'Amount: ₱' .  number_format($downpayment['payment']['downpayment'], 2) .' but minimuim payment is 1000 philippine pesos',            
+                'link' => $url,
+                'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
+            ];
+            $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['title'] . '. ' . $details['body'], $details, 'reservation.online-payment-mail'))->onQueue(null));
+        }
+        $this->employeeLogNotif('Approve Downpayment of ' . $reservation->userReservation->name() . ' with Paid ₱' . number_format($downpayment['payment']['downpayment'], 2), route('system.reservation.show.online.payment', encrypt($reservation->id)));
+        unset($downpayment);
+        return redirect()->route('system.reservation.show.online.payment', encrypt($reservation->id))->with('success', 'Approved payment successful');
+    }
+    public function disaproveOnlinePayment(Request $request, $id){
+        // $validated = $request->validate(['reason' => ['required']]);
+        $validated = Validator::make($request->all(), [
+            'reason' => ['required'],
+            'message' => Rule::when($request['reason'] == 'Other', ['required']),
+        ], [
+            'message.required' => "Required to Enter Other Message",
+        ]);
+        if($validated->fails()) return back()->with('error', $validated->errors()->all());
+        $validated = $validated->validate();
+        if($validated['reason'] == "Other") $validated['reason'] = $validated['message'];
+        $online_payment = OnlinePayment::findOrFail(decrypt($id));
+        $reservation = Reservation::findOrFail($online_payment->reservation_id);
+
         $reservation->payment_cutoff = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
         $reservation->save();
         $online_payment->approval = false;
         $online_payment->save();
+        $countDisapprove = OnlinePayment::where('reservation_id', $reservation->id)->where('approval', 0)->count();
 
         if($reservation->payment_method == "Gcash"){
             $url = route('reservation.gcash', encrypt($reservation->id));
@@ -616,7 +597,7 @@ class SystemReservationTwoController extends Controller
         $details = [
             'name' => $reservation->userReservation->name(),
             'title' => 'Your online payment was disapproved',
-            'body' => 'Reason:  ' .  $validated['reason'] . '. I will give you a chance to make payment with ('.(3 - $online_payment->attempt).' only) ',
+            'body' => 'Reason:  ' .  $validated['reason'] . '. I will give you a chance to make payment with ('.(3 - $countDisapprove).' attempt only) ',
             'link' => $url,
             'payment_cutoff' => Carbon::createFromFormat('Y-m-d H:i:s', $reservation->payment_cutoff)->format('M j, Y'),
         ];
@@ -701,7 +682,6 @@ class SystemReservationTwoController extends Controller
     }
     public function updateAddons(Request $request, $id){
         // dd($request->all());
-       try{
         $system_user = $this->system_user->user();
         $reservation = Reservation::findOrFail(decrypt($id));
 
@@ -746,7 +726,13 @@ class SystemReservationTwoController extends Controller
             $id = decrypt($validated['addons']);
             $adddon = Addons::find($id);
             $transaction = $reservation->transaction;
-            $transaction['OA'.$id][] = [
+            foreach($transaction as $key => $item){
+                if(array_key_exists('OA'.$adddon->id, $transaction)) {
+                    dd(array_key_exists('OA'.$adddon->id, $transaction));
+                    $qty = $item['pcs'];
+                }
+            }
+            $transaction['OA'.$id][now('Asia/Manila')->format('YmdHis')] = [
                 'title' => $adddon->title,
                 'amount' => $adddon->price * (int)$validated['pcs'],
                 'pcs' => $validated['pcs'],
@@ -765,11 +751,6 @@ class SystemReservationTwoController extends Controller
         $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
         $this->employeeLogNotif('Add Addons Package of ' . $reservation->userReservation->name() . '(' . $type . ')');
         if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Other Add-ons for '.$reservation->userReservation->name().' was successful');
-
-       }
-       catch(Exception $e){
-            return redirect()->route('system.reservation.home');
-       }
     }
     public function showExtend($id){
         $reservation = Reservation::findOrFail(decrypt($id));
@@ -784,7 +765,7 @@ class SystemReservationTwoController extends Controller
             $validated = $request->validate([
                 'no_days' => ['required', 'numeric', 'min:1'],
             ]);
-            $extended = Carbon::now('Asian/Manila')->addDays((int)$validated['no_days'])->format('Y-m-d');
+            $extended = Carbon::createFromFormat('Y-m-d', $reservation->check_out)->addDays((int)$validated['no_days'])->format('Y-m-d');
             $transaction = $reservation->transaction;
             $reservation->check_out = $extended;
             $reservation->save();
@@ -793,7 +774,7 @@ class SystemReservationTwoController extends Controller
                 if (strpos($key, 'rid') !== false) {
                     $rateID = (int)str_replace('rid','', $key);
                     $transaction['rid'.$rateID]['amount'] = $transaction['rid'.$rateID]['price'] * $reservation->getNoDays();
-                    if($transaction['payment']['discountPerson']){
+                    if(isset($transaction['payment']['discountPerson'])){
                         $discounted = (20 / 100) * (int)$transaction['payment']['discountPerson'];
                         $discounted = (double)($transaction['rid'.$rateID]['amount'] * $discounted);
                         $discounted = (double)($transaction['rid'.$rateID]['amount'] - $discounted);
@@ -816,7 +797,7 @@ class SystemReservationTwoController extends Controller
             ];
             $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
             $this->employeeLogNotif('Add days of Extend Day for ' . $reservation->userReservation->name(), route('system.reservation.show', encrypt($reservation->id)));
-            if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->useReservation()->name() . ' was extend in ' . ($validated['no_days'] > 1 ? $validated['no_days'] . ' days' : $validated['no_days'] . ' day'));
+            if($updated) return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', $reservation->userReservation->name() . ' was extend in ' . ($validated['no_days'] > 1 ? $validated['no_days'] . ' days' : $validated['no_days'] . ' day'));
         // }
         // catch(Exception $e){
         //     return redirect()->route('system.reservation.home');

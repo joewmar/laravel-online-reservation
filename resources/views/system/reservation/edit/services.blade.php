@@ -70,6 +70,7 @@
                                     <button class="btn btn-error btn-xs" type="button" x-show="!(tourMenu.length === 0)" x-transition>Remove</button>
                                 </th>
                                 <th>Addons</th>
+                                <th>Created</th>
                                 <th>Qty</th>
                                 <th>Price</th>
                                 <th>Amount</th>
@@ -83,6 +84,7 @@
                                             </label>
                                         </th>
                                         <td>{{$item['title']}}</td>
+                                        <td>{{$item['created']}}</td>
                                         <td>{{$item['pcs']}}</td>
                                         <td>₱ {{number_format($item['price'], 2)}}</td>
                                         <td>₱ {{number_format($item['amount'], 2)}}</td>

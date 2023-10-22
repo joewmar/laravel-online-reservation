@@ -37,7 +37,14 @@ class WebContentController extends Controller
         $main_hero = $web_content->hero ?? [];
         // dd($web_content->hero);
         if($request->hasFile('main_hero')){
-            $main_hero['main_hero'.count($main_hero) + 1] = saveImageWithJPG($request, 'main_hero', 'hero', 'public');
+            $count = count($main_hero)+1;
+            for ($i=1; $i <= count($main_hero); $i++) {
+                if(!in_array('main_hero'.$i, array_keys($main_hero))) {
+                    $count = $i;
+                    break;
+                }
+            }
+            $main_hero['main_hero'.$count] = saveImageWithJPG($request, 'main_hero', 'hero', 'public');
         }
         else{
             return back()->with('error', 'Required to send image (Hero Image)');
@@ -137,7 +144,14 @@ class WebContentController extends Controller
         $gallery = $web_content->gallery ?? [];
         // dd($web_content->hero);
         if($request->hasFile('gallery')){
-            $gallery['gallery'.count($gallery) + 1] = saveImageWithJPG($request, 'gallery', 'gallery', 'public');
+            $count = count($gallery)+1;
+            for ($i=1; $i <= count($gallery); $i++) {
+                if(!in_array('gallery'.$i, array_keys($gallery))){
+                     $count = $i;
+                     break;
+                }
+            }
+            $gallery['gallery'.$count] = saveImageWithJPG($request, 'gallery', 'gallery', 'public');
         }
         else{
             return back()->with('error', 'Required to send image (Gallery Photo)');
@@ -225,7 +239,7 @@ class WebContentController extends Controller
         $removed = $webcontents->update([
             'gallery' => $gallery,
         ]);
-        if($removed) return redirect()->route('system.webcontent.home')->with('success', 'Gallery Photo selected was removed');
+        if($removed) return redirect()->route('system.webcontent.home', "#gallery")->with('success', 'Gallery Photo selected was removed');
     }
     public function createContact(Request $request){
         $webcontents = WebContent::all()->first();
@@ -233,30 +247,26 @@ class WebContentController extends Controller
     }
     public function storeContact(Request $request){
         // dd($request->all());
-        $validated = Validator::make($request->input(), [
+        $validated = $request->validate([
             'person' => ['required'],
             'contact_no' => ['required'],
             'email' => ['required', 'email'],
-            'facebook_username' => ['required', 'regex:/^[^\s]+$/'],
+            'facebook_link' => ['required', 'url'],
             'whatsapp' => ['required'],
         ], [
             'person.required' => 'Required (Name of Person)',
             'contact_no.required' => 'Required (Contact No.)',
             'email.required' => 'Required (Email)',
-            'facebook_username.required' => 'Required (Facebook)',
-            'facebook_username.regex' => 'The facebook Username cannot contain spaces.',
+            'facebook_link.required' => 'Required (Facebook)',
+            'facebook_link.url' => 'This information does not URL.',
             'whatsapp.required' => 'Required (WhatsApp)',
         ]);
-        if($validated->fails()){
-            return back()->with('error', $validated->errors()->all())->withInput($validated->getData());
-        }
-        $validated = $validated->validate();
         $webcontents = WebContent::all()->firstOrFail();
         $contacts = $webcontents->contact ?? [];
         $contacts['other'][Str::camel($validated['person'])]['name'] = $validated['person'];
         $contacts['other'][Str::camel($validated['person'])]['contactno'][] = $validated['contact_no'];
         $contacts['other'][Str::camel($validated['person'])]['email'][] = $validated['email'];
-        $contacts['other'][Str::camel($validated['person'])]['fbuser'][] = $validated['facebook_username'];
+        $contacts['other'][Str::camel($validated['person'])]['fbuser'][] = $validated['facebook_link'];
         $contacts['other'][Str::camel($validated['person'])]['whatsapp'][] = $validated['whatsapp'];
         
         if(isset($webcontents)) $save = $webcontents->update(['contact' => $contacts]);
@@ -335,9 +345,12 @@ class WebContentController extends Controller
         if($request->has('contact')){
             $validate = Validator::make($request->input(), [
                 'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
-            ]);
+            ], ['contact.required' => 'Contact Required']);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
+            foreach($contact['other'][$key]['contactno'] as $contactno){
+                if($validate['contact'] == $contactno) return back()->with('error', 'The Contact No. already Same ('.$validate['contact'].')')->withInput($validate);
+            }
             $contact['other'][$key]['contactno'][] = $validate['contact'];
             $message =  $contact['other'][$key]['name'] . ' Contact No. was Added';
 
@@ -345,20 +358,26 @@ class WebContentController extends Controller
         if($request->has('email')){
             $validate = Validator::make($request->input(), [
                 'email' => ['email', 'required'],
-            ]);
+            ], ['email.required' => 'Email Required']);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
+            foreach($contact['other'][$key]['email'] as $email){
+                if($validate['email'] === $email) return back()->with('error', 'The Email already Same ('.$validate['email'].')')->withInput($validate);
+            }
             $contact['other'][$key]['email'][] = $validate['email'];
             $message =  $contact['other'][$key]['name'] . ' Email Address was Added';
         }
-        if($request->has('facebook_username')){
+        if($request->has('facebook_link')){
             $validate = Validator::make($request->input(), [
-                'facebook_username' => ['required'],
-            ]);
+                'facebook_link' => ['required', 'url'],
+            ], ['facebook_link.required' => 'Link Required', 'facebook_link.url' => 'Facebook Link does not URL']);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
-            $contact['other'][$key]['fbuser'][] = $validate['facebook_username'];
-            $message =  $contact['other'][$key]['name'] . ' Facebook Username was Added';
+            foreach($contact['other'][$key]['fbuser'] as $fbuser){
+                if($validate['facebook_link'] === $fbuser) return back()->with('error', 'The Facebook Link already Same')->withInput($validate);
+            }
+            $contact['other'][$key]['fbuser'][] = $validate['facebook_link'];
+            $message =  $contact['other'][$key]['name'] . ' Facebook Link was Added';
 
         }
         if($request->has('whatsapp')){
@@ -367,6 +386,9 @@ class WebContentController extends Controller
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
+            foreach($contact['other'][$key]['whatsapp'] as $whatsapp){
+                if($validate['whatsapp'] === $whatsapp) return back()->with('error', 'The WhatsApp Number already Same ('.$validate['whatsapp'].')')->withInput($validate);
+            }
             $contact['other'][$key]['whatsapp'][] = $validate['whatsapp'];
             $message =  $contact['other'][$key]['name'] . ' WhatsApp Contact No. was Added';
         }
@@ -376,6 +398,7 @@ class WebContentController extends Controller
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
+            if($contact['other'][$key]['name'] === $validate['name']) return back()->with('error', 'The Name already Same ('.$validate['name'].')')->withInput($validate);
             $contact['other'][$key]['name'] = $validate['name'];
             $message =  $contact['other'][$key]['name'] . ' was updated the name';
         }
@@ -385,18 +408,18 @@ class WebContentController extends Controller
         $key = decrypt($key);
         $webcontents = WebContent::all()->first();
         if(!array_key_exists($key, $webcontents->contact['other'])) abort(404);
-        $contact = $webcontents->contact;
+        $contact = $webcontents->contact ?? [];
         if($request->has('rcontact')){
             $validate = Validator::make($request->input(), [
                 'rcontact' => ['required'],
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
+            $message =  $contact['other'][$key]['name'] . ' was remove some contact no.';
             foreach($validate['rcontact'] as $id => $item){
                 $id = decrypt($id);
-                if(isset($contact[$key]['contactno'][$id])) unset($contact['other'][$key]['contactno'][$id]);
+                if(isset($contact['other'][$key]['contactno'][$id])) unset($contact['other'][$key]['contactno'][$id]);
             }
-            $message =  $contact[$key]['name'] . ' was remove some contact no.';
         }
         if($request->has('remail')){
             $validate = Validator::make($request->input(), [
@@ -404,11 +427,11 @@ class WebContentController extends Controller
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
+            $message =  $contact['other'][$key]['name'] . ' was remove some email';
             foreach($validate['remail'] as $id => $item){
                 $id = decrypt($id);
                 if(isset($contact['other'][$key]['email'][$id])) unset($contact['other'][$key]['email'][$id]);
             }
-            $message =  $contact['other'][$key]['name'] . ' was remove some email';
         }
         if($request->has('rfb')){
             $validate = Validator::make($request->input(), [
@@ -416,11 +439,11 @@ class WebContentController extends Controller
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
+            $message =  $contact['other'][$key]['name'] . ' was remove some item facebook user';
             foreach($validate['rfb'] as $id => $item){
                 $id = decrypt($id);
                 if(isset($contact['other'][$key]['fbuser'][$id])) unset($contact['other'][$key]['fbuser'][$id]);
             }
-            $message =  $contact['other'][$key]['name'] . ' was remove some item facebook user';
         }
         if($request->has('rwapp')){
             $validate = Validator::make($request->input(), [
@@ -428,11 +451,11 @@ class WebContentController extends Controller
             ]);
             if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput($validate->getData());
             $validate = $validate->validate();
+            $message =  $contact['other'][$key]['name'] . ' was remove some WhatsApp Contact No';
             foreach($validate['rwapp'] as $id => $item){
                 $id = decrypt($id);
                 if(isset($contact['other'][$key]['whatsapp'][$id])) unset($contact[$key]['whatsapp'][$id]);
             }
-            $message =  $contact['other'][$key]['name'] . ' was remove some WhatsApp Contact No';
         }
         if($webcontents->update(['contact' => $contact])) return redirect()->route('system.webcontent.contact.show', encrypt($key))->with('success', $message);
     }
@@ -460,17 +483,18 @@ class WebContentController extends Controller
     public function storeOperations(Request $request){
         // dd( $request->all());
         $webcontents = WebContent::all()->first();
-        $passcode = Validator::make($request->all('passcode'), [
-            'passcode' => ['required', 'digits:4', 'numeric'],
-        ]);
-        if($passcode->fails()) return back()->with('error', $passcode->errors()->all());
-        if(!Hash::check($passcode->validate()['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
         if(!$request->has('operation')){
-            $validated = $request->validate([
+            $validated = Validator::make($request->all(), [
                 'from' => ['required', 'date',  'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->format('Y-m-d')],
                 'to' => ['required', 'date',  'date_format:Y-m-d', 'after_or_equal:'.$request['from']],
                 'reason' => ['required'],
+            ], [
+                'date' => 'Requires Date Only',
+                'from.required' => 'The Start Date are Required',
+                'to.required' => 'The End Date are Required',
             ]);
+            if($validated->fails()) return redirect()->route('system.webcontent.home', '#reservation')->withErrors($validated->errors());
+            $validated = $validated->validate();
             $validated['operation'] = false;
         }
         else{
@@ -503,7 +527,7 @@ class WebContentController extends Controller
         if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
         $validate = $request->validate([
             'gcash_number' => ['required', 'numeric', 'min:10'],            'name' => ['required'],
-            'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
+            'image' =>  ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
         ]);
         $payments = $webcontents->payment ?? [];
         if(count( $payments['gcash']) === 0) $gcp = true;
@@ -557,28 +581,22 @@ class WebContentController extends Controller
         $validate = $validate->validate();
         if(!Hash::check($validate['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode');
         $validate = $request->validate([
-            'gcash_number' => ['required', 'numeric', 'min:10'],            'name' => ['required'],
-            'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
+            'gcash_number' => ['required', 'numeric', 'min:10'],            
+            'name' => ['required'],
+            'image_clear' =>  ['required'],
+            'image' =>  Rule::when($request->has('image_clear') && (bool)$request['image_clear'] == 1, ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024']),
         ]);
         $payments = $webcontents->payment ?? [];
+        $payments['gcash'][$key] =  [
+            'name' => $validate['name'],
+            'number' => $validate['gcash_number'],
+            'qrcode' => $payments['gcash'][$key]['qrcode'],
+            'priority' => $payments['gcash'][$key]['priority'],
+        ];
         if($request->hasFile('image')){       
             if(isset($payments['gcash'][$key]['qrcode'])) deleteFile($payments['gcash'][$key]['qrcode']);
             $validate['image'] = saveImageWithJPG($request, 'image', 'ref_gcash', 'private');
-            $payments['gcash'][$key] =  [
-                'name' => $validate['name'],
-                'number' => $validate['gcash_number'],
-                'qrcode' => $validate['image'],
-                'priority' => $payments['gcash'][$key]['priority'],
-            ];
-        }
-        else{
-            $payments['gcash'][$key] =  [
-                'name' => $validate['name'],
-                'number' => $validate['gcash_number'],
-                'qrcode' => $payments['gcash'][$key]['qrcode'],
-                'priority' => $payments['gcash'][$key]['priority'],
-
-            ];
+            $payments['gcash'][$key]['qrcode'] = $validate['image'];
         }
         if(isset($webcontents)){
             $updated = $webcontents->update(['payment' => $payments]);
@@ -586,7 +604,7 @@ class WebContentController extends Controller
         else{
             $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference ('.$validate['name'].') was updated');
+        if($updated) return redirect()->back()->with('success', 'Gcash Payment Reference ('.$validate['name'].') was updated');
 
         // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
     }
@@ -634,7 +652,7 @@ class WebContentController extends Controller
             'name' => ['required'],
             'email' => ['required', 'email'],
             'username' => ['required'],
-            'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
+            'image' =>  ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
         ]);
         $payments = $webcontents->payment ?? [];
         if(count( $payments['paypal']) === 0) $ppp = true;
@@ -697,34 +715,25 @@ class WebContentController extends Controller
             'name' => ['required'],
             'email' => ['required', 'email'],
             'username' => ['required'],
-            'image' =>  ['image', 'mimes:jpeg,png,jpg', 'max:5024'],
+            'image_clear' =>  ['required'],
+            'image' => Rule::when($request->has('image_clear') && (bool)$request['image_clear'] == 1, ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5024']),
         ]);
         $payments = $webcontents->payment ?? [];
+        $payments['paypal'][$key] =  [
+            'name' => $validate['name'],
+            'number' => $validate['paypal_number'],
+            'email' => $validate['email'],
+            'username' => $validate['username'],
+            'image' => $payments['paypal'][$key]['image'],
+            'priority' => $payments['paypal'][$key]['priority'],
+
+        ];
         if($request->hasFile('image')){                          // storage/app/logos
             $validate['image'] = saveImageWithJPG($request, 'image', 'ref_paypal', 'private');
             if(isset($payments['paypal'][$key]['image'])) deleteFile($payments['paypal'][$key]['image']);
-            $payments['paypal'][$key] =  [
-                'name' => $validate['name'],
-                'number' => $validate['paypal_number'],
-                'email' => $validate['email'],
-                'username' => $validate['username'],
-                'image' => $validate['image'],
-                'priority' => $payments['paypal'][$key]['priority'],
-
-            ];
+            $payments['paypal'][$key]['image'] = $validate['image'];
         }
-        else{
-            $payments['paypal'][$key] =  [
-                'name' => $validate['name'],
-                'number' => $validate['paypal_number'],
-                'email' => $validate['email'],
-                'username' => $validate['username'],
-                'image' => $payments['paypal'][$key]['image'],
-                'priority' => $payments['paypal'][$key]['priority'],
 
-            ];
-
-        }
         if(isset($webcontents)){
             $updated = $webcontents->update(['payment' => $payments]);
         }
@@ -907,7 +916,7 @@ class WebContentController extends Controller
     public function destroyPaymentBT(Request $request, $key){
         $key = decrypt($key);
         $webcontents = WebContent::all()->firstOrFail();
-        if(!array_key_exists($key, $webcontents->payment['paypal'] ?? [])) abort(404);
+        if(!array_key_exists($key, $webcontents->payment['bankTransfer'] ?? [])) abort(404);
         $validate = Validator::make($request->all(), [
             'passcode' => ['required', 'numeric', 'digits:4'],
         ]);

@@ -3,13 +3,13 @@
   {{ $details['title'] }}<br>
   {{ $details['body'] }}<br>
 
-  New Payment deadline {{ $details['payment_cutoff'] }}<br>
+  New Payment deadline: {{ $details['payment_cutoff'] }}
   
-  @if(isset($details['link']))
+  @if(!empty($details['link']))
     <x-mail::button :url="$details['link']">
         Send Again
     </x-mail::button>
   @endif
 
-  <br>Thank you<br>
+  Thank you<br>
 </x-mail::message>

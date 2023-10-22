@@ -16,6 +16,7 @@ class ProfileController extends Controller
     public function __construct()
     {
         $this->system_user = auth('system');
+        $this->middleware(['auth:system']);
     }
     public function index(){
         return view('system.profile.index',  ['activeSb' => 'Profile']);
@@ -63,7 +64,6 @@ class ProfileController extends Controller
         $updated = $system_user->update($validated);
         if($updated) return redirect()->route('system.profile.edit')->with('success', 'Your Avatar was updated');
     }
-
     public function password(){
         $system_user = System::findOrFail($this->system_user->user()->id);
         return view('system.profile.password',  ['activeSb' => 'Password', 'systemUser' => $system_user]);

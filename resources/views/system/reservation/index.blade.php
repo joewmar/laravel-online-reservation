@@ -19,13 +19,13 @@
             <div class="mt-20 w-full" x-cloak>
                 <div class="tabs md:tabs-boxed md:bg-transparent flex justify-center md:justify-start">
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list']) )}}" class="tab {{!request()->has('tab') && request()->has('rtab') ? 'tab-active font-bold text-primary' : ''}}">All</a> 
-                    @if(!auth('system')->user()->type == 2)
+                    @if(!(auth('system')->user()->type == 2))
                         <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'pending']) )}}" class="tab {{request('tab') == 'pending' ? 'tab-active font-bold text-primary' : ''}}">Pending</a> 
                         <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'confirmed']))}}" class="tab {{request('tab') == 'confirmed' ? 'tab-active font-bold text-primary' : ''}}">Confirmed</a> 
                     @endif
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cin']))}}" class="tab {{request('tab') == 'cin' ? 'tab-active font-bold text-primary' : ''}}">Check-in</a> 
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cout']))}}" class="tab {{request('tab') == 'cout' ? 'tab-active font-bold text-primary' : ''}}">Check-out</a> 
-                    @if(!auth('system')->user()->type == 2)
+                    @if(!(auth('system')->user()->type == 2))
                         <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cancel']))}}" class="tab {{request('tab') == 'cancel' ? 'tab-active font-bold text-primary' : ''}}">Cancel</a> 
                         <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'reschedule']))}}" class="tab {{request('tab') == 'reschedule' ? 'tab-active font-bold text-primary' : ''}}">Reschedule</a>
                         <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'walkin']))}}" class="tab {{request('tab') == 'walkin' ? 'tab-active font-bold text-primary' : ''}}">Walk-in</a>

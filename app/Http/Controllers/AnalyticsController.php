@@ -12,25 +12,50 @@ class AnalyticsController extends Controller
 {
     public function index(Request $request)
     {
-        $customerCount = Archive::selectRaw('DATE(created_at) as daily, COUNT(DISTINCT id) as customer_count')
-            ->groupBy('daily')
-            ->orderBy('daily')
-            ->get()
-            ->map(function ($item) {
-                $formattedDate = Carbon::createFromFormat('Y-m-d', $item->daily)->format('M j, Y');
-                $item->formatted_date = $formattedDate;
-                return $item;
+        $currentDate = Carbon::today()->toDateString();
+        if(auth('system')->user()->type == 0){
+            $sales = Archive::selectRaw('DATE(created_at) as daily, SUM(total) as total_amount')
+                ->groupBy('daily')
+                ->orderBy('daily')
+                ->get()
+                ->map(function ($item) {
+                    $formattedDate = Carbon::createFromFormat('Y-m-d', $item->daily)->format('M j, Y');
+                    $item->formatted_date = $formattedDate;
+                    return $item;
+                });
+            $customerCount = Archive::selectRaw('DATE(created_at) as daily, COUNT(DISTINCT id) as customer_count')
+                ->groupBy('daily')
+                ->orderBy('daily')
+                ->get()
+                ->map(function ($item) {
+                    $formattedDate = Carbon::createFromFormat('Y-m-d', $item->daily)->format('M j, Y');
+                    $item->formatted_date = $formattedDate;
+                    return $item;
+                });
+        }
+        else{
+            $sales = Archive::selectRaw('DATE(created_at) as daily, SUM(total) as total_amount')
+                ->whereDate('created_at', $currentDate)
+                ->groupBy('daily')
+                ->orderBy('daily')
+                ->get()
+                ->map(function ($item) {
+                    $formattedDate = Carbon::createFromFormat('Y-m-d', $item->daily)->format('M j, Y');
+                    $item->formatted_date = $formattedDate;
+                    return $item;
             });
-        $sales = Archive::selectRaw('DATE(created_at) as daily, SUM(total) as total_amount')
-        ->groupBy('daily')
-        ->orderBy('daily')
-        ->get()
-        ->map(function ($item) {
-            $formattedDate = Carbon::createFromFormat('Y-m-d', $item->daily)->format('M j, Y');
-            $item->formatted_date = $formattedDate;
-            return $item;
-        });
-        if($request->has('type') && $request['type'] === "sales"){
+            $customerCount = Archive::selectRaw('DATE(created_at) as daily, COUNT(DISTINCT id) as customer_count')
+                ->whereDate('created_at', $currentDate)
+                ->groupBy('daily')
+                ->orderBy('daily')
+                ->get()
+                ->map(function ($item) {
+                    $formattedDate = Carbon::createFromFormat('Y-m-d', $item->daily)->format('M j, Y');
+                    $item->formatted_date = $formattedDate;
+                    return $item;
+                });
+        }
+        if($request->has('type') && $request['type'] === "sales" && auth('system')->user()->type == 0){
             if($request->has('tab') && $request['tab'] === "weekly" ){
                 $sales=  DB::table('archives')
                 ->selectRaw('YEAR(created_at) as year, WEEK(created_at) as week, SUM(total) as total_amount')
@@ -70,7 +95,7 @@ class AnalyticsController extends Controller
                 ->get();
             }
         }
-        if($request->has('type') && $request['type'] === "customer"){
+        if($request->has('type') && $request['type'] === "customer" && auth('system')->user()->type == 0){
             if ($request->has('tab') && $request['tab'] === "weekly") {
                 $customerCount = DB::table('archives')
                     ->selectRaw('YEAR(created_at) as year, WEEK(created_at) as week, COUNT(DISTINCT id) as customer_count')
@@ -111,6 +136,7 @@ class AnalyticsController extends Controller
             }
 
         }
+
         $nationalities = Archive::groupBy('nationality')->selectRaw('nationality, count(*) as count')->get();
         return view('system.analytics.index', ['activeSb' => 'Analytics', 'sales' => $sales ?? [], 'nationalities' => $nationalities, 'customerCount' => $customerCount]);
     }

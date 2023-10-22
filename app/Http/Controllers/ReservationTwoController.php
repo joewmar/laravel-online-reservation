@@ -27,9 +27,9 @@ class ReservationTwoController extends Controller
             ];
         }
         foreach($systems as $system){
-            if(isset($system->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard, 'bot2'));
+            if(isset($system->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard));
         }
-        Notification::send($systems, new SystemNotification(Str::limit($text, 10), $text, route('system.notifications')));
+        Notification::send($systems, new SystemNotification(Str::limit($text, 15), $text, route('system.notifications')));
     }
     public function gcash($id){
         $reservation = Reservation::findOrFail(decrypt($id));

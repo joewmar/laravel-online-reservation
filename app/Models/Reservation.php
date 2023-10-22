@@ -139,26 +139,28 @@ class Reservation extends Model
     {
         $total = 0;
         if(!empty($this->attributes['transaction'])) {
-            foreach(json_decode($this->attributes['transaction']) as $item) {
+            $transaction = json_decode($this->attributes['transaction'], true); 
+            foreach($transaction as $item) {
+                // dd($transaction);
                 if(is_array($item)){
-                    foreach($item as $value){
-                        $total += (double)$value->amount;
+                    foreach($item as $amount){
+                        if(isset($amount['amount'])){
+                            $total += (double)$amount['amount'];
+                        }
                     }
+                    
                 }
-                if(isset($item->amount)){
-                    $total += (double)$item->amount;
+                if(isset($item['amount'])){
+                    $total += (double)$item['amount'];
                 }
             }
-            return $total;
         }
-        else return $total;
+        return $total;
     }
     public function getServiceTotal()
     {
         $total = 0;
         if(!empty($this->attributes['transaction'])) {
-            // dd(json_decode($this->attributes['transaction'], true));
-
             foreach(json_decode($this->attributes['transaction'], true) as $key => $item) {
                 if(strpos($key, 'tm') !== false) $total += (double)$item['amount'];
                 if(strpos($key, 'OA') !== false) {

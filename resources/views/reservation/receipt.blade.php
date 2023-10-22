@@ -10,13 +10,16 @@
 @endphp
 <html>
 	<head>
-		<meta charset="utf-8">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>Digital Receipt</title>
 		<link rel="stylesheet" href="style.css">
 		<link rel="license" href="https://www.opensource.org/licenses/mit-license/">
 		<script src="script.js"></script>
 		<style>
+			@font-face {
+				font-family: DejaVu Sans;
+			}
 		/* reset */
 
 *
@@ -64,7 +67,7 @@ td { border-color: #DDD; }
 html { font: 16px/1 'Open Sans', sans-serif; overflow: auto; padding: 0.5in; }
 html { background: #999; cursor: default; }
 
-body { box-sizing: border-box; height: 11in; margin: 0 auto; overflow: hidden; padding: 0.5in; width: 8.5in; }
+body { box-sizing: border-box; margin: 0 auto; overflow: hidden; padding: 0.5in; font-family: DejaVu Sans; }
 body { background: #FFF; border-radius: 1px; box-shadow: 0 0 1in -0.25in rgba(0, 0, 0, 0.5); }
 
 /* header */
@@ -87,7 +90,7 @@ article:after { clear: both; content: ""; display: table; }
 article h1 { clip: rect(0 0 0 0); position: absolute; }
 
 article address { font-size: 125%; font-weight: bold; }
-article address > span{ font-size: 60%; font-weight: 500; }
+article address > span{ font-size: 60%; font-weight: normal; }
 
 /* Details */
 div.details {padding-top: 5%; margin-bottom: 3%;}
@@ -137,7 +140,9 @@ aside h1 { border-color: #999; border-bottom-style: solid; }
 	text-align: center;
 	width: 0.6em;
 }
-
+.pageb {
+    page-break-after: always;
+}
 .add, .cut
 {
 	background: #9AF;
@@ -177,32 +182,28 @@ tr:hover .cut { opacity: 1; }
 		<header>
 			<h1>Receipt</h1>
 			<img src="{{asset('images/logo.png')}}" alt="Logo" style="width: 15%">
-			<address style="margin-top: 17px">
-				<p>{{ str_replace('_', ' ', config('app.name'))}}</p>
+			<address>
+				<p style="font-weight: bold;">{{ str_replace('_', ' ', config('app.name'))}}</p>
 				<p>{{env('MAIN_ADDRESS')}} </p>
-				<p>{{env('MAIN_CONTACT_NUMBER')}} </p>
+				<p>{{$contacts['contactno'] ?? 'None'}} </p>
+				<p>{{$contacts['email'] ?? 'None'}} </p>
 			</address>
-			{{-- <span><img alt="" src="{{asset('images/logo.png')}}"></span> --}}
 		</header>
 		<article>
 
 			<table class="meta">
 				<tr>
 					<th><span >Invoice #</span></th>
-					<td><span>{{$r_list->id}}</span></td>
+					<td><span>{{str_replace('aar-','', $r_list->id)}}</span></td>
 				</tr>
 				<tr>
 					<th><span >Date</span></th>
 					<td><span >{{ \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $r_list->updated_at)->format('F j, Y') ?? 'None'}}</span></td>
 				</tr>	
 			</table>
-			<h1>Recipient</h1>
-			<address >
+			<address>
 				<p>{{$r_list->userReservation->name()}}<br></p>
 				<span>{{$r_list->age}} years old from {{$r_list->userReservation->country}}<br></span>
-				<div>
-
-				</div>
 			</address>
 			<div class="details">
 				<h5>Guest: <span>{{$r_list->pax . ' guest' ?? 'None'}}</span></h5>
@@ -244,8 +245,8 @@ tr:hover .cut { opacity: 1; }
 					<tbody>
 						<td><span>{{$rate['name']}}</span></td> 
 						<td><span>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</span></td> 
-						<td><span data-prefix>₱ </span><span>{{ number_format($rate['price'], 2)}}</span></td>
-						<td><span data-prefix>₱ </span><span>{{ number_format($rate['amount'], 2)}}</span></td>
+						<td><span data-prefix>&#x20B1; </span><span>{{ number_format($rate['price'], 2)}}</span></td>
+						<td><span data-prefix>&#x20B1; </span><span>{{ number_format($rate['amount'], 2)}}</span></td>
 					</tbody>
 				</table>
 			@endif
@@ -264,21 +265,18 @@ tr:hover .cut { opacity: 1; }
 							<tr>
 								<td><span >{{$item['title']}}</span></td>
 								<td><span>{{ $item['tpx'] }} guest</span></td>
-								<td><span data-prefix>₱ </span><span>{{ number_format($item['price'], 2)}}</span></td>
-								<td><span data-prefix>₱ </span><span>{{ number_format($item['amount'], 2)}}</span></td>
+								<td><span data-prefix>&#x20B1; </span><span>{{ number_format($item['price'], 2)}}</span></td>
+								<td><span data-prefix>&#x20B1; </span><span>{{ number_format($item['amount'], 2)}}</span></td>
 							</tr>
 						@endforeach
 					</tbody>
 				</table>
 			@endif
 			@if(!empty($other_addons))
-				<div class="details">
-					<h5>Additional</h5>
-				</div>
 				<table class="inventory">
 					<thead>
 						<tr>
-							<th><span >Addons</span></th>
+							<th><span >Addtional @if(count($other_addons) > 1) Items @else Item @endif</span></th>
 							<th><span >Quantity</span></th>
 							<th><span >Price</span></th>
 							<th><span >Amount</span></th>
@@ -289,8 +287,8 @@ tr:hover .cut { opacity: 1; }
 							<tr>
 								<td><span >{{$other['title']}}</span></td>
 								<td><span data-prefix></span><span>{{$other['pcs'] ?? 0}} pcs</span></td>
-								<td><span data-prefix>₱ </span><span>{{ number_format($other['price'], 2)}}</span></td>
-								<td><span data-prefix>₱ </span><span>{{ number_format($other['amount'], 2)}}</span></td>
+								<td><span data-prefix>&#x20B1; </span><span>{{ number_format($other['price'], 2)}}</span></td>
+								<td><span data-prefix>&#x20B1; </span><span>{{ number_format($other['amount'], 2)}}</span></td>
 							</tr>
 						@endforeach
 					</tbody>
@@ -300,27 +298,21 @@ tr:hover .cut { opacity: 1; }
 			<table class="balance">
 				<tr>
 					<th><span >{{$r_list->status < 3 ? 'Total' : 'Amount Paid'}}</span></th>
-					<td><span data-prefix>₱ </span><span>{{number_format($r_list->getTotal(), 2)}}</span></td>
+					<td><span data-prefix>&#x20B1; </span><span>{{number_format($r_list->getTotal(), 2)}}</span></td>
 				</tr>
 				<tr>
 					<th><span >Downpayment</span></th>
-					<td><span data-prefix>₱ </span><span>{{number_format($r_list->downpayment() ?? 0, 2)}}</span></td>
+					<td><span data-prefix>&#x20B1; </span><span>{{number_format($r_list->downpayment() ?? 0, 2)}}</span></td>
 				</tr>
 				<tr>
 					<th><span >Check-in Paid</span></th>
-					<td><span data-prefix>₱ </span><span>{{number_format($r_list->checkInPayment() ?? 0, 2)}}</span></td>
+					<td><span data-prefix>&#x20B1; </span><span>{{number_format($r_list->checkInPayment() ?? 0, 2)}}</span></td>
 				</tr>
 				<tr>
 					<th><span >Check-out Paid</span></th>
-					<td><span data-prefix>₱ </span><span>{{number_format($r_list->checkOutPayment() ?? 0, 2)}}</span></td>
+					<td><span data-prefix>&#x20B1; </span><span>{{number_format($r_list->checkOutPayment() ?? 0, 2)}}</span></td>
 				</tr>
 			</table>
 		</article>
-		<aside>
-			<h1><span >Contact us</span></h1>
-			<div >
-				<p align="center">Email :- {{$contacts['email'] ?? 'None'}} || Web :- www.bognotlodge.com || Phone :- {{$contacts['contactno'] ?? 'None'}} </p>
-			</div>
-		</aside>
 	</body>
 </html>

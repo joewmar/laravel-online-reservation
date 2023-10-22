@@ -24,7 +24,7 @@
                         <th>{{$notif->data['title']}}</th>
                         <td>{{ Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $notif->created_at,)->setTimezone('Asia/Manila')->format('M j, Y g:ia')}}</td>
                         <td>
-                            <label for="Notif{{$loop->index+1}}" class="btn btn-primary btn-sm">
+                            <label for="Notif{{$loop->index+1}}" class="btn btn-ghost btn-circle btn-sm">
                               <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/></svg>
                             </label>
                         </td>
@@ -46,6 +46,7 @@
                   @method('DELETE')
                   <p class="py-4 whitespace-pre-line">{{$notif->data['message']}}</p>
                   <div class="modal-action">
+                      <a href="{{$notif->data['link']}}" class="btn btn-primary btn-sm">Go</a>
                       <button class="btn btn-error btn-sm">Mark as Read</button>
                   </div>
               </form>

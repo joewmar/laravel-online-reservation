@@ -9,7 +9,7 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="{{$contact[$key]['name']}}'s Contact Information">
         <div class="flex justify-end mt-5">
-            <x-modal id="update_name" title="Change Name">
+            <x-modal id="update_name" title="Change Name" noBottom>
                 <form id="update_name_form" action="{{route('system.webcontent.contact.update', encrypt($key))}}" method="post">
                     @csrf
                     @method('PUT')
@@ -19,13 +19,13 @@
                     </div>
                 </form>
             </x-modal>   
-            <label for="update_name" class="btn btn-primary">Change Name</label>
+            <label for="update_name" class="btn btn-primary btn-sm md:btn-md">Change Name</label>
         </div>
-        <section class="p-6 flex justify-center">
-            <div class="w-96">
+        <section class="p-6 px-10 flex justify-center">
+            <div class="w-full md:w-96">
                     <article class="prose">
                         <div>
-                            <x-modal id="add_contact" title="Add Contact No.">
+                            <x-modal id="add_contact" title="Add Contact No." noBottom>
                                 <form id="add_contact_form" action="{{route('system.webcontent.contact.update', encrypt($key))}}" method="post">
                                     @csrf
                                     @method('PUT')
@@ -37,12 +37,12 @@
                             </x-modal>
                             <h3>
                                 Contact Numbers: 
-                                <x-tooltip title="Add Contact No." color="primary">
+                                <x-tooltip title="Add Contact No." color="primary" width="">
                                     <label for="add_contact" class="btn btn-ghost btn-circle">
                                         <i class="fa-solid fa-plus"></i>
                                     </label> 
                                 </x-tooltip>
-                                <x-tooltip title="Remove Contact No." color="error">
+                                <x-tooltip title="Remove Contact No." color="error" width="">
                                     <label for="remove_contact" class="btn btn-ghost btn-circle">
                                         <i class="fa-solid fa-trash"></i>
                                     </label> 
@@ -58,7 +58,7 @@
                             
                         </div>
                         <div>
-                            <x-modal id="add_email" title="Add Email Address">
+                            <x-modal id="add_email" title="Add Email Address" noBottom>
                                 <form id="add_email_form" action="{{route('system.webcontent.contact.update', encrypt($key))}}" method="post">
                                     @csrf
                                     @method('PUT')
@@ -70,12 +70,12 @@
                             </x-modal>
                             <h3>
                                 Email
-                                <x-tooltip title="Add Email Address" color="primary">
+                                <x-tooltip title="Add Email Address" color="primary" width="">
                                     <label for="add_email" class="btn btn-ghost btn-circle">
                                         <i class="fa-solid fa-plus"></i>
                                     </label> 
                                 </x-tooltip>
-                                <x-tooltip title="Remove Email" color="error">
+                                <x-tooltip title="Remove Email" color="error" width="">
                                     <label for="remove_email" class="btn btn-ghost btn-circle">
                                         <i class="fa-solid fa-trash"></i>
                                     </label> 
@@ -83,31 +83,31 @@
                             </h3>
                             <ul class="marker:text-primary">
                                 @forelse ($email as $item)
-                                    <li>{{$item}}</li>
+                                    <li><a target="_blank" href="https://mail.google.com/mail/?view=cm&fs=1&to={{$item}}">{{$item}}</a></li>
                                 @empty
                                     <li>No Email Address</li>
                                 @endforelse
                             </ul>
                         </div>
                         <div>
-                            <x-modal id="add_facebook" title="Add Facebook Link">
+                            <x-modal id="add_facebook" title="Add Facebook Link" noBottom>
                                 <form id="add_facebook_form" action="{{route('system.webcontent.contact.update', encrypt($key))}}" method="post">
                                     @csrf
                                     @method('PUT')
-                                    <x-input name="facebook_username" id="facebook_username" placeholder="Facebook Username" />
+                                    <x-input name="facebook_link" id="facebook_link" placeholder="Facebook Username" />
                                     <div class="modal-action">
-                                        <button @click="event.preventDefault(); document.getElementById('add_facebook_form').submit();" class="btn btn-primary">Add Facebook Username</button>
+                                        <button @click="event.preventDefault(); document.getElementById('add_facebook_form').submit();" class="btn btn-primary">Add Link</button>
                                     </div>
                                 </form>
                             </x-modal>
                             <h3>
                                 Facebook Link
-                                <x-tooltip title="Add Facebook Link" color="primary">
+                                <x-tooltip title="Add Facebook Link" color="primary" width="">
                                     <label for="add_facebook" class="btn btn-ghost btn-circle">
                                         <i class="fa-solid fa-plus"></i>
                                     </label> 
                                 </x-tooltip>
-                                <x-tooltip title="Remvoe Facebook User" color="error">
+                                <x-tooltip title="Remvoe Facebook User" color="error" width="">
                                     <label for="remove_fbuser" class="btn btn-ghost btn-circle">
                                         <i class="fa-solid fa-trash"></i>
                                     </label> 
@@ -115,14 +115,14 @@
                             </h3>
                             <ul class="marker:text-primary">
                                 @forelse ($facebook_user as $item)
-                                    <li><a href="https://www.facebook.com/{{$item}}">https://www.facebook.com/{{$item}}</a></li>
+                                    <li><a target="_blank" href="{{$item}}">{{$item}}</a></li>
                                 @empty
                                     <li>No Facebook Link</li>
                                 @endforelse
                             </ul>
                         </div>
                         <div>
-                            <x-modal id="add_whatsapp" title="Add WhatsApp Contact No.">
+                            <x-modal id="add_whatsapp" title="Add WhatsApp Contact No." noBottom >
                                 <form id="add_whatsapp_form" action="{{route('system.webcontent.contact.update', encrypt($key))}}" method="post">
                                     @csrf
                                     @method('PUT')
@@ -134,12 +134,12 @@
                             </x-modal>
                             <h3>
                                 WhatsApp Contact No.
-                                <x-tooltip title="Add WhatsApp Contact No." color="primary">
+                                <x-tooltip title="Add WhatsApp Contact No." color="primary" width="">
                                     <label for="add_whatsapp" class="btn btn-ghost btn-circle">
                                         <i class="fa-solid fa-plus"></i>
                                     </label> 
                                 </x-tooltip>
-                                <x-tooltip title="Remvoe WhatsApp Contact No." color="error">
+                                <x-tooltip title="Remvoe WhatsApp Contact No." color="error" width="">
                                     <label for="remove_wapp" class="btn btn-ghost btn-circle">
                                         <i class="fa-solid fa-trash"></i>
                                     </label> 
@@ -147,14 +147,14 @@
                             </h3>
                             <ul class="marker:text-primary">
                                 @forelse ($whatsApp as $item)
-                                    <li>{{$item}}</li>
+                                    <li><a target="_blank" rel="noopener noreferrer" href="https://wa.me/{{$item}}">{{$item}}</a></li>
                                 @empty
                                     <li>No WhatsApp Contact No.</li>
                                 @endforelse
                             </ul>
                         </div>
                     </article>
-                    <x-modal id="remove_contact" title="Select Contact What you Remove">
+                    <x-modal id="remove_contact" title="Select Contact What you Remove" noBottom >
                         <form x-data="{selectContact: []}" id="remove_contact_form" action="{{route('system.webcontent.contact.destroy.one', encrypt($personID))}}" method="post">
                             @csrf
                             @method('DELETE')
@@ -171,7 +171,7 @@
                             </div>
                         </form>
                     </x-modal>
-                    <x-modal id="remove_email" title="Select Email What you Remove">
+                    <x-modal id="remove_email" title="Select Email What you Remove" noBottom>
                         <form x-data="{selectEmail: []}" id="remove_email_form" action="{{route('system.webcontent.contact.destroy.one', encrypt($personID))}}" method="post">
                             @csrf
                             @method('DELETE')
@@ -188,7 +188,7 @@
                             </div>
                         </form>
                     </x-modal>
-                    <x-modal id="remove_fbuser" title="Select Email What you Remove">
+                    <x-modal id="remove_fbuser" title="Select Email What you Remove" noBottom>
                         <form x-data="{selectFBUser: []}" id="remove_fbuser_form" action="{{route('system.webcontent.contact.destroy.one', encrypt($personID))}}" method="post">
                             @csrf
                             @method('DELETE')
@@ -205,7 +205,7 @@
                             </div>
                         </form>
                     </x-modal>
-                    <x-modal id="remove_wapp" title="Select Email What you Remove">
+                    <x-modal id="remove_wapp" title="Select Email What you Remove" noBottom>
                         <form x-data="{selectWApp: []}" id="remove_wapp_form" action="{{route('system.webcontent.contact.destroy.one', encrypt($personID))}}" method="post">
                             @csrf
                             @method('DELETE')

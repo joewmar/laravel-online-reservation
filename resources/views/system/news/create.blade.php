@@ -4,12 +4,7 @@
         @csrf
         <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
           <div class="md:w-96 flex flex-col justify-center items-start">
-            <div class="avatar">
-              <div class="w-full p-3 border-2 border-dashed rounded-md border-primary text-neutral">
-                <img id="show_img" src="{{ asset('images/logo.png')}}" alt="Room Image" />
-              </div>
-            </div>
-            <x-file-input id="image" name="image" placeholder="Image" sup="*Optional"/>
+            <x-drag-drop id="image" name="image" title="News Image" noRequired />
           </div>
           <div x-data="{deadline: '{{old('deadline') ?? 'forever'}}'}" class="w-full md:w-96">
               <x-input type="text" id="title" name="title" placeholder="News Header"/>

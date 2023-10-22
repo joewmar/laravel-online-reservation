@@ -4,7 +4,7 @@
             @csrf
             <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
                 <div class="w-96">
-                    <x-drag-drop name="image" id="image" fileValue="{{asset('images/logo.png')}}" />
+                    <x-drag-drop name="image" title="QRCODE" id="image" fileValue="{{asset('images/logo.png')}}" />
                 </div>
                 <div class="w-full md:w-96">
                     <x-input type="text" id="name" name="name" placeholder="Gcash Name"/>

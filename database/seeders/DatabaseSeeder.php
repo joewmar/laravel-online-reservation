@@ -29,6 +29,17 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('123456789'),
             'valid_id' => 'valid_id/Valid_ID.sample.jpg',
         ]);
+        User::factory()->create([
+            'first_name' => 'Mark Nikko',
+            'last_name' => 'Tabelisma',
+            'birthday' => '2002-09-15',
+            'nationality' => 'Filipino',
+            'country' => 'Philippines',
+            'contact' => '09123456789',
+            'email'=> 'zelletabelisma@gmail.com',
+            'password' => Hash::make('369258147'),
+            'valid_id' => 'valid_id/Valid_ID.sample.jpg',
+        ]);
 
         if(env('FORCE_CREATE_USER') ?? false) User::factory(10)->create();
         

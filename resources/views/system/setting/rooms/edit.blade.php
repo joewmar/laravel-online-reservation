@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Edit {{$room_list->name}}" back>
+    <x-system-content title="Edit {{$room_list->name}}" back="{{route('system.setting.rooms.home')}}">
       <form id="update-form" method="POST" action=" {{ route('system.setting.rooms.update', encrypt($room_list->id)) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')

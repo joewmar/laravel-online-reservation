@@ -5,7 +5,7 @@
                 <form action="{{route('system.webcontent.image.gallery.update', encrypt($key))}}" method="post" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
-                    <x-drag-drop name="gallery_one" id="gallery_one" fileValue="{{asset('storage/'. $gallery[$key])}}" />
+                    <x-drag-drop name="gallery_one" id="gallery_one" fileValue="{{asset('storage/'. $gallery[$key])}}" noRequired />
                     <div class="flex justify-end space-x-3 mt-5">
                         <button class="btn btn-secondary">Change</button>
                         <label for="remove_modal" class="btn btn-error">Remove</label>

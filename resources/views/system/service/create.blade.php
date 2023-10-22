@@ -21,7 +21,7 @@
 @endphp
 
 <x-system-layout :activeSb="$activeSb">
-  <x-system-content title="Add Tour Menu" back=true>
+  <x-system-content title="Add Tour Menu" back="{{route('system.menu.home')}}">
     <div x-data="listEditor()"  class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
       <div x-init="init" class="w-full md:w-96">
         <div class="{{empty($service_menus) ? 'hidden': 'flex'}}">

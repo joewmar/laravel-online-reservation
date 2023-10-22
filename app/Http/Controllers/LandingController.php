@@ -20,7 +20,7 @@ class LandingController extends Controller
         $news = News::where('type', 0)->get() ?? [];
         $announcements = News::where('type', 1)->get() ?? [];
         $web_contents = WebContent::all()->first() ?? [];
-        $feedbacks = Feedback::whereBetween('rating', [3, 4, 5])->latest()->get() ?? [];
+        $feedbacks = Feedback::whereIn('rating', [3, 4, 5])->latest()->get() ?? [];
         $request->session()->flash('info', 'This Website are under testing and developing');
         return view('index', ['activeNav' => 'Home', 'news' => $news, 'web_contents' => $web_contents, 'announcements' => $announcements, 'feedbacks' => $feedbacks]);
     }
@@ -41,10 +41,7 @@ class LandingController extends Controller
         return view('landing.contact_us', ['activeNav' => 'Contact Us', 'contacts' => $contacts]);
     }
     public function demo(){
-        return view('landing.demo', [
-            'tour_lists' => TourMenuList::all(), 
-            'tour_category' => TourMenuList::distinct()->get('category'), 
-        ]);
+        return view('landing.demo');
     }
     // public function testing(){
     //     $reservation = Reservation::all()->firstOrFail();

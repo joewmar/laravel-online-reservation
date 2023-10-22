@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Room Setting" back>
+    <x-system-content title="Room Setting" back="{{route('system.setting.home')}}">
       <div class="mt-8 p-5">
         <div>
           <div class="flex justify-between items-center">

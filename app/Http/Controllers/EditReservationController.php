@@ -139,6 +139,26 @@ class EditReservationController extends Controller
 
         if($reservation->pax == $validate['pax'] && $reservation->status == $validate['status']){
             if(!Hash::check($validate['passcode'], $system_user->passcode)) return back()->with('error', 'Invalid Passcode');
+            if($validate['check_in'] != $reservation->check_in || $validate['check_out'] != $reservation->check_out){
+                $transaction = $reservation->transaction ?? [];
+                $reservation->check_in = $validate['check_in'];
+                $reservation->check_out = $validate['check_out'];
+                foreach($transaction as $key => $item){
+                    if (strpos($key, 'rid') !== false) {
+                        // dd('Working');
+                        $transaction[$key]['amount'] = (double)$transaction[$key]['price'] * $reservation->getNoDays();
+                        if(isset($transaction['payment']['discountPerson'])) {
+                            $discounted = (20 / 100) * (int)$transaction['payment']['discountPerson'];
+                            $discounted = (double)($transaction[$key]['amount'] * $discounted);
+                            $discounted = (double)($transaction[$key]['amount'] - $discounted);
+                            $transaction[$key]['orig_amount'] = $transaction[$key]['amount'];
+                            $transaction[$key]['amount'] = $discounted;
+                        } 
+                    }
+                }
+                $validate['transaction'] = $transaction;
+                $reservation->save();
+            }
             unset($validate['passcode']);
             $updated = $reservation->update($validate);
             if($updated) return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . ' Information was Updated');
@@ -166,12 +186,12 @@ class EditReservationController extends Controller
                 }
                 $message = $reservation->message ?? [];
                 foreach($message as $key => $item){
-                    if (strpos($key, 'cancel') !== false) unset($transaction[$key]);
-                    if (strpos($key, 'reschedule') !== false) unset($transaction[$key]);
+                    if (strpos($key, 'cancel') !== false) unset($message[$key]);
+                    if (strpos($key, 'reschedule') !== false) unset($message[$key]);
                 }
                 $validate['transaction'] = $transaction;
+                $validate['message'] = $message;
             }
-
             $updated = $reservation->update($validate);
             if($updated) {
                 $details = [
@@ -333,6 +353,7 @@ class EditReservationController extends Controller
                 foreach($item as $key => $tourAddons){
                     $tour_addons[$count]['id'] = $transKey;
                     $tour_addons[$count]['title'] = $tourAddons['title'];
+                    $tour_addons[$count]['created'] = Carbon::createFromFormat('YmdHis', $key)->format('M j, Y');
                     $tour_addons[$count]['tpx'] = $tourAddons['tpx'];
                     $tour_addons[$count]['price'] = $tourAddons['price'];
                     $tour_addons[$count]['amount'] = $tourAddons['amount'];
@@ -342,6 +363,7 @@ class EditReservationController extends Controller
                 foreach($item as $key => $tourAddons){
                     $other_addons[$count]['id'] = $transKey;
                     $other_addons[$count]['title'] = $tourAddons['title'];
+                    $other_addons[$count]['created'] = Carbon::createFromFormat('YmdHis', $key)->format('M j, Y g:ia');
                     $other_addons[$count]['pcs'] = $tourAddons['pcs'];
                     $other_addons[$count]['price'] = $tourAddons['price'];
                     $other_addons[$count]['amount'] = $tourAddons['amount'];

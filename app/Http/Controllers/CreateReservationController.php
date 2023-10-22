@@ -130,12 +130,119 @@ class CreateReservationController extends Controller
         }
     }
     public function create(){
+        return view('system.reservation.create.step0',  [
+            'activeSb' => 'Reservation', 
+        ]);
+    }
+    public function storeStep0(Request $request){
+        if($request->has('accommodation_type') && $request['accommodation_type'] === 'Day Tour') $request['check_out'] = $request['check_in'];
+        $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
+
+        $validator = null;
+        if($request['accommodation_type'] == 'Day Tour'){
+            $validator = Validator::make($request->all(), [
+                'check_in' => ['required', 'date', 'date_format:Y-m-d'],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in'], 'date_equals:'.$request['check_in']],
+                'accommodation_type' => ['required'],
+                'pax' => ['required', 'numeric', 'min:1'],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
+                'required' => 'Need fill up first',
+                'date_equals' => 'Choose only one day (Day Tour)',
+            ]);
+        }
+        elseif($request['accommodation_type'] == 'Overnight'){
+            $validator = Validator::make($request->all(), [
+                'check_in' => ['required', 'date', 'date_format:Y-m-d'],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)->format('Y-m-d')],
+                'accommodation_type' => ['required'],
+                'pax' => ['required', 'numeric', 'min:1'],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
+                'check_out.unique' => 'Sorry, this date is not available',
+                'required' => 'Need fill up first',
+                'check_out.after_or_equal' => 'Choose within 2 or 3 days (Overnight)',
+            ]);
+        }
+        elseif($request['accommodation_type'] == 'Room Only'){
+            $validator = Validator::make($request->all(), [
+                'check_in' => ['required', 'date', 'date_format:Y-m-d'],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in']],
+                'accommodation_type' => ['required'],
+                'pax' => ['required', 'numeric', 'min:1'],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
+                'check_out.unique' => 'Sorry, this date is not available',
+                'required' => 'Need fill up first',
+                'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     
+                'after' => 'The :attribute was already chose from (Check-in)',
+    
+            ]);
+        }
+        else{
+            return back()->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput($request->all());
+        }
+        if ($validator->fails()) {            
+            session(['ck' => false]);
+            return back()->withErrors($validator)->withInput($request->all());
+        }
+        $validated = $validator->validated();
+
+        $param = [
+            'cin' => $validated['check_in'],
+            'cout' => $validated['check_out'],
+            'at' => $validated['accommodation_type'],
+            'px' => $validated['pax'],
+        ];
+        $param = encryptedArray($param);
+
+        if(session()->has('nwrinfo')) {
+            $session = session('nwrinfo');
+            $session['cin'] = $param['cin'] ;
+            $session['cout'] = $param['cout'] ;
+            $session['at'] = $param['at'] ;
+            $session['px'] = $param['px'] ;
+            session(['nwrinfo' => $session]);
+        }
+        return redirect()->route('system.reservation.create.step.one', Arr::query($param));
+
+
+    }
+    public function step1(Request $request){
         $rooms = Room::all() ?? [];
         $rates = RoomRate::all() ?? [];
+        if(empty($request->query())) return redirect()->route('system.reservation.create');
+        $params = decryptedArray($request->query());
+        $roomReserved = [];
+        $r_lists = Reservation::where(function ($query) use ($params) {
+            $query->whereBetween('check_in', [$params['cin'], $params['cout']])
+                  ->orWhereBetween('check_out', [$params['cin'], $params['cout']])
+                  ->orWhere(function ($query) use ($params) {
+                      $query->where('check_in', '<=', $params['cin'])
+                            ->where('check_out', '>=', $params['cout']);
+                  });
+        })->whereBetween('status', [1, 2])->pluck('id');
+        
+        foreach($rooms as $key => $room){
+            $count_paxes = 0;
+            foreach($r_lists as $r_list){
+                $rs= Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->where('id', $room->id)->get();
+                foreach($rs as $room) $count_paxes += $room->customer[$r_list];
+            }
+            if($count_paxes >= $room->room->max_occupancy) {
+                $roomReserved[] = $room->id;
+            }
+
+        }
         return view('system.reservation.create.step1',  [
             'activeSb' => 'Reservation', 
             'rooms' => $rooms, 
             'rates' => $rates, 
+            'reserved' => $roomReserved, 
         ]);
     }
     public function storeStep1(Request $request){
@@ -217,130 +324,6 @@ class CreateReservationController extends Controller
             "user_days" => $noOfday ?? 1,
         ]);
     }
-    public function storeStep21(Request $request){
-        if(str_contains($request['check_in'], 'to')){
-            $dateSeperate = explode('to', $request['check_in']);
-            $request['check_in'] = trim($dateSeperate[0]);
-            $request['check_out'] = trim ($dateSeperate[1]);
-        }
-        if(str_contains($request['check_out'], ', ')){
-            $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
-            $request['check_out'] = $date->format('Y-m-d');
-        }
-        $request['check_in'] = Carbon::parse($request['check_in'] , 'Asia/Manila')->format('Y-m-d');
-        $request['check_out'] = Carbon::parse($request['check_out'] , 'Asia/Manila')->format('Y-m-d');
-        // Check out convertion word to date format
-
-        if(checkAvailRooms($request['pax'], $request['check_in'], $request['check_out'])){
-            return back()->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
-        }
-        $validated = null;
-        if($request['accommodation_type'] == 'Day Tour'){
-            $validated = $request->validate([
-                'status' => ['required', 'numeric'],
-                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out']],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
-                'accommodation_type' => ['required'],
-                'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
-                'pax' => ['required', 'numeric', 'min:1'],
-                'payment_method' => ['required'],
-            ], [
-                'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
-                'required' => 'Need fill up first',
-                'date_equals' => 'Choose only one day (Day Tour)',
-                'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',
-            ]);
-        }
-        elseif($request['accommodation_type'] == 'Overnight'){
-            $validated = $request->validate([
-                'status' => ['required', 'numeric'],
-                'check_in' => ['required', 'date', 'date_format:Y-m-d'],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(1)],
-                'accommodation_type' => ['required'],
-                'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
-                'pax' => ['required', 'numeric', 'min:1'],
-                'payment_method' => ['required'],
-            ], [
-                'check_in.unique' => 'Sorry, this date is not available',
-                'check_out.unique' => 'Sorry, this date is not available',
-                'required' => 'Need fill up first',
-                'tour_pax.max' => 'Sorry, You can choose who will going the tour based on your preference and the number of guests you have',
-                'check_out.after_or_equal' => 'Choose within 1 day and above (Overnight)',
-            ]);
-        }
-        elseif($request['accommodation_type'] == 'Room Only'){
-            $validated = $request->validate([
-                'status' => ['required', 'numeric'],
-                'check_in' => ['required', 'date', 'date_format:Y-m-d'],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d'],
-                'accommodation_type' => 'required',
-                'pax' => ['required', 'numeric', 'min:1'],
-                'payment_method' => ['required'],
-            ], [
-                'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
-                'check_out.unique' => 'Sorry, this date is not available',
-                'required' => 'Need fill up first',
-                'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     
-
-            ]);
-        }
-        else{
-            return back()->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput();
-        }
-        $encrypted = encryptedArray($validated);
-        if(!empty($validated['tour_pax']) &&  $validated['accommodation_type'] !== 'Room Only'){
-            $param = [
-                'rt' => $request['rt'],  
-                'rm' => $request['rm'],  
-                'st' => $encrypted['status'],  
-                'cin' => $encrypted['check_in'],  
-                'cout' => $encrypted['check_out'],  
-                'at' => $encrypted['accommodation_type'],  
-                'px' => $encrypted['pax'],  
-                'tpx' => $encrypted['tour_pax'],  
-                'py' => $encrypted['payment_method'],  
-            ];
-              if(session()->has('nwrinfo')) {
-                    $session = session('nwrinfo');
-                    $session['st'] =  $encrypted['status'];  
-                    $session['cin'] =  $encrypted['check_in'];  
-                    $session['cout'] =  $encrypted['check_out'];  
-                    $session['at'] =  $encrypted['accommodation_type'];  
-                    $session['px'] =  $encrypted['pax'];  
-                    $session['tpx'] =  $encrypted['tour_pax'];  
-                    $session['py'] =  $encrypted['payment_method'];
-                    session(['nwrinfo' => $session]);
-            }
-        }
-        else{
-            if(session()->has('nwrinfo')) {
-                $session = session('nwrinfo');
-                $session['st'] =  $encrypted['status'];  
-                $session['cin'] =  $encrypted['check_in'];  
-                $session['cout'] =  $encrypted['check_out'];  
-                $session['at'] =  $encrypted['accommodation_type'];  
-                $session['px'] =  $encrypted['pax'];  
-                $session['py'] =  $encrypted['payment_method'];
-                session(['nwrinfo' => $session]);
-            }
-            $session = [
-                "rt" => $request['rt'],
-                "rm" => $request['rm'],
-                'st' => $encrypted['status'],  
-                'cin' => $encrypted['check_in'],  
-                'cout' => $encrypted['check_out'],  
-                'at' => $encrypted['accommodation_type'],  
-                'px' => $encrypted['pax'],  
-                'py' => $encrypted['payment_method'],  
-              ];
-
-            session(['nwrinfo' => $session]);
-            return redirect()->route('system.reservation.create.step.three');
-        }
-        return redirect()->route('system.reservation.create.step.two', [Arr::query($param), '#tourmenu']);
-    }
     public function storeStep22(Request $request){
         if(empty($request['tour_menu'])) return back()->with('error', 'You have not selected anything in the cart yet. Please make a selection first.');
 
@@ -366,6 +349,7 @@ class CreateReservationController extends Controller
         return redirect()->route('system.reservation.create.step.three');
     }
     public function step3(Request $request){
+        
         return view('system.reservation.create.step3', [
             'activeSb' => 'Reservation', 
             'add_ons' => Addons::all(), 
@@ -375,11 +359,11 @@ class CreateReservationController extends Controller
         $validated = $request->validate([
             'qty.*' => Rule::when(!empty($request['qty']), ['required', 'numeric']),
         ]);
-        $encrypted = session('nwrinfo');
-        if($validated){
+        if(isset($validated['qty'])){
+            $encrypted = session('nwrinfo');
             $encrypted['qty'] = encrypt($validated['qty']);
+            session(['nwrinfo' => $encrypted]);
         }
-        session(['nwrinfo' => $encrypted]);
         return redirect()->route('system.reservation.create.step.four');
 
     }

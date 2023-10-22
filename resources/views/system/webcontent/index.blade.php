@@ -17,9 +17,9 @@
             <form id="hero-form" action="{{route('system.webcontent.image.hero')}}" method="post" class="col-span-full lg:col-span-3" enctype="multipart/form-data">                
               <div class="flex justify-between">
                 <p class="font-medium text-xl">Main Hero Photos</p>
-                <label for="add_pic_modal" class="btn btn-primary">Add Hero Picture</label>
+                <label for="add_pic_modal" class="btn btn-primary btn-sm md:btn-md">Add Hero Picture</label>
                   @csrf
-                  <x-modal id="add_pic_modal" title="Add Picture">
+                  <x-modal id="add_pic_modal" title="Add Picture" noBottom>
                     <x-drag-drop name="main_hero" id="main_hero" />
                     <div class="modal-action">
                       <button class="btn btn-primary">Add</button>
@@ -56,20 +56,20 @@
                               <label for="hero_modal{{$loop->index + 1}}" class="cursor-pointer">
                                 <div class="avatar">
                                   <div class="mask mask-squircle w-12 h-12">
-                                    <img src="{{asset('storage/'.$item)}}" alt="Avatar Tailwind CSS Component" />
+                                    <img src="{{asset('storage/'.$item)}}" alt="Main Hero {{str_replace('main_hero', '', $key)}}" />
                                   </div>
                                 </div>
                               </label>
                               <div>
-                                <div class="font-bold">Main Hero {{$loop->index + 1}}</div>
+                                <div class="font-bold">Main Hero {{str_replace('main_hero', '', $key)}}</div>
                               </div>
                             </div>
                           </td>
                           <td><a href="{{route('system.webcontent.image.hero.show', encrypt($key) )}}" class="btn btn-info btn-xs">View</a></td>
                         </tr>  
-                      {{-- <x-modal id="hero_modal{{$loop->index + 1}}" title="Main Hero {{$loop->index + 1}}">
-                          <img src="{{asset('storage/'.$item)}}" alt="Avatar Tailwind CSS Component" />
-                      </x-modal> --}}
+                      <x-modal id="hero_modal{{$loop->index + 1}}" title="Main Hero {{str_replace('main_hero', '', $key)}}" width>
+                          <img src="{{asset('storage/'.$item)}}" alt="Main Hero {{str_replace('main_hero', '', $key)}}" />
+                      </x-modal>
                     @empty
                         <tr><td class="text-center font-bold" colspan="2">No Hero Picture</td></tr>
                     @endforelse
@@ -88,9 +88,9 @@
             <form id="add_gallery" action="{{route('system.webcontent.image.gallery')}}" method="post" class="col-span-full lg:col-span-3" enctype="multipart/form-data">                
               <div class="flex justify-between">
                 <p class="font-medium text-xl">Gallery Photos</p>
-                <label for="add_gallery_modal" class="btn btn-primary">Add Gallery</label>
+                <label for="add_gallery_modal" class="btn btn-primary btm-sm md:btn-md">Add Gallery</label>
                   @csrf
-                  <x-modal id="add_gallery_modal" title="Add Picture" formID="add_gallery">
+                  <x-modal id="add_gallery_modal" title="Add Picture" formID="add_gallery" noBottom>
                     <x-drag-drop name="gallery" id="gallery" />
                     <div class="modal-action">
                       <button class="btn btn-primary">Add</button>
@@ -130,7 +130,7 @@
                                   </div>
                                 </div>
                               <div>
-                                <div class="font-bold">Gallery Photo {{$loop->index + 1}}</div>
+                                <div class="font-bold">Gallery Photo {{str_replace('gallery', '', $key)}}</div>
                               </div>
                             </div>
                           </td>
@@ -152,7 +152,7 @@
           <section x-data="{ctType: 'Main Contact'}" class="p-6">
             <div class="flex justify-between">
               <div class="flex justify-between">
-                <div class="w-96">
+                <div class="w-52 md:w-96">
                   <x-select name="wala" id="walaID" placeholder="Type of Contact Information" xModel="ctType" :value="['Main Contact', 'Other Contacts']" :title="['Main Contact', 'Other Contacts']" />
                 </div>
               </div>
@@ -196,10 +196,10 @@
                       <form action="{{route('system.webcontent.main.contact.update')}}" method="post">
                         @csrf
                         @method('PUT')
-                        <x-input type="email" name="email" placeholder="Email Address" value="{{$webcontents->contact['main']['email'] }}" />
-                        <x-input type="number"  name="contact" placeholder="Contact Number" value="{{$webcontents->contact['main']['contactno'] }}" />
-                        <x-input type="number" name="whatsapp_number" placeholder="WhatsApp Number" value="{{$webcontents->contact['main']['whatsapp'] }}" />
-                        <x-input type="url" name="facebook_link" placeholder="Facebook Link (Facebook Profile Page)" value="{{$webcontents->contact['main']['fbuser'] }}" />
+                        <x-input type="email" id="email" name="email" placeholder="Email Address" value="{{$webcontents->contact['main']['email'] }}" />
+                        <x-input type="number" id="contact" name="contact" placeholder="Contact Number" value="{{$webcontents->contact['main']['contactno'] }}" />
+                        <x-input type="number" id="whatsapp_number" name="whatsapp_number" placeholder="WhatsApp Number" value="{{$webcontents->contact['main']['whatsapp'] }}" />
+                        <x-input type="url" id="facebook_link" name="facebook_link" placeholder="Facebook Link (Facebook Profile Page)" value="{{$webcontents->contact['main']['fbuser'] }}" />
                         <div class="modal-action">
                           <button class="btn btn-primary">Save</button>
                         </div>
@@ -211,10 +211,10 @@
                 <x-modal id="addMCT_modal" title="Add Main Contact">
                   <form action="{{route('system.webcontent.main.contact.store')}}" method="post">
                     @csrf
-                    <x-input type="email" name="email" placeholder="Email Address" />
-                    <x-input type="number"  name="contact" placeholder="Contact Number" />
-                    <x-input type="number" name="whatsapp_number" placeholder="WhatsApp Number" />
-                    <x-input type="url" name="facebook_link" placeholder="Facebook Link (Facebook Profile Page)" />
+                    <x-input type="email" id="email" name="email" placeholder="Email Address" />
+                    <x-input type="number" id="contact"  name="contact" placeholder="Contact Number" />
+                    <x-input type="number" id="whatsapp_number" name="whatsapp_number" placeholder="WhatsApp Number" />
+                    <x-input type="url" id="facebook_link" name="facebook_link" placeholder="Facebook Link (Facebook Profile Page)" />
                     <div class="modal-action">
                       <button class="btn btn-primary">Add</button>
                     </div>
@@ -251,7 +251,7 @@
                           <td><a href="{{route('system.webcontent.contact.show', encrypt($key) )}}" class="btn btn-warning btn-xs">View</a></td>
                         </tr>  
                     @empty
-                        <tr><td class="text-center font-bold" colspan="2">No Contact Information</td></tr>
+                        <tr><td class="text-center font-bold" colspan="3">No Contact Information</td></tr>
                     @endforelse
                   </tbody>
         
@@ -266,12 +266,12 @@
           <section x-data="{type: 'Gcash'}" class="p-6">
             <article class="my-5">
               <div class="flex justify-between">
-                <div class="w-96">
-                  <x-select name="wala" id="walaID" placeholder="Type of Payment" xModel="type" :value="['Gcash', 'PayPal', 'Bank Transfer']" :title="['Gcash', 'Paypal', 'Bank Transfer']" />
+                <div class="w-52 md:w-96">
+                  <x-select name="wala" id="walaID" placeholder="Type of Payment" xModel="type" :value="['Gcash', 'PayPal', 'Bank Transfer']" :title="['Gcash', 'Paypal', 'Bank Transfer']" noRequired />
                 </div>
-                <a x-show="type === 'Gcash'" href="{{route('system.webcontent.create.payment.gcash')}}" class="btn btn-primary btn-xs md:btn-md" x-transition.1000ms>Add Gcash Reference</a>
-                <a x-show="type === 'PayPal'" href="{{route('system.webcontent.create.payment.paypal')}}" class="btn btn-primary btn-xs md:btn-md" x-transition.1000ms>Add PayPal Reference</a>
-                <a x-show="type === 'Bank Transfer'" href="{{route('system.webcontent.create.payment.bnktr')}}" class="btn btn-primary btn-xs md:btn-md" x-transition.1000ms>Add Bank Transfer Reference</a>
+                <a x-show="type === 'Gcash'" href="{{route('system.webcontent.create.payment.gcash')}}" class="btn btn-primary btn-sm md:btn-md" x-transition.1000ms>Add Gcash</a>
+                <a x-show="type === 'PayPal'" href="{{route('system.webcontent.create.payment.paypal')}}" class="btn btn-primary btn-sm md:btn-md" x-transition.1000ms>Add PayPal</a>
+                <a x-show="type === 'Bank Transfer'" href="{{route('system.webcontent.create.payment.bnktr')}}" class="btn btn-primary btn-sm md:btn-md" x-transition.1000ms>Add Bank Transfer</a>
               </div>
               <div x-show="type === 'Gcash' " x-data="{priorityGcash: ''}" class="overflow-x-auto" x-transition.1000ms>
                 <form id="remove_gcash_reference" action="{{route('system.webcontent.priority.payment.gcash')}}" method="post">
@@ -404,30 +404,29 @@
               <p class="font-medium text-xl">Reservation Operations</p>
               {{-- <a href="{{route('system.webcontent.contact.create')}}" class="btn btn-primary">Add Contact</a> --}}
             </div>
-            <form id="change-form" action="{{route('system.webcontent.reservation.operation')}}" method="post">
+            <form id="rsrvchfr" action="{{route('system.webcontent.reservation.operation')}}" method="post">
               @csrf
               @method('PUT')
-              <div x-data="{allow: {{$webcontents->operation ?? true}}}" class="my-5 w-96">
+              <div x-data="{allow: {{$webcontents->operation ?? true}}}" class="my-5 w-full">
                 <div class="my-3">
-                  <input type="checkbox" x-model="allow" name="operation" class="checkbox checkbox-primary" :checked="allow"/>
-                  <span>Allow to make online reservation</span> 
+                  <input id="al" type="checkbox" x-model="allow" name="operation" class="checkbox checkbox-primary" :checked="allow"/>
+                  <label for="al">Allow to make online reservation</label> 
                   @error('operation')
                       <p class="text-error">$message</p>
                   @enderror
                 </div>
                 <div x-show="!allow" x-transition>
                   <div class="py-5">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <x-datetime-picker type="date" name="from" id="from" placeholder="Date Stop Operation" class="flatpickr-reservation-one" value="{{$webcontents->from ?? Carbon\Carbon::now()->format('Y-m-d')}}" />
-                      <x-datetime-picker type="date" name="to" id="to" placeholder="Date Upto Stop Operation" class="flatpickr-reservation-one"  value="{{$webcontents->to ?? ''}}" />
-                    </div>
+                    <x-input type="date" name="from" id="from" placeholder="Start Date Stop Operation" value="{{$webcontents->from ?? Carbon\Carbon::now()->format('Y-m-d')}}" />
+                    <x-input type="date" name="to" id="to" placeholder="End Date Stop Operation" value="{{$webcontents->to ?? ''}}" />
                     <x-textarea name="reason" id="reason" placeholder="Reason to Stop Reservation?" value="{{$webcontents->reason ?? ''}}" />
                   </div>
                 </div>
-                <label for="change_modal" class="btn btn-primary">Save</label>
+                <label for="reservationchmdl" class="btn btn-primary">Save</label>
 
-                <x-passcode-modal title="Change Operation Confirmation" id="change_modal" formId="change-form" />        
               </div>
+              <x-modal title="Do you want to Change Operation" id="reservationchmdl" type="YesNo" formID="rsrvchfr" noBottom >        
+              </x-modal>        
             </form>
           </section>
         </template>

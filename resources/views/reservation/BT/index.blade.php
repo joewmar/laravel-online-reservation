@@ -43,7 +43,7 @@
                         <div class="camera"></div> 
                         <div class="display">
                             <div class="artboard artboard-demo phone-1"> 
-                                <img src="{{asset('images/payment/bank-transfer.png')}}" class="show_img w-full object-center" />
+                                <img src="{{asset('images/payment/bank-transfer.png')}}" class="show_img" />
                             </div>
                         </div>
                     </div>
@@ -64,7 +64,7 @@
                         <div class="camera"></div> 
                         <div class="display">
                             <div class="artboard artboard-demo phone-1"> 
-                                <img src="{{asset('images/payment/bank-transfer.png')}}" class="show_img w-full object-center" />
+                                <img src="{{asset('images/payment/bank-transfer.png')}}" class="show_img" />
                             </div>
                         </div>
                     </div>

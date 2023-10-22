@@ -172,27 +172,20 @@ class SystemReservationController extends Controller
     public function search(Request $request){
 
         $search = $request->input('query');
-        // Perform your search logic here
-        // For example, querying the database
         $names = [];
         if($search){
             $results = Reservation::whereHas('userReservation', function ($query) use ($search) {
                 $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%$search%"]);
             })->get();
-        }
-        else{
-            $results = Reservation::all();
-        }
-        foreach($results as $list){
-            $names[] = [
-                'title' => $list->userReservation->name(),
-                'link' => route('system.reservation.show', encrypt($list->id)),
-            ];
+            foreach($results as $list){
+                $names[] = [
+                    'title' => $list->userReservation->name(),
+                    'link' => route('system.reservation.show', encrypt($list->id)),
+                ];
+            }
         }
         return response()->json($names);
-        
-        return response()->json($results);
-        
+            
     }
     public function event(){
         if(!Auth::guard('system')->check()) abort(404);
@@ -254,6 +247,7 @@ class SystemReservationController extends Controller
 
             // Rate
             if (strpos($key, 'rid') !== false) {
+                // dd($item['amount']);
                 $rate['name'] = $item['title'];;
                 $rate['price'] = $item['price'];
                 $rate['amount'] = $item['amount'];
@@ -262,7 +256,6 @@ class SystemReservationController extends Controller
                 }
             }
             if (strpos($key, 'OA') !== false) {
-                dd(is_array($item));
                 if(is_array($item)){
                     foreach($item as $key => $value){
                         $other_addons[$count.'-'.$key]['title'] = $value['title'];

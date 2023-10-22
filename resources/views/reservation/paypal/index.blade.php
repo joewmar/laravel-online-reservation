@@ -110,7 +110,7 @@
                         <div class="camera"></div> 
                         <div class="display">
                             <div class="artboard artboard-demo phone-1"> 
-                                <img id="receipt" src="{{asset('images/payment/paypal-logo.png')}}" class="show_img" />
+                                <img src="{{asset('images/payment/paypal-logo.png')}}" class="show_img" />
                             </div>
                         </div>
                     </div>
@@ -131,7 +131,7 @@
                         <div class="camera"></div> 
                         <div class="display">
                             <div class="artboard artboard-demo phone-1"> 
-                                <img id="receipt" src="{{asset('images/payment/sample-gcash-receipt.jpg')}}" class="show_img h-full w-full object-center" />
+                                <img src="{{asset('images/payment/paypal-logo.png')}}" class="show_img" />
                             </div>
                         </div>
                     </div>

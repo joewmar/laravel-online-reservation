@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="">
+    <x-system-content title="" back="{{route('system.reservation.show', encrypt($r_list->id))}}">
         {{-- User Details --}}
         <div class="flex justify-between">
             <div>

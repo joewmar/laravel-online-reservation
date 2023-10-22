@@ -67,7 +67,7 @@
                                                 @if($item->getAllPax() === (int)$item->room->max_occupancy - 1)
                                                     <p x-show="!force" class="mt-1 text-xs font-bold text-error">There is only {{$item->getAllPax()}} guest</p>
                                                 @else
-                                                    <p x-show="!force" class="mt-1 text-sm font-medium ">{{$item->getAllPax() > 0 ? $item->getAllPax() . ' guest availed' : 'No guest'}} </p>
+                                                    <p x-show="!force" class="mt-1 text-sm font-medium ">{{$item->getAllPax() > 1 ? $item->getAllPax() . ' guest availed' : 'No guest'}} </p>
                                                 @endif
                                             </div>
                                         </div>

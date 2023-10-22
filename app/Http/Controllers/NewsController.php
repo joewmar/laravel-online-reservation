@@ -85,6 +85,7 @@ class NewsController extends Controller
             'date_from' => Rule::when($request['deadline'] === "limit", ['required', 'date', 'date_format:Y-m-d']),
             'date_to' => Rule::when($request['deadline'] === "limit", ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['date_from']]),
             'image' => ['nullable' ,'image', 'mimes:jpeg,png,jpg', 'max:5024'], 
+            'image_clear' => ['required', 'boolean'], 
         ], [
             'required' => 'Required Input',
             'image' => 'The file must be an image of type: jpeg, png, jpg',
@@ -95,6 +96,11 @@ class NewsController extends Controller
         if($request->hasFile('image')){  
             if($new->image) deleteFile($new->image);
             $validated['image'] = saveImageWithJPG($request, 'image', 'news', 'public');
+        }
+        if((bool)$validated['image_clear'] === true){  
+            deleteFile($new->image);
+            $new->image = null;
+            $new->save();
         }
         if($validated['deadline'] === 'limit'){
             $updated = $new->update([

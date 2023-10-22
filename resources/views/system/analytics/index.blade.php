@@ -3,15 +3,18 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @endpush
     <x-system-content title="Analytics">
+        <div id="sls" class="hidden"></div>
         <section>
-            <div class="flex justify-between my-5 w-full">
-                <h1 class="font-semibold text-xl md:text-2xl hidden md:block">Sales Report</h1>
-                <div class="tabs tabs-boxed bg-transparent">
-                    <a href="{{route('system.analytics.home')}}" class="{{request()->has('tab') ? 'tab' : 'tab tab-active'}}">Daily</a> 
-                    <a href="{{route('system.analytics.home', ['type=sales', 'tab=weekly'])}}" class="{{(request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'weekly' ? 'tab tab-active' : 'tab '}}">Weekly</a> 
-                    <a href="{{route('system.analytics.home', ['type=sales', 'tab=monthly'])}}" class="{{(request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'monthly' ? 'tab tab-active' : 'tab '}}">Monthly</a>
-                    <a href="{{route('system.analytics.home', ['type=sales', 'tab=yearly'])}}" class="{{(request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'yearly' ? 'tab tab-active' : 'tab '}}">Yearly</a>
-                </div>
+            <div class="block md:flex justify-between my-5 w-full">
+                <h1 class="font-semibold text-lg md:text-xl">Sales Report {{auth('system')->user()->type == 0 ? '' : 'Today'}}</h1>
+                @if (auth('system')->user()->type == 0)
+                    <div class="tabs tabs-boxed bg-transparent">
+                        <a href="{{route('system.analytics.home',  '#sls')}}" class="{{ request()->has('type') && request('type') === 'sales' && request()->has('tab') ? 'tab' : 'tab tab-active'}}">Daily</a> 
+                        <a href="{{route('system.analytics.home', ['type=sales', 'tab=weekly', '#sls'])}}" class="{{(request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'weekly' ? 'tab tab-active' : 'tab '}}">Weekly</a> 
+                        <a href="{{route('system.analytics.home', ['type=sales', 'tab=monthly', '#sls'])}}" class="{{(request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'monthly' ? 'tab tab-active' : 'tab '}}">Monthly</a>
+                        <a href="{{route('system.analytics.home', ['type=sales', 'tab=yearly', '#sls'])}}" class="{{(request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'yearly' ? 'tab tab-active' : 'tab '}}">Yearly</a>
+                    </div>
+                @endif
             </div>
             @if((request()->has('type') && request('type') === 'sales') && request()->has('tab') && request('tab') === 'weekly')
                 <div class="h-96">
@@ -163,8 +166,8 @@
                 </div>
             @endif
             <div class="divider"></div>
-            <h1 class="text-xl md:text-2xl font-semibold mb-5">Total of Customer: Nationality</h1>
-            <div class="flex flex-col items-center justify-center">
+            <h1 class="text-lg md:text-xl font-semibold mb-5">Total of Customer {{auth('system')->user()->type == 0 ? '' : 'Today'}}: Nationality</h1>
+            <div id="cuscount1" class="flex flex-col items-center justify-center">
                 <div class="w-full">
                     <canvas id="nationalityChart" width="400" height="400"></canvas>
                 </div>
@@ -202,14 +205,16 @@
                     });
                 </script>
             </div>
-            <div class="flex justify-between my-5 w-full">
-                <h1 class="text-xl md:text-2xl font-semibold mb-5">Total of Customer: Today</h1>
-                <div class="tabs tabs-boxed bg-transparent">
-                    <a href="{{route('system.analytics.home')}}" class="{{ request()->has('type') && request('type') === 'customer' && request()->has('tab') ? 'tab' : 'tab tab-active'}}">Daily</a> 
-                    <a href="{{route('system.analytics.home', ['type=customer', 'tab=weekly'])}}" class="{{ (request()->has('type') && request('type') === 'customer') && (request()->has('tab') && request('tab') === 'weekly') ? 'tab tab-active' : 'tab'}}">Weekly</a> 
-                    <a href="{{route('system.analytics.home', ['type=customer', 'tab=monthly'])}}" class="{{ (request()->has('type') && request('type') === 'customer') && (request()->has('tab') && request('tab')) === 'monthly' ? 'tab tab-active' : 'tab'}}">Monthly</a>
-                    <a href="{{route('system.analytics.home', ['type=customer', 'tab=yearly'])}}" class="{{ (request()->has('type') && request('type') === 'customer') && (request()->has('tab') && request('tab'))=== 'yearly' ? 'tab tab-active' : 'tab'}}">Yearly</a>
-                </div>
+            <div id="cuscount2" class="block md:flex justify-between my-5 w-full">
+                <h1 class="text-lg md:text-xl font-semibold mb-5">Total of Customer {{auth('system')->user()->type == 0 ? '' : 'Today'}}: Bar Graph</h1>
+                @if (auth('system')->user()->type == 0)
+                    <div class="tabs tabs-boxed bg-transparent">
+                        <a href="{{route('system.analytics.home', '#cuscount2')}}" class="{{ request()->has('type') && request('type') === 'customer' && request()->has('tab') ? 'tab' : 'tab tab-active'}}">Daily</a> 
+                        <a href="{{route('system.analytics.home', ['type=customer', 'tab=weekly', '#cuscount2'])}}" class="{{ (request()->has('type') && request('type') === 'customer') && (request()->has('tab') && request('tab') === 'weekly') ? 'tab tab-active' : 'tab'}}">Weekly</a> 
+                        <a href="{{route('system.analytics.home', ['type=customer', 'tab=monthly', '#cuscount2'])}}" class="{{ (request()->has('type') && request('type') === 'customer') && (request()->has('tab') && request('tab') === 'monthly') ? 'tab tab-active' : 'tab'}}">Monthly</a>
+                        <a href="{{route('system.analytics.home', ['type=customer', 'tab=yearly', '#cuscount2'])}}" class="{{ (request()->has('type') && request('type') === 'customer') && (request()->has('tab') && request('tab')=== 'yearly') ? 'tab tab-active' : 'tab'}}">Yearly</a>
+                    </div>
+                @endif
             </div>
             <div class="h-96">
                 <canvas id="dailyChartCount"></canvas>

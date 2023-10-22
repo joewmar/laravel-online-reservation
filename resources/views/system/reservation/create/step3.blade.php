@@ -1,5 +1,8 @@
 @php
     $addons = isset(session('nwrinfo')['qty']) ? decrypt(session('nwrinfo')['qty']) : old('qty');
+    if(session()->has('nwrinfo')){
+      $params = session('nwrinfo') ?? [];
+    }
 @endphp
 <x-system-layout :activeSb="$activeSb">
   <x-system-content title="Add Book (Addons)" back=true>
@@ -48,7 +51,11 @@
               </table>
           </div>
           <div class="flex justify-end">
-            <a @click="loader = true" href="{{route('system.reservation.create.step.two', Arr::query(["rt" =>  request('rt'), "rm" =>  request('rm'), "px" =>  request('px')]) ) }}" class="btn btn-ghost">Back</a>
+            @if (session()->has('nwrinfo') && decrypt(session('nwrinfo')['at']) == "Room Only")
+              <a @click="loader = true" href="{{route('system.reservation.create.step.one', Arr::query(["at" => $params['at'], "cin" =>  $params['cin'], "cout" =>  $params['cout'], "px" =>  $params['px']]) ) }}" class="btn btn-ghost">Back</a>
+            @else
+              <a @click="loader = true" href="{{route('system.reservation.create.step.two', Arr::query(["rt" =>  $params['rt'], "rm" => $params['rm'], "px" =>  $params['px'], "cin" =>  $params['cin'], "cout" =>  $params['cout'], "py" =>  $params['py'], "st" =>  $params['st'], "at" =>  $params['at'], "tpx" =>  $params['tpx']]) ) }}" class="btn btn-ghost">Back</a>
+            @endif
             <button class="btn btn-primary" @click="loader = true">Next</button>
         </div>
       </form>

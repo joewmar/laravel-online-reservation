@@ -68,6 +68,10 @@
    else{
         $arrSideBarItems = 
             [
+            "Home" => [
+                "icon" => "fa-solid fa-gauge",
+                "link" => route('system.home')
+            ],
             "Reservation" => [
                 "icon" => "fa-sharp fa-solid fa-book",
                 "link" => route('system.reservation.home'),

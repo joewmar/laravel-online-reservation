@@ -1,6 +1,6 @@
 
 <x-system-layout :activeSb="$activeSb">
-  <x-system-content title="Add Add-on" back=true>
+  <x-system-content title="Add Addon Item" back="{{route('system.menu.home', 'tab=addons')}}">
     <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
       <div class="w-full md:w-96">
         <form id="add-form" action=" {{ route('system.menu.addons.store')}}" method="post">

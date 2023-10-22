@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="" back=true>
+    <x-system-content title="" back="{{route('system.menu.home')}}">
       <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center px-10 md:px-0">
         <div class="w-full md:w-96">
           <article class="prose">

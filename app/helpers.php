@@ -134,7 +134,7 @@ function saveImageWithJPG(Request $request, $fieldName, $folderName,$option = 'p
         else $imageFile = $request->file($fieldName);
         
         // Generate a unique filename for the image
-        $imageName = Str::random(8) . '.jpg';
+        $imageName = Str::random(4). now()->format('YmdHis') . '.jpg';
         // Generate the full path where you want to save the image in the storage folder
         $destinationPath = $option . '/' . $folderName . '/' . $imageName;
         // Save the image using Intervention Image

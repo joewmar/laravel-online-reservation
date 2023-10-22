@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\SendTelegramMessage;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use App\Models\Room;
 use App\Models\System;
 use App\Models\Archive;
@@ -14,11 +15,11 @@ use Illuminate\Support\Str;
 use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use App\Jobs\SendTelegramMessage;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Validation\Validator as ValidationValidator;
 
 class MyReservationController extends Controller
 {   
@@ -339,8 +340,24 @@ class MyReservationController extends Controller
             $count++;
         }
         unset($count);
-        
-        return view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'tour_addons' => $tour_addons, 'other_addons' => $other_addons, 'rate' => $rate ?? null, 'rooms' => $rooms ?? [], 'contacts' => $contacts]);
+        // instantiate and use the dompdf class
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isFontSubsettingEnabled', true);
+        $dompdf = new Dompdf($options);
+
+        $dompdf->loadHtml(view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'tour_addons' => $tour_addons, 'other_addons' => $other_addons, 'rate' => $rate ?? null, 'rooms' => $rooms ?? [], 'contacts' => $contacts]));
+
+        // (Optional) Setup the paper size and orientation
+        $dompdf->setPaper('Legal');
+
+        // Render the HTML as PDF
+        $dompdf->render();
+
+        // Output the generated PDF to Browser
+        $dompdf->stream('AA'.str_replace('aar-','',$reservation->id).'.pdf', ['Attachment' => false]);
+        // return view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'tour_addons' => $tour_addons, 'other_addons' => $other_addons, 'rate' => $rate ?? null, 'rooms' => $rooms ?? [], 'contacts' => $contacts]);
     }
     public function updateDetails(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));

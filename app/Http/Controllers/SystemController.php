@@ -20,12 +20,15 @@ class SystemController extends Controller
     public function __construct()
     {
         $this->system_user = auth('system');
-        $this->middleware(['auth:system'])->except(['check', 'login']);
+        $this->middleware(function ($request, $next){
+            if(!($this->system_user->user()->type === 0)) abort(404);
+            return $next($request);
+        })->except(['check', 'login', 'logout', 'notifications', 'markAsRead', 'deleteOneNotif']);
 
     }
     private function systemNotification($text, $link = null){
         if($this->system_user->user()->type != 0){
-            $systems = System::whereBetween('type', [0, 1])->get();
+            $systems = System::where('type', 0)->get();
             $keyboard = null;
             if(isset($link)){
                 $keyboard = [
@@ -41,21 +44,7 @@ class SystemController extends Controller
         }
     }
     public function index(Request $request){
-        $employees  = System::paginate(5);
-        if($request->has('type') && $request['type'] != 'all'){
-            $employees  = System::where('type', '=', $request['type'])
-            ->paginate(5);
-        }
-        if(isset($request['search'])){
-            $names = explode(' ', $request['search']);
-
-            $firstName = $names[0];
-            $lastName = isset($names[1]) ? $names[1] : '';
-            $employees  = System::where('id', 'like', '%' .$firstName . '%')
-            ->where('last_name', 'like', '%' . $lastName . '%')
-            ->orWhere('last_name', 'like', '%' . $firstName . '%')
-            ->paginate(5);
-        }
+        $employees  = System::whereNot('id', auth('system')->user()->id)->paginate(5);
         return view ('system.setting.accounts.index',  ['activeSb' => 'Accounts', 'employees' => $employees]);
     }
     public function create(){
@@ -72,7 +61,18 @@ class SystemController extends Controller
 
     }
     public function search(Request $request){
-        return redirect()->route('system.setting.accounts.home', Arr::query(['search' => $request['search'], 'type' => $request['type']]));
+        $search = $request->input('query');
+        $names = [];
+        if(!empty($search)){
+            $results = System::whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%$search%"])->get();
+            foreach($results as $list){
+                $names[] = [
+                    'title' => $list->name(),
+                    'link' => route('system.setting.accounts.show', encrypt($list->id)),
+                ];
+            }
+        } 
+        return response()->json($names);
     }
     public function store(Request $request){
         $validated = $request->validate([
@@ -89,7 +89,7 @@ class SystemController extends Controller
         ], [
             'required' => 'Required to fill up this form'
         ]);
-        if($validated['telegram_username'] != null){
+        if(isset($validated['telegram_username']) && $validated['telegram_username'] != null){
             $chat_id = getChatIdByUsername($validated['telegram_username']) ;
             if($chat_id == null){
                 return back()->withErrors(['telegram_username' => 'Invalid Username or did not do it when typing in chat bots'])->withInput($validated);

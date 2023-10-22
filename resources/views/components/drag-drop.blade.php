@@ -37,7 +37,7 @@
       return {
         isDragging: false,
         imageData{{$id}}: '{{$fileValue ?? ''}}',
-        clearFile{{$id}}: false,
+        clearFile{{$id}}: 0,
         
         dragOver{{$id}}(event) {
           event.preventDefault();
@@ -58,7 +58,7 @@
         fileSelected{{$id}}(input) {
           const file = input.files[0];
           this.displayImage{{$id}}(file);
-          this.clearFile{{$id}} = false;
+          this.clearFile{{$id}} = 0;
         },
         
         displayImage{{$id}}(file) {
@@ -67,12 +67,12 @@
             this.imageData{{$id}} = reader.result;
           };
           reader.readAsDataURL(file);
-          this.clearFile{{$id}} = false;
+          this.clearFile{{$id}} = 0;
         },
         
         clearImage{{$id}}() {
           this.imageData{{$id}} = '';
-          this.clearFile{{$id}} = true;
+          this.clearFile{{$id}} = 1;
 
         },
       };

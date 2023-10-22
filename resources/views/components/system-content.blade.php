@@ -1,8 +1,8 @@
-@props(['title' => '', 'back' => false])
+@props(['title' => '', 'back' => ''])
 <div {{ $attributes->merge(['class' => 'h-auto items-center m-0 md:m-4 bg-base-100 shadow-md'])}}>
     <div class="w-full py-16 px-3  md:px-8">
-        @if($back)
-          <a href="{{URL::previous()}}" class="btn btn-ghost">
+        @if(!empty($back))
+          <a href="{{$back}}" class="btn btn-ghost">
             <i class="fa-solid fa-arrow-left"></i>
           </a>
         @endif

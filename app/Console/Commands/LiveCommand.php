@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use Carbon\Carbon;
+use App\Models\News;
+use App\Models\Room;
 use App\Models\User;
 use App\Models\System;
 use App\Models\WebContent;
@@ -13,7 +15,6 @@ use App\Models\OnlinePayment;
 use Illuminate\Console\Command;
 use App\Notifications\UserNotif;
 use App\Jobs\SendTelegramMessage;
-use App\Models\News;
 use Illuminate\Support\Facades\Mail;
 
 class LiveCommand extends Command
@@ -39,6 +40,7 @@ class LiveCommand extends Command
     {
         $system_user = System::whereIn('type', [0, 1])->get();
         $wb = WebContent::all()->first();
+        $rooms = Room::all();
         if(!empty($wb)){
             if(isset($wb->from) && Carbon::createFromFormat('Y-m-d', $wb->from, 'Asia/Manila')->timestamp <= Carbon::createFromFormat('Y-m-d', Carbon::now('Asia/Manila'))->timestamp){
                 $wb->update(['operation' => false]);
@@ -47,15 +49,15 @@ class LiveCommand extends Command
                 $wb->update(['operation' => true]);
             }
         }
-        foreach(Reservation::all() as $item){
+        foreach(Reservation::whereIn('status', [1, 2])->get() as $item){
             // Verify the deadline of payment then auto canceled
-            if(isset($item->payment_cutoff)){
+            if(!empty($item->payment_cutoff)){
                 if(Carbon::createFromFormat('Y-m-d H:i:s', $item->payment_cutoff)->timestamp <= Carbon::now('Asia/Manila')->timestamp && !($item->downpayment() >= 1000)){
                     $item->update(['status' => 5]);
                     $details = [
                         'name' => $item->userReservation->name(),
                         'title' => 'Reservation was Canceled',
-                        'body' => 'Your reservation has been canceled as you did not take time pay the downpayment. If you have any concerns, you can contact the owner or personnel.'
+                        'body' => 'Your reservation has been canceled that you did not take time pay the downpayment for reservation. If you have any concerns, you can contact the owner or personnel.'
                     ];
                     $text = 
                     "Cancel Reservation!\n" .
@@ -68,21 +70,20 @@ class LiveCommand extends Command
                     // Send Notification to 
                     $keyboard = [
                         [
-                            ['text' => 'View Details', 'url' => route('system.reservation.show', encrypt($item->id))],
+                            ['text' => 'View', 'url' => route('system.reservation.show', encrypt($item->id))],
                         ],
                     ];
-                    $item->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab' => 'canceled'])) ,$details['body'], $details, 'reservation.mail')));
+                    $item->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab' => 'cancel'])) ,$details['body'], $details, 'reservation.mail')));
                     foreach($system_user as $user){
                         if(!empty($user->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text, $keyboard));
                     }
+                    foreach($rooms as $room) $room->removeCustomer($item->id);
+                    
                     $this->info('Cancel due downpayment');
     
                 }
             }
             $checkInToday = Carbon::now()->format('Y-m-d') . ' 9:15pm' ;
-            // $this->info(Carbon::createFromFormat('Y-m-d', $item->check_in)->addDays(2)->timestamp);
-            // $this->info(Carbon::createFromFormat('Y-m-d g:ia', $checkInToday)->timestamp);
-            // $this->info(Carbon::createFromFormat('Y-m-d', $item->check_in)->addDays(2)->timestamp === Carbon::createFromFormat('Y-m-d g:ia', $checkInToday)->timestamp ? 'true' : 'false');
 
             // Verify the the not present on guesthouse then auto canceled
             if(Carbon::createFromFormat('Y-m-d', $item->check_in)->addDays(2)->timestamp <= Carbon::createFromFormat('Y-m-d g:ia', $checkInToday)->timestamp){
@@ -105,10 +106,11 @@ class LiveCommand extends Command
                         ['text' => 'View ', 'url' => route('system.reservation.show', encrypt($item->id))],
                     ],
                 ];
-                $item->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab' => 'canceled'])) ,$details['body'], $details, 'reservation.mail')));
+                $item->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab' => 'cancel'])) ,$details['body'], $details, 'reservation.mail')));
                 foreach($system_user as $user){
                     if(!empty($user->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $user->telegram_chatID, $text, $keyboard));
                 }
+                foreach($rooms as $room) $room->removeCustomer($item->id);
                 $this->info('Show up of customer');
             }
             // Notify of check in's (System)
@@ -176,7 +178,7 @@ class LiveCommand extends Command
                     'title' => 'Check-out Alert',
                     'body' => 'Be prepared due as your room stay time up. If you have any concerns, you can contact the owner or personnel.'
                 ];
-                $item->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($item->id)) ,$details['body'], $details, 'reservation.mail')));
+                $item->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab' => 'cin'])) ,$details['body'], $details, 'reservation.mail')));
                 $this->info('Check-out on User Notifcation ');
             }
         }
@@ -193,12 +195,12 @@ class LiveCommand extends Command
         }
         foreach(User::all() as $user){
             $rlist = Reservation::where('user_id', $user->id);
-            if($rlist->count() == 5){
+            if($rlist->count() >= 5){
                 $delete = $rlist->oldest('created_at')->first();
                 $delete->delete();
             }
         }
-        unset($checkInToday,  $keyboard, $text, $details,  $system_user, $webcontent, $reservations);
+        unset($checkInToday,  $keyboard, $text, $details,  $system_user, $wb, $rooms);
         $this->info('Live Application Updated');
 
     }

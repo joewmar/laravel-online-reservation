@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Add New Room" back>
+    <x-system-content title="Add New Room" back="{{route('system.setting.rooms.home')}}">
       <form id="add-form" action=" {{ route('system.setting.rooms.store') }}" method="post" enctype="multipart/form-data">
         @csrf
       <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center px-8 md:px-0">

@@ -5,7 +5,7 @@
             @method('PUT')
             <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
                 <div class="w-96">
-                    <x-drag-drop name="image" id="image" fileValue="{{isset($paypal[$key]['image']) ? route('private.image', ['folder' => explode('/', $paypal[$key]['image'])[0], 'filename' => explode('/', $paypal[$key]['image'])[1]]) : asset('images/logo.png')}}" alt="QR Code of {{$paypal[$key]['name']}}" />
+                    <x-drag-drop name="image" id="image" fileValue="{{isset($paypal[$key]['image']) ? route('private.image', ['folder' => explode('/', $paypal[$key]['image'])[0], 'filename' => explode('/', $paypal[$key]['image'])[1]]) : asset('images/logo.png')}}" alt="QR Code of {{$paypal[$key]['name']}}" noRequired />
                 </div>
                 <div class="w-full md:w-96">
                     <x-input type="text" id="name" name="name" placeholder="PayPal Name" value="{{$paypal[$key]['name']}}"/>

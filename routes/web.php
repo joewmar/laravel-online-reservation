@@ -176,14 +176,16 @@ Route::prefix('system')->name('system.')->group(function(){
 
             Route::controller(CreateReservationController::class)->group(function (){
                 Route::get('/create/step1', 'create')->name('create');
-                Route::post('/create/step1', 'storeStep1')->name('store.step.one');
-                Route::get('/create/step2', 'step2')->name('create.step.two');
-                Route::post('/create/step2-1', 'storeStep21')->name('store.step.two-one');
-                Route::post('/create/step2-2', 'storeStep22')->name('store.step.two-two');
-                Route::get('/create/step3', 'step3')->name('create.step.three');
-                Route::post('/create/step3', 'storeStep3')->name('store.step.three');
-                Route::get('/create/step4', 'step4')->name('create.step.four');
-                Route::post('/create/step4', 'storeStep4')->name('store.step.four');
+                Route::get('/create/step2', 'step1')->name('create.step.one');
+                Route::post('/create/step1', 'storeStep0')->name('store.step.zero');
+                Route::post('/create/step2', 'storeStep1')->name('store.step.one');
+                Route::get('/create/step3', 'step2')->name('create.step.two');
+                Route::post('/create/step3-1', 'storeStep21')->name('store.step.two-one');
+                Route::post('/create/step3-2', 'storeStep22')->name('store.step.two-two');
+                Route::get('/create/step4', 'step3')->name('create.step.three');
+                Route::post('/create/step4', 'storeStep3')->name('store.step.three');
+                Route::get('/create/step5', 'step4')->name('create.step.four');
+                Route::post('/create/step5', 'storeStep4')->name('store.step.four');
             });
             Route::controller(EditReservationController::class)->group(function (){
 
@@ -302,8 +304,9 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::delete('/{id}/delete', 'destroy')->name('destroy');
 
         });
-        Route::prefix('feedback')->name('feedback.')->group(function (){
-            Route::get('/', [FeedbackController::class, 'index'])->name('home');
+        Route::prefix('feedback')->name('feedback.')->controller(FeedbackController::class)->group(function (){
+            Route::get('/', 'index')->name('home');
+            Route::get('/search', 'search')->name('search');
         });
         Route::prefix('webcontent')->name('webcontent.')->controller(WebContentController::class)->middleware('can:admin')->group(function (){
             Route::get('/', 'index')->name('home');
@@ -381,7 +384,7 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::view('/', 'system.setting.index',  ['activeSb' => 'Setting'])->middleware('can:admin')->name('home');
             Route::prefix('accounts')->name('accounts.')->controller(SystemController::class)->middleware('can:admin')->group(function (){
                 Route::get('/', 'index')->name('home');
-                Route::post('/search', 'search')->name('search');
+                Route::get('/search', 'search')->name('search');
                 Route::get('/create', 'create')->name('create');
                 Route::post('/create/store', 'store')->name('create.store');
     
@@ -399,7 +402,7 @@ Route::prefix('system')->name('system.')->group(function(){
                 Route::post('/store', 'store')->name('store');
                 
                 // Room Rate Setting
-                Route::view('/rate/create', 'system.setting.rooms.rate.create',  ['activeSb' => 'Rooms'])->name('rate.create');
+                Route::get('/rate/create', 'createRate')->name('rate.create');
                 Route::post('/rate', 'storeRate')->name('rate.store');
 
                 // Room rate Setting ID's

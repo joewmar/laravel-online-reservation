@@ -1,17 +1,20 @@
 <x-system-layout :activeSb="$activeSb">
+    <x-loader />
     <x-system-content title="">
         {{-- User Details --}}
-        <x-profile :rlist="$r_list" />
-        <div class="flex px-8 justify-between">
-            <h1 class="font-bold text-xl">Payment: <span class="font-normal text-xl">{{$r_list->payment_method}}</span></h1>
-            @if(!($r_list->downpayment() >= 1000))
-                <label for="fpmdl" class="btn btn-warning btn-sm">
+        <div class="px-8 mb-5">
+            <x-profile :rlist="$r_list" />
+        </div>
+        <div class="block md:flex px-8 items-start justify-between">
+            <h1 class="font-bold text-sm md:text-xl">Payment: <span class="font-normal text-sm md:text-xl">{{$r_list->payment_method}}</span></h1>
+            <div class="flex flex-col items-end">
+                <label for="fpmdl" class="btn btn-warning btn-sm" {{$r_list->downpayment() >= 1000 ? 'disabled' : ''}}>
                     Force Payment
                 </label>
-            @else
-                <div class="text-error text-xs md:text-sm">Unable because your downpayment is more than ₱ 1,000.</div>
-
-            @endif
+                @if($r_list->downpayment() >= 1000)
+                    <div class="text-error text-[10px] md:text-sm text-right">Unable because your downpayment is more than ₱ 1,000.</div>
+                @endif 
+            </div>
             @if (!($r_list->downpayment() >= 1000))
                 <x-modal id="fpmdl" title="Force payment for {{$r_list->userReservation->name()}}">
                     <form id="frcpf" method="POST" action="{{route('system.reservation.online.payment.forcepayment.update', encrypt($r_list->id))}}" >
@@ -38,25 +41,25 @@
                             <div class="flex flex-col-reverse md:flex-row  justify-center items-center w-full h-full space-y-2 md:space-x-5">
                                 <div class="w-96 rounded my-5">
                                     @if($item->approval === 1)
-                                        <div class="text-4xl text-primary flex items-center space-x-3">
+                                        <div class="text-2xl md:text-4xl text-primary flex items-center space-x-3">
                                             <span><i class="fa-regular fa-face-smile"></i></span>
-                                            <span class="text-xl font-bold">Approved</span>
+                                            <span class="text-sm md:text-xl font-bold">Approved</span>
                                         </div>
                                     @endif
                                     @if($item->approval === 0)
-                                    <div class="text-4xl text-error flex items-center space-x-3">
+                                    <div class="text-2xl md:text-4xl text-error flex items-center space-x-3">
                                         <span><i class="fa-regular fa-face-frown"></i></i></span>
-                                            <span class="text-xl font-bold">Disapproved</span>
+                                            <span class="text-sm md:text-xl font-bold">Disapproved</span>
                                         </div>
                                     @endif
                                     @if($item->approval === 3)
-                                    <div class="text-4xl text-error flex items-center space-x-3">
+                                    <div class="text-2xl md:text-4xl text-error flex items-center space-x-3">
                                         <span><i class="fa-regular fa-face-frown"></i></i></span>
-                                            <span class="text-xl font-bold">Partial Approve</span>
+                                            <span class="text-sm md:text-xl font-bold">Partial Approve</span>
                                         </div>
                                     @endif
                                     <div class="flex justify-between items-center">
-                                        <p class="text-neutral font-bold text-2xl">Payment information {{$loop->index+1}}</p>
+                                        <p class="text-neutral font-bold text-lg md:text-2xl">Payment information {{$loop->index+1}}</p>
                                         <div class="dropdown dropdown-end">
                                             <label tabindex="0" class="btn btn-circle btn-ghost btn-xs text-blue-500">
                                               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-4 h-4 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -70,39 +73,48 @@
                                           </div>
                                     </div>
                                     <div class="mt-5">
-                                        <p class="text-neutral text-xl"><strong>Payer Name: </strong>{{$item->payment_name}}</p>
-                                        <p class="text-neutral text-xl"><strong>Reference No.: </strong>{{$item->reference_no}}</p>
-                                        <p class="text-neutral text-xl"><strong>Amount: </strong>{{$item->amount}}</p>
+                                        <p class="text-neutral text-sm md:text-xl"><strong>Payer Name: </strong>{{$item->payment_name}}</p>
+                                        <p class="text-neutral text-sm md:text-xl"><strong>Reference No.: </strong>{{$item->reference_no}}</p>
+                                        <p class="text-neutral text-sm md:text-xl"><strong>Amount: </strong>{{$item->amount}}</p>
                                     </div>
                                     <div class="flex space-x-1 mt-5" id="{{!empty($item->approval) ? 'disabledAll' : ''}}">
-                                            <label for="approve{{$item->id}}" class="btn btn-info btn-sm" {{!empty($item->approval) ? 'disabled' : ''}}>Approve</label>
-                                            <label for="disaprove{{$item->id}}"class="btn btn-error btn-sm" {{!empty($item->approval) ? 'disabled' : ''}}>Disapprove</label>
-                                        @if(empty($item->approval))       
-                                            <x-modal id="approve{{$item->id}}" title="Approve for Payment Name: {{$item->payment_name}}" type="YesNo" formID="approve-form{{$item->id}}" noBottom>
+                                            <label for="approve{{$item->id}}" class="btn btn-info btn-sm" {{isset($item->approval) ? 'disabled' : ''}}>Approve</label>
+                                            <label for="disaprove{{$item->id}}"class="btn btn-error btn-sm" {{isset($item->approval) ? 'disabled' : ''}}>Disapprove</label>
+                                        @if(!isset($item->approval))       
+                                            <x-modal id="approve{{$item->id}}" title="Approve for Payment Name: {{$item->payment_name}}" noBottom>
                                                 <h1 class="text-xl text-neutral">Verified?</h1>
-                                                <form id="approve-form{{$item->id}}" action="{{route('system.reservation.online.payment.store', encrypt($item->id))}}" method="POST">
+                                                <form x-data="{category: '{{$item->amount >= 1000 ? 'full' : 'partial'}}', py: '{{$total}}'}" id="approve-form{{$item->id}}" action="{{route('system.reservation.online.payment.store', encrypt($item->id))}}" method="POST">
                                                     @csrf
-                                                    <div x-data="{category: '{{$item->amount > 1000 ? 'full' : 'partial'}}'}" class="my-3">
-                                                        <input id="cat1" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="partial" />
-                                                        <label :aria-checked="category == 'downpayment'" :class="category == 'downpayment' ? 'mr-5 text-primary' : 'mr-5'" for="cat1" class="my-5">Partial Approve</label>  
+                                                    <div class="my-3">
+                                                        <input id="cat1" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="partial" :disabled="py >= 1000" />
+                                                        <label :aria-checked="category == 'partial'" :class="category == 'partial' ? 'mr-5 text-primary' : 'mr-5'" for="cat1" class="my-5">Partial Approve</label>  
                                                         <input id="cat2" class="my-2 radio radio-primary radio-sm" name="type" x-model="category" type="radio" value="full" />
-                                                        <label :aria-checked="category == 'cinpayment'" :class="category == 'cinpayment' ? 'mr-5 text-primary' : 'mr-5'" for="cat2" class="my-5">Full Approve</label>  
-                                                      </div>
-                                                    <x-input type="number" name="amount" id="amount" placeholder="Total Amount Approve" value="{{$total}}" />
+                                                        <label :aria-checked="category == 'full'" :class="category == 'full' ? 'mr-5 text-primary' : 'mr-5'" for="cat2" class="my-5">Full Approve</label>  
+                                                    </div>
+                                                    <input @input="py >= 1000 ? category = 'full' : category = 'partial'" x-model="py" type="number" name="amount" id="amountpy" class="input input-primary w-full" placeholder="Total Amount Approve" />
+                                                    <div class="modal-action">
+                                                        <label for="aprvmdl{{$item->id}}"class="btn btn-primary">Approve</label>
+                                                    </div>
+                                                    <x-modal title="Do you want to disapprove?" id="aprvmdl{{$item->id}}" type="YesNo" formID="approve-form{{$item->id}}" loader=true noBottom >
+                                                    </x-modal>
                                                 </form>
                                             </x-modal>
-                                            <form id="disaprove-form{{$item->id}}" action="{{route('system.reservation.online.payment.disaprove', encrypt($item->id))}}" method="POST" >
-                                                @csrf
-                                                <x-modal id="disaprove{{$item->id}}" title="Why disapprove of Payment Name: {{$item->payment_name}}?" formID="disaprove-form{{$item->id}}" type="YesNo" loader=true noBottom>
-                                                    <x-textarea type="text" name="reason" id="reason" placeholder="Reason" />
-                                                </x-modal>
-                                            </form>
-
+                                            <x-modal id="disaprove{{$item->id}}" title="Why disapprove of Payment Name: {{$item->payment_name}}?" noBottom>
+                                                <form id="disaprove-form{{$item->id}}" action="{{route('system.reservation.online.payment.disaprove', encrypt($item->id))}}" method="POST" >
+                                                    @csrf
+                                                    <x-disapprove-input :common="['Invalid Receipt', 'Invalid Transaction ID', 'Invalid Payer']" />
+                                                    <div class="modal-action">
+                                                        <label for="dspmdl{{$item->id}}"class="btn btn-error">Disapprove</label>
+                                                    </div>
+                                                    <x-modal title="Do you want to disapprove?" id="dspmdl{{$item->id}}" formID="disaprove-form{{$item->id}}" type="YesNo" loader=true noBottom >
+                                                    </x-modal>
+                                                </form>
+                                            </x-modal>
                                         @endif
                                     </div>
                                 </div>
-                                <div class="w-72 rounded">
-                                    <img src="{{route('private.image', ['folder' => explode('/', $item->image)[0], 'filename' => explode('/', $item->image)[1]])}}" alt="Payment Receipt of {{$r_list->userReservation->name()}}">
+                                <div class="w-52 md:w-72 rounded">
+                                    <img src="{{route('private.image', ['folder' => explode('/', $item->image)[0], 'filename' => explode('/', $item->image)[1]])}}" alt="Payment Receipt of {{$r_list->userReservation->name()}}" class="object-fill">
                                 </div>
                             </div>
                             <div class="divider"></div>

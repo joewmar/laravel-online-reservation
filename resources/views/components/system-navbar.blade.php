@@ -22,14 +22,13 @@
           <div class="card-body">
             <span class="font-bold text-lg">Notifications</span>
             <ul class="menu">
-              @forelse (auth('system')->user()->unreadNotifications as $notification)
-                <li>
-                  <a href="{{$notification->data['link'] ?? '#'}}">
-                    <span>{{$notification->data['title']}}</span>
-                  </a>
-                </li>
-                @if($loop->index+1 === 8)
-                  @break
+              @forelse (auth('system')->user()->unreadNotifications->sortByDesc('created_at') as $notification)
+                @if(($loop->index+1) <= 8)
+                  <li>
+                    <a href="{{$notification->data['link'] ?? '#'}}">
+                      <span>{{$notification->data['title']}}</span>
+                    </a>
+                  </li>
                 @endif
               @empty
                 <li>No Notifications</li>

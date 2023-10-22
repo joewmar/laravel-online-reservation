@@ -9,7 +9,7 @@
                         <x-input name="person" id="person" placeholder="Full Name of Contact Person" />
                         <x-input type="number" name="contact_no" id="contact_no" placeholder="Contact No." />
                         <x-input type="email" name="email" id="email" placeholder="Email Address" />
-                        <x-input name="facebook_username" id="facebook_username" placeholder="facebook Username" />
+                        <x-input name="facebook_link" id="facebook_link" placeholder="facebook Link (Profile)" />
                         <x-input type="number" name="whatsapp" id="whatsapp" placeholder="WhatsApp Number" />
                     </section>
                     <button class="btn btn-primary btn-block">Add</button> 
