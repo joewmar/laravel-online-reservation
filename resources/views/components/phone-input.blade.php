@@ -7,13 +7,7 @@
 @endphp
 
 @push('styles')
-    <style>
-        /* .iti__flag {background-image: url("path/to/flags.png");}
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            .iti__flag {background-image: url("path/to/flags@2x.png");}
-        } */
-    </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
+    {{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css"> --}}
 
 @endpush
 
@@ -38,41 +32,3 @@
         </span>
     </label>
 </div>
-
-@push('scripts')
-    <!--<script type="module" src="{{Vite::asset('resources/js/phone.js')}}"></script>-->
-    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
-
-    <script>
-        const phoneInputField = document.querySelector("#phone");
-        // const phoneInput = window.intlTelInput(phoneInputField, {
-        //     utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js",
-        //  });
-          const phoneInput = window.intlTelInput(phoneInputField, {
-            utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js",
-          });
-                
-        // Set the initial country code based on the old input value
-        const initialCountryCode = document.querySelector("#phone_code").value;
-        if (initialCountryCode) {
-            phoneInput.setCountry(initialCountryCode);
-        }
-        
-        @if(!empty($value))
-            const selectedCountryData = phoneInput.getSelectedCountryData();
-            const countryCode = selectedCountryData.iso2;
-
-            document.querySelector("#phone_code").value = countryCode;            
-        @endif
-        // Listen for changes in the phone number input
-        phoneInputField.addEventListener("countrychange", function () {
-            const selectedCountryData = phoneInput.getSelectedCountryData();
-            const countryCode = selectedCountryData.iso2;
-        
-            // Update the hidden input field with the selected country code
-            document.querySelector("#phone_code").value = countryCode;
-        });
-
-
-    </script>
-@endpush

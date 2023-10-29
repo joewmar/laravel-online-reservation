@@ -4,16 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\Addons;
 use App\Models\TourMenu;
+use App\Models\AuditTrail;
 use Illuminate\Support\Arr;
 use App\Models\TourMenuList;
 use Illuminate\Http\Request;
+use Laravel\Ui\Presets\React;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
-use Laravel\Ui\Presets\React;
 
 class TourMenuController extends Controller
 {
-
+    private function employeeLogNotif($action){
+        $user = auth()->guard('system')->user();
+        AuditTrail::create([
+            'system_id' => $user->id,
+            'action' => $action,
+            'module' => 'Tour Menu',
+        ]);
+    }
     public function index(Request $request){
         if($request->has('tab') && $request['tab'] === 'addons'){
             return view('system.service.index', ['activeSb' => 'Tour Menu', 'addons_list' => Addons::all()]);

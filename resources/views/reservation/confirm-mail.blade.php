@@ -1,7 +1,6 @@
 <x-mail::message>
   # {{ $details['body'] }}
   Name: {{ $details['name'] }}<br>
-  Age: {{ $details['age'] }}<br>
   Nationality: {{ $details['nationality'] }}<br>
   Country: {{ $details['country'] }}<br>
   Type: {{ $details['accommodation_type'] }}<br>

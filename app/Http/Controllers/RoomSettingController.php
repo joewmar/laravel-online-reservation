@@ -21,7 +21,6 @@ class RoomSettingController extends Controller
         $this->middleware(function ($request, $next){
             if(!($this->system_user->user()->type === 0)) abort(404);
             return $next($request);
-
         });
     }
     // Show All Rooms View

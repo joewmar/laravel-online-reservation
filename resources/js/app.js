@@ -1,4 +1,5 @@
 import './bootstrap';
+import './phone';
 import '../css/app.css';
 import './flatpickr2.js';
 import.meta.glob([

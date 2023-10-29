@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservationConfirmation;
+use App\Models\AuditTrail;
 use App\Notifications\SystemNotification;
 use App\Notifications\UserNotif;
 use Exception;
@@ -48,7 +49,8 @@ class SystemReservationController extends Controller
         })->except(['updateCheckin', 'updateCheckout', 'show', 'index', 'search', 'event']);
     }
     private function employeeLogNotif($action, $link = null){
-        if(auth()->guard('system')->user()->role() !== "Admin"){
+        $user = auth()->guard('system')->user();
+        if($user->role() !== "Admin"){
             $admins = System::all()->where('type', 0);
             $text = "New Employee Log! \n" .
             "Employee: " . auth()->guard('system')->user()->name() ."\n" .
@@ -68,6 +70,11 @@ class SystemReservationController extends Controller
             }
             Notification::send($admins, new SystemNotification('Employee Action from '.auth()->guard('system')->user()->name().': ' . Str::limit($action, 10, '...'), $text, route('system.notifications')));
         }
+        AuditTrail::create([
+            'system_id' => $user->id,
+            'action' => $action,
+            'module' => 'Reservation',
+        ]);
     }
     private function roomAssign(array $rooms, Reservation $reservation, $validated, bool $forceAssign = false, bool $changeAssign = false){
         $roomCustomer = [];
@@ -362,7 +369,7 @@ class SystemReservationController extends Controller
                 'title' => 'Reservation Cancellation',
                 'body' => 'Your Reservation Cancel Request are now approved. '
             ];
-            $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab' => 'cancel'])) ,$details['body'], $details, 'reservation.mail')));
+            if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab' => 'cancel'])) ,$details['body'], $details, 'reservation.mail')));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Cancel Request of '.$reservation->userReservation->name().' was approved');
         }
     }
@@ -386,7 +393,7 @@ class SystemReservationController extends Controller
                 'title' => 'Reservation Cancel',
                 'body' => 'Sorry, Your Cancel Request are now disapproved due to ' . $validator['reason'] . '. If you want concern. Please contact the owner'
             ];
-            $reservation->userReservation->notify((new UserNotif(route('user.reservation.home'),$details['body'], $details, 'reservation.mail')));
+            if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home'),$details['body'], $details, 'reservation.mail')));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Reschedule Request of '.$reservation->userReservation->name().'was successful disapproved');
         }
     
@@ -464,7 +471,7 @@ class SystemReservationController extends Controller
                 'title' => 'Reservation Disapprove',
                 'body' => 'Your Reservation are Forced Cancel from '.$system_user->name().' due of ' . $validated['disaprove']. 'Sorry for waiting. Please try again to make reservation in another dates',
             ];
-            $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'canceled'])) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+            if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'canceled'])) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
             unset($details, $text);
             $this->employeeLogNotif('Cancel Forced of ' . $reservation->userReservation->name() . ' Reservation', route('system.reservation.show', encrypt($reservation->id)));
             return redirect()->route('system.reservation.home')->with('success', 'Force Cancel of ' . $reservation->userReservation->name() . ' was Successful');
@@ -516,7 +523,7 @@ class SystemReservationController extends Controller
                 'title' => 'Force Reservation Reschedule',
                 'body' => 'Your Force to reschedule from' . Carbon::createFromFormat('Y-m-d', $validator['ncin'])->format('F j, Y') . ' to ' . Carbon::createFromFormat('Y-m-d', $validator['ncout'])->format('F j, Y') . ' by ' . $system_user->name() . ' due ' . $validator['message'],
             ];
-            $reservation->userReservation->notify((new UserNotif(route('user.reservation.home') ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+            if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home') ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Force Reschedule Request of '.$reservation->userReservation->name().' was approved');
         }
 
@@ -556,7 +563,7 @@ class SystemReservationController extends Controller
         if($updated){
             if(isset($message['reschedule']['message'])) unset($message['reschedule']['message']);
             $message['reschedule']['prev_status'] = 4; // For User Resevation List
-            $message['open_at'] = Carbon::now()->addDay()->format('Y-m-d H:i:s');
+            // $message['open_at'] = Carbon::now()->addDay()->format('Y-m-d H:i:s');
             
             $reservation->update([
                 'message' => $message,
@@ -567,7 +574,7 @@ class SystemReservationController extends Controller
                 'title' => 'Reservation Reschedule',
                 'body' => 'Your Request are now approved. '
             ];
-            $reservation->userReservation->notify((new UserNotif(route('user.reservation.home') ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+            if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home') ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Reschedule Request of '.$reservation->userReservation->name().' was approved');
         }
     }

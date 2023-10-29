@@ -21,6 +21,12 @@ export default defineConfig({
             ],
             refresh: true,
         }),
+        // copy({
+        //     targets: [
+        //       { src: 'node_modules/intl-tel-input/build/js/utils.js', dest: 'public/vendor/intl-tel-input/build/js' }
+        //     ],
+        //     hook: 'buildStart' // or 'buildEnd'
+        // }),
     ],
 });
 

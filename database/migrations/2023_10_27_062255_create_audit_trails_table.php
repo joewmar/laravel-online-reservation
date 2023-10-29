@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rides', function (Blueprint $table) {
+        Schema::create('audit_trails', function (Blueprint $table) {
             $table->id();
-            $table->string('image')->nullable();
-            $table->string('model');
-            $table->integer('max_passenger');
-            $table->integer('many');
+            $table->foreignId('system_id')->nullable()->constrained('systems', 'id')->onDelete('set null');
+            $table->string('name')->nullable();
+            $table->tinyInteger('role')->nullable();
+            $table->text('action');
+            $table->string('module');
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rides');
+        Schema::dropIfExists('audit_trails');
     }
 };

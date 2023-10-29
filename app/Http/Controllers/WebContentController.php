@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\WebContent;
 use Carbon\Carbon;
+use App\Models\AuditTrail;
+use App\Models\WebContent;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Validator as ValidationValidator;
 
@@ -23,6 +24,14 @@ class WebContentController extends Controller
             return $next($request);
         });
     }
+    private function employeeLogNotif($action){
+        $user = auth()->guard('system')->user();
+        AuditTrail::create([
+            'system_id' => $user->id,
+            'action' => $action,
+            'module' => 'Web Content',
+        ]);
+    }
     public function index(){
         $webcontents = WebContent::all()->first();
         return view('system.webcontent.index', ['activeSb' => 'Website Content', 'webcontents' => $webcontents]);
@@ -30,10 +39,11 @@ class WebContentController extends Controller
     public function storeHero(Request $request){
         $web_content = WebContent::all()->first();
         // dd($request->all());
-        $validated = $request->validate([
+        $validated = Validator::make($request->all(), [
             'main_hero' =>  ['required', 'image', 'mimes:jpeg,png,jpg'],
         ]);
-
+        if($validated->fails()) return redirect()->route('system.webcontent.home', '#hero')->with('error', $validated->errors()->all());
+        $validated = $validated->validate();
         $main_hero = $web_content->hero ?? [];
         // dd($web_content->hero);
         if($request->hasFile('main_hero')){
@@ -240,6 +250,161 @@ class WebContentController extends Controller
             'gallery' => $gallery,
         ]);
         if($removed) return redirect()->route('system.webcontent.home', "#gallery")->with('success', 'Gallery Photo selected was removed');
+    }
+    public function storeTour(Request $request){
+        $web_content = WebContent::all()->first();
+        $validated = Validator::make($request->all(), [
+            'tour_type' =>  ['required'],
+            'tour' =>  ['required'],
+            'location' =>  ['nullable'],
+            'image' =>  ['required', 'image', 'mimes:jpeg,png,jpg'],
+        ], [
+            'tour_type.required' => 'Required Choose Type of Tour',
+            'tour.required' => 'Required Enter Tour Destination',
+            'image.required' => 'Required Upload Image of Tour',
+            'image.image' => 'Upload Image Only',
+        ]);
+        if($validated->fails()) return redirect()->route('system.webcontent.home', '#tour')->with('error', $validated->errors()->all());
+        $validated = $validated->validate();
+        $tour = $web_content->tour ?? []; 
+        $key = null; 
+        $path = null;
+        if($validated['tour_type'] == 'Main Tour') {
+            $key = 'mt';
+            $path = '/main_tour';
+            $type = 'mainTour';
+        }
+        if($validated['tour_type'] == 'Side Tour') {
+            $key = 'st';
+            $path = '/side_tour';
+            $type = 'sideTour';
+        }
+        // dd($web_content->hero);
+        $count = count($tour[$type])+1;
+        for ($i=1; $i <= count($tour[$type]); $i++) {
+            if(!in_array($key.$i, array_keys($tour[$type]))) {
+                $count = $i;
+                break;
+            }
+        }
+        $tour[$type][$key.$count] = [
+            'title' => $validated['tour'],
+            'location' => $validated['location'],
+            'image' => saveImageWithJPG($request, 'image', 'tour'.$path, 'public'),
+        ];
+
+        if(empty($web_content)){
+            $created = WebContent::create([
+                'tour' => $tour,
+            ]);
+        }
+        else{
+            $created = $web_content->update([
+                'tour' => $tour,
+            ]);
+        }
+        if($created) return redirect()->route('system.webcontent.home', '#tour')->with('success', $validated['tour'].' was created');
+    }
+    public function showTour($type, $key){
+        $key = decrypt($key);
+        $type = decrypt($type);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->tour[$type])) abort(404);
+        return view('system.webcontent.tour.show', ['activeSb' => 'Website Content', 'type' => $type ,'key' => $key, 'tour' => $webcontents->tour[$type][$key]]);
+    }
+    public function updateTour(Request $request, $type, $key){
+        $key = decrypt($key);
+        $type = decrypt($type);
+        $webcontents = WebContent::all()->first();
+        if(!array_key_exists($key, $webcontents->tour[$type])) abort(404);
+        $validated = Validator::make($request->all(), [
+            'tour' =>  ['required'],
+            'location' =>  ['nullable'],
+            'image' =>  ['nullable', 'image', 'mimes:jpeg,png,jpg'],
+        ], [
+            'tour.required' => 'Required Enter Tour Destination',
+            'image.required' => 'Required Upload Image of Tour',
+            'image.image' => 'Upload Image Only',
+        ]);
+        if($validated->fails()) return redirect()->route('system.webcontent.home', '#tour')->with('error', $validated->errors()->all());
+        $validated = $validated->validate();
+        $tour = $webcontents->tour ?? []; 
+        $tour[$type][$key]['title'] = $validated['tour'];
+        $tour[$type][$key]['location'] = $validated['location'];
+        if($request->hasFile('image')){
+            if(strpos($key, 'mt') !== false) $path = '/main_tour';
+            if(strpos($key, 'st') !== false) $path = '/side_tour';
+            $tour[$type][$key]['image'] = saveImageWithJPG($request, 'image', 'tour'.$path, 'public');
+        }
+        if(empty($webcontents)){
+            $updated = WebContent::create([
+                'tour' => $tour,
+            ]);
+        }
+        else{
+            $updated = $webcontents->update([
+                'tour' => $tour,
+            ]);
+        }
+        if($updated) return redirect()->route('system.webcontent.home', '#tour')->with('success', $validated['tour'].' was updated');
+    }
+    public function destroyTourOne($type, $key){
+        $webcontents = WebContent::all()->first();
+        // dd($request->all());
+        $key = decrypt($key);
+        $type = decrypt($type);
+        $tour = $webcontents->tour ?? [];
+        if(!array_key_exists($key, $tour[$type])) abort(404);
+        deleteFile($tour[$type][$key]['image']);
+        unset($tour[$type][$key]);
+        
+        $removed = $webcontents->update([
+            'tour' => $tour,
+        ]);
+        if($removed) return redirect()->route('system.webcontent.home', '#tour')->with('success', 'Hero Image was removed');
+    }
+    public function destroyTourMain(Request $request){
+        $webcontents = WebContent::all()->firstOrFail();
+        // dd($request->all());
+        $validated = $request->validate([
+            'rtr.*' =>  ['required'],
+        ]);
+        $tour = $webcontents->tour ?? [];
+        foreach($validated['rtr'] as $key => $item){
+            $tourMain = decrypt($key);
+            if(array_key_exists($tourMain , $tour['mainTour'])){
+                deleteFile($tour['mainTour'][$tourMain]['image']);
+                unset($tour['mainTour'][$tourMain]);
+            }
+            else{
+                return redirect()->route('system.webcontent.home', '#hero')->with('error', 'Main Tour Images does not exist');
+            }
+        }
+        $removed = $webcontents->update([
+            'tour' => $tour,
+        ]);
+        if($removed) return redirect()->route('system.webcontent.home', '#tour')->with('success', 'Main Tour Image you selected was removed');
+    }
+    public function destroyTourSide(Request $request){
+        $webcontents = WebContent::all()->firstOrFail();
+        $validated = $request->validate([
+            'rts.*' =>  ['required'],
+        ]);
+        $tour = $webcontents->tour ?? [];
+        foreach($validated['rts'] as $key => $item){
+            $tourKey = decrypt($key);
+            if(array_key_exists($tourKey , $tour['sideTour'])){
+                deleteFile($tour['sideTour'][$tourKey]['image']);
+                unset($tour['sideTour'][$tourKey]);
+            }
+            else{
+                return redirect()->route('system.webcontent.home', '#tour')->with('error', 'Side Tour Pictures does not exist');
+            }
+        }
+        $removed = $webcontents->update([
+            'tour' => $tour,
+        ]);
+        if($removed) return redirect()->route('system.webcontent.home', '#tour')->with('success', 'Side Tour Picture you selected was removed');
     }
     public function createContact(Request $request){
         $webcontents = WebContent::all()->first();

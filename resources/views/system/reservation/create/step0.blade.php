@@ -1,20 +1,6 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
     $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
-    $roomInfo = [
-        'at' =>    request('at')  ? decrypt(request('at')) : old('accommodation_type'),
-        'cin' =>   request('cin') ? decrypt(request('cin')) : old('check_in'),
-        'cout' =>  request('cout') ? decrypt(request('cout')) : old('check_out'),
-        'px' =>  request('px') ? decrypt(request('px')) : old('pax'),
-    ];
-    if(session()->has('nwrinfo')){
-        $roomInfo = [
-            'at' => isset(session('nwrinfo')['at']) ? decrypt(session('nwrinfo')['at']) : old('accommodation_type'),
-            'cin' => isset(session('nwrinfo')['cin']) ? decrypt(session('nwrinfo')['cin']) : old('check_in'),
-            'cout' => isset(session('nwrinfo')['cout']) ? decrypt(session('nwrinfo')['cout']) : old('check_out'),
-            'px' => isset(session('nwrinfo')['px']) ? decrypt(session('nwrinfo')['px']) : old('pax'),
-        ];
-    }
 @endphp
 
 <x-system-layout :activeSb="$activeSb">
@@ -36,7 +22,7 @@
                     <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-month" value="{{$roomInfo['cout']}}" />
                 </div>
                 <div class="col-span-2">
-                    <x-input id="pax" name="pax" placeholder="Number of Guest" value="{{$roomInfo['px']}}" />
+                    <x-input type="number" id="pax" name="pax" placeholder="Number of Guest" value="{{$roomInfo['px']}}" />
                 </div>
             </div>
 

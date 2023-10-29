@@ -33,3 +33,4 @@ flatpickr(".flatpickr-reservation-month", {
         }
       ],
 });
+

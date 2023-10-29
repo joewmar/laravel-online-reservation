@@ -62,4 +62,8 @@ class System extends Authenticatable
     public function name(){
         return $this->attributes['first_name'] . ' ' . $this->attributes['last_name'];
     }
+    public function activityLogs()
+    {
+        return $this->hasMany(AuditTrail::class, 'system_id');
+    }
 }

@@ -9,6 +9,7 @@ use App\Models\System;
 use App\Models\RoomList;
 use App\Models\RoomRate;
 use App\Models\TourMenu;
+use App\Models\AuditTrail;
 use App\Models\Reservation;
 use App\Models\UserOffline;
 use Illuminate\Support\Arr;
@@ -20,6 +21,8 @@ use Illuminate\Validation\Rule;
 use App\Jobs\SendTelegramMessage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Mail;
+use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Storage;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Validator;
 use Propaganistas\LaravelPhone\PhoneNumber;
@@ -32,6 +35,12 @@ class CreateReservationController extends Controller
     public function __construct()
     {
         $this->system_user = auth()->guard('system');
+    }
+    private function deleteValidID($array){
+        if(isset($array['vid'])){
+            Storage::delete('private/'.decrypt($array['vid']));
+            unset($array['vid']);
+        }
     }
     private function reservationValidation(Request $request){
         // Check in (startDate to endDate) trim convertion
@@ -107,7 +116,8 @@ class CreateReservationController extends Controller
         return $validated;
     }
     private function employeeLogNotif($action, $link = null){
-        if(auth()->guard('system')->user()->role() !== "Admin"){
+        $user = auth()->guard('system')->user();
+        if($user->role() !== "Admin"){
             $admins = System::all()->where('type', 0);
             $text = "New Employee Log! \n" .
             "Employee: " . auth()->guard('system')->user()->name() ."\n" .
@@ -128,10 +138,31 @@ class CreateReservationController extends Controller
             }
             Notification::send($admins, new SystemNotification('Employee Action from '.auth()->guard('system')->user()->name().': ' . Str::limit($action, 10, '...'), $text, route('system.notifications')));
         }
+        AuditTrail::create([
+            'system_id' => $user->id,
+            'action' => $action,
+            'module' => 'Reservation',
+        ]);
     }
-    public function create(){
+    public function create(Request $request){
+        $roomInfo = [
+            'at' =>    $request['at'] ? decrypt($request['at']) : old('accommodation_type'),
+            'cin' =>   $request['cin'] ? decrypt($request['cin']) : old('check_in'),
+            'cout' =>  $request['cout'] ? decrypt($request['cout']) : old('check_out'),
+            'px' =>  $request['px'] ? decrypt($request['px']) : old('pax'),
+        ];
+        if(session()->has('nwrinfo')){
+            $roomInfo = $request->session()->get('nwrinfo');
+            $roomInfo = [
+                'at' => isset($roomInfo['at']) ? decrypt($roomInfo['at']) : old('accommodation_type'),
+                'cin' => isset($roomInfo['cin']) ? decrypt($roomInfo['cin']) : old('check_in'),
+                'cout' => isset($roomInfo['cout']) ? decrypt($roomInfo['cout']) : old('check_out'),
+                'px' => isset($roomInfo['px']) ? decrypt($roomInfo['px']) : old('pax'),
+            ];
+        }
         return view('system.reservation.create.step0',  [
             'activeSb' => 'Reservation', 
+            'roomInfo' => $roomInfo, 
         ]);
     }
     public function storeStep0(Request $request){
@@ -238,11 +269,40 @@ class CreateReservationController extends Controller
             }
 
         }
+        $roomInfo = [
+            'at' =>    $request['at']  ? decrypt($request['at']) : old('accommodation_type'),
+            'px' =>    $request['px']  ? decrypt($request['px']): old('pax'),
+            'rm' =>    $request['rm']  ? decrypt($request['rm']): old('room_pax'),
+            'rt' =>    $request['rt']  ? decrypt($request['rt']) : old('room_rate'),
+            'cin' =>   $request['cin'] ? decrypt($request['cin']) : old('check_in'),
+            'cout' =>  $request['cout'] ? decrypt($request['cout']) : old('check_out'),
+            'py' =>   $request['py'] ? decrypt($request['py']) : old('payment_method'),
+            'tpx' =>   $request['tpx'] ? decrypt($request['tpx']) : old('tour_pax'),
+            'st' =>   $request['st'] ? decrypt($request['st']) : old('status'),
+        ];
+        if(auth('system')->user()->type == 2){
+            $roomInfo['cin'] = request('cin') ? decrypt(request('cin')) : (old('check_in') ?? Carbon::now('Asia/Manila')->format('Y-m-d'));
+        }
+        if(session()->has('nwrinfo')){
+            $ri = $request->session()->get('nwrinfo');
+            $roomInfo = [
+                'at' => isset($ri['at']) ? decrypt($ri['at']) : old('accommodation_type'),
+                'px' => isset($ri['px']) ? decrypt($ri['px']) : old('pax'),
+                'rm' => isset($ri['rm']) ? decrypt($ri['rm']) : old('room_pax'),
+                'rt' => isset($ri['rt']) ? decrypt($ri['rt']) : old('room_rate'),
+                'cin' => isset($ri['cin']) ? decrypt($ri['cin']) : old('check_in'),
+                'cout' => isset($ri['cout']) ? decrypt($ri['cout']) : old('check_out'),
+                'py' => isset($ri['py']) ? decrypt($ri['py']) : old('payment_method'),
+                'tpx' => isset($ri['tpx']) ? decrypt($ri['tpx']) : old('tour_pax'),
+                'st' => isset($ri['st']) ? decrypt($ri['st']) : old('status'),
+            ];
+        }
         return view('system.reservation.create.step1',  [
             'activeSb' => 'Reservation', 
             'rooms' => $rooms, 
             'rates' => $rates, 
             'reserved' => $roomReserved, 
+            'roomInfo' => $roomInfo, 
         ]);
     }
     public function storeStep1(Request $request){
@@ -273,9 +333,9 @@ class CreateReservationController extends Controller
             'py' => $validated['payment_method'],
         ];
         if($validated['accommodation_type'] === 'Day Tour' || $validated['accommodation_type'] === 'Overnight') $param['tpx'] = $validated['tour_pax'];
-        
+
         $param = encryptedArray($param);
-        $session = [];
+        $session = session()->has('nwrinfo') ? session('nwrinfo') : [] ;
         $session['rt'] = $param['rt'] ;
         $session['rm'] = $param['rm'] ;
         $session['px'] = $param['px'] ;
@@ -284,16 +344,20 @@ class CreateReservationController extends Controller
         $session['at'] = $param['at'] ;
         $session['st'] = $param['st'] ;
         $session['py'] = $param['py'] ;
-        if($validated['accommodation_type'] === 'Day Tour' || $validated['accommodation_type'] === 'Overnight') $session['tpx'] = $param['tpx'] ;
+        if($validated['accommodation_type'] === 'Day Tour' || $validated['accommodation_type'] === 'Overnight') {
+            if(isset($session['tpx']) && decrypt($session['tpx']) != decrypt($param['tpx']) && isset($session['tm'])) unset($session['tm']);
+            $session['tpx'] = $param['tpx'] ;
+        }
         if(session()->has('nwrinfo')) {
             session(['nwrinfo' => $session]);
         }
-        if($validated['accommodation_type'] === 'Day Tour' || $validated['accommodation_type'] === 'Overnight') return redirect()->route('system.reservation.create.step.two', Arr::query($param));
+        if($validated['accommodation_type'] === 'Day Tour' || $validated['accommodation_type'] === 'Overnight') {
+            return redirect()->route('system.reservation.create.step.two', Arr::query($param));
+        }
         else{
             session(['nwrinfo' => $session]);
             return redirect()->route('system.reservation.create.step.three');
         }
-
     }
     public function step2(Request $request){
         if(session()->has('nwrinfo') && !empty(session('nwrinfo')['tm'])){
@@ -357,9 +421,9 @@ class CreateReservationController extends Controller
     }
     public function storeStep3(Request $request){
         $validated = $request->validate([
-            'qty.*' => Rule::when(!empty($request['qty']), ['required', 'numeric']),
+            'qty.*' => Rule::when(!empty($request['qty']), ['required', 'numeric'], ['nullable']),
         ]);
-        if(isset($validated['qty'])){
+        if(isset($validated['qty']) && !empty($validated['qty'])){
             $encrypted = session('nwrinfo');
             $encrypted['qty'] = encrypt($validated['qty']);
             session(['nwrinfo' => $encrypted]);
@@ -368,10 +432,106 @@ class CreateReservationController extends Controller
 
     }
     public function step4(Request $request){
+        $user = [];
+        if($request->has('uof')){
+            $user = UserOffline::find(decrypt($request->query('uof'))) ?? [];
+        }
+        return view('system.reservation.create.step4',  [
+            'activeSb' => 'Reservation', 
+            'status' => decrypt($request->session()->get('nwrinfo')['st']), 
+            'user' => $user, 
+        ]);
+    }
+    public function step4Search(Request $request){
+        $search = $request->input('query');
+        $names = [];
+        if($search){
+            $results = UserOffline::where(function ($query) use ($search) {
+                $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%$search%"]);
+            })->get();
+            foreach($results as $list){
+                $names[] = [
+                    'title' => $list->name(),
+                    'link' => route('system.reservation.create.step.four', Arr::query(['uof' => encrypt($list->id)])),
+                ];
+            }
+        }
+        return response()->json($names);
+    }
+    public function storeStep4(Request $request){
+        $status = decrypt($request->session()->get('nwrinfo')['st']);
+        $validated = $request->validate([
+            'uid' => Rule::when(!($request->has('ncus') && $request['ncus'] == 'on'), ['required']), 
+            'first_name' => ['required', 'min:1'],
+            'last_name' => ['required', 'min:1'],
+            'age' => ['required', 'numeric','min:8'],
+            'country' => ['required', 'min:1'],
+            'dyamount' => Rule::when($status == 1,['required', 'numeric','min:1000']),
+            'cnpy' => Rule::when($status == 2, ['required']),
+            'senior_count' => Rule::when($request->has('hs') && $request['hs'] == 'on', ['required']),
+            'cinamount' => Rule::when($request->has('cnpy') && $request['cnpy'] == 'partial', ['required', 'numeric']),
+            'nationality' => ['required'],
+            'contact' => ['nullable'],
+            'email' => Rule::when($request->has('ncus') && $request['ncus'] == 'on',['email', Rule::unique('user_offlines', 'email')]),
+            'valid_id_clear' => ['required'], 
+            'valid_id' => Rule::when($request['valid_id_clear'] == true, ['image', 'mimes:jpeg,png,jpg', 'max:5024'], ['nullable']), 
+        ], [
+            'required' => 'This input are required',
+            'uid.required' => 'Required to select the Customer',
+            'image' => 'The file must be an image of type: jpeg, png, jpg',
+            'mimes' => 'The image must be of type: jpeg, png, jpg',
+            'max' => 'The image size must not exceed 5 MB',
+            'dyamount.min' => 'The amount must be ₱ 1,000 above',
+        ]);
+        $info = session('nwrinfo');
+        $info['fn'] = encrypt($validated['first_name']);
+        $info['ln'] = encrypt($validated['last_name']);
+        $info['age'] = encrypt($validated['age']);
+        $info['ctct'] = encrypt($validated['contact']);
+        $info['eml'] = encrypt($validated['email']);
+        $info['ntnlt'] = encrypt($validated['nationality']);
+        $info['ctry'] = encrypt($validated['country']);
+        if(!($request->has('ncus') && $request['ncus'] == 'on') && isset($validated['uid'])) {
+            $info['uid'] =  $validated['uid'];
+        }
+        else{
+            if(isset($info['uid'])) unset($info['uid']);
+        }
+        if(decrypt($info['st']) == 1){
+            if(isset($info['secount'])) unset($info['secount']);
+            if(isset($info['cinpy'])) unset($info['cinpy']);
+            $info['dwnpy'] = encrypt($validated['dyamount']);
+        }
+        if(decrypt($info['st']) == 2){
+            if(isset($info['dwnpy'])) unset($info['dwnpy']);
+            if($request->has('hs') && $request['hs'] == 'on') $info['secount'] = encrypt($validated['senior_count']);
+            if($request->has('cnpy') && $request['cnpy'] == 'partial') $info['cinpy'] = encrypt($validated['cinamount']);
+            else $info['cinpy'] = encrypt('full');
+        }
+        if($validated['valid_id_clear'] == true) {
+            $this->deleteValidID($info);
+        }
+        if($request->hasFile('valid_id')){  
+            $image = $request->file('valid_id');
+            $imageName = Str::random(4). now()->format('YmdHis') . '.jpg';
+            $encodedImage = Image::make($image)->encode('jpg', 65); // Encoding the image to JPG format with 65% quality
+            $destinationPath = 'temp/' . $imageName;
+            Storage::put('private/'.$destinationPath, (string) $encodedImage, 'private');
+            $info['vid'] = encrypt($destinationPath);
+        }
+
+        session(['nwrinfo' => $info]);
+        return redirect()->route('system.reservation.create.step.five');
+    }
+    public function step5(Request $request){
         $decrypted = decryptedArray(session('nwrinfo'));
+        if(isset($decrypted['uid']) && !isset($decrypted['vid'])){
+            $decrypted['vid'] = UserOffline::find($decrypted['uid'])->valid_id ?? '';
+        }
         $tour_menus = [];
         $addons = [];
         $rooms = [];
+        $noDays = getNoDays($decrypted['cin'], $decrypted['cout']) ?? 1;
         if(isset($decrypted['tm'])){
             foreach($decrypted['tm'] as $key => $id){
                 $tour = TourMenu::find($id);
@@ -397,63 +557,65 @@ class CreateReservationController extends Controller
             else $rooms[] =  'Room Data Missing';
         }
         $rate = RoomRate::find($decrypted['rt']);
+        if(isset($decrypted['secount'])){
+            $rates['name'] = $rate->name;
+            $rates['price'] = $rate->price;
+            $rates['amount'] = (double)$rate->price * $noDays;
+            $discounted = (20 / 100) * $decrypted['secount'];
+            $discounted = (double)($rates['amount'] * $discounted);
+            $discounted = (double)($rates['amount'] - $discounted);
+            $rates['price'] = $rate->price;
+            $rates['orig_amount'] =  $rates['amount'];
+            $rates['amount'] = $discounted;
+        }
+        else{
+            $rates['name'] = $rate->name;
+            $rates['price'] = $rate->price;
+            $rates['amount'] = (double)$rate->price * $noDays;
+        }
         $rooms = implode(', ', $rooms);
         unset($count);
-        return view('system.reservation.create.step4',  [
+        return view('system.reservation.create.step5',  [
             'activeSb' => 'Reservation', 
             'tour_menus' => $tour_menus, 
             'addons' => $addons, 
             'rooms' => $rooms, 
-            'rate' => $rate, 
+            'rates' => $rates ?? [], 
             'other_info' => $decrypted, 
-            "user_days" => getNoDays($decrypted['cin'], $decrypted['cout']) ?? 1,
+            "user_days" => $noDays,
         ]);
     }
-    public function storeStep4(Request $request){
-        $validated = $request->validate([
-            'first_name' => ['required', 'min:1'],
-            'last_name' => ['required', 'min:1'],
-            'age' => ['required', 'numeric','min:8'],
-            'country' => ['required', 'min:1'],
-            'type' => ['required'],
-            'dyamount' => Rule::when($request->has('type') && $request['type'] == 'downpayment',['required', 'numeric','min:1000']),
-            'cnpy' => Rule::when($request->has('type') && $request['type'] == 'cinpayment',['required']),
-            'senior_count' => Rule::when($request->has('hs') && $request['hs'] == 'on', ['required']),
-            'cinamount' => Rule::when($request->has('cnpy') && $request['cnpy'] == 'partial', ['required', 'numeric']),
-            'nationality' => ['required'],
-            'contact_code' => ['required'],
-            'contact' => ['required', (new Phone)->international()->country(Str::upper($request['contact_code']))],
-            'email' => ['required', 'email', Rule::unique('user_offlines', 'email')],
-            'valid_id' => ['image', 'mimes:jpeg,png,jpg', 'max:5024'], 
-        ], [
-            'required' => 'This input are required',
-            'image' => 'The file must be an image of type: jpeg, png, jpg',
-            'mimes' => 'The image must be of type: jpeg, png, jpg',
-            'max' => 'The image size must not exceed 5 MB',
-            'dyamount.min' => 'The amount must be ₱ 1,000 above',
-        ]);
-        $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
-        $validated['contact'] = $phone->formatInternational(); 
-
-        if($request->hasFile('valid_id')){  
-            $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
+    public function storeStep5(Request $request){
+        $decrypted = decryptedArray($request->session()->get('nwrinfo'));
+        // dd($decrypted);
+        if(isset($decrypted['vid'])){
+            $imageData = Storage::get('private/'.$decrypted['vid']);
+            $newPath = 'valid_id/'.Str::random(4). now()->format('YmdHis') .'.jpg';
+            Storage::put('private/'.$newPath, $imageData);
+            Storage::delete('private/'.$decrypted['vid']);
+            $decrypted['vid'] = $newPath;
         }
-        $created = UserOffline::create([
-            "first_name"  => $validated['first_name'],
-            "last_name" => $validated['last_name'],
-            "age" => $validated['age'],
-            "country"  => $validated['country'],
-            "nationality" => $validated['nationality'],
-            "email" => $validated['email'],
-            "contact" => $validated['contact'],
-            "valid_id" => $validated['valid_id'] ?? null,
-        ]);
+        $ui = [ 
+            "first_name"  => $decrypted['fn'],
+            "last_name" => $decrypted['ln'],
+            "age" => $decrypted['age'],
+            "country"  => $decrypted['ctry'],
+            "nationality" => $decrypted['ntnlt'],
+            "email" => $decrypted['eml'],
+            "contact" => $decrypted['ctct'],
+        ];
+        if(isset($decrypted['vid'])) $ui["valid_id"] > $decrypted['vid'];
 
+        if(isset($decrypted['uid'])){
+            $created = UserOffline::find($decrypted['uid']) ?? [];
+            $created->update($ui);
+        }
+        else $created = UserOffline::create($ui);
+        
         if($created){
             $transaction = [];
             $roomDetails = [];
-            $decrypted = decryptedArray(session('nwrinfo'));
-
+            $totalAll = 0;
             if(isset($decrypted['tm'])){
                 foreach($decrypted['tm'] as $key => $tour_id){
                     $tour_menu = TourMenu::find($tour_id);
@@ -461,19 +623,21 @@ class CreateReservationController extends Controller
                         'title' => $tour_menu->tourMenu->title . ' ' . $tour_menu->type . '('.$tour_menu->pax.' pax)',
                         'tpx' => (int)$decrypted['tpx'],
                         'price' => (double)$tour_menu->price,
-                        'amount' => (double)$tour_menu->price * (int)$decrypted['tpx']
+                        'amount' => (double)$tour_menu->price * (int)$decrypted['tpx'],
                     ];
+                    $totalAll += (double)$tour_menu->price * (int)$decrypted['tpx'];
                 }
             }
             if(isset($decrypted['qty'])){
                 foreach($decrypted['qty'] as $key => $qty){
                     $addons = Addons::find($key);
-                    $transaction['OA'. $addons->id] = [
+                    $transaction['OA'. $addons->id][now('Asia/Manila')->format('YmdHis')] = [
                         'title' => $addons->title,
                         'price' => (double)$addons->price,
                         'pcs' => (int)$qty,
-                        'amount' => (double)$addons->price * (int)$qty
+                        'amount' => (double)$addons->price * (int)$qty,
                     ];
+                    $totalAll += (double)$addons->price * (int)$qty;
                 }
             }
             if(isset($decrypted['rt'])){
@@ -481,19 +645,23 @@ class CreateReservationController extends Controller
                 $transaction['rid'. $rate->id] = [
                     'title' => $rate->name,
                     'price' => (double)$rate->price,
-                    'amount' => (double)$rate->price * (int)$decrypted['px']
+                    'amount' => (double)$rate->price * getNoDays($decrypted['cin'], $decrypted['cout']),
                 ];
-                if(isset($validated['hs']) && isset($validated['senior_count'])){                    
-                    $discounted = (20 / 100) * $validated['senior_count'];
+                if(isset($decrypted['secount'])){                    
+                    $discounted = (20 / 100) * $decrypted['secount'];
                     $discounted = (double)($transaction['rid'. $rate->id]['amount'] * $discounted);
                     $discounted = (double)($transaction['rid'. $rate->id]['amount'] - $discounted);
                     $transaction['rid'. $rate->id]['orig_amount'] = $transaction['rid'. $rate->id]['amount'];
                     $transaction['rid'. $rate->id]['amount'] = $discounted;
                 }
+                $totalAll += $transaction['rid'. $rate->id]['amount'];
             }
-
-            if($validated['type'] == 'cinpayment') $transaction['payment']['cinpay'] = $validated['cinamount'];
-            elseif($validated['type'] == 'downpayment') $transaction['payment']['downpayment'] = $validated['dyamount'];
+            if($decrypted['st'] == 1 && isset($decrypted['dwnpy'])) $transaction['payment']['downpayment'] = $decrypted['dwnpy'];
+            elseif($decrypted['st'] == 2 && isset($decrypted['cinpy'])) {
+                if($decrypted['cinpy'] == 'full') $transaction['payment']['cinpay'] = $totalAll;
+                else $transaction['payment']['cinpay'] = $decrypted['cinpy'];
+            }
+            elseif($decrypted['st'] == 3) $transaction['payment']['coutpay'] = $totalAll;
 
             $reserved = Reservation::create([
                 'offline_user_id' => $created->id,
@@ -517,7 +685,6 @@ class CreateReservationController extends Controller
                 }
             }
         }
-
 
         $this->employeeLogNotif('Add Booking for ' . $reserved->userReservation->name(), route('system.reservation.show', encrypt($reserved->id)));
         $details = [

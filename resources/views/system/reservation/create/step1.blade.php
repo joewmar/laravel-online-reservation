@@ -3,34 +3,9 @@
     $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
     $arrPayment = ['Walk-in', 'Other Online Booking', 'Gcash', 'Paypal'];
     $arrStatus = [1 => 'Confirmed', 2 => 'Check-in', 3 =>'Check-out'];
-    $roomInfo = [
-        'at' =>    request('at')  ? decrypt(request('at')) : old('accommodation_type'),
-        'px' =>    request('px')  ? decrypt(request('px')): old('pax'),
-        'rm' =>    request('rm')  ? decrypt(request('rm')): old('room_pax'),
-        'rt' =>    request('rt')  ? decrypt(request('rt')) : old('room_rate'),
-        'cin' =>   request('cin') ? decrypt(request('cin')) : old('check_in'),
-        'cout' =>  request('cout') ? decrypt(request('cout')) : old('check_out'),
-        'py' =>   request('py') ? decrypt(request('py')) : old('payment_method'),
-        'tpx' =>   request('tpx') ? decrypt(request('tpx')) : old('tour_pax'),
-        'st' =>   request('st') ? decrypt(request('st')) : old('status'),
-    ];
     if(auth('system')->user()->type == 2){
         $arrPayment = ['Walk-in', 'Gcash', 'Paypal'];
         $arrStatus = ['Check-in', 'Check-out'];
-        $roomInfo['cin'] = request('cin') ? decrypt(request('cin')) : (old('check_in') ?? Carbon\Carbon::now('Asia/Manila')->format('Y-m-d'));
-    }
-    if(session()->has('nwrinfo')){
-        $roomInfo = [
-            'at' => isset(session('nwrinfo')['at']) ? decrypt(session('nwrinfo')['at']) : old('accommodation_type'),
-            'px' => isset(session('nwrinfo')['px']) ? decrypt(session('nwrinfo')['px']) : old('pax'),
-            'rm' => isset(session('nwrinfo')['rm']) ? decrypt(session('nwrinfo')['rm']) : old('room_pax'),
-            'rt' => isset(session('nwrinfo')['rt']) ? decrypt(session('nwrinfo')['rt']) : old('room_rate'),
-            'cin' => isset(session('nwrinfo')['cin']) ? decrypt(session('nwrinfo')['cin']) : old('check_in'),
-            'cout' => isset(session('nwrinfo')['cout']) ? decrypt(session('nwrinfo')['cout']) : old('check_out'),
-            'py' => isset(session('nwrinfo')['py']) ? decrypt(session('nwrinfo')['py']) : old('payment_method'),
-            'tpx' => isset(session('nwrinfo')['tpx']) ? decrypt(session('nwrinfo')['tpx']) : old('tour_pax'),
-            'st' => isset(session('nwrinfo')['st']) ? decrypt(session('nwrinfo')['st']) : old('status'),
-        ];
     }
 @endphp
 <x-system-layout :activeSb="$activeSb">
@@ -133,7 +108,8 @@
                     @endforelse
                 </div>
             </div>
-            <div class="flex justify-end">
+            <div class="flex justify-end space-x-2 mt-5">
+                <a href="{{route('system.reservation.create')}}" class="btn btn-ghost" @click="loader = true">Back</a>
                 <button class="btn btn-primary" @click="loader = true">Next</button>
             </div>
         </form>

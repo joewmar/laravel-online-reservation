@@ -17,7 +17,7 @@
         @if(request('rtab') === 'list')
             {{-- Table  --}}
             <div class="mt-20 w-full" x-cloak>
-                <div class="tabs md:tabs-boxed md:bg-transparent flex justify-center md:justify-start">
+                <div class="tabs tabs-boxed bg-transparent">
                     <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list']) )}}" class="tab {{!request()->has('tab') && request()->has('rtab') ? 'tab-active font-bold text-primary' : ''}}">All</a> 
                     @if(!(auth('system')->user()->type == 2))
                         <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'pending']) )}}" class="tab {{request('tab') == 'pending' ? 'tab-active font-bold text-primary' : ''}}">Pending</a> 
@@ -29,11 +29,10 @@
                         <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'cancel']))}}" class="tab {{request('tab') == 'cancel' ? 'tab-active font-bold text-primary' : ''}}">Cancel</a> 
                         <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'reschedule']))}}" class="tab {{request('tab') == 'reschedule' ? 'tab-active font-bold text-primary' : ''}}">Reschedule</a>
                         <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'walkin']))}}" class="tab {{request('tab') == 'walkin' ? 'tab-active font-bold text-primary' : ''}}">Walk-in</a>
-                        <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'othbook']))}}" class="tab {{request('tab') == 'othbook' ? 'tab-active font-bold text-primary' : ''}}">Other Booking</a>
+                        <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list', 'tab' => 'othbook']))}}" class="tab {{request('tab') == 'othbook' ? 'tab-active font-bold text-primary' : ''}}">Other Online Booking</a>
                     @endif
 
-                </div>
-                <div class="mt-10">
+
                     <div class="overflow-x-auto w-full">
                         <table class="table table-xs md:table-md">
                             <!-- head -->
@@ -44,7 +43,6 @@
                                     </th>
                                     <th>Name</th>
                                     <th>Age</th>
-                                    <th>Nationality</th>
                                     <th>Status</th>
                                     <th>Created</th>
                                 </tr>
@@ -64,12 +62,11 @@
                                         </td>
                                         <td>
                                             <div>
-                                                <div class="font-bold">{{$list->userReservation->name() ?? ''}}</div>
-                                                <div class="text-sm opacity-50">{{$list->userReservation->country}}</div>
+                                                <div class="font-bold">{{($list->userReservation->name() ?? $list->otherinfo['name']) ?? 'None'}}</div>
+                                                <div class="text-sm opacity-50">{{($list->userReservation->country ?? $list->otherinfo['country']) ?? 'None'}}</div>
                                             </div>
                                         </td>
-                                        <td>{{$list->age ?? ''}} years old</td>
-                                        <td>{{$list->userReservation->country ?? ''}}</td>
+                                        <td>{{(($list->userReservation->age() ?? $list->otherinfo['age']) . ' years old') ?? 'None'}}</td>
                                         <td>{{$list->status()}}</td>
                                         <td>{{ \Carbon\Carbon::parse($list->created_at, 'Asia/Manila')->format('M j, Y g:i A')}}</td>
     
@@ -89,7 +86,7 @@
     
                     </div>
                     {!! $r_list->links() !!}
-                </div>    
+                </div> 
             </div>
         @else
             @push('styles')

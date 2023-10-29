@@ -25,7 +25,7 @@ return new class extends Migration
             if(env('FORCE_CREATE_USER') ?? false) $table->string('email');
             else $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->string('valid_id')->nullable();
             $table->rememberToken();
             $table->timestamps();

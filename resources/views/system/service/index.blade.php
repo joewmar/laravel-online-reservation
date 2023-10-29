@@ -1,20 +1,23 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Tour Menu">
         <div class="mt-8">
-            <div class="my-3 flex justify-between">
-              <div class="tabs tabs-boxed bg-transparent">
+          <div class="tabs tabs-boxed bg-transparent">
+            <div class="flex justify-between w-full mb-5">
+              <div>
                 <a href="{{route('system.menu.home')}}"class="tab {{request()->has('tab') && request('tab') != 'home' ? '' : 'tab-active'}}">Menu</a> 
-                <a href="{{route('system.menu.home', Arr::query(['tab' => 'addons']))}}" class="tab {{request()->has('tab') && request('tab') === 'addons' ? 'tab-active' : ''}}">Add-ons</a> 
+                <a href="{{route('system.menu.home', Arr::query(['tab' => 'addons']))}}" class="tab {{request()->has('tab') && request('tab') === 'addons' ? 'tab-active' : ''}}">Add-ons</a>
               </div>
-              @if(request()->has('tab') && request('tab') === 'addons')
-                <a href=" {{ route('system.menu.addons.create') }}" class="btn btn-primary text-base-100">
-                  Add Add-ons
-                </a>
-              @else
-                <a href=" {{ route('system.menu.create') }}" class="btn btn-primary text-base-100">
-                  Add Menu
-                </a>
-              @endif
+              <div>
+                @if(request()->has('tab') && request('tab') === 'addons')
+                  <a href=" {{ route('system.menu.addons.create') }}" class="btn btn-primary text-base-100">
+                    Add Add-ons
+                  </a>
+                @else
+                  <a href=" {{ route('system.menu.create') }}" class="btn btn-primary text-base-100">
+                    Add Menu
+                  </a>
+                @endif
+              </div>
             </div>
             @if(request()->has('tab') && request('tab') === 'addons')
                 <div class="overflow-x-auto w-full shadow-2xl">
@@ -90,5 +93,6 @@
               </div>
             @endif
           </div>
+        </div>
     </x-system-content>
 </x-system-layout>

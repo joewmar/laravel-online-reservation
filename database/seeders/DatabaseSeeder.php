@@ -7,6 +7,7 @@ namespace Database\Seeders;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\UserOffline;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -40,6 +41,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('369258147'),
             'valid_id' => 'valid_id/Valid_ID.sample.jpg',
         ]);
+        UserOffline::factory(10)->create();
 
         if(env('FORCE_CREATE_USER') ?? false) User::factory(10)->create();
         
@@ -73,7 +75,6 @@ class DatabaseSeeder extends Seeder
         //     'tour_pax' => 4,
         //     'accommodation_type' => 'Overnight',
         //     'payment_method' => 'Gcash',
-        //     'age' => User::findOrfail(1)->age(),
         //     'check_in' => Carbon::now('Asia/Manila')->addDays(15)->toDateTimeString(),
         //     'check_out' => Carbon::now('Asia/Manila')->addDays(20)->toDateTimeString(),
         //     'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
@@ -88,7 +89,6 @@ class DatabaseSeeder extends Seeder
             'tour_pax' => 4,
             'accommodation_type' => 'Overnight',
             'payment_method' => 'Bank Transfer',
-            'age' => User::findOrfail(1)->age(),
             'check_in' => Carbon::now('Asia/Manila')->addDays(16)->toDateTimeString(),
             'check_out' => Carbon::now('Asia/Manila')->addDays(18)->toDateTimeString(),
             'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */

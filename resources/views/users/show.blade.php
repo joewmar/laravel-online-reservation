@@ -58,7 +58,9 @@
                             <h2 class="text-2xl font-bold mb-5">Change Password</h2>
                             <div x-data="{loader: false}" class="my-5 w-full md:w-96">
                                 <x-loader />
-                                <x-password name="current_password" id="current_password" placeholder="Current Password" />
+                                @isset($user->password)
+                                    <x-password name="current_password" id="current_password" placeholder="Current Password" />
+                                @endisset
                                 <x-password name="new_password" id="new_password" placeholder="New Password" validation/>
                                 <x-input type="password" name="new_password_confirmation" id="new_password_confirmation" placeholder="Confirm New Password" />
                                 <label for="passmdl" class="btn btn-warning btn-sm">Change</label>  
@@ -108,17 +110,64 @@
                             <label class="btn btn-primary btn-sm" disabled>Delete Account</label> 
                         @else
                             <label for="delete_acc_modal" class="btn btn-error btn-sm">Delete Account</label> 
-                            <x-modal id="delete_acc_modal" title="Enter your password to confirm delete your account" loader>
-                                <form action="{{route('profile.destroy.account', encrypt($user->id))}}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <p class="mb-3 text-error">When you delete your account, the previous reservation information will also be deleted.</p>
-                                    <x-password name="dltpass" />
-                                    <div class="modal-action">
-                                        <button class="btn btn-error">Delete Account</button>
-                                    </div>
-                                </form>
-                            </x-modal>
+                            @isset($user->password)
+                                <x-modal id="delete_acc_modal" title="Enter your password to confirm delete your account" noBottom loader>
+                                    <form action="{{route('profile.destroy.account', encrypt($user->id))}}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-password name="dltpass" />
+                                        <div class="modal-action">
+                                            <button class="btn btn-error">Delete Account</button>
+                                        </div>
+                                    </form>
+                                </x-modal>    
+                            @else
+                                <x-modal id="delete_acc_modal" title="Enter your code to confirm delete your account" loader>
+                                    <form x-data="codes" action="{{route('profile.destroy.account.code', encrypt($user->id))}}" method="POST" noBottom>
+                                        @csrf
+                                        @method('DELETE')
+                                        <div x-data="{countdown: 15, resend: false}">
+                                            <input type="text" name="code" placeholder="Type Code here" class="input input-bordered w-full" maxlength="4" />
+                                            <template x-if="resend">
+                                                <div class="text-sm">Resend after: <span x-text="countdown" class="text-lg"></span> sec</div>
+                                            </template>
+                                            <div class="modal-action">
+                                                <button type="button" class="btn btn-ghost" @click="send()" :disabled="resend">Send Code</button>
+                                                <button class="btn btn-error" @click="loader = true">Delete Account</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </x-modal> 
+                                @push('scripts')
+                                    <script>
+                                        document.addEventListener('alpine:init', () => {
+                                            Alpine.data('codes', () => ({
+                                                countdown: 15,
+                                                resend: false,
+                                                send() {
+                                                    axios.get('{{route('profile.destroy.send.code', encrypt($user->id))}}')
+                                                        .then(response => {
+                                                            console.log(response.data);
+                                                        })
+                                                        .catch(error => {
+                                                            console.error(error);
+                                                        });
+                                                    this.resend = true;
+                                                    setInterval (() => { 
+                                                        this.countdown -= 1; 
+                                                        if(this.countdown <= 0) {
+                                                            this.countdown = 15;
+                                                            this.resend = false
+                                                        }
+                                                    }, 1000)
+
+                                                },
+                                            }));
+                                        });
+                                    </script>
+                                @endpush    
+                            @endisset
+
                         @endif
                     </div>
                 </fieldset>

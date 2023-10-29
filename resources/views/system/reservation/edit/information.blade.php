@@ -1,6 +1,6 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
-    $arrPayment = ['Walk-in', 'Other Booking', 'Gcash', 'PayPal', 'Bank Transfer'];
+    $arrPayment = ['Walk-in', 'Other Online Booking', 'Gcash', 'PayPal', 'Bank Transfer'];
     $arrStatus = [0 => 'Pending', 1 => 'Confirmed', 2 => 'Check-in', 3 => 'Check-out', 5 => 'Cancel'];
 @endphp
 <x-system-layout :activeSb="$activeSb">

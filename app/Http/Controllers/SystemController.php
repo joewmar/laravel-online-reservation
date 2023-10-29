@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\System;
+use App\Models\AuditTrail;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -42,6 +43,11 @@ class SystemController extends Controller
             }
             Notification::send($systems, new SystemNotification(Str::limit($text, 10), $text, route('system.notifications')));
         }
+        AuditTrail::create([
+            'system_id' => $this->system_user->user()->id,
+            'action' => $text,
+            'module' => 'Access System',
+        ]);
     }
     public function index(Request $request){
         $employees  = System::whereNot('id', auth('system')->user()->id)->paginate(5);
@@ -157,6 +163,9 @@ class SystemController extends Controller
         ]);
         if(Hash::check($validated['passcode'], $this->system_user->user()->passcode)){
             $systemUser = System::findOrFail(decrypt($id));
+            
+            foreach(AuditTrail::where('system_id', $systemUser->id)->get() ?? [] as $at) $at->update(['name' => $systemUser->name(), 'role' => $systemUser->type]);
+
             $systemUser->delete();
             return redirect()->route('system.setting.accounts.home')->with('success', $systemUser->name() . ' was Deleted');
         }

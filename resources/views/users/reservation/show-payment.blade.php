@@ -12,14 +12,16 @@
                 <div class="mt-5 flex justify-between items-end">
                     <div>
                         <h2 class="font-bold text-sm">Payment Method: <span class="font-normal">{{$r_list->payment_method}}</span></h2>
-                        <h2 class="font-bold text-sm">Attempt: <span class="font-normal">{{3 - $r_list->payment->count()}}</span></h2>
+                        @if($r_list->payment->whereNotNull('approval')->count() > 0)
+                            <h2 class="font-bold text-sm">Attempt: <span class="font-normal">{{3 - $r_list->payment->whereNotNull('approval')->count() > 0 ? 3 - $r_list->payment->whereNotNull('approval')->count() : 'None'}}</span></h2>
+                        @endif
                     </div>
                     @if($r_list->payment_method == "Gcash")
-                        <a href="{{route('reservation.gcash', encrypt($r_list->id))}}" class="btn btn-primary btn-sm md:btn-md">Send</a>
+                        <a href="{{route('reservation.gcash', encrypt($r_list->id))}}" class="btn btn-primary btn-sm md:btn-md {{!($r_list->status > 0 && $r_list->status < 5) ? 'btn-disabled' : ''}}">Send</a>
                     @elseif($r_list->payment_method == "PayPal")
-                        <a href="{{route('reservation.paypal', encrypt($r_list->id))}}" class="btn btn-primary btn-sm md:btn-md">Send</a>
+                        <a href="{{route('reservation.paypal', encrypt($r_list->id))}}" class="btn btn-primary btn-sm md:btn-md {{!($r_list->status > 0 && $r_list->status < 5) ? 'btn-disabled' : ''}}">Send</a>
                     @elseif($r_list->payment_method == "Bank Transfer")
-                        <a href="{{route('reservation.bnktr', encrypt($r_list->id))}}" class="btn btn-primary btn-sm md:btn-md">Send</a>
+                        <a href="{{route('reservation.bnktr', encrypt($r_list->id))}}" class="btn btn-primary btn-sm md:btn-md {{!($r_list->status > 0 && $r_list->status < 5) ? 'btn-disabled' : ''}}">Send</a>
                     @endif
                 </div>
                 <div class="divider"></div>
@@ -27,7 +29,6 @@
                     @php $total = 0 @endphp
                         @forelse ($r_list->payment as $item)
                             @php $total += (double)$item->amount @endphp
-                            @if($item->payment_method === $r_list->payment_method)
                                 <div class="flex flex-col-reverse md:flex-row  justify-center items-center w-full h-full space-y-2 md:space-x-5">
                                     <div class="w-96 rounded my-5">
                                         @if(!isset($item->approval))
@@ -37,18 +38,24 @@
                                             </div>
                                         @endif
                                         @if($item->approval === 1)
-                                            <div class="mb-3 text-2xl md:text-4xl text-primary flex items-center space-x-3">
+                                            <div class="text-2xl md:text-4xl text-primary flex items-center space-x-3">
                                                 <span><i class="fa-regular fa-face-smile"></i></span>
                                                 <span class="text-sm md:text-xl font-bold">Approved</span>
                                             </div>
                                         @endif
                                         @if($item->approval === 0)
-                                        <div class="mb-3 text-2xl md:text-4xl text-error flex items-center space-x-3">
+                                        <div class="text-2xl md:text-4xl text-error flex items-center space-x-3">
                                             <span><i class="fa-regular fa-face-frown"></i></i></span>
                                                 <span class="text-sm md:text-xl font-bold">Disapproved</span>
                                             </div>
                                         @endif
-                                        <p class="text-neutral font-bold text-lg md:text-xl">{{$r_list->payment_method}} Payment from {{Carbon\Carbon::createFromFormat('Y-m-d h:i:s', $item->created_at)->format('F j, Y')}}</p>
+                                        @if($item->approval === 3)
+                                        <div class="text-2xl md:text-4xl text-yellow-500 flex items-center space-x-3">
+                                            <span><i class="fa-regular fa-face-meh"></i></span>
+                                                <span class="text-sm md:text-xl font-bold">Partial Approve</span>
+                                            </div>
+                                        @endif
+                                        <p class="text-neutral font-bold text-lg md:text-xl">{{$item->payment_method}} Receipts at {{Carbon\Carbon::createFromFormat('Y-m-d h:i:s', $item->created_at)->format('M j, Y')}}</p>
                                         <div class="mt-5">
                                             <p class="text-neutral text-sm md:text-xl"><strong>Payer Name: </strong>{{$item->payment_name}}</p>
                                             <p class="text-neutral text-sm md:text-xl"><strong>Reference No.: </strong>{{$item->reference_no}}</p>
@@ -60,7 +67,6 @@
                                     </div>
                                 </div>
                                 <div class="divider"></div>
-                            @endif
                         @empty
                         <div class="flex justify-center">
                             <h1 class="font-bold text-xl">No Payment Sent</h1>

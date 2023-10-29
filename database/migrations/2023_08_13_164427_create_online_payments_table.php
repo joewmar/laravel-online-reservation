@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('payment_name'); /* 0=>gcash, 1 => paypal */
             $table->string('image');
             $table->decimal('amount', 8, 2);
-            $table->boolean('approval')->nullable(); /* 0 => aproval, 1 => disaproval */
+            $table->boolean('approval')->nullable(); /* 1 => aproval, 0 => disaproval, 3 => partial approve */
             // $table->tinyInteger('attempt')->default(0); /* 2 attepmt was max to give your chance */
             $table->string('reference_no');
             $table->timestamps();

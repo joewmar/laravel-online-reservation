@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\News;
+use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
@@ -18,6 +19,14 @@ class NewsController extends Controller
             if(!($this->system_user->user()->type === 0)) abort(404);
             return $next($request);
         });
+    }
+    private function employeeLog($action){
+        $user = auth()->guard('system')->user();
+        AuditTrail::create([
+            'system_id' => $user->id,
+            'action' => $action,
+            'module' => 'News',
+        ]);
     }
     public function index(Request $request){
         $news = News::news()->get();
@@ -64,7 +73,9 @@ class NewsController extends Controller
                 'description' => $validated['description'],
             ]);
         }
-        if($created) return redirect()->route('system.news.home')->with('success', $created->title . ' News was Added');
+        $message = $created->title . ' News was Added';
+        $this->employeeLog($message);
+        if($created) return redirect()->route('system.news.home')->with('success', $message);
     }
     public function show($id){
         $new = News::findOrFail(decrypt($id));
@@ -120,7 +131,9 @@ class NewsController extends Controller
                 'to' => null,
             ]);
         }
-        if($updated) return redirect()->route('system.news.home')->with('success', $new->title . ' News was Update');
+        $message = $new->title . ' News was Updated';
+        $this->employeeLog($message);
+        if($updated) return redirect()->route('system.news.home')->with('success', $message);
     }
     public function destroy(Request $request, $id){
         $new = News::findOrFail(decrypt($id));
@@ -130,7 +143,9 @@ class NewsController extends Controller
         if(!Hash::check($validated['passcode'], $this->system_user->user()->passcode)) return back()->with('error', 'Invalid Passcode')->withInput($validated);
         deleteFile($new->image);
         $deleted = $new->delete();
-        if($deleted) return redirect()->route('system.news.home')->with('success', $new->title . ' News was Removed');
+        $message = $new->title . ' News was Removed';
+        $this->employeeLog($message);
+        if($deleted) return redirect()->route('system.news.home')->with('success', $message);
 
     }
     public function createAnnouncement(){
@@ -162,7 +177,9 @@ class NewsController extends Controller
                 'title' => $validated['title'],
             ]);
         }
-        if($created) return redirect()->route('system.news.home', 'tab=announcement')->with('success', $created->title . ' Announcement was Added');
+        $message = $created->title . ' Announcement was Added';
+        $this->employeeLog($message);
+        if($created) return redirect()->route('system.news.home', 'tab=announcement')->with('success', $message);
     }
     public function showAnnouncement($id){
         $new = News::findOrFail(decrypt($id));
@@ -209,7 +226,9 @@ class NewsController extends Controller
                 'to' => null,
             ]);
         }
-        if($updated) return redirect()->route('system.news.home', 'tab=announcement')->with('success', $new->title . ' Announcement was Update');
+        $message = $new->title . ' Announcement was Updated';
+        $this->employeeLog($message);
+        if($updated) return redirect()->route('system.news.home', 'tab=announcement')->with('success', $message);
     }
     public function destroyAnnouncement(Request $request, $id){
         $new = News::findOrFail(decrypt($id));
@@ -218,7 +237,9 @@ class NewsController extends Controller
         ]);
         if(!Hash::check($validated['passcode'], $this->system_user->user()->passcode)) return back()->with('error', 'Invalid Passcode')->withInput($validated);
         $deleted = $new->delete();
-        if($deleted) return redirect()->route('system.news.home', 'tab=announcement')->with('success', $new->title . ' Announcement was Removed');
+        $message = $new->title . ' Announcement was Removed';
+        $this->employeeLog($message);
+        if($deleted) return redirect()->route('system.news.home', 'tab=announcement')->with('success', $message);
 
     }
     

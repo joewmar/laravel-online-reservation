@@ -431,12 +431,12 @@ class ReservationController extends Controller
             'user_id' => $user->id,
             'pax' => $uinfo['px'] ?? '',
             'age' => $uinfo['age'] ?? '',
-            'check_in' => $uinfo['cin'] ?? '',
-            'check_out' => $uinfo['cout'] ?? '',
+            'check_in' => Carbon::createFromFormat('Y-m-d', $uinfo['cin'])->setTimezone('Asia/Manila')->format('Y-m-d') ?? '',
+            'check_out' => Carbon::createFromFormat('Y-m-d', $uinfo['cout'])->setTimezone('Asia/Manila')->format('Y-m-d') ?? '',
             'accommodation_type' => $uinfo['at'] ?? '',
             'payment_method' => $uinfo['py'] ?? '',
         ];
-        if($uinfo['at'] !== 'Room Only'){
+        if($uinfo['at'] !== 'Room Only' && isset($validated['tour'])){
             foreach(decryptedArray($validated['tour']) as $key => $tour_id) {
                 $tour_menu = TourMenu::find($tour_id);
                 $tours['tm'. $tour_id] = [
@@ -449,7 +449,7 @@ class ReservationController extends Controller
             $reserve_info['tour_pax'] = $uinfo['tpx'];
             $reserve_info['transaction'] = $tours;
         }
-
+        
         $reserve_info = Reservation::create($reserve_info);
 
         if($request->hasFile('valid_id')){  

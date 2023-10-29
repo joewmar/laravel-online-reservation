@@ -138,7 +138,7 @@ class UserController extends Controller
     public function updatePassword(Request $request, $id){
         $user = User::findOrFail(decrypt($id));
         $validator = Validator::make($request->all(), [
-            'current_password' => ['required'],
+            'current_password' => Rule::when(isset($user->password), ['required']),
             'new_password' => ['required', Password::min(8)->symbols()],
             'new_password_confirmation' => ['required', 'same:new_password'],
         ], [
@@ -147,11 +147,11 @@ class UserController extends Controller
         if($validator->fails()) return back()->withErrors($validator);
         
         $validator = $validator->validated();
-        if (!Hash::check($validator['current_password'], $user->password)) return back()->withErrors(['new_password' => 'The Current Password does not match']);
+        if (isset($user->password) && !Hash::check($validator['current_password'], $user->password)) return back()->withErrors(['new_password' => 'The Current Password does not match']);
         $validator['new_password'] = bcrypt($validator['new_password']);
         $updated = $user->update(['password' => $validator['new_password']]);
 
-        if($updated) return redirect()->route('profile.home')->with('success', 'Your New Password was changed');
+        if($updated) return redirect()->route('profile.home')->with('success', 'Your Password was changed');
         
     }
     public function updateValidID(Request $request, $id){
@@ -295,7 +295,6 @@ class UserController extends Controller
             $validated['first_name'] = $user['first_name'];
             $validated['last_name'] = $user['last_name'];
             $validated['email'] = $user['email'];
-            $validated['password'] = Str::password();
             $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
             $validated['contact'] = $phone->formatInternational(); 
             $newUser = User::create($validated);
@@ -324,10 +323,58 @@ class UserController extends Controller
         if(!Hash::check($validated['dltpass'], $user->password)) return back()->with('error', 'Invalid Credential');
         if(isset($user->valid_id)) deleteFile($user->valid_id);
         if(isset($user->avatar)) deleteFile($user->avatar);
-        $userID = $user->id;
+        foreach (Reservation::where('user_id', $user->id)->get() ?? [] as $list) $list->update([
+            'otherinfo' => [
+                'name' => $user->name(),
+                'age' => $user->age(),
+                'nationality' => $user->nationality,
+                'country' => $user->country,
+                'email' => $user->email,
+                'contact' => $user->contact,
+            ],
+        ]);
         if($user->delete()){
-            $r_lists = Reservation::where('user_id', $userID);
-            foreach ($r_lists ?? [] as $list) $list->delete();
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect('/')->with('success', 'Your Account was permanent delete');
+        }
+    }
+    public function sendCode($id){
+        $user = User::findOrFail(decrypt($id));
+        $otp = mt_rand(1111,9999);
+        $otp = encrypt($otp);
+        $details = [
+            'name' => $user->name(),
+            'title' => "Account Deletion Confirmation",
+            'body' => 'Code: ' . decrypt($otp),
+        ];
+        Mail::to($user->email)->queue(new ReservationMail($details, 'reservation.mail', 'Delete Account Verification'));
+        session(['code' => $otp]);
+        return response()->json(['status' => 'success']);
+    }
+    public function destroyAccCode(Request $request, $id){
+        $user = User::findOrFail(decrypt($id));
+        $validated = Validator::make($request->all(), ['code' => 'required|numeric|digits:4']);
+        if($validated->fails()) return back()->with('error', $validated->errors()->all());
+
+        $validated = $validated->validate();
+
+        if(session()->has('code') && $validated['code'] != decrypt(session('code'))) return back()->with('error', 'Invalid Code');
+        if(isset($user->valid_id)) deleteFile($user->valid_id);
+        if(isset($user->avatar)) deleteFile($user->avatar);
+        foreach (Reservation::where('user_id', $user->id)->get() ?? [] as $list) $list->update([
+            'otherinfo' => [
+                'name' => $user->name(),
+                'age' => $user->age(),
+                'nationality' => $user->nationality,
+                'country' => $user->country,
+                'email' => $user->email,
+                'contact' => $user->contact,
+            ],
+        ]);
+        if($user->delete()){
+            session()->has('code');
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

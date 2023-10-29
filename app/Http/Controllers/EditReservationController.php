@@ -6,6 +6,7 @@ use Exception;
 use App\Models\Room;
 use App\Models\System;
 use App\Models\RoomRate;
+use App\Models\AuditTrail;
 use App\Models\Reservation;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
@@ -31,7 +32,8 @@ class EditReservationController extends Controller
         });
     }
     private function employeeLogNotif($action, $link = null){
-        if(auth()->guard('system')->user()->role() !== "Admin"){
+        $user = auth()->guard('system')->user();
+        if($user->role() !== "Admin"){
             $admins = System::all()->where('type', 0);
             $text = "New Employee Log! \n" .
             "Employee: " . auth()->guard('system')->user()->name() ."\n" .
@@ -51,6 +53,11 @@ class EditReservationController extends Controller
             }
             Notification::send($admins, new SystemNotification('Employee Action from '.auth()->guard('system')->user()->name().': ' . Str::limit($action, 10, '...'), $text, route('system.notifications')));
         }
+        AuditTrail::create([
+            'system_id' => $user->id,
+            'action' => $action,
+            'module' => 'Reservation',
+        ]);
     }
     private function roomAssign(array $rooms, Reservation $reservation, $validated, bool $forceAssign = false, bool $changeAssign = false){
         $roomCustomer = [];
@@ -199,7 +206,7 @@ class EditReservationController extends Controller
                     'title' => "Edit Information",
                     'body' => "Your Reservation was updated by " . $system_user->name(). '. If you have Concern Please Contact us',
                 ];
-                $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail')));
+                if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail')));
                 $this->employeeLogNotif('Update Reservation for ' . $reservation->userReservation->name(), route('system.reservation.show', $id));
                 return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . ' Information was Updated');
             }
@@ -333,7 +340,7 @@ class EditReservationController extends Controller
                 'title' => "Edit Information",
                 'body' => "Your Reservation was updated by " . $system_user->name(). '. If you have Concern Please Contact of Owner',
             ];
-            $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail')));
+            if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail')));
             $this->employeeLogNotif('Update Reservation for ' . $reservation->userReservation->name(), route('system.reservation.show', $id));
             return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . ' Information was Updated');
         }
@@ -450,7 +457,7 @@ class EditReservationController extends Controller
                 'title' => 'Change Room Assign',
                 'body' => 'The business has changed your room assignment. Your room is now ' . implode(', ', $roomDetails),
             ];
-            $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail')));
+            if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.show', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail')));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Change Room Assign of '.$reservation->userReservation->name().' was updated');
         }
     }
@@ -490,7 +497,7 @@ class EditReservationController extends Controller
                     'title' => "Edit Downpayment",
                     'body' => "Your Downpayment was updated by " . $system_user->name() . " with  ₱" . number_format($validated['amount'], 2),
                 ];
-                $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+                if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
 
                 $this->employeeLogNotif('Fill the Payment of Force Payment for ' . $reservation->userReservation->name() . ' in ' . $validated['amount'] . ' pesos', route('system.reservation.show', $id));
                 return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . ' downpayment was updated in amount of ₱ ' . number_format($validated['amount'], 2));
@@ -572,7 +579,7 @@ class EditReservationController extends Controller
                     'title' => "Edit Check-in Payment",
                     'body' => "Your Check-in Payment was updated by " . $system_user->name() . " with  ₱" . number_format($validated['amount'], 2),
                 ];
-                $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+                if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.show.online.payment', encrypt($reservation->id)) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
 
                 $this->employeeLogNotif('Fill the Payment of Force Payment for ' . $reservation->userReservation->name() . ' in ' . $validated['amount'] . ' pesos', route('system.reservation.show', $id));
                 return redirect()->route('system.reservation.show', $id)->with('success', $reservation->userReservation->name() . ' downpayment was updated in amount of ₱ ' . number_format($validated['amount'], 2));

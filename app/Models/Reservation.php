@@ -27,7 +27,7 @@ class Reservation extends Model
         'check_out',
         'status',
         'transaction',
-        'message',
+        'otherinfo',
     ];
 
     protected $primaryKey = 'id'; // Set the custom ID as the primary key.
@@ -106,6 +106,13 @@ class Reservation extends Model
             set: fn ($value) => json_encode($value),
         );
     }
+    protected function otherinfo(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => json_decode($value, true),
+            set: fn ($value) => json_encode($value),
+        );
+    }
     protected function message(): Attribute
     {
         return Attribute::make(
@@ -174,6 +181,17 @@ class Reservation extends Model
         }
         else return $total;
     }
+    public function getRoomAmount()
+    {
+        $amount = 0;
+        if(!empty($this->attributes['transaction'])) {
+            foreach(json_decode($this->attributes['transaction'], true) as $key => $item) {
+                if(strpos($key, 'rid') !== false) $amount += (double)$item['amount'];
+            }
+            return $amount;
+        }
+        else return $amount;
+    }
     public function downpayment()
     {
         return json_decode($this->attributes['transaction'])->payment->downpayment ?? 0;
@@ -193,6 +211,7 @@ class Reservation extends Model
         if(isset($allPaid['payment'])){
             $paymentCustomer += $allPaid['payment']['cinpay'] ?? 0;
             $paymentCustomer += $allPaid['payment']['downpayment'] ?? 0;
+            $paymentCustomer += $allPaid['payment']['coutpay'] ?? 0;
         }
         if($this->getTotal() > $paymentCustomer){
             return abs($this->getTotal() - $paymentCustomer);

@@ -12,6 +12,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\TourMenuController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\SystemHomeController;
 use App\Http\Controllers\WebContentController;
@@ -24,7 +25,6 @@ use App\Http\Controllers\EditReservationController;
 use App\Http\Controllers\ReservationTwoController;
 use App\Http\Controllers\SystemReservationController;
 use App\Http\Controllers\SystemReservationTwoController;
-use App\Notifications\SystemNotification;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,6 +110,8 @@ Route::middleware(['auth:web', 'preventBackhHistory', 'session.delete'])->contro
         Route::put('/{id}/update/password', 'updatePassword')->name('update.password');
         Route::put('/{id}/update/valid-id', 'updateValidID')->name('update.validid');
         Route::delete('/{id}/delete/account', 'destroyAccount')->name('destroy.account');
+        Route::get('/{id}/delete/code', 'sendCode')->name('destroy.send.code');
+        Route::delete('/{id}/delete/code', 'destroyAccCode')->name('destroy.account.code');
     });
 
     Route::prefix('my-reservation')->name('user.reservation.')->controller(MyReservationController::class)->group(function (){
@@ -185,7 +187,10 @@ Route::prefix('system')->name('system.')->group(function(){
                 Route::get('/create/step4', 'step3')->name('create.step.three');
                 Route::post('/create/step4', 'storeStep3')->name('store.step.three');
                 Route::get('/create/step5', 'step4')->name('create.step.four');
+                Route::get('/create/step5/search', 'step4Search')->name('create.step.three.search');
                 Route::post('/create/step5', 'storeStep4')->name('store.step.four');
+                Route::get('/create/step6', 'step5')->name('create.step.five');
+                Route::post('/create/step6', 'storeStep5')->name('store.step.five');
             });
             Route::controller(EditReservationController::class)->group(function (){
 
@@ -317,7 +322,14 @@ Route::prefix('system')->name('system.')->group(function(){
 
             Route::post('/image/gallery', 'storeGallery')->name('image.gallery');
             Route::delete('/image/gallery/delete', 'destroyGallery')->name('image.gallery.destroy.all');
+
+            Route::post('/tour', 'storeTour')->name('image.tour');
+            // Route::put('/image/tour/update', 'updateTour')->name('image.tour.update');
+            // Route::delete('/image/tour/delete', 'destroyTour')->name('image.tour.destroy.all');
+
             Route::put('/reservation/operation', 'storeOperations')->name('reservation.operation');
+
+
 
             Route::get('/image/gallery/{key}/show', 'showGallery')->name('image.gallery.show');
             Route::put('/image/gallery/{key}/update', 'updateGallery')->name('image.gallery.update');
@@ -326,6 +338,14 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::get('/image/hero/{key}/show', 'showHero')->name('image.hero.show');
             Route::put('/image/hero/{key}/update', 'updateHero')->name('image.hero.update');
             Route::delete('/image/hero/{key}/delete', 'destroyHeroOne')->name('image.hero.destroy.one');
+
+            Route::get('/tour/{type}/{key}/show', 'showTour')->name('image.tour.show');
+            Route::get('/tour/{type}/{key}/update', 'updateTour')->name('image.tour.update');
+            Route::delete('/tour/{type}/{key}/delete', 'destroyTourOne')->name('image.tour.destroy.one');
+
+            Route::delete('/image/tour/main/delete', 'destroyTourMain')->name('image.tour.destroy.main.all');
+            Route::delete('/image/tour/side/delete', 'destroyTourSide')->name('image.tour.destroy.side.all');
+
 
             Route::get('/contact/create', 'createContact')->name('contact.create');
             Route::post('/contact/create', 'storeContact')->name('contact.store');
@@ -394,6 +414,17 @@ Route::prefix('system')->name('system.')->group(function(){
                 Route::delete('/{id}/delete', 'destroy')->name('destroy');
             });
 
+            Route::prefix('activity-log')->name('audit.')->controller(AuditLogController::class)->middleware('can:admin')->group(function (){
+                Route::get('/', 'index')->name('home');
+                Route::post('/search', 'search')->name('search');
+                // Route::get('/create', 'create')->name('create');
+                // Route::post('/create/store', 'store')->name('create.store');
+    
+                // Route::get('/{id}', 'show')->name('show');
+                // Route::get('/{id}/edit', 'edit')->name('edit');
+                // Route::put('/{id}/update', 'update')->name('update');
+                // Route::delete('/{id}/delete', 'destroy')->name('destroy');
+            });
 
             Route::prefix('rooms')->name('rooms.')->controller(RoomSettingController::class)->middleware('can:admin')->group(function(){
                 Route::get('/','index')->name('home');

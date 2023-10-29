@@ -10,9 +10,8 @@
     @vite('resources/css/app.css')
     @stack('styles')
     <title>{{ str_replace('_', ' ', config('app.name'))}}</title>
-    {{-- <script src="//unpkg.com/alpinejs" defer></script> --}}
 </head>
-<body class="bg-white h-screen">
+<body x-data="{loader: false}" class="bg-white h-screen">
   @stack('top')
   @if(session()->has('success'))
     @if(is_array(session('success')))
@@ -36,10 +35,12 @@
       <div id="overlay" class="transition ease-in-out duration-300 hidden fixed w-full h-full bg-primary bg-opacity-70 z-50"></div>
       <x-system-navbar />
       <div class="sysContent mt-10 md:mt-24">
+        <x-loader />
         {{$slot}}
       </div>
     </main>
    </div>
+
   @vite('resources/js/app.js')
   @stack('scripts')
   <script src="{{Vite::asset("resources/js/passcode.js")}}"></script>

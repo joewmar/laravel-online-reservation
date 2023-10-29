@@ -1,11 +1,12 @@
 @php
     $addons = isset(session('nwrinfo')['qty']) ? decrypt(session('nwrinfo')['qty']) : old('qty');
+    $params = [];
     if(session()->has('nwrinfo')){
       $params = session('nwrinfo') ?? [];
     }
 @endphp
 <x-system-layout :activeSb="$activeSb">
-  <x-system-content title="Add Book (Addons)" back=true>
+  <x-system-content title="Add Book (Addons)">
     <section x-data="{loader: false}" class="my-10 p-5">
       <x-loader />
       <div>
