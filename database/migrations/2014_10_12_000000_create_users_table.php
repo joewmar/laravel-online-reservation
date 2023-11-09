@@ -22,8 +22,7 @@ return new class extends Migration
             $table->string('nationality');
             $table->string('country');
             $table->string('contact');
-            if(env('FORCE_CREATE_USER') ?? false) $table->string('email');
-            else $table->string('email')->unique();
+            $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->string('valid_id')->nullable();

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('category');
             $table->text('inclusion');
             $table->tinyInteger('atpermit')->default(0); /* 0 => All, 1 => 'Day Tour */
+            $table->softDeletes();
             $table->timestamps();
         });
     }

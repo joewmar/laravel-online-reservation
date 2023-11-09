@@ -52,10 +52,10 @@
               </table>
           </div>
           <div class="flex justify-end">
-            @if (session()->has('nwrinfo') && decrypt(session('nwrinfo')['at']) == "Room Only")
-              <a @click="loader = true" href="{{route('system.reservation.create.step.one', Arr::query(["at" => $params['at'], "cin" =>  $params['cin'], "cout" =>  $params['cout'], "px" =>  $params['px']]) ) }}" class="btn btn-ghost">Back</a>
+            @if ($info['at'] == "Room Only")
+              <a @click="loader = true" href="{{route('system.reservation.create.step.one') }}" class="btn btn-ghost">Back</a>
             @else
-              <a @click="loader = true" href="{{route('system.reservation.create.step.two', Arr::query(["rt" =>  $params['rt'], "rm" => $params['rm'], "px" =>  $params['px'], "cin" =>  $params['cin'], "cout" =>  $params['cout'], "py" =>  $params['py'], "st" =>  $params['st'], "at" =>  $params['at'], "tpx" =>  $params['tpx']]) ) }}" class="btn btn-ghost">Back</a>
+              <a @click="loader = true" href="{{route('system.reservation.create.step.two') }}" class="btn btn-ghost">Back</a>
             @endif
             <button class="btn btn-primary" @click="loader = true">Next</button>
         </div>

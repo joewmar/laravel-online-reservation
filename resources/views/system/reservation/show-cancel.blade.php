@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="" back=true>
+    <x-system-content title="" back="{{route('system.reservation.show', encrypt($r_list->id))}}">
         {{-- User Details --}}
        <div class="px-3 md:px-20">
 
@@ -7,7 +7,7 @@
         <div class="divider"></div>
         <div class="my-5 flex justify-between items-center">
             <h2 class="text-xl md:text-2xl  font-bold">Cancellation Request<sup class="text-sm text-error">{{$r_list->status === 5 ? ' *Reservation Canceled' : ''}}</sup></h2>
-            <a href="{{route('system.reservation.force.cancel', encrypt($r_list->id))}}" class="btn btn-error btn-sm" {{$r_list->status < 1 ? 'disabled' : ''}}>Force Cancel</a>
+            <a href="{{route('system.reservation.force.cancel', encrypt($r_list->id))}}" class="btn btn-error btn-sm" {{$r_list->status > 0 ? '' : 'disabled'}}>Force Cancel</a>
         </div>
         <div class="divider"></div>
         <div class="w-full">

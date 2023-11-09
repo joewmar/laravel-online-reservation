@@ -3,7 +3,7 @@
     $arrKeyType = array_keys($arrType);
 
 @endphp
-<x-system-layout :activeSb="$activeSb">
+<x-system-layout :activeSb="$activeSb" back="{{route('system.setting.accounts.home')}}">
     <x-system-content title="Edit {{$employee->first_name}} {{$employee->last_name}}">
         <section class="pt-24 p-6 text-neutral">
             <form action="{{route('system.setting.accounts.update', encrypt($employee->id))}}" method="POST" class="flex justify-center" enctype="multipart/form-data">

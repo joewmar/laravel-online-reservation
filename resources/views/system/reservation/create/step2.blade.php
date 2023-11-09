@@ -37,6 +37,7 @@
         "st" => $decrypted['st'] ??  old('status'),
       ];
     }
+    $user_days = getNoDays($TourInfo['cin'], $TourInfo['cout']);
 
 @endphp
 
@@ -44,40 +45,42 @@
   <x-system-content title="Add Book (Tour)">
     <section
       x-data="{
-        filterOpen: false, 
         alert: false,
         alertType: '',
         loader: false,
-         @if(session()->has('nwrinfo') && !empty(session()->get('nwrinfo')['tm']))
+         @if(!empty($cmenu))
           carts: [
-            @foreach($cmenu as $key => $item)
+            @foreach($cmenu ?? [] as $key => $item)
               { id: '{{ $item['id'] ?? '' }}', 
                 title: '{{ $item['title'] ?? '' }}',
                 type: '{{ $item['type'] ?? '' }} ({{$item['pax']}} guest)',
                 price: '₱ {{ number_format($item['price'], 2) ?? '' }}',
+                nprice: {{$item['price'] * (int)$TourInfo['tpx'] }},
               },
             @endforeach
           ],
         @else
           carts: [],
         @endif
-        cartsCount: 0,
         message: '',
-        addToCart(idValue, titleValue, typeValue, priceValue){
-          const item = { id: idValue, title: titleValue, type: typeValue, price: priceValue };
+        days: 0,
+        amount: 0,
+        addToCart(idValue, titleValue, typeValue, priceValue, numPrice){
+          const item = { id: idValue, title: titleValue, type: typeValue, price: priceValue, nprice: parseFloat(numPrice * {{(int)$TourInfo['tpx']}}) };
           if(!this.carts.find(cartItem => cartItem.id == idValue)){
-            this.carts.push(item);
-            this.alert = true;
-            this.alertType = 'success';
-            this.message = `${titleValue} added from the cart!`;
+              this.carts.push(item);
+              this.alert = true;
+              this.alertType = 'success';
+              this.message = `${titleValue} added from the cart!`;
           }
           else{
-            this.alert = true;
-            this.alertType = 'error';
-            this.message = `${titleValue} was already added`;
+              this.alert = true;
+              this.alertType = 'error';
+              this.message = `${titleValue} was already added`;
           }
+          this.computeAmount()
         },
-        removeItemCart(id, title) {
+        removeItemCart(id, title, numPrice) {
             const index = this.carts.findIndex(cartItem => cartItem.id == id);
             if (index !== -1) {
               this.carts.splice(index, 1);
@@ -90,11 +93,22 @@
               this.alertType = 'error';
               this.message = `${title} was already remove`;
             }
+            this.computeAmount()
+        },
+        computeAmount(){
+          this.amount = 0;
+          for (let x in this.carts) {
+            this.amount += parseFloat(this.carts[x].nprice);
+          }
+          this.days = this.carts.length;
         },
       }"
+      @if(!empty($cmenu))
+        x-init="days = carts.length;"
+      @endif
       x-cloak>
       <x-loader />
-      <div x-show="alert" id="close" class="fixed left-0 top-0 flex justify-center z-[100] w-full" x-init="console.log(carts); setTimeout(() => { alert = false }, 5000)">
+      <div x-show="alert" id="close" class="fixed left-0 top-0 flex justify-center z-[100] w-full" x-init="setTimeout(() => { alert = false }, 5000)">
         <div :class="alertType == 'error' ? 'alert-error' : 'alert-success'" class="w-full alert shadow-md">
             <i :class="alertType == 'error' ? 'fa-solid fa-circle-exclamation' : 'fa-solid fa-circle-check'" class="text-xl"></i>        
             <div>
@@ -107,15 +121,17 @@
         </div>
       </div>
       <div class="mx-auto max-w-screen-md md:flex flex-col justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8" >
-          @if(request()->has(['cin', 'cout', 'py', 'at', 'st', 'tpx']) && $TourInfo['at'] != 'Room Type')
             <div id="tourmenu" class="w-full">
               <header>
                 <p class="mt-4 max-w-md font-bold text-2xl">
                   Choose your Tour
                 </p>
               </header>
-              <h4 class="mt-3 text-sm font-semibold">You Guest will going on tour: <span class="font-normal">{{$TourInfo['tpx']}} guest</span></h4>
-
+              <div class="mt-5">
+                <h4 class="text-sm font-semibold">Days: <span class="font-normal">{{$user_days}}</span></h4>
+                <h4 class="text-sm font-semibold">You Guest will going on tour: <span class="font-normal">{{$TourInfo['tpx']}} guest</span></h4>
+              </div>
+              <h4 class="mt-5 text-sm font-semibold text-error">Note: Each tour is equivalent to 1 day</h4>
               <div class="gap-10">
                 <form id="tour-form" action="{{route('system.reservation.store.step.two-two', Arr::query($TourInfoEncrypted))}}" method="post">
                   @csrf
@@ -136,18 +152,22 @@
                             <!-- head -->
                             <thead>
                               <tr>
-                                <th>Menu</th>
+                                <th>Tour</th>
                                 <th>Type</th>
                                 <th>Price</th>
+                                <th>Quantity</th>
                                 <th></th>
                               </tr>
                             </thead>
                             <tbody>
+    
+                              <!-- row -->
                               <template x-for="(cart, index) in carts" :key="index">
-                                <tr>
+                                <tr x-effect="computeAmount()">
                                   <td x-text="cart.title"></td>
                                   <td x-text="cart.type"></td>
                                   <td x-text="cart.price"></td>
+                                  <td>{{$TourInfo['tpx']}}</td>
                                   <td>
                                     <label :for="'removeCart' + index" class="btn btn-ghost">
                                       <i class="fa-solid fa-x text-xl text-error"></i>
@@ -157,7 +177,7 @@
                                       <div class="modal-box">
                                         <h3 class="font-bold text-lg">Do you want to remove: <span x-text="cart.title"></span></h3>
                                         <div class="modal-action">
-                                          <label :for="'removeCart' + index" @click="removeItemCart(cart.id, cart.title)" class="btn btn-primary">Yes</label>
+                                          <label :for="'removeCart' + index" @click="removeItemCart(cart.id, cart.title, cart.nprice)" class="btn btn-primary">Yes</label>
                                           <label :for="'removeCart' + index" class="btn btn-ghost">No</label>
                                         </div>
                                       </div>
@@ -165,15 +185,22 @@
                                   </td>
                                     <input x-ref="idRef + (index + 1)" type="hidden" name="tour_menu[]", :value="$el.value = cart.id">
                                 </tr>
+            
                               </template>
+  
                               <template x-if="carts.length === 0">
-                                <tr colspan="2" class="w-full"><td class="font-bold w-full text-center">No Cart Item!</td></tr>
+                                <tr class="w-full"><td colspan="4" class="font-bold w-full text-center">No Cart Item!</td></tr>
                               </template>
                             
                             </tbody>
                           </table>
                         </div>
-        
+                        <template x-if="carts.length !== 0">
+                          <div class="flex justify-start">
+                            <div class="font-bold mr-3">Total: </div>
+                            <div x-text="amount > 0 ? '₱ ' + amount.toLocaleString('en-US', {maximumFractionDigits:2}) : 'None' "></div>
+                          </div>
+                        </template>
                       </div>
                     </div>
                   </div>
@@ -183,7 +210,7 @@
               <div class="w-full text-center">
                   <span x-show="!document.querySelector('[x-cloak]')" class="loading loading-spinner loading-lg text-primary"></span>
               </div>
-              <x-tour :tourCategory="$tour_category" :tourLists="$tour_lists" tpx="{{$TourInfo['tpx']}}" atpermit="{{$TourInfo['at'] == 'Day Tour' ? 1 : 0 }}" />
+              <x-tour :tourCategory="$tour_category" :tourLists="$tour_lists" tpx="{{$TourInfo['tpx']}}" atpermit="{{$TourInfo['at'] == 'Day Tour' ? 1 : 0 }}" noDays="{{$user_days}}" />
 
             <div class="flex justify-start gap-5">
               <div class="mt-8 flex gap-4">
@@ -191,7 +218,6 @@
                   <button @click="loader = true" onclick="event.preventDefault(); document.getElementById('tour-form').submit();" class="btn btn-primary">Next</button>
               </div>
             </div>
-          @endif
         </form>
       </div>
     </section>

@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Your Profile" back="{{route('system.profile.home')}}">
+    <x-system-content title="Your Profile">
         <div class="w-full grid grid-cols-1 md:grid-cols-2 place-items-center gap-2 mt-11">
             <x-setting-card link="{{route('system.profile.edit')}}" icon="fa-solid fa-users" title="Edit Profile" description="Update your profile" />
             {{-- <x-setting-card link="system/profile/link" icon="fa-solid fa-briefcase" title="Business Social Link" description="Manage your social to communicate" /> --}}

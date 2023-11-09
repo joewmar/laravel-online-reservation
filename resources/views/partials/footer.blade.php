@@ -1,7 +1,10 @@
 <footer class="footer p-10 bg-base-200 text-base-content">
     <div>
       <img src="{{asset('images/logo.png')}}" width="50" height="50" alt="AA Logo">
-      <p>Alvin and Angie Mt. Pinatubo Accommodation and Tours<br/>Providing room and tour service since 2009</p>
+      <p>
+        <span class="font-medium">Alvin and Angie Mt. Pinatubo Accommodation and Tours<br/>Providing room and tour service since 2009</span>
+        <br/>© All Right Reserved. Designed by Recelestino et al.
+      </p>
     </div> 
     <div>
       <span class="footer-title">Social</span> 

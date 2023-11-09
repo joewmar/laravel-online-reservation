@@ -49,22 +49,24 @@
           @endif
         </div>
       </label>
-      <div tabindex="0" class="mt-3 card card-compact dropdown-content w-72 md:w-96 bg-base-100 shadow-xl">
+      <div tabindex="0" class="mt-3 card dropdown-content w-72 md:w-96 bg-base-100 shadow-xl">
         <div class="card-body">
           <span class="font-bold text-lg">Notifications</span>
-          <ul class="menu">
-            @forelse (auth('web')->user()->unreadNotifications->sortByDesc('created_at') as $notification)
-              @if(($loop->index+1) <= 8)
-                <li>
-                  <a href="{{$notification->data['link'] ?? '#'}}">
-                    <span>{{$notification->data['message']}}</span>
-                  </a>
-                </li>
-              @endif
-            @empty
-              <li>No Notifications</li>
-            @endforelse 
-          </ul>
+          <div class="overflow-y-auto h-32 md:h-96">
+            <ul class="menu">
+              @forelse (auth('web')->user()->unreadNotifications->sortByDesc('created_at') as $notification)
+                @if(($loop->index+1) <= 8)
+                  <li>
+                    <a href="{{$notification->data['link'] ?? '#'}}">
+                      <span>{{$notification->data['message']}}</span>
+                    </a>
+                  </li>
+                @endif
+              @empty
+                <li>No Notifications</li>
+              @endforelse 
+            </ul>
+          </div>
           <a href="{{route('user.notifications')}}" class="btn btn-primary btn-block">See All</a>
         </div>
       </div>

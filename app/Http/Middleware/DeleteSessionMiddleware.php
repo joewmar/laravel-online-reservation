@@ -17,6 +17,8 @@ class DeleteSessionMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if(!($request->routeIs('reservation.*'))) session()->forget('rinfo');
+        if(!($request->routeIs('user.reservation.edit.*'))) session()->forget('erinfo');
+        if(!($request->routeIs('system.reservation.edit.*'))) session()->forget('esrinfo');
         if(!($request->is('register/*'))) session()->forget('uinfo');
         if(!($request->routeIs('profile.*'))) session()->forget('upuinfo');
         

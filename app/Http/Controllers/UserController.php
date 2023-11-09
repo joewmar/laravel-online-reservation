@@ -159,7 +159,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'valid_id' => ['required', 'image', 'mimes:jpeg,png,jpg'],
         ]);
-        if(isset($user->valid_id)) deleteFile($user->valid_id);
+        if(isset($user->valid_id)) deleteFile($user->valid_id, 'private');
         $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
         $user->update($validated);
         return redirect()->route('profile.home')->with('success', 'Your Valid ID was changed');
@@ -181,6 +181,12 @@ class UserController extends Controller
             'contact.min' => 'Contact number must be valid',
             'required' => 'Need to fill up your :attribute',
         ]);
+        $accecpted = Validator::make($request->all(), [
+            'acptm' => ['accepted'],
+        ], [
+            'acptm.accepted' => 'Required to accepted Term & Conditiions',
+        ]);
+        if($accecpted->fails()) return back()->with('error', $accecpted->errors()->all())->withInput($request->all());
         if($validated){
             $phone = new PhoneNumber($validated['contact'], Str::upper($validated['contact_code']));
             $validated['contact'] = $phone->formatInternational();    
@@ -321,12 +327,13 @@ class UserController extends Controller
         $validated = $validated->validate();
 
         if(!Hash::check($validated['dltpass'], $user->password)) return back()->with('error', 'Invalid Credential');
-        if(isset($user->valid_id)) deleteFile($user->valid_id);
+        if(isset($user->valid_id)) deleteFile($user->valid_id, 'private');
         if(isset($user->avatar)) deleteFile($user->avatar);
         foreach (Reservation::where('user_id', $user->id)->get() ?? [] as $list) $list->update([
             'otherinfo' => [
-                'name' => $user->name(),
-                'age' => $user->age(),
+                "birthday" =>  $user->birthday,
+                "first_name" => $user->first_name,
+                "last_name" =>  $user->last_name,
                 'nationality' => $user->nationality,
                 'country' => $user->country,
                 'email' => $user->email,
@@ -361,7 +368,7 @@ class UserController extends Controller
         $validated = $validated->validate();
 
         if(session()->has('code') && $validated['code'] != decrypt(session('code'))) return back()->with('error', 'Invalid Code');
-        if(isset($user->valid_id)) deleteFile($user->valid_id);
+        if(isset($user->valid_id)) deleteFile($user->valid_id, 'private');
         if(isset($user->avatar)) deleteFile($user->avatar);
         foreach (Reservation::where('user_id', $user->id)->get() ?? [] as $list) $list->update([
             'otherinfo' => [

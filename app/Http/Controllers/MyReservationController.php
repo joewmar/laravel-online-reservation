@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use App\Models\TourMenuList;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 use App\Jobs\SendTelegramMessage;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\SystemNotification;
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\Notification;
 class MyReservationController extends Controller
 {   
     private function systemNotification($text, $link = null){
-        $systems = System::whereBetween('type', [0, 1])->get();
+        $systems = System::whereIn('type', [0, 1])->get();
         $keyboard = null;
         if(isset($link)){
             $keyboard = [
@@ -35,21 +36,20 @@ class MyReservationController extends Controller
         }
         foreach($systems as $system){
             if(isset($system->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID') ?? $system->telegram_chatID, $text, $keyboard));
-
         }
-
-        Notification::send($systems, new SystemNotification('Employee Action from '.auth()->guard('system')->user()->name().': ' . Str::limit($text, 10, '...'), $text, route('system.notifications')));
+        Notification::send($systems, new SystemNotification(Str::limit($text, 10, '...'), $text, route('system.notifications')));
     }
+
     public function index(Request $request){
-        $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 0)->latest()->first() ?? [];
+        $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 0)->latest()->paginate(5) ?? [];
         if($request['tab'] == 'confirmed'){
-            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 1)->latest()->first() ?? [];
+            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 1)->latest()->paginate(5) ?? [];
         }
         if($request['tab'] == 'cin'){
-            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 2)->latest()->first() ?? [];
+            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 2)->latest()->paginate(5) ?? [];
         }
         if($request['tab'] == 'cout'){
-            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 3)->latest()->first() ?? [];
+            $reservation = Reservation::where('user_id', auth('web')->user()->id)->where('status', 3)->latest()->paginate(5) ?? [];
         }
         if($request['tab'] == 'reshedule'){
             $reservation = Reservation::where(function ($query) {
@@ -72,8 +72,8 @@ class MyReservationController extends Controller
 
         }
 
-        if($request['tab'] == 'previous'){
-            $reservation = Reservation::with('previous')->where('user_id', auth('web')->user()->id)->where('status', 3)->latest()->paginate(5) ?? [];
+        if($request['tab'] == 'all'){
+            $reservation = Reservation::where('user_id', auth('web')->user()->id)->latest()->paginate(5) ?? [];
         }
         return view('users.reservation.index', ['activeNav' => 'My Reservation', 'reservation' => $reservation]);
     }
@@ -93,58 +93,57 @@ class MyReservationController extends Controller
 
             }
         }
-        $conflict = Reservation::all()->where('check_in', $reservation->check_in)->where('status', 0)->except($reservation->id);;
         $count = 0;
         foreach($reservation->transaction ?? [] as $key => $item){
             if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
-                $tour_menuID = (int)str_replace('tm','', $key);
-                $tour_menu[$count]['title'] = $reservation->transaction['tm'.$tour_menuID]['title'];
-                $tour_menu[$count]['price'] = $reservation->transaction['tm'.$tour_menuID]['price'];
-                $tour_menu[$count]['tpx'] = $reservation->transaction['tm'.$tour_menuID]['tpx'];
-                $tour_menu[$count]['amount'] = $reservation->transaction['tm'.$tour_menuID]['amount'];
-                $total += (double)$tour_menu[$count]['amount'];
+                $tour_menu[$count]['title'] = $item['title'] . ' '.$item['type'];
+                $tour_menu[$count]['price'] = $item['price'];
+                $tour_menu[$count]['tpx'] = $item['tpx'];
+                $tour_menu[$count]['used'] = $item['used'];
+                $tour_menu[$count]['amount'] = $item['amount'];
+                $tour_menu[$count]['key'] = $key;
+
+                // 'id' => $tour_menu->id,
+                // 'title' => $tour_menu->tourMenu->title,
+                // 'type' => $tour_menu->type,
+                // 'pax' => $tour_menu->pax,
+                // 'price' => (double)$tour_menu->price,
+                // 'created' => now('Asia/Manila')->format('YmdHis'),
+                // 'tpx' => $uinfo['tpx'],
             }
+
             // Rate
             if (strpos($key, 'rid') !== false) {
-                $rateID = (int)str_replace('rid','', $key);
-                $rate['name'] = $reservation->transaction['rid'.$rateID]['title'];;
-                $rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
-                $rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
-                if(isset($reservation->transaction['rid'.$rateID]['orig_amount'])){
-                    $rate['orig_amount'] = $reservation->transaction['rid'.$rateID]['orig_amount'];
+                // dd($item['amount']);
+                $rate['name'] = $item['title'];;
+                $rate['price'] = $item['price'];
+                $rate['person'] = $item['person'];
+                $rate['amount'] = $item['amount'];
+                if(isset($item['discounted'])){
+                    $rate['discounted'] = $item['discounted'];
+                }
+                if(isset($item['orig_amount'])){
+                    $rate['orig_amount'] = $item['orig_amount'];
                 }
             }
-            if (strpos($key, 'OA') !== false && is_array($item)) {
-                if(is_array($item)){
-                    foreach($item as $key => $value){
-                        $other_addons[$count.'-'.$key]['title'] = $value['title'];
-                        $other_addons[$count.'-'.$key]['pcs'] = $value['pcs'];
-                        $other_addons[$count.'-'.$key]['price'] = $value['price'];
-                        $other_addons[$count.'-'.$key]['amount'] = $value['amount'];
-                    }
+            if (strpos($key, 'OA') !== false) {
+                foreach($item as $key => $value){
+                    $other_addons[$count]['title'] = $value['title'];
+                    $other_addons[$count]['pcs'] = $value['pcs'];
+                    $other_addons[$count]['price'] = $value['price'];
+                    $other_addons[$count]['amount'] = $value['amount'];
                 }
-                else{
-                    $other_addons[$count]['title'] = $item['title'];
-                    $other_addons[$count]['pcs'] = $item['pcs'];
-                    $other_addons[$count]['price'] = $item['price'];
-                    $other_addons[$count]['amount'] = $item['amount'];
-                }
-
             }
-            if (strpos($key, 'TA') !== false && is_array($item)) {
-                if(is_array($item)){
-                    foreach($item as $key => $value){
-                        $tour_menu[$count.'-'.$key]['title'] = $value['title'];
-                        $tour_menu[$count.'-'.$key]['price'] = $value['price'];
-                        $tour_menu[$count.'-'.$key]['amount'] = $value['amount'];
-                    }
+            if (strpos($key, 'TA') !== false) {
+                foreach($item as $created => $value){
+                    $tour_menu[$count]['title'] = $value['title'] . ' '.$value['type'];
+                    $tour_menu[$count]['tpx'] = $value['tpx'];
+                    $tour_menu[$count]['price'] = $value['price'];
+                    $tour_menu[$count]['used'] = $value['used'];
+                    $tour_menu[$count]['key'] = $key . '(_)' . $created;
+                    // dd($item);
+                    $tour_menu[$count]['amount'] = $value['amount'];
                 }
-                else{
-                    $tour_menu[$count]['title'] = $item['title'];
-                    $tour_menu[$count]['price'] = $item['price'];
-                    $tour_menu[$count]['amount'] = $item['amount'];
-                }
-
             }
             $count++;
         }
@@ -168,42 +167,31 @@ class MyReservationController extends Controller
             'prev_status' => $reservation->status,
             'message' =>  $validate['cancel_message'],
         ];
-        $updated = $reservation->update(['message' => $messages, 'status' => 8]);
-        if($updated) {
-            $text = 
-            "Cancel Request Reservation!\n" .
-            "Name: ". $reservation->userReservation->name() ."\n" . 
-            "Age: " . $reservation->age ."\n" .  
-            "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
-            "Country: " . $reservation->userReservation->country ."\n" . 
-            "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservation->check_in)->format('F j, Y') ."\n" . 
-            "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservation->check_out)->format('F j, Y') ."\n" . 
-            "Type: " . $reservation->accommodation_type ."\n" . 
-            "Pax: " . $reservation->pax ."\n" . 
-            "Why to Cancel: " .$validate['cancel_message']; 
-            $this->systemNotification($text , route('system.reservation.show.cancel', $id));
-            return redirect()->route('user.reservation.home')->with('success', 'Cancel Request was succesfull to send. Just Wait Send Email or any Contact for Approval Request');
-        }
+        $reservation->message = $messages;
+        $reservation->status = 8;
+        $reservation->save();
+        $text = 
+        "Cancel Request Reservation!\n" .
+        "Name: ". $reservation->userReservation->name() ."\n" . 
+        "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+        "Country: " . $reservation->userReservation->country ."\n" . 
+        "Check-in: " . Carbon::createFromFormat('Y-m-d', $reservation->check_in)->setTimezone('Asia/Manila')->format('F j, Y') ."\n" . 
+        "Check-out: " . Carbon::createFromFormat('Y-m-d', $reservation->check_out)->setTimezone('Asia/Manila')->format('F j, Y') ."\n" . 
+        "Pax: " . $reservation->pax ."\n" . 
+        "Why to Cancel: " .$validate['cancel_message']; 
+        $this->systemNotification($text , route('system.reservation.show.cancel', $id));
+        return redirect()->route('user.reservation.home')->with('success', 'Cancel Request was succesfull to send. Just Wait Send Email or any Contact for Approval Request');
     }
     public function reschedule(Request $request, $id) {
         $reservation = Reservation::findOrFail(decrypt( $id));
-        if(str_contains($request['check_in'], 'to')){
-            $dateSeperate = explode('to', $request['check_in']);
-            $request['check_in'] = trim($dateSeperate[0]);
-            $request['check_out'] = trim ($dateSeperate[1]);
-        }
-        // Check out convertion word to date format
-        if(str_contains($request['check_out'], ', ')){
-            $date = Carbon::createFromFormat('F j, Y', $request['check_out']);
-            $request['check_out'] = $date->format('Y-m-d');
-        }
+        if($reservation->accommodation_type == 'Day Tour') $request['check_out'] = $request['check_in'];
         $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
         $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
 
         if(($request['check_in'] === $reservation->check_in && $request['check_out'] === $reservation->check_out)){
-            return back()->with('error', 'Your choose date does not change at all');
+            return back()->with('error', 'Your choose date does not change at all')->withInput($request->all());
         }
-
+        $noDays = getNoDays($request['check_in'], $request['check_out']);
         $validator = null;
         if($reservation->accommodation_type == 'Day Tour'){
             $validator = Validator::make($request->all(), [
@@ -224,9 +212,9 @@ class MyReservationController extends Controller
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after' => 'Choose date with 2 to 3 days',
+                'check_in.after' => 'Select date with 2 to 3 days',
                 'required' => 'Need fill up first (:attribute)',
-                'check_out.after_or_equal' => 'Choose within 2 or 3 days (Overnight)',
+                'check_out.after_or_equal' => 'Select within 2 or 3 days above (Overnight)',
             ]);
         }
         elseif($reservation->accommodation_type == 'Room Only'){
@@ -242,15 +230,10 @@ class MyReservationController extends Controller
     
             ]);
         }
-        if ($validator->fails()) {            
-            session(['ck' => false]);
-            return back()
-            ->with('error', $validator->errors()->all())
-            ->withInput();
-        }
-        $validator = $validator->validate();
 
-        $systemUser = System::all()->where('type', '>=', 0)->where('type', '<=', 1);
+        if ($validator->fails()) return back()->with('error', $validator->errors()->all())->withInput($request->all());
+        $validator = $validator->validate();
+        
         $messages = $reservation->message;
         $messages['reschedule'] = [
             'message' => $validator['reschedule_message'],
@@ -258,25 +241,27 @@ class MyReservationController extends Controller
             'check_out' => $validator['check_out'],
             'prev_status' => $reservation->status,
         ];
-        $updated = $reservation->update(['message' => $messages, 'status' => 7]);
-        if($updated) {
-            $text = 
-            "Reschedule Request Reservation!\n" .
-            "Name: ". $reservation->userReservation->name() ."\n" . 
-            "Age: " . $reservation->age ."\n" .  
-            "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
-            "Country: " . $reservation->userReservation->country ."\n" . 
-            "Type: " . $reservation->accommodation_type ."\n" . 
-            "Pax: " . $reservation->pax ."\n" . 
-            "Reschedule Check-in: " . Carbon::createFromFormat('Y-m-d', $validator['check_in'])->format('F j, Y') ."\n" . 
-            "Reschedule Check-out: " . Carbon::createFromFormat('Y-m-d', $validator['check_out'])->format('F j, Y') ."\n" . 
-            "Why: " . $validator['reschedule_message'];
-            $this->systemNotification($text , route('system.reservation.show.cancel', $id));
-            return redirect()->route('user.reservation.home')->with('success', 'Reschedule Request was succesfull to send. Just Wait Send Email or any Contact for Approval Request');
-        }
+        
+        $reservation->message =  $messages;
+        $reservation->status =  7;
+        $reservation->save();
+
+        $text = 
+        "Reschedule Request !\n" .
+        "Name: ". $reservation->userReservation->name() ."\n" . 
+        "Nationality: " . $reservation->userReservation->nationality  ."\n" . 
+        "Country: " . $reservation->userReservation->country ."\n" . 
+        "Pax: " . $reservation->pax ."\n" . 
+        "New Check-in: " . Carbon::createFromFormat('Y-m-d', $validator['check_in'])->setTimezone('Asia/Manila')->format('F j, Y') ."\n" . 
+        "New Check-out: " . Carbon::createFromFormat('Y-m-d', $validator['check_out'])->setTimezone('Asia/Manila')->format('F j, Y') ."\n" . 
+        "Reason: " . $validator['reschedule_message'];
+        $this->systemNotification($text , route('system.reservation.show.cancel', $id));
+        return redirect()->route('user.reservation.home')->with('success', 'Reschedule Request was succesfull to send. Just Wait Send Email or any Contact for Approval Request');
+        
     }
     public function receipt($id){
         $reservation = Reservation::findOrFail(decrypt($id));
+        abort_if($reservation->status != 3, 404); 
         $tour_menu = [];
         $other_addons = [];
         $tour_addons = [];
@@ -290,8 +275,8 @@ class MyReservationController extends Controller
         
         $count = 0;
         foreach($reservation->transaction as $key => $item){
-            if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
-                $tour_menuID = (int)str_replace('tm','', $key);
+            if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only' && $item['used'] == true) {
+                // $tour_menuID = (int)str_replace('tm','', $key);
                 $tour_menu[$count]['title'] = $item['title'];
                 $tour_menu[$count]['tpx'] = $item['tpx'];
                 $tour_menu[$count]['price'] = $item['price'];
@@ -302,6 +287,8 @@ class MyReservationController extends Controller
                 $rateID = (int)str_replace('rid','', $key);
                 $rate['name'] = RoomRate::find($rateID)->name;
                 $rate['price'] = $reservation->transaction['rid'.$rateID]['price'];
+                $rate['person'] = $reservation->transaction['rid'.$rateID]['person'];
+                if($reservation->countSenior() > 0) $rate['orig_amount'] = $reservation->getRoomAmount(true) ;
                 $rate['amount'] = $reservation->transaction['rid'.$rateID]['amount'];
             }
             if (strpos($key, 'OA') !== false) {
@@ -359,165 +346,6 @@ class MyReservationController extends Controller
         $dompdf->stream('AA'.str_replace('aar-','',$reservation->id).'.pdf', ['Attachment' => false]);
         // return view('reservation.receipt',  ['r_list' => $reservation, 'menu' => $tour_menu, 'tour_addons' => $tour_addons, 'other_addons' => $other_addons, 'rate' => $rate ?? null, 'rooms' => $rooms ?? [], 'contacts' => $contacts]);
     }
-    public function updateDetails(Request $request, $id){
-        $reservation = Reservation::findOrFail(decrypt($id));
-        if($reservation->status > 0) abort(404);
-        $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
-        $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
-
-        if(checkAvailRooms($request['pax'] ?? 0, $request['check_in'], $request['check_out']) && !empty($request['pax'])) {
-            if(isset($view)) return redirect()->route($view)->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
-            else return back()->withErrors(['check_in' => 'Sorry this date was not available for rooms'])->withInput($request->input());
-        }
-        $web_contents = WebContent::all()->firstOrFail();
-        if(isset($web_contents->from) && isset($web_contents->to)){
-            if(Carbon::createFromFormat('Y-m-d', $request['check_in'])->timestamp >= Carbon::createFromFormat('Y-m-d', $web_contents->from)->timestamp && Carbon::createFromFormat('Y-m-d', $request['check_in'])->timestamp <= Carbon::createFromFormat('Y-m-d', $web_contents->to)->timestamp) {
-                if(isset($view)) return redirect()->route($view)->with('error', 'Sorry, this date cannot be allowed due ' . $web_contents->reason)->withInput($request->input());
-                else return back()->with('error', 'Sorry, this date cannot be allowed due ' . $web_contents->reason)->withInput($request->input());
-            }
-        }
-
-        $validator = Validator::make($request->all('accommodation_type'), [
-            'accommodation_type' => ['required'],
-        ], [
-            'required' => 'Need fill up first',
-        ]);
-        $dayTour = [
-            'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after_or_equal:'.Carbon::now()->addDays(1)],
-            'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in'], 'date_equals:'.$request['check_in']],
-            'accommodation_type' => ['required'],
-            'pax' => ['required', 'numeric', 'min:1'],
-            'payment_method' => ['required'],
-
-        ];
-        $overnight = [
-            'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
-            'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)->format('Y-m-d')],
-            'accommodation_type' => ['required'],
-            'pax' => ['required', 'numeric', 'min:1'],
-            'payment_method' => ['required'],
-        ];
-        $roomOnly = [
-            'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::now()->addDays(1)],
-            'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in']],
-            'accommodation_type' => ['required'],
-            'pax' => ['required', 'numeric', 'min:1'],
-            'payment_method' => ['required'],
-        ];
-        
-
-        // dd($dayTour);
-        if($request['accommodation_type'] == 'Day Tour'){
-            $validated = Validator::make($request->all(), $dayTour, [
-                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
-                'required' => 'Need fill up first',
-                'date_equals' => 'Choose only one day (Day Tour)',
-            ]);
-        }
-        elseif($request['accommodation_type'] == 'Overnight'){
-            $validated = Validator::make($request->all(),  $overnight, [
-                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
-                'required' => 'Need fill up first',
-                'check_out.after_or_equal' => 'Choose within 2 or 3 days (Overnight)',
-            ]);
-        }
-        elseif($request['accommodation_type'] == 'Room Only'){
-            $validated = Validator::make($request->all(), $roomOnly, [
-                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
-                'required' => 'Need fill up first',
-                'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     
-                'after' => 'The :attribute was already chose from (Check-in)',
-            ]);
-        }
-        else{
-            return back()->with('error', $validator->errors()->all())->withInput($request->all());
-        }
-        if ($validated->fails()) {            
-            return back()
-            ->with('error', $validator->errors()->all())
-            ->withInput($request->all());
-        }
-
-        $validated = $validated->validated();
-        if($reservation->update($validated)){
-            return redirect()->route('user.reservation.show', $id)->with('success', 'Reservation Details was updated');
-        }
-    }
-    public function editTour($id){
-        $reservation = Reservation::findOrFail(decrypt($id));
-        if($reservation->status > 2) abort(404);
-        // dd('Panis');
-        $chooseMenu = [];
-        $count = 0;
-        foreach($reservation->transaction ?? [] as $key => $item){
-            if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
-                $id = explode('tm',$key)[1];
-                $chooseMenu[$count]['id'] = $id;
-                $chooseMenu[$count]['title'] = $item['title'];
-                $chooseMenu[$count]['price'] = $item['price'];
-                $chooseMenu[$count]['amount'] = $item['amount'];
-            }
-            if (strpos($key, 'TA') !== false && is_array($item)) {
-                $id = explode('TA', $key)[1];
-                foreach($item as $key => $tourAddons){
-                    $chooseMenu[$count]['id'] =  $id.$count;
-                    $chooseMenu[$count]['title'] = $tourAddons['title'];
-                    $chooseMenu[$count]['price'] = $tourAddons['price'];
-                    $chooseMenu[$count]['amount'] = $tourAddons['amount'];
-                }
-                
-            }
-
-            $count++;
-        }
-        // dd($chooseMenu);
-        return view('users.reservation.show-tour', [
-            'activeNav' => 'My Reservation', 
-            'r_list' => $reservation, 
-            'tour_lists' => TourMenuList::all(), 
-            'tour_category' => TourMenuList::distinct()->get('category'), 
-            'cmenu' => $chooseMenu ,
-            "user_days" => isset($noOfday) ? $noOfday : 1,
-        ]); 
-    }
-    public function updateTour(Request $request, $id){
-        $reservation = Reservation::findOrFail(decrypt($id));
-        if($reservation->status > 2) abort(404);
-        $transaction = $reservation->transaction;
-        // dd($request->all());
-        $validate = Validator::make($request->all(), [
-            'tour_menu' => ['required'],
-            'new_pax' => ['required', 'numeric', 'min:1' , 'max:'.$reservation->pax],
-        ], [
-            'tour_menu.required' => 'Your Cart is empty',
-            'new_pax.required' => 'Required to fill up number of guest ',
-            'new_pax.numeric' => 'Number of guest should be number only',
-            'new_pax.min' => 'Number of guest should be 1 and above',
-            'new_pax.max' => 'Number of guest should be '.$reservation->pax.' guest below',
-        ]);     
-        if($validate->fails()) return back()->with('error', $validate->errors()->all())->withInput();
-        
-        $validated = $validate->validate();
-
-        // Remove All Tours
-        foreach($transaction ?? [] as $key => $item){
-            if (strpos($key, 'tm') !== false) {
-                unset($transaction[$key]);
-            }
-        }
-        foreach($validated['tour_menu'] as $item){
-            $tours = TourMenu::find($item);
-            $transaction['tm'.$item] = [
-                'title' => $tours->tourMenu->title . ' ' . $tours->type . '('.$tours->pax.' pax)',
-                'tpx' => (int)$validated['new_pax'],
-                'price' => $tours->price ?? 0,
-                'amount' => ((double)$tours->price ?? 0) * (int)$validated['new_pax'],
-            ];
-        }
-        if($reservation->update(['transaction' => $transaction, 'tour_pax' => $validated['new_pax']])){
-            return redirect()->route('user.reservation.show', $id)->with('success', 'Tour Menu was updated');
-        }
-    }
     public function updateRequest(Request $request, $id){
         // dd($request->all());
         $validate = Validator::make($request->all('service_message'), [
@@ -528,9 +356,10 @@ class MyReservationController extends Controller
         $reservation = Reservation::findOrFail(decrypt($id));
         $messages = $reservation->message;
         $messages['request'] =   $validate['service_message'];
-        if($reservation->update(['message' => $messages])){
-            return redirect()->route('user.reservation.show', $id)->with('success', 'Service Request Message was updated');
-        }
+        $reservation->message = $messages;
+        $reservation->save();
+        return redirect()->route('user.reservation.show', $id)->with('success', 'Service Request Message was updated');
+        
     }
     public function updateCancel(Request $request, $id){
         // dd($request->all());
@@ -544,9 +373,9 @@ class MyReservationController extends Controller
         $messages['cancel'] = [
             'message' =>  $validate['cancel_message'],
         ];
-        if($reservation->update(['message' => $messages])){
-            return redirect()->route('user.reservation.show', $id)->with('success', 'Cancel Request Message was updated');
-        }
+        $reservation->message = $messages;
+        $reservation->save();
+        return redirect()->route('user.reservation.show', $id)->with('success', 'Cancel Request Message was updated');
     }
     public function updateReschedule(Request $request, $id){
         // dd($request->all());
@@ -613,7 +442,6 @@ class MyReservationController extends Controller
             'check_out' => $validator['check_out'],
         ];
         if($reservation->update(['message' => $messages])){
-            $this->systemNotification("", route('system.reservation.show.cancel', $id));
              return redirect()->route('user.reservation.show', $id)->with('success', 'Reschedule Request was updated');
         }
         

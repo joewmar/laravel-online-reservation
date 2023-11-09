@@ -1,40 +1,7 @@
 @php
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
-    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
+    $arrAccTypeTitle = ['Room Only', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
     $arrPayment = ['Gcash', 'PayPal', 'Bank Transfer'];
-    $TourInfo = [
-        "cin" => request()->has('cin') ? decrypt(request('cin')) : old('check_in'),
-        "cout" => request()->has('cout') ?  decrypt(request('cout')) : old('check_out'),
-        "px" => request()->has('px') ? decrypt(request('px')) : old('pax'),
-        "tpx" => request()->has('tpx') ? decrypt(request('tpx')) : old('tour_pax'),
-        "at" => request()->has('at') ? decrypt(request('at')) : old('accommodation_type'),
-        "py" => request()->has('py') ? decrypt(request('py')) : old('payment_method'),
-      ];
-    $tourListCart = [];
-    if(session()->has('rinfo')){
-      $decrypted = decryptedArray(session('rinfo'));
-      if(isset($decrypted['tm'])) $tourListCart = $decrypted['tm'];
-      if($decrypted['at'] === 'Room Only') $decrypted['tpx'] = $decrypted['px']; 
-      $TourInfo = [
-        "cin" => old('check_in') ?? $decrypted['cin'],
-        "cout" => old('check_out') ?? $decrypted['cout'],
-        "px" => old('pax') ?? $decrypted['px'],
-        "tpx" => old('tour_pax') ?? (request()->has('tpx') ? decrypt(request('tpx')) : $decrypted['tpx']  ),
-        "at" => old('accommodation_type') ?? $decrypted['at'],
-        "py" =>  old('payment_method') ?? $decrypted['py'],
-        "otpx" =>  $decrypted['otpx'] ?? 0,
-        "ck" => request('ck') ?? '',
-      ];
-    }
-    $TourInfoEncrypted = [
-        "cin" => request()->has('cin') ? request('cin') : old('check_in'),
-        "cout" => request()->has('cout') ? request('cout') : old('check_out'),
-        "px" => request()->has('px') ? request('px') : old('pax'),
-        "tpx" => request()->has('tpx') ? request('tpx') : old('tour_pax'),
-        "at" => request()->has('at') ? request('at') : old('accommodation_type'),
-        "py" => request()->has('py') ? request('py') : old('payment_method'),
-      ];
-    // dd( $TourInfo);
 @endphp
 
 <x-landing-layout noFooter>
@@ -50,11 +17,12 @@
           loader: false,
           @if(session()->has('rinfo') && !empty(session()->get('rinfo')['tm']))
             carts: [
-              @foreach($tourListCart as $key => $item)
-                { id: '{{ $tourListCart[$key] ?? '' }}', 
-                  title: '{{ $cmenu[$key]['title'] ?? '' }}',
-                  type: '{{ $cmenu[$key]['type'] ?? '' }} ({{$cmenu[$key]['pax']}} guest)',
-                  price: '₱ {{ number_format($cmenu[$key]['price'], 2) ?? '' }}',
+              @foreach($tourListCart ?? [] as $key => $item)
+                { id: '{{  $item['id'] ?? '' }}', 
+                  title: '{{  $item['title'] ?? '' }}',
+                  type: '{{  $item['type'] ?? '' }} ({{ $item['pax'] ?? ''}} guest)',
+                  price: '₱ {{isset($item['price']) ? number_format( $item['price'], 2) : '' }}',
+                  nprice: {{$item['price'] * (int)$TourInfo['tpx']}},
                 },
               @endforeach
             ],
@@ -63,22 +31,23 @@
           @endif
           cartsCount: 0,
           message: '',
-          addToCart(idValue, titleValue, typeValue, priceValue){
-            const item = { id: idValue, title: titleValue, type: typeValue, price: priceValue };
+          days: 0,
+          amount: 0,
+          addToCart(idValue, titleValue, typeValue, priceValue, numPrice){
+            const item = { id: idValue, title: titleValue, type: typeValue, price: priceValue, nprice: parseFloat(numPrice * {{(int)$TourInfo['tpx']}}) };
             if(!this.carts.find(cartItem => cartItem.id == idValue)){
-              this.carts.push(item);
-              this.alert = true;
-              this.alertType = 'success';
-              this.message = `${titleValue} added from the cart!`;
+                this.carts.push(item);
+                this.alert = true;
+                this.alertType = 'success';
+                this.message = `${titleValue} added from the cart!`;
             }
             else{
-              this.alert = true;
-              this.alertType = 'error';
-              this.message = `${titleValue} was already added`;
+                this.alert = true;
+                this.alertType = 'error';
+                this.message = `${titleValue} was already added`;
             }
-
           },
-          removeItemCart(id, title) {
+          removeItemCart(id, title, numPrice) {
               const index = this.carts.findIndex(cartItem => cartItem.id == id);
               if (index !== -1) {
                 this.carts.splice(index, 1);
@@ -92,7 +61,17 @@
                 this.message = `${title} was already remove`;
               }
           },
+          computeAmount(){
+            this.amount = 0;
+            for (let x in this.carts) {
+              this.amount += parseFloat(this.carts[x].nprice);
+            }
+            this.days = this.carts.length;
+          }
         }"
+        @if(session()->has('rinfo') && !empty(session()->get('rinfo')['tm']) && !empty($tourListCart))
+          x-init="days = carts.length;"
+        @endif
         x-cloak>
         <x-loader />
     <div x-show="alert" id="close" class="fixed left-0 top-0 flex justify-center z-[100] w-full" x-effect="setTimeout(() => { alert = false, alertType = '', message = '' }, 5000)">
@@ -175,9 +154,15 @@
                 2. Choose your menu wisely
               </p>
             </header>
+            <div class="mt-5">
+              <h4 class="text-sm font-semibold">Days: <span class="font-normal">{{$user_days}}</span></h4>
+              <h4 class="text-sm font-semibold">You Guest will going on tour: <span class="font-normal">{{$TourInfo['tpx']}} guest</span></h4>
+            </div>
+            <h4 class="mt-5 text-sm font-semibold text-error">Note: Each tour is equivalent to 1 day</h4>
+
             <form x-init="if({{$TourInfo['tpx'] != (int)$TourInfo['otpx'] ? 'true' : 'false'}}) carts = []" id="tour-form" action="{{route('reservation.choose.check.all', Arr::query(encryptedArray($TourInfo)))}}" method="post">
               @csrf
-              <div class="flex justify-between mt-6">
+              <div class="flex justify-between mt-5">
                 <h3 class="font-bold text-xl">Category</h3>
                 <div class="dropdown dropdown-end">
                   <label tabindex="0" class="btn btn-ghost btn-circle">
@@ -186,7 +171,7 @@
                       <span class="badge badge-sm indicator-item" x-text="carts.length"></span>
                     </div>
                   </label>
-                  <div tabindex="0" class="card p-6 w-96 md:w-[50rem] compact dropdown-content z-[1] drop-shadow-lg border bg-base-100 rounded-box ">
+                  <div tabindex="0" class="card p-6 w-96 md:w-[50rem] compact dropdown-content z-[1] shadow-md bg-base-100 rounded-box ">
                     <div class="card-body">
                       <h2 class="card-title">My Cart</h2> 
                       <div class="overflow-x-auto">
@@ -194,20 +179,22 @@
                           <!-- head -->
                           <thead>
                             <tr>
-                              <th>Menu</th>
+                              <th>Tour</th>
                               <th>Type</th>
                               <th>Price</th>
+                              <th>Quantity</th>
                               <th></th>
                             </tr>
                           </thead>
                           <tbody>
-        
+  
                             <!-- row -->
                             <template x-for="(cart, index) in carts" :key="index">
-                              <tr>
+                              <tr x-effect="computeAmount()">
                                 <td x-text="cart.title"></td>
                                 <td x-text="cart.type"></td>
                                 <td x-text="cart.price"></td>
+                                <td>{{(int)$TourInfo['tpx']}}</td>
                                 <td>
                                   <label :for="'removeCart' + index" class="btn btn-ghost">
                                     <i class="fa-solid fa-x text-xl text-error"></i>
@@ -217,7 +204,7 @@
                                     <div class="modal-box">
                                       <h3 class="font-bold text-lg">Do you want to remove: <span x-text="cart.title"></span></h3>
                                       <div class="modal-action">
-                                        <label :for="'removeCart' + index" @click="removeItemCart(cart.id, cart.title)" class="btn btn-primary">Yes</label>
+                                        <label :for="'removeCart' + index" @click="removeItemCart(cart.id, cart.title, cart.nprice)" class="btn btn-primary">Yes</label>
                                         <label :for="'removeCart' + index" class="btn btn-ghost">No</label>
                                       </div>
                                     </div>
@@ -225,22 +212,28 @@
                                 </td>
                                   <input x-ref="idRef + (index + 1)" type="hidden" name="tour_menu[]", :value="$el.value = cart.id">
                               </tr>
+          
                             </template>
+
                             <template x-if="carts.length === 0">
-                              <tr colspan="2" class="w-full"><td class="font-bold w-full text-center">No Cart Item!</td></tr>
+                              <tr class="w-full"><td colspan="4" class="font-bold w-full text-center">No Cart Item!</td></tr>
                             </template>
                           
                           </tbody>
                         </table>
                       </div>
-        
+                      <template x-if="carts.length !== 0">
+                        <div class="flex justify-start">
+                          <div class="font-bold mr-3">Total: </div>
+                          <div x-text="amount > 0 ? '₱ ' + amount.toLocaleString('en-US', {maximumFractionDigits:2}) : 'None' "></div>
+                        </div>
+                      </template>
                     </div>
                   </div>
                 </div>
               </div>
-              <h4 class="mb-3 text-sm font-semibold">You Guest will going on tour: <span class="font-normal">{{$TourInfo['tpx']}} guest</span></h4>
             </form>
-            <x-tour :tourCategory="$tour_category" :tourLists="$tour_lists" tpx="{{$TourInfo['tpx']}}" atpermit="{{$TourInfo['at'] == 'Day Tour' ? 1 : 0 }}" />
+            <x-tour :tourCategory="$tour_category" :tourLists="$tour_lists" tpx="{{$TourInfo['tpx']}}" atpermit="{{$TourInfo['at'] == 'Day Tour' ? 1 : 0 }}" noDays="{{$user_days}}" />
           <div class="flex justify-start gap-5">
             <div class="mt-8 flex gap-4">
               <a href="{{route('reservation.choose', Arr::query(['cin' => $TourInfoEncrypted['cin'], 'cout' => $TourInfoEncrypted['cout'], 'at' => $TourInfoEncrypted['at'], 'px' => $TourInfoEncrypted['px']]))}}" class="btn btn-ghost">Back</a>

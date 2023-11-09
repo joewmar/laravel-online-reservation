@@ -13,10 +13,7 @@
     foreach ($menu as $key => $value) {
         $tours[$key] = $value;
     }
-    foreach ($tour_addons as $key => $value) {
-        $tours[$key] = $value;
-    }
-
+    $total = 0;
 @endphp
 
 <x-system-layout :activeSb="$activeSb">
@@ -34,7 +31,7 @@
                         @if($r_list->status >= 1 && $r_list->status < 6)
                             <li>
                                 <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}">
-                                    Online Payment
+                                    Payment
                                 </a>
                             </li>
                         @endif
@@ -67,32 +64,34 @@
                         </ul>
                 </div>
             </div>
-            <div class="w-full hidden md:flex justify-end space-x-1">
-                @if($r_list->status >= 1 && $r_list->status < 6)
-                    <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}" class="btn btn-info btn-sm">
-                        <i class="fa-solid fa-credit-card"></i>
-                        Online Payment
-                    </a>
-                @endif
-                @if($r_list->status > 1 && $r_list->status < 3)
-                    <a href="{{route('system.reservation.show.extend', encrypt($r_list->id))}}" class="btn btn-accent btn-sm">
-                        <i class="fa-solid fa-circle-plus"></i>                   
-                        Extend Room Stay
-                    </a>
-                    <a href="{{route('system.reservation.show.addons', encrypt($r_list->id))}}" class="btn btn-accent btn-sm">
-                        Add-ons
-                    </a>
-                @endif
-                @if($r_list->status == 3)
-                    <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-success btn-sm">
-                        <i class="fa-solid fa-receipt"></i>
-                        Reciept
-                    </a>
-                @endif
+            <div class="w-full hidden md:flex justify-end">
+                <div class="join">
+                    @if($r_list->status >= 1 && $r_list->status < 6)
+                        <a href="{{route('system.reservation.show.online.payment', encrypt($r_list->id))}}" class="join-item btn btn-info btn-sm">
+                            <i class="fa-solid fa-credit-card"></i>
+                            Payment
+                        </a>
+                    @endif
+                    @if($r_list->status > 1 && $r_list->status < 3)
+                        <a href="{{route('system.reservation.show.extend', encrypt($r_list->id))}}" class="join-item btn btn-accent btn-sm">
+                            <i class="fa-solid fa-circle-plus"></i>                   
+                            Extend Room Stay
+                        </a>
+                        <a href="{{route('system.reservation.show.addons', encrypt($r_list->id))}}" class="join-item btn btn-accent btn-sm">
+                            Add-ons
+                        </a>
+                    @endif
+                    @if($r_list->status == 3)
+                        <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="join-item btn btn-success btn-sm">
+                            <i class="fa-solid fa-receipt"></i>
+                            Reciept
+                        </a>
+                    @endif
 
-                <label for="edit_modal" class="btn btn-sm" {{$r_list->status === 3 ? 'disabled' : ''}}>
-                    Edit
-                </label>
+                    <label for="edit_modal" class="join-item btn btn-sm" {{$r_list->status === 3 ? 'disabled' : ''}}>
+                        Edit
+                    </label>
+                </div>
             </div>
         @else
             <div class="flex md:hidden justify-end">
@@ -130,32 +129,34 @@
                     </ul>
                 </div>
             </div>
-            <div class="w-full hidden md:flex justify-end space-x-1">
-                @if($r_list->status > 1 && $r_list->status < 3)
-                    <a href="{{route('system.reservation.show.extend', encrypt($r_list->id))}}" class="btn btn-accent btn-sm">
-                        <i class="fa-solid fa-circle-plus"></i>                   
-                        Extend Room Stay
-                    </a>
-                    <a href="{{route('system.reservation.show.addons', encrypt($r_list->id))}}" class="btn btn-accent btn-sm">
-                        Add-ons
-                    </a>
-                    <a href="{{route('system.reservation.edit.rooms', encrypt($r_list->id))}}" class="btn btn-warning btn-sm">
-                        Edit Room Assign
-                    </a>
-                    @if($r_list->status >= 1)
-                        @if(!$r_list->status == 6 )
-                            <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-success btn-sm">
-                                <i class="fa-solid fa-receipt"></i>
-                                Reciept
-                            </a>
+            <div class="w-full hidden md:flex justify-end">
+                <div class="join">
+                    @if($r_list->status > 1 && $r_list->status < 3)
+                        <a href="{{route('system.reservation.show.extend', encrypt($r_list->id))}}" class="join-item btn btn-accent btn-sm">
+                            <i class="fa-solid fa-circle-plus"></i>                   
+                            Extend Room Stay
+                        </a>
+                        <a href="{{route('system.reservation.show.addons', encrypt($r_list->id))}}" class="join-item btn btn-accent btn-sm">
+                            Add-ons
+                        </a>
+                        <a href="{{route('system.reservation.edit.rooms', encrypt($r_list->id))}}" class="join-item btn btn-warning btn-sm">
+                            Edit Room Assign
+                        </a>
+                        @if($r_list->status >= 1)
+                            @if(!$r_list->status == 6 )
+                                <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="join-item btn btn-success btn-sm">
+                                    <i class="fa-solid fa-receipt"></i>
+                                    Reciept
+                                </a>
+                            @endif
                         @endif
                     @endif
-                @endif
+                </div>
             </div>
         @endif
         <x-modal title="What kind do you want to edit?" id="edit_modal">
             <div class="grid grid-cols-3 gap-5">
-                <a href="{{route('system.reservation.edit.information', encrypt($r_list->id))}}" class="card border hover:bg-primary hover:text-primary-content">
+                <a href="{{route('system.reservation.edit.step1', encrypt($r_list->id))}}" class="card border hover:bg-primary hover:text-primary-content">
                     <div class="card-body justify-center items-center">
                       <h2 class="card-title">Information</h2>
                     </div>
@@ -170,6 +171,13 @@
                       <h2 class="card-title">Services</h2>
                     </div>
                 </a>
+                @if(isset($r_list->offline_user_id))
+                    <a href="{{route('system.reservation.edit.customer', encrypt($r_list->id))}}" class="card border hover:bg-primary hover:text-primary-content">
+                        <div class="card-body justify-center items-center">
+                        <h2 class="card-title">Customer</h2>
+                        </div>
+                    </a>
+                @endif
             </div>
         </x-modal>
         <div class="divider"></div>
@@ -251,17 +259,59 @@
                                     <td>Price</td>
                                     <td>Quantity</td>
                                     <td>Amount</td>
+                                    @if ($r_list->status == 2)
+                                        <td>Mark</td>
+                                        <td></td>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
                                 @php $totalTour = 0 @endphp
                                 @foreach ($tours as $key => $item)
-                                    <tr>
+                                    <tr >
+                                        {{-- @if ($r_list->status == 2)
+                                            <td>
+                                                <input x-model="mark{{$loop->index+1}}" type="checkbox" class="checkbox checkbox-primary">    
+                                            </td>
+                                        @endif --}}
                                         <td>{{$item['title']}}</td> 
                                         <td>₱ {{number_format($item['price'], 2)}}</td> 
                                         <td class="text-center">{{$item['tpx']}} guest</td> 
                                         <td>₱ {{number_format($item['amount'], 2)}}</td> 
+                                        @if ($r_list->status == 2)
+                                            <td>
+                                                @if($item['used'])
+                                                    <i class="fa-solid fa-check text-primary"></i>
+                                                @else
+                                                    <i class="fa-solid fa-x text-error"></i>
+                                                @endif
+                                            </td>
+                                            <td class="flex">
+                                                <label for="trusemdl{{$loop->index+1}}" class="btn btn-ghost btn-circle btn-sm">
+                                                    <i class="fa-brands fa-elementor"></i>
+                                                </label>
+                                            </td> 
+                                        @endif
                                     </tr>
+                                    @if ($r_list->status == 2)
+                                        <x-modal title="This Menu was used?" id="trusemdl{{$loop->index+1}}">
+                                            <form method="POST" action="{{route('system.reservation.update.used', ['id' => encrypt($r_list->id), 'key' => encrypt($item['key'])])}}" @if ($r_list->status == 2) x-data="{mark{{$loop->index+1}}: '{{$item['used'] ? 'y' : 'n'}}'}" @endif>
+                                                @csrf
+                                                @method('PUT')
+                                                <div>
+                                                    <input x-model="mark{{$loop->index+1}}" type="radio" name="used" id="usedy" class="radio radio-primary" value="y">
+                                                    <label for="usedy" class="ml-1 font-medium">Yes</label>
+                                                </div>
+                                                <div class="mt-3">
+                                                    <input x-model="mark{{$loop->index+1}}" type="radio" name="used" id="usedn" class="radio radio-primary" value="n">
+                                                    <label for="usedn" class="ml-1 font-medium">No</label>
+                                                </div>
+                                                <div class="modal-action">
+                                                    <button type="submit" class="btn btn-primary">Save</button>
+                                                </div>
+                                            </form>
+                                        </x-modal>
+                                    @endif
                                     @php $totalTour += $item['amount'] @endphp
 
                                 @endforeach
@@ -270,6 +320,7 @@
                                     <td></td> 
                                     <td class="font-bold text-right">Total</td> 
                                     <td colspan="2" class="font-bold">₱ {{number_format($totalTour, 2)}}</td> 
+                                    <td></td> 
                                 </tr>
                             </tbody>
                             </table>
@@ -321,18 +372,24 @@
             </article>
         @endif
         <div class="divider"></div>
-            <article class="text-md tracking-tight text-neutral my-5 w-auto">
+        <article class="text-md tracking-tight text-neutral my-5 w-auto">
                 <h2 class="text-xl md:text-2xl mt-5 font-bold">Transaction</h2>
                 <div class="overflow-x-auto">
                     <table class="table table-xs md:table-sm">
-                        <thead>
-                            <th></th>
-                            <th></th>
-                        </thead>
                         <tbody>
+                            <tr @if($r_list->status == 3) class="line-through" @endif>
+                                <th>Tour Cost:</th>
+                                <td>{{$r_list->getTourTotal(false) > 0 ? '₱ ' . number_format($r_list->getTourTotal(false) ?? 0, 2) : 'None' }}</td>
+                            </tr>
                             <tr>
-                                <th>Service Cost:</th>
-                                <td>₱ {{ number_format((double)$r_list->getServiceTotal() ?? 0, 2) }}</td>
+                                <th>Tour Used Cost: </th>
+                                <td>{{$r_list->getTourTotal(true) > 0 ? '₱ ' .  number_format($r_list->getTourTotal(true) ?? 0, 2) : 'None' }}</td>
+                                @php $total += $r_list->getTourTotal() @endphp
+                            </tr>
+                            <tr>
+                                <th>Addons Cost:</th>
+                                <td>{{$r_list->getAddonTotal() > 0 ? '₱ '.  number_format($r_list->getAddonTotal() ?? 0, 2) : 'None' }}</td>
+                                @php $total += $r_list->getAddonTotal() @endphp
                             </tr>
                             @if ($dscPerson !== 0)
                                 <tr>
@@ -344,11 +401,15 @@
                                     <td>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</td>
                                 </tr>
                                 <tr>
-                                    <th>Total of Room Rate</th>
-                                    <td>₱ {{ number_format($rate['orig_amount'] ?? 0, 2) }}</td>
+                                    <th>Rate Amount per Person: </th>
+                                    <td>₱ {{ number_format($rate['person'], 2) }}</td>
                                 </tr>
                                 <tr>
-                                    <th>Senior Guest</th>
+                                    <th>Rate Amount (Orginal):</th>
+                                    <td>₱ {{ number_format($rate['orig_amount'], 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Senior / PWD Guest</th>
                                     <td>{{$dscPerson ?? 0}} Guest</td>
                                 </tr>
                                 <tr>
@@ -356,7 +417,11 @@
                                     <td>20%</td>
                                 </tr>
                                 <tr>
-                                    <th>Total of Room Rate Discounted</th>
+                                    <th>Room Rate Discounted</th>
+                                    <td>₱ {{ number_format($rate['discounted'] , 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total of Room Rate with Discounted</th>
                                     <td>₱ {{ number_format($rate['amount'], 2) }}</td>
                                 </tr>
                             @endif
@@ -370,19 +435,24 @@
                                     <td>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</td>
                                 </tr>
                                 <tr>
-                                    <th>Total of Room Rate: </th>
+                                    <th>Rate Amount per Person: </th>
+                                    <td>₱ {{ number_format($rate['person'], 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Rate Amount: </th>
                                     <td>₱ {{ number_format($rate['amount'], 2) }}</td>
                                 </tr>
                             @endif
+                            @php $total += $r_list->getRoomAmount() @endphp
                         <tr>
                             <th>Total Cost: </th>
-                            <td>₱ {{ number_format($r_list->getTotal(), 2) }}</td>
+                            <td>{{$total > 0 ? '₱ ' . number_format($total, 2) : 'None' }}</td>
                         </tr>
                         <tr>
                             <th>Downpayment: </th>
                             <td class="flex items-center gap-4">
-                                {{$r_list->downpayment() !== 0 ? '₱ ' . number_format($r_list->downpayment(), 2) : 'No Downpayment'}}
-                                @if ($r_list->downpayment() !== 0)
+                                {{$r_list->downpayment() !== 0 ? '₱ ' . number_format($r_list->downpayment(), 2) : 'None'}}
+                                @if (isset($r_list->transaction['payment']['downpayment']) || $r_list->status == 2)
                                     <a href="{{route('system.reservation.edit.payment', encrypt($r_list->id))}}" class="btn btn-sm btn-ghost btn-circle btn-primary {{$r_list->status >= 1 && $r_list->status <= 2 ? '' : 'btn-disabled'}}">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </a> 
@@ -392,8 +462,8 @@
                         <tr>
                             <th>Payment after Check-in: </th>
                             <td class="flex items-center gap-4">
-                                {{$r_list->checkInPayment() !== 0 ? '₱ ' . number_format($r_list->checkInPayment(), 2) : 'No Payment' }}
-                                @if ($r_list->checkInPayment() != 0)
+                                {{$r_list->checkInPayment() !== 0 ? '₱ ' . number_format($r_list->checkInPayment(), 2) : 'None' }}
+                                @if (isset($r_list->transaction['payment']['cinpay']) || $r_list->status == 2)
                                     <a href="{{route('system.reservation.edit.payment', ['id' => encrypt($r_list->id), 'tab=CINP'])}}" class="btn btn-sm btn-ghost btn-circle btn-primary {{$r_list->status === 2 ? '' : 'btn-disabled'}}">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </a> 
@@ -402,15 +472,15 @@
                         </tr>
                         <tr>
                             <th>Payment after Check-out: </th>
-                            <td>{{$r_list->checkOutPayment() !== 0 ? '₱ ' . number_format($r_list->checkOutPayment(), 2) : 'No Payment' }}</td>
+                            <td>{{$r_list->checkOutPayment() != 0 ? '₱ ' . number_format($r_list->checkOutPayment(), 2) : 'None' }}</td>
                         </tr>
                         <tr >
                             <th>Balance due: </th>
-                            <td>{{$r_list->balance() !== 0 ? '₱ ' . number_format($r_list->balance(), 2) : 'No Balance' }}</td>
+                            <td>{{$r_list->balance() !== 0 ? '₱ ' . number_format($r_list->balance(), 2) : 'None' }}</td>
                         </tr>
                         <tr >
                             <th>Refund: </th>
-                            <td>{{$r_list->refund() !== 0 ? '₱ ' . number_format($r_list->refund(), 2) : 'No Refund' }}</td>
+                            <td>{{$r_list->refund() !== 0 && !(isset($r_list->transaction['payment']['refunded']) && $r_list->transaction['payment']['refunded'] == true) ? '₱ ' . number_format($r_list->refund(), 2) : 'No Refund' }}</td>
                         </tr>
                     </tbody>
                 </table>

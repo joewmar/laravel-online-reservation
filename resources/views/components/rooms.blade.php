@@ -1,10 +1,19 @@
-@props(['rooms', 'rlist', 'title' => null,'haveRate' => false, 'rates' => [], 'reserved' => [], 'includeID' => false])
+@props(['rooms', 'rlist', 'title' => null,'haveRate' => false, 'rates' => [], 'reserved' => [], 'includeID' => false, 'selected' => [], 'rateSelected' => null])
 @php
     $roomOld = old('room_pax') ?? [];
     foreach ($rlist->roomid ?? [] as $id) {
         foreach ($rooms as $room) {
             if($room->id == $id && array_key_exists($rlist->id, $room->customer ?? [])){
                 $roomOld[$room->id] = $room->customer[$rlist->id];
+            }
+        }
+    }
+    if(!empty($selected)){
+        foreach ($selected ?? [] as $id => $pax) {
+            foreach ($rooms as $room) {
+                if($room->id == $id){
+                    $roomOld[$id] = $pax;
+                }
             }
         }
     }
@@ -23,11 +32,13 @@
                         @php
                             try {
                                 $rateID = decrypt($rate->id);
+                                
                             } catch (Exception $e) {
                                 $rateID = $rate->id;
                             }
+                            if(!empty($rateSelected)) $rateID = $rateSelected;
                         @endphp
-                            @if(old('room_rate') == $rateID || $rlist->pax === $rate->occupancy || $rlist->pax > $rate->occupancy);
+                            @if(old('room_rate') == $rateID || $rate->id == $rateID  || $rlist->pax === $rate->occupancy || $rlist->pax > $rate->occupancy);
                                 <option value="{{encrypt($rate->id)}}" selected>{{$rate->name}} ({{$rate->occupancy}} pax)</option>
                             @else
                                 <option value="{{encrypt($rate->id)}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>

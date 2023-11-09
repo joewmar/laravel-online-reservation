@@ -78,7 +78,7 @@
                         <div class="join mt-5">
                             <label for="show_id_modal" class="btn btn-sm join-item">Show</label> 
                             @if(!$isPending)
-                                <label for="edit_id_modal'" class="btn btn-primary btn-sm join-item">Change</label> 
+                                <label for="edit_id_modal" class="btn btn-primary btn-sm join-item">Change</label> 
                                 <x-modal id="edit_id_modal" title="Change Valid ID" loader>
                                     <form action="{{route('profile.update.validid', encrypt($user->id))}}" method="POST" enctype="multipart/form-data" >
                                         @csrf

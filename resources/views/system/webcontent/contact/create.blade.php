@@ -1,6 +1,6 @@
 
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Add New Contact">
+    <x-system-content title="Add New Contact" back="{{route('system.webcontent.home', '#contact')}}">
         <section class="p-6 flex justify-center">
             <form x-data="{contactPerson: 'new'}" action="{{route('system.webcontent.contact.store')}}" method="post">
                 @csrf

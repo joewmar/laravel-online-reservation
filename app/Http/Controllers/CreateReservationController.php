@@ -44,9 +44,9 @@ class CreateReservationController extends Controller
     }
     private function reservationValidation(Request $request){
         // Check in (startDate to endDate) trim convertion
-        if($request->has('accommodation_type') && $request['accommodation_type'] === 'Day Tour') $request['check_out'] = $request['check_in'];
-        $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
-        $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
+        if($request->has('accommodation_type') && $request['accommodation_type'] == 'Day Tour') $request['check_out'] = $request['check_in'];
+        $request['check_in'] = Carbon::parse($request['check_in'])->setTimezone('Asia/Manila')->format('Y-m-d');
+        $request['check_out'] = Carbon::parse($request['check_out'])->setTimezone('Asia/Manila')->format('Y-m-d');
 
         $validator = null;
         if($request['accommodation_type'] == 'Day Tour'){
@@ -54,10 +54,8 @@ class CreateReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d'],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in'], 'date_equals:'.$request['check_in']],
                 'accommodation_type' => ['required'],
-                'room_rate' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
                 'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
-                'status' => ['required', 'numeric'],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
@@ -71,10 +69,8 @@ class CreateReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d'],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)->format('Y-m-d')],
                 'accommodation_type' => ['required'],
-                'room_rate' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
                 'tour_pax' => ['required', 'numeric', 'min:1', 'max:'.$request['pax']],
-                'status' => ['required', 'numeric'],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
@@ -89,9 +85,7 @@ class CreateReservationController extends Controller
                 'check_in' => ['required', 'date', 'date_format:Y-m-d'],
                 'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in']],
                 'accommodation_type' => ['required'],
-                'room_rate' => ['required'],
                 'pax' => ['required', 'numeric', 'min:1'],
-                'status' => ['required', 'numeric'],
                 'payment_method' => ['required'],
             ], [
                 'check_in.unique' => 'Sorry, this date is not available',
@@ -140,16 +134,19 @@ class CreateReservationController extends Controller
         }
         AuditTrail::create([
             'system_id' => $user->id,
+            'role' => $user->type ?? '',
             'action' => $action,
             'module' => 'Reservation',
         ]);
     }
     public function create(Request $request){
         $roomInfo = [
-            'at' =>    $request['at'] ? decrypt($request['at']) : old('accommodation_type'),
-            'cin' =>   $request['cin'] ? decrypt($request['cin']) : old('check_in'),
-            'cout' =>  $request['cout'] ? decrypt($request['cout']) : old('check_out'),
-            'px' =>  $request['px'] ? decrypt($request['px']) : old('pax'),
+            'at' =>    old('accommodation_type'),
+            'cin' =>    old('check_in'),
+            'cout' =>   old('check_out'),
+            'px' =>   old('pax'),
+            'tpx' =>  old('tour_pax'),
+            'py' =>  old('payment_method'),
         ];
         if(session()->has('nwrinfo')){
             $roomInfo = $request->session()->get('nwrinfo');
@@ -158,6 +155,8 @@ class CreateReservationController extends Controller
                 'cin' => isset($roomInfo['cin']) ? decrypt($roomInfo['cin']) : old('check_in'),
                 'cout' => isset($roomInfo['cout']) ? decrypt($roomInfo['cout']) : old('check_out'),
                 'px' => isset($roomInfo['px']) ? decrypt($roomInfo['px']) : old('pax'),
+                'tpx' => isset($roomInfo['tpx']) ? decrypt($roomInfo['tpx']) : old('tour_pax'),
+                'py' => isset($roomInfo['py']) ? decrypt($roomInfo['py']) : old('payment_method'),
             ];
         }
         return view('system.reservation.create.step0',  [
@@ -169,86 +168,41 @@ class CreateReservationController extends Controller
         if($request->has('accommodation_type') && $request['accommodation_type'] === 'Day Tour') $request['check_out'] = $request['check_in'];
         $request['check_in'] = Carbon::parse($request['check_in'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
         $request['check_out'] = Carbon::parse($request['check_out'])->shiftTimezone(now()->timezone)->setTimezone('Asia/Manila')->format('Y-m-d');
-
-        $validator = null;
-        if($request['accommodation_type'] == 'Day Tour'){
-            $validator = Validator::make($request->all(), [
-                'check_in' => ['required', 'date', 'date_format:Y-m-d'],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in'], 'date_equals:'.$request['check_in']],
-                'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1'],
-            ], [
-                'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
-                'required' => 'Need fill up first',
-                'date_equals' => 'Choose only one day (Day Tour)',
-            ]);
-        }
-        elseif($request['accommodation_type'] == 'Overnight'){
-            $validator = Validator::make($request->all(), [
-                'check_in' => ['required', 'date', 'date_format:Y-m-d'],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)->format('Y-m-d')],
-                'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1'],
-            ], [
-                'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
-                'check_out.unique' => 'Sorry, this date is not available',
-                'required' => 'Need fill up first',
-                'check_out.after_or_equal' => 'Choose within 2 or 3 days (Overnight)',
-            ]);
-        }
-        elseif($request['accommodation_type'] == 'Room Only'){
-            $validator = Validator::make($request->all(), [
-                'check_in' => ['required', 'date', 'date_format:Y-m-d'],
-                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.$request['check_in']],
-                'accommodation_type' => ['required'],
-                'pax' => ['required', 'numeric', 'min:1'],
-            ], [
-                'check_in.unique' => 'Sorry, this date is not available',
-                'check_in.after_or_equal' => 'Choose date with 2 to 3 days',
-                'check_out.unique' => 'Sorry, this date is not available',
-                'required' => 'Need fill up first',
-                'pax.exists' => 'Sorry, this guest you choose is not available (Room Capacity)',     
-                'after' => 'The :attribute was already chose from (Check-in)',
-    
-            ]);
-        }
-        else{
-            return back()->withErrors(['accommodation_type' => 'Choose the Accommodation type'])->withInput($request->all());
-        }
-        if ($validator->fails()) {            
-            session(['ck' => false]);
-            return back()->withErrors($validator)->withInput($request->all());
-        }
-        $validated = $validator->validated();
-
+        // dd($request->all());
+        $validated = $this->reservationValidation($request);
+        if(!is_array($validated)) return $validated; 
         $param = [
             'cin' => $validated['check_in'],
             'cout' => $validated['check_out'],
             'at' => $validated['accommodation_type'],
             'px' => $validated['pax'],
+            'py' => $validated['payment_method'],
         ];
+        if($validated['accommodation_type'] != 'Room Only') $param['tpx'] = $validated['tour_pax'] ?? null;
         $param = encryptedArray($param);
 
-        if(session()->has('nwrinfo')) {
-            $session = session('nwrinfo');
-            $session['cin'] = $param['cin'] ;
-            $session['cout'] = $param['cout'] ;
-            $session['at'] = $param['at'] ;
-            $session['px'] = $param['px'] ;
-            session(['nwrinfo' => $session]);
-        }
-        return redirect()->route('system.reservation.create.step.one', Arr::query($param));
+        $session = session('nwrinfo');
+        $session['cin'] = $param['cin'] ;
+        $session['cout'] = $param['cout'] ;
+        $session['px'] = $param['px'] ;
+        $session['py'] = $param['py'] ;
+        $session['at'] = $param['at'] ;
+        if($validated['accommodation_type'] != 'Room Only') $session['tpx'] = $param['tpx'] ?? null;
+        else unset($session['tpx']);
 
+        session(['nwrinfo' => $session]);
+
+        return redirect()->route('system.reservation.create.step.one');
 
     }
     public function step1(Request $request){
         $rooms = Room::all() ?? [];
         $rates = RoomRate::all() ?? [];
-        if(empty($request->query())) return redirect()->route('system.reservation.create');
-        $params = decryptedArray($request->query());
+        if(!session()->has('nwrinfo')) return redirect()->route('system.reservation.create');
+        $params = decryptedArray(session('nwrinfo'));
         $roomReserved = [];
+        if(!isset($param['rm']))$params['rm'] = [];
+        if(!isset($param['rt']))$params['rt'] = '';
         $r_lists = Reservation::where(function ($query) use ($params) {
             $query->whereBetween('check_in', [$params['cin'], $params['cout']])
                   ->orWhereBetween('check_out', [$params['cin'], $params['cout']])
@@ -269,17 +223,6 @@ class CreateReservationController extends Controller
             }
 
         }
-        $roomInfo = [
-            'at' =>    $request['at']  ? decrypt($request['at']) : old('accommodation_type'),
-            'px' =>    $request['px']  ? decrypt($request['px']): old('pax'),
-            'rm' =>    $request['rm']  ? decrypt($request['rm']): old('room_pax'),
-            'rt' =>    $request['rt']  ? decrypt($request['rt']) : old('room_rate'),
-            'cin' =>   $request['cin'] ? decrypt($request['cin']) : old('check_in'),
-            'cout' =>  $request['cout'] ? decrypt($request['cout']) : old('check_out'),
-            'py' =>   $request['py'] ? decrypt($request['py']) : old('payment_method'),
-            'tpx' =>   $request['tpx'] ? decrypt($request['tpx']) : old('tour_pax'),
-            'st' =>   $request['st'] ? decrypt($request['st']) : old('status'),
-        ];
         if(auth('system')->user()->type == 2){
             $roomInfo['cin'] = request('cin') ? decrypt(request('cin')) : (old('check_in') ?? Carbon::now('Asia/Manila')->format('Y-m-d'));
         }
@@ -302,69 +245,42 @@ class CreateReservationController extends Controller
             'rooms' => $rooms, 
             'rates' => $rates, 
             'reserved' => $roomReserved, 
-            'roomInfo' => $roomInfo, 
+            'roomInfo' => $params , 
         ]);
     }
     public function storeStep1(Request $request){
-        $validated = $this->reservationValidation($request);
-        if(!is_array($validated)) return $validated;
-
+        if(!session()->has('nwrinfo')) return redirect()->route('system.reservation.create');
+   
+        $param = decryptedArray(session('nwrinfo'));
         if($request->has('room_rate')) $validated['room_rate'] = decrypt($request['room_rate']);
-    
+
         if(empty($request['room_pax'])) return back()->with('error', 'Required to choose rooms')->withInput($validated);
         else $validated['room_pax'] = $request['room_pax'];
-        $rate = RoomRate::find($validated['room_rate']);
+        $rate = RoomRate::findOrFail($validated['room_rate']);
 
         // dd($validated);
         $rpax = 0;
         // dd($validated['room_pax']);
         foreach($validated['room_pax'] as $pax){
             $rpax += $pax;
-            if($rpax > $validated['pax']) return back()->with('error', 'Guest you choose ('.$rpax.' pax) for Rooms does not match on Customer Guest ('.$validated['pax'].' pax)')->withInput($request->all());
+            if($rpax > $param['px']) return back()->with('error', 'Guest you choose ('.$rpax.' pax) for Rooms does not match on Customer Guest ('.$param['px'].' pax)')->withInput($request->all());
         }
-        $param = [
-            'rt' => $rate->id,
-            'rm' => $validated['room_pax'],
-            'px' => $validated['pax'],
-            'cin' => $validated['check_in'],
-            'cout' => $validated['check_out'],
-            'at' => $validated['accommodation_type'],
-            'st' => $validated['status'],
-            'py' => $validated['payment_method'],
-        ];
-        if($validated['accommodation_type'] === 'Day Tour' || $validated['accommodation_type'] === 'Overnight') $param['tpx'] = $validated['tour_pax'];
+        $param['rt'] = $rate->id ;
+        $param['rm'] = $validated['room_pax'];
+        if($param['at'] === 'Room Only') unset($param['tm']);
+        session(['nwrinfo' => encryptedArray($param)]);
+        if($param['at'] === 'Day Tour' || $param['at'] === 'Overnight')  return redirect()->route('system.reservation.create.step.two');
 
-        $param = encryptedArray($param);
-        $session = session()->has('nwrinfo') ? session('nwrinfo') : [] ;
-        $session['rt'] = $param['rt'] ;
-        $session['rm'] = $param['rm'] ;
-        $session['px'] = $param['px'] ;
-        $session['cin'] = $param['cin'] ;
-        $session['cout'] = $param['cout'] ;
-        $session['at'] = $param['at'] ;
-        $session['st'] = $param['st'] ;
-        $session['py'] = $param['py'] ;
-        if($validated['accommodation_type'] === 'Day Tour' || $validated['accommodation_type'] === 'Overnight') {
-            if(isset($session['tpx']) && decrypt($session['tpx']) != decrypt($param['tpx']) && isset($session['tm'])) unset($session['tm']);
-            $session['tpx'] = $param['tpx'] ;
-        }
-        if(session()->has('nwrinfo')) {
-            session(['nwrinfo' => $session]);
-        }
-        if($validated['accommodation_type'] === 'Day Tour' || $validated['accommodation_type'] === 'Overnight') {
-            return redirect()->route('system.reservation.create.step.two', Arr::query($param));
-        }
-        else{
-            session(['nwrinfo' => $session]);
-            return redirect()->route('system.reservation.create.step.three');
-        }
+        else return redirect()->route('system.reservation.create.step.three');
+        
     }
     public function step2(Request $request){
+        // dd($request->query());
         if(session()->has('nwrinfo') && !empty(session('nwrinfo')['tm'])){
             $decryptedTm = decrypt(session('nwrinfo')['tm']);
             $cmenu = [];
             foreach($decryptedTm as $key => $item){
-                $tour = TourMenu::find($item);
+                $tour = TourMenu::withTrashed()->find($item);
                 $cmenu[$key]['id'] = $tour->id;
                 $cmenu[$key]['title'] = $tour->tourMenu->title;
                 $cmenu[$key]['type'] = $tour->type;
@@ -389,57 +305,52 @@ class CreateReservationController extends Controller
         ]);
     }
     public function storeStep22(Request $request){
+        if(!session()->has('nwrinfo')) return redirect()->route('system.reservation.create');
         if(empty($request['tour_menu'])) return back()->with('error', 'You have not selected anything in the cart yet. Please make a selection first.');
+        $session = session('nwrinfo');
+        $session['tm'] = encrypt($request['tour_menu']);
 
-        if(session()->has('nwrinfo')){
-            $session = session('nwrinfo');
-            $session['tm'] = encrypt($request['tour_menu']);
-        }
-        else{
-            $session = [
-                "rt" => $request['rt'],
-                "rm" => $request['rm'],
-                "cin" => $request['cin'],
-                "cout" => $request['cout'],
-                "px" => $request['px'],
-                "tpx" => $request['tpx'],
-                "at" => $request['at'],
-                "py" => $request['py'],
-                "st" => $request['st'],
-                "tm" => encrypt($request['tour_menu']),
-              ];
-        }
         session(['nwrinfo' => $session]);
         return redirect()->route('system.reservation.create.step.three');
     }
     public function step3(Request $request){
-        
+        if(!session()->has('nwrinfo')) return redirect()->route('system.reservation.create');
+        $info = decryptedArray(session('nwrinfo'));
+        // dd($info);
         return view('system.reservation.create.step3', [
             'activeSb' => 'Reservation', 
             'add_ons' => Addons::all(), 
+            'info' =>$info , 
         ]);
     }
     public function storeStep3(Request $request){
+        if(!session()->has('nwrinfo')) return redirect()->route('system.reservation.create');
         $validated = $request->validate([
             'qty.*' => Rule::when(!empty($request['qty']), ['required', 'numeric'], ['nullable']),
         ]);
+        $encrypted = session('nwrinfo');
         if(isset($validated['qty']) && !empty($validated['qty'])){
             $encrypted = session('nwrinfo');
             $encrypted['qty'] = encrypt($validated['qty']);
             session(['nwrinfo' => $encrypted]);
         }
-        return redirect()->route('system.reservation.create.step.four');
+        if(isset($encrypted['uid'])) return redirect()->route('system.reservation.create.step.four', Arr::query(['uof' => $encrypted['uid']]));
+        else return redirect()->route('system.reservation.create.step.four');
 
     }
     public function step4(Request $request){
+        if(!session()->has('nwrinfo')) return to_route('system.reservation.create');
         $user = [];
         if($request->has('uof')){
             $user = UserOffline::find(decrypt($request->query('uof'))) ?? [];
         }
+        $info = decryptedArray($request->session()->get('nwrinfo'));
+
         return view('system.reservation.create.step4',  [
             'activeSb' => 'Reservation', 
-            'status' => decrypt($request->session()->get('nwrinfo')['st']), 
-            'user' => $user, 
+            'user' => $user,  
+            'info' => $info,  
+
         ]);
     }
     public function step4Search(Request $request){
@@ -459,34 +370,31 @@ class CreateReservationController extends Controller
         return response()->json($names);
     }
     public function storeStep4(Request $request){
-        $status = decrypt($request->session()->get('nwrinfo')['st']);
-        $validated = $request->validate([
+        if(!session()->has('nwrinfo')) return to_route('system.reservation.create');
+        $validated = Validator::make($request->all(),[
             'uid' => Rule::when(!($request->has('ncus') && $request['ncus'] == 'on'), ['required']), 
             'first_name' => ['required', 'min:1'],
             'last_name' => ['required', 'min:1'],
-            'age' => ['required', 'numeric','min:8'],
+            'birthday' => ['required', 'date'],
             'country' => ['required', 'min:1'],
-            'dyamount' => Rule::when($status == 1,['required', 'numeric','min:1000']),
-            'cnpy' => Rule::when($status == 2, ['required']),
-            'senior_count' => Rule::when($request->has('hs') && $request['hs'] == 'on', ['required']),
-            'cinamount' => Rule::when($request->has('cnpy') && $request['cnpy'] == 'partial', ['required', 'numeric']),
             'nationality' => ['required'],
             'contact' => ['nullable'],
             'email' => Rule::when($request->has('ncus') && $request['ncus'] == 'on',['email', Rule::unique('user_offlines', 'email')]),
             'valid_id_clear' => ['required'], 
             'valid_id' => Rule::when($request['valid_id_clear'] == true, ['image', 'mimes:jpeg,png,jpg', 'max:5024'], ['nullable']), 
         ], [
-            'required' => 'This input are required',
-            'uid.required' => 'Required to select the Customer',
+            'required' => 'This input are required (:attribute)',
             'image' => 'The file must be an image of type: jpeg, png, jpg',
             'mimes' => 'The image must be of type: jpeg, png, jpg',
             'max' => 'The image size must not exceed 5 MB',
-            'dyamount.min' => 'The amount must be ₱ 1,000 above',
         ]);
+        if($validated->fails()) return back()->with('error', $validated->errors()->all())->withInput($request->all());
+        $validated = $validated->validate();
+        // dd($validated);
         $info = session('nwrinfo');
         $info['fn'] = encrypt($validated['first_name']);
         $info['ln'] = encrypt($validated['last_name']);
-        $info['age'] = encrypt($validated['age']);
+        $info['bday'] = encrypt($validated['birthday']);
         $info['ctct'] = encrypt($validated['contact']);
         $info['eml'] = encrypt($validated['email']);
         $info['ntnlt'] = encrypt($validated['nationality']);
@@ -496,17 +404,6 @@ class CreateReservationController extends Controller
         }
         else{
             if(isset($info['uid'])) unset($info['uid']);
-        }
-        if(decrypt($info['st']) == 1){
-            if(isset($info['secount'])) unset($info['secount']);
-            if(isset($info['cinpy'])) unset($info['cinpy']);
-            $info['dwnpy'] = encrypt($validated['dyamount']);
-        }
-        if(decrypt($info['st']) == 2){
-            if(isset($info['dwnpy'])) unset($info['dwnpy']);
-            if($request->has('hs') && $request['hs'] == 'on') $info['secount'] = encrypt($validated['senior_count']);
-            if($request->has('cnpy') && $request['cnpy'] == 'partial') $info['cinpy'] = encrypt($validated['cinamount']);
-            else $info['cinpy'] = encrypt('full');
         }
         if($validated['valid_id_clear'] == true) {
             $this->deleteValidID($info);
@@ -519,12 +416,14 @@ class CreateReservationController extends Controller
             Storage::put('private/'.$destinationPath, (string) $encodedImage, 'private');
             $info['vid'] = encrypt($destinationPath);
         }
-
         session(['nwrinfo' => $info]);
         return redirect()->route('system.reservation.create.step.five');
     }
     public function step5(Request $request){
+        if(!session()->has('nwrinfo')) return to_route('system.reservation.create');
         $decrypted = decryptedArray(session('nwrinfo'));
+        // dd($decrypted);
+        if(!session()->has('nwrinfo')) return to_route('system.reservation.create');
         if(isset($decrypted['uid']) && !isset($decrypted['vid'])){
             $decrypted['vid'] = UserOffline::find($decrypted['uid'])->valid_id ?? '';
         }
@@ -533,8 +432,8 @@ class CreateReservationController extends Controller
         $rooms = [];
         $noDays = getNoDays($decrypted['cin'], $decrypted['cout']) ?? 1;
         if(isset($decrypted['tm'])){
-            foreach($decrypted['tm'] as $key => $id){
-                $tour = TourMenu::find($id);
+            foreach($decrypted['tm'] ?? [] as $key => $id){
+                $tour = TourMenu::withTrashed()->find($id);
                 $tour_menus[$key]['title'] =  $tour->tourMenu->title . ' ' . $tour->type;
                 $tour_menus[$key]['price'] =  '₱ ' . number_format($tour->price, 2);
                 $tour_menus[$key]['amount'] =  $tour->price * (int)$decrypted['tpx'];
@@ -542,7 +441,7 @@ class CreateReservationController extends Controller
         }
         $count = 0;
         if(isset($decrypted['qty'])){
-            foreach($decrypted['qty'] as $id => $qty){
+            foreach($decrypted['qty'] ?? [] as $id => $qty){
                 $addon = Addons::find($id);
                 $addons[$count]['title'] =  $addon->title;
                 $addons[$count]['pcs'] =  (int)$qty;;
@@ -551,60 +450,56 @@ class CreateReservationController extends Controller
                 $count++;
             }
         }
-        foreach($decrypted['rm'] as $id => $pax){
-            $room = Room::find($id);
-            if($room) $rooms[] =  'Room No. ' .$room->room_no . ' ('.$pax.' guest assigned)';
-            else $rooms[] =  'Room Data Missing';
+        if(isset($decrypted['rm'])){
+            foreach($decrypted['rm'] ?? [] as $id => $pax){
+                $room = Room::find($id);
+                if($room) $rooms[] =  'Room No. ' .$room->room_no . ' ('.$pax.' guest assigned)';
+                else $rooms[] =  'Room Data Missing';
+            }
+            $rooms = implode(', ', $rooms);    
         }
-        $rate = RoomRate::find($decrypted['rt']);
-        if(isset($decrypted['secount'])){
-            $rates['name'] = $rate->name;
-            $rates['price'] = $rate->price;
-            $rates['amount'] = (double)$rate->price * $noDays;
-            $discounted = (20 / 100) * $decrypted['secount'];
-            $discounted = (double)($rates['amount'] * $discounted);
-            $discounted = (double)($rates['amount'] - $discounted);
-            $rates['price'] = $rate->price;
-            $rates['orig_amount'] =  $rates['amount'];
-            $rates['amount'] = $discounted;
+        $roomTotal = 0;
+        if(array_key_exists('rt', $decrypted)){
+            $rate = RoomRate::find($decrypted['rt']);
+            $ratePrice = $rate->price;
+            $ratePerson = (double)$ratePrice * $noDays;
+            $roomTotal += $ratePerson * $decrypted['px'];
         }
-        else{
-            $rates['name'] = $rate->name;
-            $rates['price'] = $rate->price;
-            $rates['amount'] = (double)$rate->price * $noDays;
-        }
-        $rooms = implode(', ', $rooms);
+
         unset($count);
         return view('system.reservation.create.step5',  [
             'activeSb' => 'Reservation', 
             'tour_menus' => $tour_menus, 
             'addons' => $addons, 
-            'rooms' => $rooms, 
-            'rates' => $rates ?? [], 
-            'other_info' => $decrypted, 
+            'rooms' => $rooms ?? [], 
+            'other_info' => $decrypted ?? [], 
             "user_days" => $noDays,
+            'rate' => $rate,  
+            'ratePerson' => $ratePerson, 
+            'roomTotal' => $roomTotal,
         ]);
     }
     public function storeStep5(Request $request){
+        if(!session()->has('nwrinfo')) return redirect()->route('system.reservation.create');
         $decrypted = decryptedArray($request->session()->get('nwrinfo'));
         // dd($decrypted);
+        $pathValidID = $decrypted['vid'];
         if(isset($decrypted['vid'])){
             $imageData = Storage::get('private/'.$decrypted['vid']);
             $newPath = 'valid_id/'.Str::random(4). now()->format('YmdHis') .'.jpg';
             Storage::put('private/'.$newPath, $imageData);
-            Storage::delete('private/'.$decrypted['vid']);
             $decrypted['vid'] = $newPath;
         }
         $ui = [ 
             "first_name"  => $decrypted['fn'],
             "last_name" => $decrypted['ln'],
-            "age" => $decrypted['age'],
+            "birthday" => $decrypted['bday'],
             "country"  => $decrypted['ctry'],
             "nationality" => $decrypted['ntnlt'],
             "email" => $decrypted['eml'],
             "contact" => $decrypted['ctct'],
         ];
-        if(isset($decrypted['vid'])) $ui["valid_id"] > $decrypted['vid'];
+        if(isset($decrypted['vid'])) $ui["valid_id"] = $decrypted['vid'];
 
         if(isset($decrypted['uid'])){
             $created = UserOffline::find($decrypted['uid']) ?? [];
@@ -618,11 +513,14 @@ class CreateReservationController extends Controller
             $totalAll = 0;
             if(isset($decrypted['tm'])){
                 foreach($decrypted['tm'] as $key => $tour_id){
-                    $tour_menu = TourMenu::find($tour_id);
+                    $tour_menu = TourMenu::withTrashed()->find($tour_id);
                     $transaction['tm'. $tour_id] = [
-                        'title' => $tour_menu->tourMenu->title . ' ' . $tour_menu->type . '('.$tour_menu->pax.' pax)',
                         'tpx' => (int)$decrypted['tpx'],
                         'price' => (double)$tour_menu->price,
+                        'title' => $tour_menu->tourMenu->title,
+                        'type' => $tour_menu->type,
+                        'pax' => $tour_menu->pax,
+                        'used' => false,
                         'amount' => (double)$tour_menu->price * (int)$decrypted['tpx'],
                     ];
                     $totalAll += (double)$tour_menu->price * (int)$decrypted['tpx'];
@@ -640,41 +538,30 @@ class CreateReservationController extends Controller
                     $totalAll += (double)$addons->price * (int)$qty;
                 }
             }
+            $noDays = getNoDays($decrypted['cin'], $decrypted['cout']);
             if(isset($decrypted['rt'])){
                 $rate = RoomRate::find($decrypted['rt']);
+                $person = (double)$rate->price * $noDays;
+                $amount = $person * $decrypted['px'];
                 $transaction['rid'. $rate->id] = [
                     'title' => $rate->name,
                     'price' => (double)$rate->price,
-                    'amount' => (double)$rate->price * getNoDays($decrypted['cin'], $decrypted['cout']),
+                    'person' => $person,
+                    'amount' => $amount,
                 ];
-                if(isset($decrypted['secount'])){                    
-                    $discounted = (20 / 100) * $decrypted['secount'];
-                    $discounted = (double)($transaction['rid'. $rate->id]['amount'] * $discounted);
-                    $discounted = (double)($transaction['rid'. $rate->id]['amount'] - $discounted);
-                    $transaction['rid'. $rate->id]['orig_amount'] = $transaction['rid'. $rate->id]['amount'];
-                    $transaction['rid'. $rate->id]['amount'] = $discounted;
-                }
-                $totalAll += $transaction['rid'. $rate->id]['amount'];
             }
-            if($decrypted['st'] == 1 && isset($decrypted['dwnpy'])) $transaction['payment']['downpayment'] = $decrypted['dwnpy'];
-            elseif($decrypted['st'] == 2 && isset($decrypted['cinpy'])) {
-                if($decrypted['cinpy'] == 'full') $transaction['payment']['cinpay'] = $totalAll;
-                else $transaction['payment']['cinpay'] = $decrypted['cinpy'];
-            }
-            elseif($decrypted['st'] == 3) $transaction['payment']['coutpay'] = $totalAll;
 
             $reserved = Reservation::create([
                 'offline_user_id' => $created->id,
-                'roomid' => array_keys($decrypted['rm']),
-                'roomrateid' => $decrypted['rt'],
+                'roomid' => isset($decrypted['rm']) ?array_keys($decrypted['rm']) : null,
+                'roomrateid' => isset($decrypted['rt']) ? $decrypted['rt'] : null,
                 'pax' => $decrypted['px'],
                 'tour_pax' => $decrypted['tpx'] ?? null,
-                'age' => $created->age,
                 'accommodation_type' => $decrypted['at'],
                 'payment_method' => $decrypted['py'],
                 'check_in' => $decrypted['cin'],
                 'check_out' => $decrypted['cout'],
-                'status' => $decrypted['st'],
+                'status' => 1,
                 'transaction' => $transaction,
             ]);
             if(isset($decrypted['rm'])){
@@ -686,14 +573,15 @@ class CreateReservationController extends Controller
             }
         }
 
-        $this->employeeLogNotif('Add Booking for ' . $reserved->userReservation->name(), route('system.reservation.show', encrypt($reserved->id)));
         $details = [
             'name' => $reserved->userReservation->name(),
             'title' => 'Reservation Complete',
-            'body' => 'You Reservation at ' . Carbon::now()->format('F j, Y') .' and the Room Assign are '.implode(', ', $roomDetails).'. Be Enjoy our service with full happiness',
+            'body' => 'You Reservation at ' . Carbon::now()->format('F j, Y') .' (UTC) and the Room Assign are '.implode(', ', $roomDetails).'. Be Enjoy our service with full happiness',
         ];
+        // Storage::delete('private/'.$pathValidID);
         Mail::to(env('SAMPLE_EMAIL') ?? $reserved->userReservation->email)->queue(new ReservationMail($details, 'reservation.mail', $details['title']));
         session()->forget('nwrinfo');
+        $this->employeeLogNotif('Add Booking for ' . $reserved->userReservation->name(), route('system.reservation.show', encrypt($reserved->id)));
         return redirect()->route('system.reservation.home')->with('success', $reserved->userReservation->name() . ' was added on Reservation');
     }
 }

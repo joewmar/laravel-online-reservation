@@ -8,7 +8,6 @@ use App\Models\AuditTrail;
 use Illuminate\Support\Arr;
 use App\Models\TourMenuList;
 use Illuminate\Http\Request;
-use Laravel\Ui\Presets\React;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,6 +17,7 @@ class TourMenuController extends Controller
         $user = auth()->guard('system')->user();
         AuditTrail::create([
             'system_id' => $user->id,
+            'role' => $user->type ?? '',
             'action' => $action,
             'module' => 'Tour Menu',
         ]);
@@ -29,30 +29,30 @@ class TourMenuController extends Controller
         return view('system.service.index', ['activeSb' => 'Tour Menu', 'tour_lists' => TourMenuList::all()]);
     }
     
-    public function searchAddons(Request $request){
-        $search = $request->input('query');
-        // Perform your search logic here
-        // For example, querying the database
-        $names = [];
-        if(!empty($search)){
-            $results = Addons::where('title' . 'like', '%' . $search  . '%')->get();
+    // public function searchAddons(Request $request){
+    //     $search = $request->input('query');
+    //     // Perform your search logic here
+    //     // For example, querying the database
+    //     $names = [];
+    //     if(!empty($search)){
+    //         $results = Addons::where('title' . 'like', '%' . $search  . '%')->get();
 
-        }
-        else{
-            $results = Addons::all();
-        }
-        $results = Addons::where('title' . 'like', '%' . $search  . '%')->get();
-        foreach($results as $list){
-            $names[] = [
-                'title' => $list->userReservation->name(),
-                'link' => route('system.reservation.show', encrypt($list->id)),
-            ];
-        }
-        return response()->json($names);
+    //     }
+    //     else{
+    //         $results = Addons::all();
+    //     }
+    //     $results = Addons::where('title' . 'like', '%' . $search  . '%')->get();
+    //     foreach($results as $list){
+    //         $names[] = [
+    //             'title' => $list->userReservation->name(),
+    //             'link' => route('system.reservation.show', encrypt($list->id)),
+    //         ];
+    //     }
+    //     return response()->json($names);
         
-        return response()->json($results);
+    //     return response()->json($results);
         
-    }
+    // }
     public function create(Request $request){
         $category = TourMenuList::distinct()->get('category')->pluck('category');
         if($request->has('tl')){
@@ -71,7 +71,11 @@ class TourMenuController extends Controller
         ]);
         if(!Hash::check($validated['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode')->withInput($request->except('passcode'));
         $addons = Addons::create($validated);
-        if($addons) return redirect()->route('system.menu.home', Arr::query(['tab' => 'addons']))->with('success', $addons->title . ' was Added');
+        if($addons) {
+            $message = $addons->title . ' was Added';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.menu.home', Arr::query(['tab' => 'addons']))->with('success', $message);
+        }
     }
     public function editAddons($id){
         
@@ -86,12 +90,16 @@ class TourMenuController extends Controller
         ]);
         if(!Hash::check($validated['passcode'], auth('system')->user()->passcode)) return back()->with('error', 'Invalid Passcode')->withInput($request->except('passcode'));
         $addon->update($validated);
-        return redirect()->route('system.menu.home', Arr::query(['tab' => 'addons']))->with('success', $addon->title . ' was Updated');
+        $message = $addon->title . ' was Updated';
+        $this->employeeLogNotif($message);
+        return redirect()->route('system.menu.home', Arr::query(['tab' => 'addons']))->with('success', $message);
     }
     public function destroyAddons(Request $request, $id){
         $addon = Addons::findOrFail(decrypt($id));
         $addon->delete();
-        return redirect()->route('system.menu.home', Arr::query(['tab' => 'addons']))->with('success', $addon->title . ' was Removed');
+        $message = $addon->title . ' was Removed';
+        $this->employeeLogNotif($message);
+        return redirect()->route('system.menu.home', Arr::query(['tab' => 'addons']))->with('success', $message);
     }
 
     // Replace the Input 
@@ -121,7 +129,9 @@ class TourMenuController extends Controller
                 if($validated){
                     if(Hash::check($validated['passcode'], $system_user->passcode)){
                         $tour_menu = TourMenu::create($validated);
-                        return redirect()->route('system.menu.price.details', Arr::query(['rpid' => encrypt($tour_menu->menu_id)]))->with('success', TourMenuList::findOrFail($validated['menu_id'])->title . ' ' . $tour_menu->type . ' price'. ' was Added');
+                        $message = TourMenuList::findOrFail($validated['menu_id'])->title . ' ' . $tour_menu->type . ' price'. ' was Added';
+                        $this->employeeLogNotif($message);
+                        return redirect()->route('system.menu.price.details', Arr::query(['rpid' => encrypt($tour_menu->menu_id)]))->with('success', $message);
                     }
                     else{
                         return back()->with('error', 'Passcode Invalid')->withInput();
@@ -154,7 +164,9 @@ class TourMenuController extends Controller
                             'pax' => $validated['pax'],
                             'price' =>$validated['price'],
                         ]);
-                        return redirect()->route('system.menu.price.details', Arr::query(['rpid' => encrypt($tour_list->id)]))->with('success', $tour_list->title . ' was Added');
+                        $message = $tour_list->title . ' was Added';
+                        $this->employeeLogNotif($message);
+                        return redirect()->route('system.menu.price.details', Arr::query(['rpid' => encrypt($tour_list->id)]))->with('success', $message);
                     }
                     else{
                         return back()->with('error', 'Passcode Invalid')->withInput();
@@ -175,6 +187,7 @@ class TourMenuController extends Controller
     public function show (Request $request){
         if(auth('system')->user()->type !== 0) abort(404);
         $id = decrypt($request->id);
+        // dd(TourMenuList::findorFail(1)->tourMenuLists);
         return view('system.service.show', ['activeSb' => 'Tour Menu', 'tour_list' => TourMenuList::findOrFail($id), 'tour_menu' => TourMenu::where('menu_id', '=' ,$id)]);
 
     }
@@ -203,16 +216,13 @@ class TourMenuController extends Controller
             $validated['inclusion'] = implode("(..)",$validated['inclusion']) ?? null;
 
             $tour->update($validated);
-
-            return redirect()->route('system.menu.home')->with('success', $tour->title .' was Updated');
+            $message = $tour->title .' was Updated';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.menu.home')->with('success', $message);
         } 
         else{
             return back()->with('error', 'Passcode Invalid');
         }
-        
-
-       
-
     }
     public function editPrice(Request $request){
         $priceid = decrypt($request->priceid);
@@ -235,7 +245,9 @@ class TourMenuController extends Controller
 
         if (Hash::check($validated['passcode'], $system_user->passcode)) {
             $tour_menu->update($validated);
-            return redirect()->route('system.menu.show', encrypt($list_id))->with('success', $tour_menu->type .' was Updated');
+            $message = $tour_menu->tourMenu->title . ' ' . $tour_menu->type . ' price'. ' was Added';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.menu.show', encrypt($list_id))->with('success', $message);
         } 
         else{
             return back()->with('error', 'Passcode Invalid');
@@ -256,8 +268,9 @@ class TourMenuController extends Controller
                 $tour_menu = TourMenu::where('menu_id', '=', $tour_list->id);
                 $deleted_list = $tour_list->delete();
                 if($deleted_list) $tour_menu->delete();
-
-                return redirect()->route('system.menu.home')->with('success', $tour_list->title .' was Deleted');
+                $message = $tour_list->title .' was Removed';
+                $this->employeeLogNotif($message);
+                return redirect()->route('system.menu.home')->with('success', );
             } 
             else{
                 return back()->with('error', 'Passcode Invalid');
@@ -276,7 +289,11 @@ class TourMenuController extends Controller
         $list_id = decrypt($request->id);
         $tour_menu = TourMenu::findOrFail($priceid);
         if($tour_menu) {
-            if($tour_menu->delete()) return redirect()->route('system.menu.show', encrypt($list_id))->with('success', $tour_menu->tourMenu->title . ' - ' . $tour_menu->type .' was removed');
+            if($tour_menu->delete()) {
+                $message = $tour_menu->tourMenu->title . ' - ' . $tour_menu->type .' was removed';
+                $this->employeeLogNotif($message);
+                return redirect()->route('system.menu.show', encrypt($list_id))->with('success', $message);
+            }
             else return back();
         }
         else{

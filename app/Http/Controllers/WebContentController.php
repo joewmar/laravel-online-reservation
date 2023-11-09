@@ -28,6 +28,7 @@ class WebContentController extends Controller
         $user = auth()->guard('system')->user();
         AuditTrail::create([
             'system_id' => $user->id,
+            'role' => $user->type ?? '',
             'action' => $action,
             'module' => 'Web Content',
         ]);
@@ -69,7 +70,11 @@ class WebContentController extends Controller
                 'hero' => $main_hero,
             ]);
         }
-        if($created) return redirect()->route('system.webcontent.home', '#hero')->with('success', 'Hero Images was created');
+        if($created) {
+            $message =  'Hero Photo was created';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#hero')->with('success', $message);
+        }
     }
     public function showHero($key){
         $key = decrypt($key);
@@ -94,7 +99,7 @@ class WebContentController extends Controller
             }
         }
         else{
-            return back()->with('error', 'Required change your Image');
+            return back()->with('error', 'Required change your Photo');
         }
         if(empty($web_content)){
             $created = WebContent::create([
@@ -106,7 +111,11 @@ class WebContentController extends Controller
                 'hero' => $main_hero,
             ]);
         }
-        if($created) return redirect()->route('system.webcontent.home', '#hero')->with('success', 'Hero Images was updated');
+        if($created) {
+            $message =  'Hero Photo was updated';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#hero')->with('success', $message);
+        }
     }
     public function destroyHero(Request $request){
         $webcontents = WebContent::all()->firstOrFail();
@@ -128,7 +137,11 @@ class WebContentController extends Controller
         $removed = $webcontents->update([
             'hero' => $main_hero,
         ]);
-        if($removed) return redirect()->route('system.webcontent.home')->with('success', 'Hero Image was removed');
+        if($removed) {
+            $message = count($validated['remove_hero']). ' Hero Photo selected was removed';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home')->with('success', $message);
+        }
     }
     public function destroyHeroOne($key){
         $webcontents = WebContent::all()->first();
@@ -142,7 +155,11 @@ class WebContentController extends Controller
         $removed = $webcontents->update([
             'hero' => $main_hero,
         ]);
-        if($removed) return redirect()->route('system.webcontent.home', '#hero')->with('success', 'Hero Image was removed');
+        if($removed) {
+            $message = 'Hero Photo was removed';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#hero')->with('success', $message);
+        }
     }
     public function storeGallery(Request $request){
         $web_content = WebContent::all()->first();
@@ -176,7 +193,11 @@ class WebContentController extends Controller
                 'gallery' => $gallery,
             ]);
         }
-        if($created) return redirect()->route('system.webcontent.home', '#gallery')->with('success', 'Gallery Photo was added');
+        if($created) {
+            $message = 'Gallery Photo was added';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#gallery')->with('success', $message);
+        }
     }
     public function showGallery($key){
         $key = decrypt($key);
@@ -213,7 +234,11 @@ class WebContentController extends Controller
                 'gallery' => $gallery,
             ]);
         }
-        if($created) return redirect()->route('system.webcontent.home', '#gallery')->with('success', 'Hero Images was updated');
+        if($created) {
+            $message = 'Gallery Photo was updated';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#gallery')->with('success', $message);
+        }
     }
     public function destroyGalleryOne($key){
         $webcontents = WebContent::all()->firstOrFail();
@@ -227,7 +252,11 @@ class WebContentController extends Controller
         $removed = $webcontents->update([
             'gallery' => $gallery,
         ]);
-        if($removed) return redirect()->route('system.webcontent.home', '#gallery')->with('success', 'Hero Image was removed');
+        if($removed) {
+            $message = 'Gallery Photo was removed';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#gallery')->with('success', $message);
+        }
     }
     public function destroyGallery(Request $request){
         $webcontents = WebContent::all()->firstOrFail();
@@ -249,7 +278,11 @@ class WebContentController extends Controller
         $removed = $webcontents->update([
             'gallery' => $gallery,
         ]);
-        if($removed) return redirect()->route('system.webcontent.home', "#gallery")->with('success', 'Gallery Photo selected was removed');
+        if($removed) {
+            $message = count($validated['remove_gallery']) . ' Gallery Photo selected was removed';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', "#gallery")->with('success', $message);
+        }
     }
     public function storeTour(Request $request){
         $web_content = WebContent::all()->first();
@@ -303,7 +336,11 @@ class WebContentController extends Controller
                 'tour' => $tour,
             ]);
         }
-        if($created) return redirect()->route('system.webcontent.home', '#tour')->with('success', $validated['tour'].' was created');
+        if($created) {
+            $message = $validated['tour'] .' was created';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#tour')->with('success', $message);
+        }
     }
     public function showTour($type, $key){
         $key = decrypt($key);
@@ -346,7 +383,11 @@ class WebContentController extends Controller
                 'tour' => $tour,
             ]);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#tour')->with('success', $validated['tour'].' was updated');
+        if($updated) {
+            $message = $validated['tour'] .' was updated';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#tour')->with('success', $message);
+        }
     }
     public function destroyTourOne($type, $key){
         $webcontents = WebContent::all()->first();
@@ -355,13 +396,18 @@ class WebContentController extends Controller
         $type = decrypt($type);
         $tour = $webcontents->tour ?? [];
         if(!array_key_exists($key, $tour[$type])) abort(404);
+        $tour = $tour[$type][$key]['title'];
         deleteFile($tour[$type][$key]['image']);
         unset($tour[$type][$key]);
         
         $removed = $webcontents->update([
             'tour' => $tour,
         ]);
-        if($removed) return redirect()->route('system.webcontent.home', '#tour')->with('success', 'Hero Image was removed');
+        if($removed) {
+            $message = $tour .' was removed';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#tour')->with('success', $message);
+        }
     }
     public function destroyTourMain(Request $request){
         $webcontents = WebContent::all()->firstOrFail();
@@ -383,7 +429,11 @@ class WebContentController extends Controller
         $removed = $webcontents->update([
             'tour' => $tour,
         ]);
-        if($removed) return redirect()->route('system.webcontent.home', '#tour')->with('success', 'Main Tour Image you selected was removed');
+        if($removed) {
+            $message = count($validated['rtr']) . ' Main Tour you selected was removed';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#tour')->with('success', $message);
+        }
     }
     public function destroyTourSide(Request $request){
         $webcontents = WebContent::all()->firstOrFail();
@@ -404,7 +454,11 @@ class WebContentController extends Controller
         $removed = $webcontents->update([
             'tour' => $tour,
         ]);
-        if($removed) return redirect()->route('system.webcontent.home', '#tour')->with('success', 'Side Tour Picture you selected was removed');
+        if($removed) {
+            $message = count($validated['rts']) . ' Side Tour selected was removed';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#tour')->with('success', $message);
+        }
     }
     public function createContact(Request $request){
         $webcontents = WebContent::all()->first();
@@ -436,7 +490,11 @@ class WebContentController extends Controller
         
         if(isset($webcontents)) $save = $webcontents->update(['contact' => $contacts]);
         else $save = WebContent::create(['contact' => $contacts,  'operation' => true]);
-        if($save) return redirect()->route('system.webcontent.home', '#contact')->with('success', 'Contact of '.$validated['person'].'was added');
+        if($save) {
+            $message = 'Contact of '.$validated['person'].'was added';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#contact')->with('success', $message);
+        }
     }
     public function storeMainContact(Request $request){
         $validated = Validator::make($request->input(), [
@@ -464,7 +522,11 @@ class WebContentController extends Controller
         
         if(isset($webcontents)) $save = $webcontents->update(['contact' => $contacts]);
         else $save = WebContent::create(['contact' => $contacts,  'operation' => true]);
-        if($save) return redirect()->route('system.webcontent.home', '#contact')->with('success', 'Main Contact was added');
+        if($save) {
+            $message = 'Main Contact was added';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#contact')->with('success', $message);
+        }
     }
     public function updateMainContact(Request $request){
         $webcontents = WebContent::all()->firstOrFail();
@@ -493,7 +555,11 @@ class WebContentController extends Controller
         $contacts['main']['whatsapp'] = $validated['whatsapp_number'];
         
         if(isset($webcontents)) $save = $webcontents->update(['contact' => $contacts]);
-        if($save) return redirect()->route('system.webcontent.home', '#contact')->with('success', 'Main Contact was updated');
+        if($save) {
+            $message = 'Main Contact was updated';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#contact')->with('success', $message);
+        }
     }
     public function showContact($key){
         $key = decrypt($key);
@@ -507,6 +573,7 @@ class WebContentController extends Controller
         $webcontents = WebContent::all()->first();
         if(!array_key_exists($key, $webcontents->contact['other'])) abort(404);
         $contact = $webcontents->contact;
+        $message = $contact['other'][$key]['name'] . ' was updated';
         if($request->has('contact')){
             $validate = Validator::make($request->input(), [
                 'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
@@ -567,13 +634,18 @@ class WebContentController extends Controller
             $contact['other'][$key]['name'] = $validate['name'];
             $message =  $contact['other'][$key]['name'] . ' was updated the name';
         }
-        if($webcontents->update(['contact' => $contact])) return redirect()->route('system.webcontent.contact.show', encrypt($key))->with('success', $message);
+        if($webcontents->update(['contact' => $contact])) {
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.contact.show', encrypt($key))->with('success', $message);
+        }
     }
     public function destroyContactOne(Request $request, $key){
         $key = decrypt($key);
         $webcontents = WebContent::all()->first();
         if(!array_key_exists($key, $webcontents->contact['other'])) abort(404);
         $contact = $webcontents->contact ?? [];
+        $message = $contact['other'][$key]['name'] . ' was remove some information';
+
         if($request->has('rcontact')){
             $validate = Validator::make($request->input(), [
                 'rcontact' => ['required'],
@@ -622,11 +694,14 @@ class WebContentController extends Controller
                 if(isset($contact['other'][$key]['whatsapp'][$id])) unset($contact[$key]['whatsapp'][$id]);
             }
         }
-        if($webcontents->update(['contact' => $contact])) return redirect()->route('system.webcontent.contact.show', encrypt($key))->with('success', $message);
+        if($webcontents->update(['contact' => $contact])) {
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.contact.show', encrypt($key))->with('success', $message);
+        }
     }
     public function destroyContact(Request $request){
         $webcontents = WebContent::all()->firstOrFail();
-        // dd($request->all());
+        dd($request->all());
         $validated = $request->validate([
             'remove_contact.*' =>  ['required'],
         ]);
@@ -643,7 +718,11 @@ class WebContentController extends Controller
         $removed = $webcontents->update([
             'contact' => $contact,
         ]);
-        if($removed) return redirect()->route('system.webcontent.home', '#contact')->with('success', 'Contact Information selected was removed');
+        if($removed) {
+            $message = count($validated['remove_contact']) . ' Contact Information selected was removed';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#contact')->with('success', $message);
+        }
     }
     public function storeOperations(Request $request){
         // dd( $request->all());
@@ -676,7 +755,11 @@ class WebContentController extends Controller
         else{
             $updated=  WebContent::create($validated);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#reservation')->with('success', 'Reservation Operation was updated');
+        if($updated) {
+            $message = 'Reservation Operation was updated';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#reservation')->with('success', $message);
+        }
 
     }
     public function createPaymentGcash(){
@@ -719,7 +802,11 @@ class WebContentController extends Controller
         else{
             $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference was created');
+        if($updated) {
+            $message = 'Gcash Payment Reference was created';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#payment')->with('success', $message);
+        }
 
         // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
     }
@@ -759,7 +846,7 @@ class WebContentController extends Controller
             'priority' => $payments['gcash'][$key]['priority'],
         ];
         if($request->hasFile('image')){       
-            if(isset($payments['gcash'][$key]['qrcode'])) deleteFile($payments['gcash'][$key]['qrcode']);
+            if(isset($payments['gcash'][$key]['qrcode'])) deleteFile($payments['gcash'][$key]['qrcode'], 'private');
             $validate['image'] = saveImageWithJPG($request, 'image', 'ref_gcash', 'private');
             $payments['gcash'][$key]['qrcode'] = $validate['image'];
         }
@@ -769,7 +856,11 @@ class WebContentController extends Controller
         else{
             $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
-        if($updated) return redirect()->back()->with('success', 'Gcash Payment Reference ('.$validate['name'].') was updated');
+        if($updated) {
+            $message = 'Gcash Payment Reference ('.$validate['name'].') was updated';
+            $this->employeeLogNotif($message);
+            return redirect()->back()->with('success', $message);
+        }
 
         // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
     }
@@ -787,7 +878,7 @@ class WebContentController extends Controller
         foreach($payments['gcash'] as $gcahsKey => $item){
             if($gcahsKey === $key){
                 $name = $payments['gcash'][$key]['name'];
-                if(isset($payments['gcash'][$key]['qrcode'])) deleteFile($payments['gcash'][$key]['qrcode']);
+                if(isset($payments['gcash'][$key]['qrcode'])) deleteFile($payments['gcash'][$key]['qrcode'], 'private');
                 unset($payments['gcash'][$key]);
             }
         }
@@ -797,7 +888,11 @@ class WebContentController extends Controller
         else{
             $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Reference of '.$name.' was removed');
+        if($updated) {
+            $message = 'Gcash Reference of '.$name.' was removed';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#payment')->with('success', $message);
+        }
 
         // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
     }
@@ -849,7 +944,11 @@ class WebContentController extends Controller
         else{
             $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference was created');
+        if($updated) {
+            $message = 'PayPal Reference was created';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#payment')->with('success', $message);
+        }
 
         // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
     }
@@ -895,7 +994,7 @@ class WebContentController extends Controller
         ];
         if($request->hasFile('image')){                          // storage/app/logos
             $validate['image'] = saveImageWithJPG($request, 'image', 'ref_paypal', 'private');
-            if(isset($payments['paypal'][$key]['image'])) deleteFile($payments['paypal'][$key]['image']);
+            if(isset($payments['paypal'][$key]['image'])) deleteFile($payments['paypal'][$key]['image'], 'private');
             $payments['paypal'][$key]['image'] = $validate['image'];
         }
 
@@ -905,7 +1004,11 @@ class WebContentController extends Controller
         else{
             $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference ('.$validate['name'].') was updated');
+        if($updated) {
+            $message = 'PayPal Reference ('.$validate['name'].') was updated';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#payment')->with('success', $message);
+        }
 
         // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
     }
@@ -923,7 +1026,7 @@ class WebContentController extends Controller
         foreach($payments['paypal'] as $paypalKey => $item){
             if($paypalKey === $key){
                 $name = $payments['paypal'][$key]['name'];
-                if(isset($payments['paypal'][$key]['image'])) deleteFile($payments['paypal'][$key]['image']);
+                if(isset($payments['paypal'][$key]['image'])) deleteFile($payments['paypal'][$key]['image'], 'private');
                 unset($payments['paypal'][$key]);
             }
         }
@@ -933,7 +1036,11 @@ class WebContentController extends Controller
         else{
             $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Reference of '.$name.' was removed');
+        if($updated) {
+            $message = 'PayPal Reference of '.$name.' was removed';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#payment')->with('success', $message);
+        }
 
         // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
     }
@@ -959,7 +1066,11 @@ class WebContentController extends Controller
         
         if(isset($webcontents)) $updated = $webcontents->update(['payment' => $payments]);
         else $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Gcash Payment Reference ('.$payments['gcash'][$key]['name'].') was set priority');
+        if($updated) {
+            $message = 'Gcash Reference ('.$payments['gcash'][$key]['name'].') was set priority';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#payment')->with('success', $message);
+        }
     }
     public function priorityPaymentPayPal(Request $request){
         // dd(decrypt($request->all('priority')['priority']));
@@ -983,7 +1094,11 @@ class WebContentController extends Controller
         
         if(isset($webcontents)) $updated = $webcontents->update(['payment' => $payments]);
         else $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference ('.$payments['paypal'][$key]['name'].') was set priority');
+        if($updated) {
+            $message = 'PayPal Reference ('.$payments['paypal'][$key]['name'].') was set priority';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#payment')->with('success', $message);
+        }
     }
     public function priorityPaymentBT(Request $request){
         $validate = Validator::make($request->all(), [
@@ -1002,7 +1117,11 @@ class WebContentController extends Controller
         
         if(isset($webcontents)) $updated = $webcontents->update(['payment' => $payments]);
         else $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'PayPal Payment Reference ('.$payments['bankTransfer'][$key]['name'].') was set priority');
+        if($updated) {
+            $message = 'PayPal Payment Reference ('.$payments['bankTransfer'][$key]['name'].') was set priority';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#payment')->with('success', $message);
+        }
     }
     public function createPaymentBT(){
         return view('system.webcontent.payment.bank-transfer', ['activeSb' => 'Website Content']);
@@ -1037,7 +1156,11 @@ class WebContentController extends Controller
         else{
             $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         }
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Bank Transfer Reference was created');
+        if($updated) {
+            $message = 'Bank Transfer Reference was created';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#payment')->with('success', $message);
+        }
 
     }
     public function showPaymentBT($key){
@@ -1076,7 +1199,11 @@ class WebContentController extends Controller
         if(isset($webcontents))$updated = $webcontents->update(['payment' => $payments]);
         else $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Bank Transfer Reference ('.$validate['name'].') was updated');
+        if($updated) {
+            $message = 'Bank Transfer Reference ('.$validate['name'].') was updated';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#payment')->with('success', $message);
+        }
     }
     public function destroyPaymentBT(Request $request, $key){
         $key = decrypt($key);
@@ -1098,7 +1225,11 @@ class WebContentController extends Controller
         if(isset($webcontents)) $updated = $webcontents->update(['payment' => $payments]);
         else $updated = WebContent::create(['payment' => $payments, 'operation' => true]);
         
-        if($updated) return redirect()->route('system.webcontent.home', '#payment')->with('success', 'Bank Transfer Reference of '.$name.' was removed');
+        if($updated) {
+            $message = 'Bank Transfer Reference of '.$name.' was removed';
+            $this->employeeLogNotif($message);
+            return redirect()->route('system.webcontent.home', '#payment')->with('success', $message);
+        }
 
         // return view('system.webcontent.payment.gcash', ['activeSb' => 'Website Content']);
     }

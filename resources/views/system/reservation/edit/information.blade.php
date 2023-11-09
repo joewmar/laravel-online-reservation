@@ -4,16 +4,15 @@
     $arrStatus = [0 => 'Pending', 1 => 'Confirmed', 2 => 'Check-in', 3 => 'Check-out', 5 => 'Cancel'];
 @endphp
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Reservation Information of {{$r_list->userReservation->name()}}" back=true>
+    <x-system-content title="Reservation Information of {{$r_list->userReservation->name()}}" back="{{route('system.reservation.show', encrypt($r_list->id))}}">
         <div x-data="{newpax: '{{old('pax') ?? $r_list->pax}}', status: '{{$r_list->status}}'}">
             <form :id="status == '{{$r_list->status}}' && newpax == '{{$r_list->pax}}' ? 'edit-info' : '' " method="POST" action="{{route('system.reservation.edit.information.update', encrypt($r_list->id))}}">
                 @csrf
                 @method('PUT')
                 <section class="w-full flex justify-center">
                     <div class="w-96 my-8">
-                        <x-input type="number" name="age" id="age" placeholder="{{$r_list->userReservation->name()}} Age" value="{{old('age') ?? $r_list->age}}"/>
-                        <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one" value="{{old('check_in') ?? $r_list->check_in}}"/>
-                        <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{old('check_out') ?? $r_list->check_out}}" />
+                        <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-one" value="{{old('check_in') ?? $r_list->check_in}}" disabled="{{$r_list->status > 0 ? true : false}}" />
+                        <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-one" value="{{old('check_out') ?? $r_list->check_out}}" disabled="{{$r_list->status > 0 ? true : false}}" />
                         <x-select name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccType" selected="{{old('accommodation_type') ?? $r_list->accommodation_type}}" />
                         <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" xModel="newpax" />
                         <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{old('payment_method') ?? $r_list->payment_method}}"/>

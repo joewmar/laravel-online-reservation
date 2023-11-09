@@ -22,6 +22,7 @@ use App\Http\Controllers\TourSettingController;
 use App\Http\Controllers\MyReservationController;
 use App\Http\Controllers\CreateReservationController;
 use App\Http\Controllers\EditReservationController;
+use App\Http\Controllers\EditUserReserveController;
 use App\Http\Controllers\ReservationTwoController;
 use App\Http\Controllers\SystemReservationController;
 use App\Http\Controllers\SystemReservationTwoController;
@@ -47,18 +48,19 @@ Route::middleware(['auth.image'])->group(function () {
 // Route::middleware(['auth.dbBackup'])->group(function () {
 //     Route::get('/private/backup/{filename}', [HomeController::class,'accessBackup'])->name('private.image');
 // });
-Route::view('/privacy-policy', 'privacy-policy');
 // Route::get('/bot/getUpdates',[LandingController::class, 'teleUpdates'])->name('home');
-Route::controller(LandingController::class)->group(function (){
+Route::controller(LandingController::class)->middleware(['session.delete'])->group(function (){
     Route::get('/', 'index')->name('home');
     // Route::get('/testing', 'testing')->name('home');
     Route::get('/tour', 'services')->name('services');
     Route::get('/aboutus', 'aboutus')->name('about.us');
     Route::get('/contact', 'contact')->name('contact');
     Route::get('/reservation/demo', 'demo')->name('reservation.demo');
+    Route::get('/term-and-conditions', 'termConditions')->name('term-conditions');
+
 });
 
-Route::prefix('reservation')->name('reservation.')->group(function (){
+Route::prefix('reservation')->name('reservation.')->middleware(['session.delete'])->group(function (){
     Route::get('/date', [ReservationController::class, 'date'])->name('date');
     Route::post('/date', [ReservationController::class, 'dateCheck'])->name('date.check');
     Route::post('/date/check', [ReservationController::class, 'dateStore'])->name('date.check.store');
@@ -66,7 +68,7 @@ Route::prefix('reservation')->name('reservation.')->group(function (){
 
 
 // Route::middleware(['guest:web'])->group(function(){
-Route::middleware(['guest:web'])->group(function(){
+Route::middleware(['guest:web'])->middleware(['session.delete'])->group(function(){
     Route::get('/login', [UserController::class, 'login'])->name('login');
     Route::get('/register', [UserController::class, 'register'])->name('register');
     Route::post('/register', [UserController::class, 'create'])->name('create');
@@ -128,6 +130,16 @@ Route::middleware(['auth:web', 'preventBackhHistory', 'session.delete'])->contro
         Route::put('/{id}/reschedule/update', 'updateReschedule')->name('update.reschedule');
         Route::get('/{id}/show/online-payment', 'showOnlinePayment')->name('show.online.payment');
         Route::delete('/{id}/reservation/delete', 'destroyReservation')->name('destroy');
+        
+    });
+    Route::prefix('reservation/{id}/edit')->name('user.reservation.edit.')->controller(EditUserReserveController::class)->group(function (){
+        Route::get('/step1', 'step1')->name('step1');
+        Route::post('/step1/store', 'storeStep1')->name('step1.store');
+        Route::get('/step2', 'step2')->name('step2');
+        Route::post('/step2-1/store', 'storeStep21')->name('step21.store');
+        Route::post('/step2-2/store', 'storeStep22')->name('step22.store');
+        Route::get('/step3', 'step3')->name('step3');
+        Route::put('/update', 'update')->name('update');
     });
     // Reservation Information
     Route::prefix('reservation')->name('reservation.')->group(function (){
@@ -161,12 +173,12 @@ Route::middleware(['auth:web', 'preventBackhHistory', 'session.delete'])->contro
 });
 
 //For System Users Auth (System Panel)
-Route::prefix('system')->name('system.')->group(function(){
+Route::prefix('system')->name('system.')->middleware(['session.delete'])->group(function(){
     Route::middleware(['guest:system'])->group(function(){
        Route::get('/login', [SystemController::class, 'login'])->name('login');
        Route::post('/check', [SystemController::class, 'check'])->name('check');
     });
-    Route::middleware(['auth:system','preventBackhHistory', 'session.delete'])->group(function(){
+    Route::middleware(['auth:system','preventBackhHistory'])->group(function(){
         Route::post('/logout', [SystemController::class, 'logout'])->name('logout');
         Route::get('/notifications', [SystemController::class, 'notifications'])->name('notifications');
         Route::get('/notifications/mark-as-read', [SystemController::class, 'markAsRead'])->name('notifications.mark-as-read');
@@ -194,18 +206,26 @@ Route::prefix('system')->name('system.')->group(function(){
             });
             Route::controller(EditReservationController::class)->group(function (){
 
-                Route::get('/{id}/edit/information', 'information')->name('edit.information');
-                Route::put('/{id}/edit/information', 'updateInfo')->name('edit.information.update');
-                
-                Route::get('/{id}/edit/information/room', 'changeRoom')->name('edit.information.room');
-                Route::put('/{id}/edit/information/room', 'updateInfoRoom')->name('edit.information.room.update');
+                Route::get('/{id}/edit/step1', 'step1')->name('edit.step1');
+                Route::post('/{id}/edit/step1', 'storeStep1')->name('edit.step1.store');
+                Route::get('/{id}/edit/step2', 'step2')->name('edit.step2');
+                Route::post('/{id}/edit/step2', 'storeStep2')->name('edit.step2.store');
+                Route::get('/{id}/edit/step3', 'step3')->name('edit.step3');
 
+                Route::post('/{id}/edit/step3', 'storeStep3')->name('edit.step3.store');
+                Route::get('/{id}/edit/step4', 'step4')->name('edit.step4');
+
+                Route::put('/{id}/edit/step4', 'storeStep4')->name('edit.step4.update');
+
+
+                Route::get('/{id}/edit/customer', 'customer')->name('edit.customer');
+                Route::put('/{id}/edit/customer', 'updateCustomer')->name('edit.customer.update');
 
                 Route::get('/{id}/edit/rooms', 'rooms')->name('edit.rooms');
                 Route::put('/{id}/edit/rooms', 'updateRooms')->name('edit.rooms.update');
 
                 Route::get('/{id}/edit/services', 'services')->name('edit.tour');
-                Route::put('/{id}/edit/services', 'updateServices')->name('edit.tour.update');
+                Route::put('/{id}/edit/services', 'updateServices')->name('edit.addons.update');
 
                 Route::get('/{id}/edit/payment', 'payment')->name('edit.payment');
                 Route::put('/{id}/edit/payment/downpayment', 'updateDY')->name('update.downpayment');
@@ -244,7 +264,9 @@ Route::prefix('system')->name('system.')->group(function(){
                 Route::get('/{id}/show/extend', 'showExtend')->name('show.extend');
                 Route::put('/{id}/show/extend/update', 'updateExtend')->name('extend.update');
 
-                
+                Route::put('/{id}/{key}/used/update', 'updateUsed')->name('update.used');
+                Route::put('/{id}/{key}/{created}/used/update', 'updateUsed2')->name('update.used.two');
+
 
             });
 
@@ -417,6 +439,7 @@ Route::prefix('system')->name('system.')->group(function(){
             Route::prefix('activity-log')->name('audit.')->controller(AuditLogController::class)->middleware('can:admin')->group(function (){
                 Route::get('/', 'index')->name('home');
                 Route::post('/search', 'search')->name('search');
+                Route::get('/report', 'report')->name('report');
                 // Route::get('/create', 'create')->name('create');
                 // Route::post('/create/store', 'store')->name('create.store');
     
@@ -454,5 +477,5 @@ Route::prefix('system')->name('system.')->group(function(){
     });  
 
 });
-Route::get('reservation/{id}/receipt', [MyReservationController::class, 'receipt'])->name('reservation.receipt');
+Route::get('reservation/{id}/receipt', [MyReservationController::class, 'receipt'])->middleware(['session.delete'])->name('reservation.receipt');
 

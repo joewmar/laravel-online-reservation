@@ -1,4 +1,4 @@
-@props(['noFooter' => false, 'DOMLoading' => false, 'btnTop' => false])
+@props(['title' => '', 'noFooter' => false, 'DOMLoading' => false, 'btnTop' => false])
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
 <head>
@@ -13,7 +13,11 @@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     @vite('resources/css/app.css')
     @stack('styles')
-    <title>{{ str_replace('_', ' ', config('app.name'))}}</title>
+    @if(!empty($record))
+      <title>A&A: {{$title}}</title>
+    @else
+      <title>{{ str_replace('_', ' ', config('app.name'))}}</title>
+    @endif
 </head>
 <body {{$DOMLoading ? 'id="main-content"' : ''}} class="bg-base-100 selection:bg-primary selection:text-base-100">
   @stack('top')

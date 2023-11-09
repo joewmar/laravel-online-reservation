@@ -24,6 +24,7 @@ class NewsController extends Controller
         $user = auth()->guard('system')->user();
         AuditTrail::create([
             'system_id' => $user->id,
+            'role' => $user->type ?? '',
             'action' => $action,
             'module' => 'News',
         ]);

@@ -2,9 +2,10 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -170,6 +171,7 @@ class UserFactory extends Factory
         $birthday = fake()->date('Y-m-d');
         $password = str_replace(' ', '', $first_name) . '@' . str_replace('-', '', $birthday);
 
+
         $emails = [
             'joemarieportacio00@gmail.com',
             'armanescoto0@gmail.com',
@@ -181,7 +183,7 @@ class UserFactory extends Factory
             'first_name' => $first_name,
             'last_name' => fake()->lastName(),
             'birthday' => $birthday,
-            'nationality' =>fake()->randomElement($arrNationality),
+            'nationality' => fake()->randomElement($arrNationality),
             'country' => fake()->country(),
             'contact' => fake()->e164PhoneNumber(),
             'email' => fake()->randomElement($emails),

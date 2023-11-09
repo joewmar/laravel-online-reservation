@@ -19,13 +19,16 @@
 @endphp
 
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="" back=true>
+    <x-system-content title="" back="{{route('system.reservation.show', encrypt($r_list->id))}}">
         {{-- User Details --}}
        <div class="px-3 md:px-20">
         <x-profile :rlist="$r_list" />
-        <div class="my-5 flex justify-between items-center">
-            <h2 class="text-xl md:text-2xl font-bold">Reschedule Request<sup class="text-sm text-primary">{{$r_list->status === 5 ? ' *Approved' : ''}}</sup></h2>
-            <label for="frsch_mdl" class="btn btn-error btn-sm" {{$r_list->status < 1 ? 'disabled' : ''}}>Force Reschedule</label>
+        <div class="my-5 flex justify-between items-start">
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold">Reschedule Request</h2>
+                <h2 class="text-sm md:text-lg font-bold">Type: <span class="font-normal">{{$r_list->accommodation_type}}</span></h2>
+            </div>
+            <label for="frsch_mdl" class="btn btn-error btn-sm" {{$r_list->status > 0 ? '' : 'disabled'}}>Force Reschedule</label>
             @if(!($r_list->status < 1))
                 <x-modal title="Before Proceed, Choose date to force reschedule" id="frsch_mdl">
                     <form action="{{route('system.reservation.force.reschedule', encrypt($r_list->id))}}" method="GET">
@@ -34,7 +37,9 @@
                         <p><span class="font-bold">Previous Check-out:</span> {{Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out)->format('F j, Y')}}</p>
                         <div class="mt-5">
                             <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" />
-                            <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" />
+                            @if($r_list->accommodation_type != 'Day Tour')
+                                <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" />
+                            @endif
                         </div>
                         <div class="modal-action">
                             <button class="btn btn-primary">Proceed</button>
@@ -148,19 +153,18 @@
                         <x-rooms id="infomdl" :rooms="$rooms" :rlist="$r_list" :reserved="$reserved" />
 
                         <div class="modal-action">
-                            <button class="btn btn-primary">Save</button>
-                        </div>
-                            
-                            
-                    </form>                    
-                
+                            <label for="apreshmdl" class="btn btn-primary">Save</label>
+                        </div>  
+                    </form>                  
                 </x-modal>
+                <x-modal id="apreshmdl" title="Do you want to approve?" type="YesNo" formID="approve-form" loader noBottom>        
+                </x-modal> 
             @endif
 
             <label for="disaprove_modal" class="btn btn-sm btn-error" {{$r_list->status === 5 || !isset($r_list->message['reschedule']) ? 'disabled' : ''}}>Dissaprove</label>
             @if(!($r_list->status === 5 || !isset($r_list->message['reschedule'])))
                 <x-modal id="disaprove_modal" title="Why Disapprove Reschedule">
-                    <form x-data="{resched: ''}" action="{{route('system.reservation.update.reschedule.disaprove', encrypt($r_list->id))}}" method="POST">
+                    <form id="disapprove-form" x-data="{resched: ''}" action="{{route('system.reservation.update.reschedule.disaprove', encrypt($r_list->id))}}" method="POST">
                         @csrf
                         @method('PUT')
                         <div class="flex flex-col gap-2 my-3">
@@ -180,9 +184,11 @@
                         <template x-if="resched === 'Other' ">
                             <x-textarea placeholder="Reason Message" name="reason" id="reason" />
                         </template>
-                        <div class="modal-action">
-                            <button class="btn btn-sm btn-error">Proceed Disapprove</button>
+                        <div class="modal-action ">
+                            <label for="dpreshmdl" class="btn btn-sm btn-error">Disapprove</label>
                         </div>
+                        <x-modal id="dpreshmdl" title="Do you want to disapprove?" type="YesNo" formID="disapprove-form" loader noBottom>        
+                        </x-modal> 
                     </form>
                 </x-modal>
             @endif

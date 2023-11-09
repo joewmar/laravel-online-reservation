@@ -76,8 +76,8 @@
         </div>
         <div class="mt-8 flex justify-center w-full">
           @foreach ($announcements as $announcement)
-            @if((isset($announcement->from) && isset($announcement->to)))
-              @if((Carbon\Carbon::createFromFormat('Y-m-d', $announcement->from)->timestamp <= Carbon\Carbon::now()->timestamp) && !(Carbon\Carbon::createFromFormat('Y-m-d', $announcement->to)->timestamp <= Carbon\Carbon::now()->addDay()->timestamp))
+            @if(isset($announcement->from) && isset($announcement->to))
+              @if(Carbon\Carbon::createFromFormat('Y-m-d', $announcement->from)->setTimezone('Asia/Manila')->timestamp >= Carbon\Carbon::now()->setTimezone('Asia/Manila')->timestamp && Carbon\Carbon::createFromFormat('Y-m-d', $announcement->to)->timestamp >= Carbon\Carbon::now()->setTimezone('Asia/Manila')->timestamp)
                 <article x-init="hacc = true" data-aos="fade-down" class="flex gap-4 items-center w-9/12 h-auto rounded-lg bg-primary border border-gray-100 bg-white p-4 shadow-lg sm:p-6" >
                   <span class="inline-block rounded bg-primary p-2 text-primary-content">
                     <i class="fa-solid fa-bullhorn"></i>
@@ -113,12 +113,12 @@
           <h2 class="text-3xl font-bold sm:text-4xl">News</h2>
         </div>
     
-        <div class="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3 place-items-center w-full">
+        <div class="mt-8 flex flex-wrap justify-around w-full gap-10">
           @foreach ($news as $new)
             @if((isset($new->from) && isset($new->to)))
-              @if(Carbon\Carbon::createFromFormat('Y-m-d', $new->from, 'Asia/Manila')->timestamp < Carbon\Carbon::now('Asia/Manila')->timestamp)
+              @if(Carbon\Carbon::createFromFormat('Y-m-d', $new->from)->setTimezone('Asia/Manila')->timestamp <= Carbon\Carbon::now()->setTimezone('Asia/Manila')->timestamp && Carbon\Carbon::createFromFormat('Y-m-d', $new->to)->setTimezone('Asia/Manila')->timestamp >= Carbon\Carbon::now()->setTimezone('Asia/Manila')->timestamp)
                 <div x-init="hide = true" data-aos="flip-right" for="news{{$loop->index+1}}" class="card w-96 bg-base-100 shadow-xl">
-                  <figure><img src="{{$new->image ? asset('storage/'.$new->image) : asset('images/logo2.png')}}" alt="Shoes" class="w-full object-cover" /></figure>
+                  <figure><img src="{{$new->image ? asset('storage/'.$new->image) : asset('images/logo2.png')}}" alt="Shoes" class="w-full object-cover h-96" /></figure>
                   <div class="card-body">
                     <h2 class="card-title">{{$new->title}}</h2>
                     <p>{{Str::limit($new->description, 200)}}</p>
@@ -127,6 +127,7 @@
                     </div>
                   </div>
                 </div>
+                
                 <dialog id="news{{$loop->index+1}}" class="modal modal-bottom sm:modal-middle">
                   <form method="dialog" class="modal-box">
                     <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>

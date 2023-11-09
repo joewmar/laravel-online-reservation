@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Add Annoucement">
+    <x-system-content title="Add Annoucement"  back="{{route('system.news.home')}}">
       <form id="add-form" action=" {{ route('system.news.announcement.store') }}" method="post" enctype="multipart/form-data">
         @csrf
         <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">

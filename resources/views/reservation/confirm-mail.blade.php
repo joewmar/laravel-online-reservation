@@ -11,6 +11,9 @@
   Payment Method: {{ $details['payment_method'] }}<br>
   Room Assign: {{ $details['room_no'] }}<br>
   Room Rate: {{$details['room_type']}} : ₱ {{ number_format($details['room_rate'], 2) }} (Philippine Currency)<br>
+  Days: {{$details['days']}}  <br>
+  Rate Amount Per Person: ₱ {{ number_format($details['rate_person'], 2) }} <br>
+  Total Rate: ₱ {{ number_format($details['rate_amount'], 2) }} <br>
   
   @php
     if(isset($details['menu'])){

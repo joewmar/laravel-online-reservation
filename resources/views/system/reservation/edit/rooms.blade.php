@@ -2,7 +2,7 @@
     $r = $r_list->roomid ?? array_keys(old('room_pax')); 
 @endphp
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Edit Room Assign" back>
+    <x-system-content title="Edit Room Assign" back="{{route('system.reservation.show', encrypt($r_list->id))}}">
         {{-- User Details --}}
         <div x-data="{force: false, rooms: {{$r_list->roomid ? '[' . implode(',', $r_list->roomid) .']' : '[]'}} }" class="mt-5 px-5 w-full">
             <div class="flex justify-between">

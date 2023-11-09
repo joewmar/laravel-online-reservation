@@ -4,7 +4,7 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Reservation">
         {{-- Calendar  --}}
-        <div class="flex justify-between items-center mt-5">
+        <div  class="flex justify-between items-center mt-5">
             <div class="tabs bg-transparent tabs-boxed">
                 <a href="{{route('system.reservation.home')}}" class="tab tab-md md:tab-lg {{request('rtab') === 'list' ? '' : 'tab-active'}}">Calendar</a> 
                 <a href="{{route('system.reservation.home', Arr::query(['rtab' => 'list']) )}}" class="tab tab-md md:tab-lg {{request('rtab') === 'list' ? 'tab-active' : ''}}">List</a> 
@@ -33,7 +33,13 @@
                     @endif
 
 
+                    
                     <div class="overflow-x-auto w-full">
+                        {{-- @if(request('tab') == 'cin' || request('tab') == 'cout')
+                            <div class="max-w-xs mt-5">
+                                <x-select name="wala" id="walaID" placeholder="" xModel="type" :value="['All', 'Today']" :title="['All', 'Today']" noRequired />
+                            </div>
+                        @endif --}}
                         <table class="table table-xs md:table-md">
                             <!-- head -->
                             <thead>
@@ -72,7 +78,7 @@
     
                                         <th class="w-auto">
                                             <a href="{{route('system.reservation.show', encrypt($list->id))}}" class="btn btn-ghost btn-sm btn-circle hover:btn-primary">
-                                                <i class="fa-solid fa-ellipsis"></i>
+                                                <i class="fa-solid fa-circle-info"></i>
                                             </a>
                                         </th>
                                     </tr>
@@ -161,6 +167,7 @@
                 <div id='calendar' class="my-5"></div>
             </div> 
             @push('scripts')
+
                 <script type="module" src='{{Vite::asset("resources/js/reservation-calendar.js")}}'></script>
             @endpush
         @endif

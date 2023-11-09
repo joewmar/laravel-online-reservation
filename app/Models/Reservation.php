@@ -62,8 +62,19 @@ class Reservation extends Model
         });
     }
     public function userReservation(){
+        $userInfo = json_decode($this->attributes['otherinfo'] ?? '');
         if(!empty($this->attributes['offline_user_id'])) return $this->belongsTo(UserOffline::class, 'offline_user_id');
-        else return $this->belongsTo(User::class, 'user_id');
+        else return $this->belongsTo(User::class, 'user_id')->withDefault([
+            'avatar' => null,
+            'first_name' => $userInfo->first_name ?? 'None',
+            'last_name'=> $userInfo->last_name ?? 'None',
+            'birthday' => $userInfo->birthday ?? 'None',
+            'nationality' => $userInfo->nationality ?? 'None',
+            'country' => $userInfo->country ?? 'None',
+            'contact' => $userInfo->contact ?? 'None',
+            'email' =>$userInfo->email ?? 'None',
+            'valid_id' => null,
+        ]);
     }
     public function room(){
         return $this->hasMany(Room::class, 'roomid');
@@ -125,7 +136,7 @@ class Reservation extends Model
         $date1 = Carbon::parse($this->attributes['check_in']); // Convert $date1 to Carbon object
         $date2 = Carbon::parse($this->attributes['check_out']); // Convert $date2 to Carbon object
         if($date1->timestamp === $date2->timestamp) return 1;
-        else return (int)$date1->diffInDays($date2); // Calculate the number of days between the two dates
+        else return (int)$date1->diffInDays($date2) + 1; // Calculate the number of days between the two dates
     }
     public function getNoDaysInToday()
     {
@@ -134,63 +145,115 @@ class Reservation extends Model
         $date2 = Carbon::parse($this->attributes['check_out']); // Convert $date2 to Carbon object
         return (int)$date1->diffInDays($date2); // Calculate the number of days between the two dates
     }
-    public function getAllArray($attribute)
+    public function countSenior()
     {
-        if(!empty($replace)) {
-            foreach(json_decode($this->attributes[$attribute], true) as $key => $item) $replace[$key] = $item;
-            return $replace;
+        $num = false;
+        $transaction = json_decode($this->attributes['transaction']);
+        if(isset($transaction->payment->discountPerson)){
+            $num = $transaction->payment->discountPerson;
         }
-        else return [];
+        return $num;
     }
-    public function getTotal()
-    {
-        $total = 0;
-        if(!empty($this->attributes['transaction'])) {
-            $transaction = json_decode($this->attributes['transaction'], true); 
-            foreach($transaction as $item) {
-                // dd($transaction);
-                if(is_array($item)){
-                    foreach($item as $amount){
-                        if(isset($amount['amount'])){
-                            $total += (double)$amount['amount'];
-                        }
-                    }
-                    
-                }
-                if(isset($item['amount'])){
-                    $total += (double)$item['amount'];
+    public function counrTour(){
+        $c = 0;
+        if(!empty($this->attributes['transaction'])){
+            $trans = json_decode($this->attributes['transaction'], true);
+            foreach($trans as $key => $item){
+                if (strpos($key, 'tm') !== false || strpos($key, 'TA') !== false) {
+                    $c++;
                 }
             }
         }
+
+        return $c;
+    }
+    public function getTotal($tourUsed = false)
+    {
+        $total = 0;
+            // $transaction = json_decode($this->attributes['transaction'], true); 
+        if($tourUsed) $total += $this->getTourTotal(true);
+        else $total += $this->getTourTotal();
+        $total += $this->getAddonTotal();
+        $total += $this->getRoomAmount();
+    
         return $total;
     }
-    public function getServiceTotal()
+    public function getServiceTotal($checkin = false)
+    {
+        $total = 0;
+        if(!$checkin) $total += $this->getTourTotal();
+        else $total += $this->getTourTotal(true);
+        $total += $this->getAddonTotal();
+        return $total;
+       
+    }
+    public function getTourTotal($marked = false)
     {
         $total = 0;
         if(!empty($this->attributes['transaction'])) {
             foreach(json_decode($this->attributes['transaction'], true) as $key => $item) {
-                if(strpos($key, 'tm') !== false) $total += (double)$item['amount'];
-                if(strpos($key, 'OA') !== false) {
-                    foreach($item as $key => $OA) $total += (double)$OA['amount'];
+                if(strpos($key, 'tm') !== false) {
+                    if($marked){
+                        if($item['used'] == true) $total += (double)$item['amount'];
+                    }
+                    else $total += (double)$item['amount'];
                 }
                 if(strpos($key, 'TA') !== false) {
-                    foreach($item as $key => $TA) $total += (double)$TA['amount'];
+                    foreach($item as $key => $TA) {
+                        if($marked){
+                            if($TA['used'] == true) $total += (double)$TA['amount'];
+                        }
+                        else $total += (double)$TA['amount'];
+                    }
                 }
             }
             return $total;
         }
         else return $total;
     }
-    public function getRoomAmount()
+    public function getAddonTotal()
+    {
+        $total = 0;
+        if(!empty($this->attributes['transaction'])) {
+            foreach(json_decode($this->attributes['transaction'], true) as $key => $item) {
+                if(strpos($key, 'OA') !== false) {
+                    foreach($item as $key => $OA) $total += (double)$OA['amount'];
+                }
+            }
+            return $total;
+        }
+        else return $total;
+    }
+    public function getRoomAmount($origAmount = false, $getPerson = false)
     {
         $amount = 0;
         if(!empty($this->attributes['transaction'])) {
             foreach(json_decode($this->attributes['transaction'], true) as $key => $item) {
-                if(strpos($key, 'rid') !== false) $amount += (double)$item['amount'];
+                if(strpos($key, 'rid') !== false) {
+                    if($getPerson){
+                        $amount += (double)$item['person'];
+                    }
+                    else{
+                        if($origAmount && isset($item['orig_amount'])) $amount += (double)$item['orig_amount'];
+                        else $amount += (double)$item['amount'];
+                    }
+
+                }
             }
             return $amount;
         }
         else return $amount;
+    }
+    public static function discounted($amount = 0, $rate = 20){
+
+        $total = (double)$amount;
+        if($amount !== 0){
+            $discounted = $rate / 100;
+            $discounted = (double)($total * $discounted);
+            $discounted = (double)($total - $discounted);
+            $total = $discounted;
+        }
+        return $total;
     }
     public function downpayment()
     {
@@ -209,9 +272,9 @@ class Reservation extends Model
         $paymentCustomer = 0;
         $allPaid = json_decode($this->attributes['transaction'], true); 
         if(isset($allPaid['payment'])){
-            $paymentCustomer += $allPaid['payment']['cinpay'] ?? 0;
-            $paymentCustomer += $allPaid['payment']['downpayment'] ?? 0;
-            $paymentCustomer += $allPaid['payment']['coutpay'] ?? 0;
+            $paymentCustomer += $this->downpayment();
+            $paymentCustomer +=  $this->checkInPayment();
+            $paymentCustomer +=  $this->checkOutPayment();
         }
         if($this->getTotal() > $paymentCustomer){
             return abs($this->getTotal() - $paymentCustomer);

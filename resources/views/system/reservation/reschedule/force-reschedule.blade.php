@@ -1,6 +1,6 @@
 
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="" back=true>
+    <x-system-content title="" back="{{route('system.reservation.show.reschedule', encrypt($r_list->id))}}">
         {{-- User Details --}}
        <div class="px-3 md:px-20">
         <x-profile :rlist="$r_list" />
@@ -83,7 +83,7 @@
         </form>   
         </article>
         <div class="flex justify-end space-x-1">
-            <label for="frshMdl" class="btn btn-error btn-sm">Force Cancel</label>
+            <label for="frshMdl" class="btn btn-warning btn-sm">Force reschedule</label>
         </div>
        </div>
     </x-system-content>

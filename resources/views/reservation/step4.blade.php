@@ -153,7 +153,7 @@
                     </div>
       
                     <div class="col-span-2">
-                      <label for="Email" class="block text-xs font-medium text-gray-700">
+                      <label for="Age" class="block text-xs font-medium text-gray-700">
                         Age
                       </label>
       

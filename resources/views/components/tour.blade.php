@@ -1,15 +1,15 @@
-@props(['tourCategory', 'tourLists', 'tpx', 'atpermit' => 0])
+@props(['tourCategory', 'tourLists', 'tpx', 'atpermit' => 0, 'noDays'])
 <div class="w-full text-center">
     <span x-show="!document.querySelector('[x-cloak]')" class="loading loading-spinner loading-lg text-primary"></span>
 </div>
 <div x-data="{category: null}" x-cloak>
     @foreach ($tourCategory as $category)
       @if($loop->index === 0)
-        <input x-model="category" id="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-2 radio radio-primary" x-model="category" type="radio" value="{{Str::camel($category->category)}}" />
-        <label x-init="category = '{{Str::camel($category->category)}}'" :aria-checked="category == '{{Str::camel($category->category)}}'" :class="category == '{{Str::camel($category->category)}}' ? 'mr-5 text-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-5">{{$category->category}}</label>  
+        <input x-model="category" id="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="radio radio-primary" x-model="category" type="radio" value="{{Str::camel($category->category)}}" />
+        <label x-init="category = '{{Str::camel($category->category)}}'" :aria-checked="category == '{{Str::camel($category->category)}}'" :class="category == '{{Str::camel($category->category)}}' ? 'mr-5 text-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($category->category))}}">{{$category->category}}</label>  
       @else
-          <input x-model="category" id="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-2 radio radio-primary" x-model="category" type="radio" value="{{Str::camel($category->category)}}"/>
-          <label :aria-checked="category == '{{Str::camel($category->category)}}'" :class="category == '{{Str::camel($category->category)}}' ? 'mr-5 text-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="my-5">{{$category->category}}</label>  
+          <input x-model="category" id="{{Str::replace(' ', '_', Str::lower($category->category))}}" class="radio radio-primary" x-model="category" type="radio" value="{{Str::camel($category->category)}}"/>
+          <label :aria-checked="category == '{{Str::camel($category->category)}}'" :class="category == '{{Str::camel($category->category)}}' ? 'mr-5 text-primary' : 'mr-5'" for="{{Str::replace(' ', '_', Str::lower($category->category))}}">{{$category->category}}</label>  
       @endif
 
     @endforeach
@@ -23,13 +23,14 @@
                 @php $list_count = $loop->index + 1 ?? 1; @endphp
 
                 @if ($category->category === $list->category)
-                    <div class="{{$list->atpermit >= $atpermit ? '' : 'cursor-not-allowed'}}">
+                    <div class="{{$list->atpermit >= $atpermit ? '' : 'cursor-not-allowed'}}" :class="days < {{$noDays}} ? '' : 'cursor-not-allowed' ">
           
                       <div class="card h-full bg-base-100 shadow-xl border border-primary {{$list->atpermit >= $atpermit ? 'hover:border-primary hover:bg-primary hover:text-base-100' : ''}} ">
-                        <label for="{{!($list->atpermit >= $atpermit) ? '' : Str::camel($list->title)}}" tabindex="0" class="{{!($list->atpermit >= $atpermit) ? 'opacity-60' : ''}}">
+                        <label tabindex="0" class="{{!($list->atpermit >= $atpermit) ? 'opacity-60' : ''}}" :for="days < {{$noDays}} ? '{{!($list->atpermit >= $atpermit) ? '' : Str::camel($list->title)}}' : '' " :class="days < {{$noDays}} ? '' : 'opacity-60' ">
                             <div class="card-body">
-                              <h2 x-ref="titleRef{{$list_count}}" class="card-title {{$list->atpermit >= $atpermit ? '' : 'cursor-not-allowed'}}">{{$list->title}} </h2> 
+                              <h2 x-ref="titleRef{{$list_count}}" class="card-title {{$list->atpermit >= $atpermit ? '' : 'cursor-not-allowed'}}" :class="days < {{$noDays}} ? '' : 'cursor-not-allowed' ">{{$list->title}} </h2> 
                               @if(!($list->atpermit >= $atpermit)) <p class="text-error text-sm {{$list->atpermit >= $atpermit ? '' : 'cursor-not-allowed'}}">Invalid Tour due does not allow in Day Tour</p> @endif
+                              <p x-show="!(days < {{$noDays}})" class="text-error text-sm cursor-not-allowed">Invalid</p>
                             </div>
                         </label>
                         {{-- Modal Tour Details --}}                                  
@@ -64,7 +65,7 @@
                                             <p class="text-neutral" x-ref="refType{{$menu->id}}">{{$menu->type}} ({{$menu->pax}} guest)</p>
                                             <i class="hidden text-primary fa-solid fa-square-check"></i>
                                           </div>
-                                          <p class="mt-1 text-neutral" x-ref="priceRef{{$menu->id}}">P {{number_format($menu->price, 2)}}</p>
+                                          <p class="mt-1 text-neutral" x-ref="priceRef{{$menu->id}}">₱ {{number_format($menu->price, 2)}}</p>
                                           @if(count($list->tourMenuLists) !== 1)
                                             @if($tpx > $menu->pax && $menu_count !== count($list->tourMenuLists))
                                                 <p class="absolute text-error text-[7px] md:text-xs">Invalid guest count for this price.</p>
@@ -82,7 +83,7 @@
                           @foreach ($list->tourMenuLists as $menu)
 
                               <template x-if="price == {{$menu->id}}">
-                                <label for="{{Str::camel($list->title)}}" @click=" addToCart(price, $refs.titleRef{{$list_count}}.innerText, $refs.refType{{$menu->id}}.innerText, $refs.priceRef{{$menu->id}}.innerText)" class="btn btn-primary float-right">
+                                <label for="{{Str::camel($list->title)}}" @click=" addToCart(price, $refs.titleRef{{$list_count}}.innerText, $refs.refType{{$menu->id}}.innerText, $refs.priceRef{{$menu->id}}.innerText, {{$menu->price}})" class="btn btn-primary float-right">
                                   Add to Cart
                                 </label>
                               </template>

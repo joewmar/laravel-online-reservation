@@ -9,7 +9,7 @@
     // array_push($tour_menu, $tour_addons);
 @endphp
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="{{$r_list->userReservation->name()}}'s Tour " back=true>
+    <x-system-content title="{{$r_list->userReservation->name()}}'s Tour " back="{{route('system.reservation.show', encrypt($r_list->id))}}">
         <section x-data="{tab: 'tour'}">
             <div class="flex justify-between items-center my-5">
                 <div class="tabs">
@@ -19,7 +19,7 @@
                 <a href="{{route('system.reservation.show.addons', [encrypt($r_list->id), 'tab=TA'])}}" x-show="tab == 'tour'" class="btn btn-primary btn-sm">Add Tour</a>
                 <a href="{{route('system.reservation.show.addons', encrypt($r_list->id))}}" x-show="tab == 'addons'" class="btn btn-primary btn-sm">Add Addons</a>
             </div>
-            <form x-show="tab == 'tour'" id="edit-form" method="POST" action="{{route('system.reservation.edit.tour.update', encrypt($r_list->id))}}" enctype="multipart/form-data">
+            <form x-show="tab == 'tour'" id="trfrm" method="POST" action="{{route('system.reservation.edit.addons.update', encrypt($r_list->id))}}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <section class="w-full">
@@ -28,10 +28,11 @@
                             <!-- head -->
                             <thead>
                                 <th class="flex justify-start items-center">
-                                    <button class="btn btn-error btn-xs" type="button" x-show="!(tourMenu.length === 0)" x-transition>Remove</button>
+                                    <label for="trmdl" class="btn btn-error btn-xs" x-show="!(tourMenu.length === 0)" x-transition>Remove</label>
                                 </th>
                                 <th>Tour</th>
                                 <th>Quantity</th>
+                                <th>Created</th>
                                 <th>Price</th>
                                 <th>Amount</th>
                             </thead>
@@ -45,6 +46,7 @@
                                         </th>
                                         <td>{{$item['title']}}</td>
                                         <td>{{$item['tpx']}} guest</td>
+                                        <td>{{$item['created']}}</td>
                                         <td>₱ {{number_format($item['price'], 2)}}</td>
                                         <td>₱ {{number_format($item['amount'], 2)}}</td>
                                     </tr>
@@ -57,8 +59,10 @@
                         </table>
                     </div>
                 </section>
+                <x-modal id="trmdl" title="Do you want to remove selected tours memu" type="YesNo" formID="trfrm" loader>
+                </x-modal>
             </form>
-            <form x-show="tab == 'addons'" id="edit-form" method="POST" action="{{route('system.reservation.edit.tour.update', encrypt($r_list->id))}}" enctype="multipart/form-data">
+            <form x-show="tab == 'addons'" id="otfrm" method="POST" action="{{route('system.reservation.edit.addons.update', encrypt($r_list->id))}}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <section class="w-full">
@@ -67,9 +71,9 @@
                             <!-- head -->
                             <thead>
                                 <th class="flex justify-start items-center">
-                                    <button class="btn btn-error btn-xs" type="button" x-show="!(tourMenu.length === 0)" x-transition>Remove</button>
+                                    <label for="otmdl" class="btn btn-error btn-xs" x-show="!(tourMenu.length === 0)" x-transition>Remove</label>
                                 </th>
-                                <th>Addons</th>
+                                <th>Item</th>
                                 <th>Created</th>
                                 <th>Qty</th>
                                 <th>Price</th>
@@ -91,13 +95,15 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center font-bold">No Tour Found</td>
+                                        <td colspan="6" class="text-center font-bold">No Item Found</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
                 </section>
+                <x-modal id="otmdl" title="Do you want to remove selected tours memu" type="YesNo" formID="otfrm" loader>
+                </x-modal>
             </form>
         </section>
     </x-system-content>

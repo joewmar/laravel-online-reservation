@@ -167,7 +167,7 @@ class UserOfflineFactory extends Factory
         return [
             "first_name" => fake()->firstName(),
             "last_name" => fake()->lastName(),
-            "age" => Carbon::createFromFormat('Y-m-d', fake()->date('Y-m-d'))->age,
+            "birthday" => fake()->date('Y-m-d', '2000-12-31'),
             "country" => fake()->country(),
             "email" => fake()->freeEmail(),
             "nationality" => fake()->randomElement($arrNationality),

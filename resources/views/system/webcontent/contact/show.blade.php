@@ -7,7 +7,7 @@
 @endphp
 
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="{{$contact[$key]['name']}}'s Contact Information">
+    <x-system-content title="{{$contact[$key]['name']}}'s Contact Information" back="{{route('system.webcontent.home', '#contact')}}">
         <div class="flex justify-end mt-5">
             <x-modal id="update_name" title="Change Name" noBottom>
                 <form id="update_name_form" action="{{route('system.webcontent.contact.update', encrypt($key))}}" method="post">

@@ -6,6 +6,7 @@ use App\Models\Room;
 use App\Models\System;
 use App\Models\RoomList;
 use App\Models\RoomRate;
+use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
@@ -22,6 +23,14 @@ class RoomSettingController extends Controller
             if(!($this->system_user->user()->type === 0)) abort(404);
             return $next($request);
         });
+    }
+    private function employeeLogNotif($text){
+        AuditTrail::create([
+            'system_id' => $this->system_user->user()->id,
+            'role' => $this->system_user->user()->type ?? '',
+            'action' => $text,
+            'module' => 'Employee Account',
+        ]);
     }
     // Show All Rooms View
     public function index(Request $request){
@@ -84,8 +93,9 @@ class RoomSettingController extends Controller
                     else $saved;
                 }
                 refreshRoomNumber();
-
-                return redirect()->route('system.setting.rooms.home')->with('success', 'Room Created');
+                $message = $room_list->name . ' Room Created';
+                $this->employeeLogNotif($message);
+                return redirect()->route('system.setting.rooms.home')->with('success', $message);
             }
             
         } 
@@ -142,7 +152,9 @@ class RoomSettingController extends Controller
                 refreshRoomNumber();    
             }
             $room_list->update($validated);
-            return back()->with('success', $room_list->name .' Room was updated');
+            $message = $room_list->name . ' Room Updated';
+            $this->employeeLogNotif($message);
+            return back()->with('success', $message);
         } 
         else{
             return back()->with('error', 'Passcode Invalid');
@@ -163,8 +175,10 @@ class RoomSettingController extends Controller
             $room_list->delete();
 
             Room::where('roomid', $id)->delete();
-            refreshRoomNumber();    
-            return redirect()->route('system.setting.rooms.home')->with('success', $room_name .' Room was deleted');
+            refreshRoomNumber(); 
+            $message = $room_name .' Room Removed';
+            $this->employeeLogNotif($message);   
+            return redirect()->route('system.setting.rooms.home')->with('success', );
         } 
         else{
             return back()->with('error', 'Passcode Invalid');
@@ -186,9 +200,10 @@ class RoomSettingController extends Controller
         if (Hash::check($validated['passcode'], $this->system_user->user()->passcode)) {
 
             // Save to database and get value
-            RoomRate::create($validated);  
-        
-            return redirect()->route('system.setting.rooms.home', 'tab=2')->with('success', 'Room Type Created');
+            $rate = RoomRate::create($validated);  
+            $message = $rate->name .' Rate Created';
+            $this->employeeLogNotif($message); 
+            return redirect()->route('system.setting.rooms.home', 'tab=2')->with('success', $message);
         } 
         else{
             return back()->with('error', 'Passcode Invalid');
@@ -199,7 +214,6 @@ class RoomSettingController extends Controller
     public function editRate(Request $request){
             $id = decrypt($request->id);
             return view('system.setting.rooms.rate.edit',  ['activeSb' => 'Rooms', 'room_rate' =>  RoomRate::findOrFail($id)]);
-        
     }
     public function updateRate(Request $request){
         $id = decrypt($request->id);        $room_rate = RoomRate::find($id);
@@ -214,8 +228,9 @@ class RoomSettingController extends Controller
         if (Hash::check($validated['passcode'], $this->system_user->user()->passcode)) {
             // Update Data Process
             $room_rate->update($validated) ;
-        
-            return redirect()->route('system.setting.rooms.home', 'tab=2')->with('success', $room_rate->name . ' was Updated');
+            $message = $room_rate->name .' Rate Updated';
+            $this->employeeLogNotif($message); 
+            return back()->with('success', $room_rate->name . $message);
         } 
         else{
             return back()->with('error', 'Passcode Invalid');
@@ -230,8 +245,9 @@ class RoomSettingController extends Controller
             $room_rate = RoomRate::findOrFail(decrypt($request->id));
             $room_rate_name = $room_rate->name;
             $room_rate->delete();
-        
-            return redirect()->route('system.setting.rooms.home', 'tab=2')->with('success', $room_rate_name .' was deleted');
+            $message = $room_rate_name.' Rate Removed';
+            $this->employeeLogNotif($message); 
+            return redirect()->route('system.setting.rooms.home', 'tab=2')->with('success', $message);
         } 
         else{
             return back()->with('error', 'Passcode Invalid');

@@ -5,7 +5,7 @@
     }
 @endphp
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Edit Annoucement {{$new->title}}">
+    <x-system-content title="Edit Annoucement {{$new->title}}" back="{{route('system.news.show', encrypt($new->id))}}">
       <form id="update-form" action=" {{ route('system.news.announcement.update', encrypt($new->id)) }}" method="post" enctype="multipart/form-data">
         @csrf
         @method('PUT')

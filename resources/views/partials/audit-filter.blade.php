@@ -1,6 +1,6 @@
 @props(['roles' => []])
 <x-modal id="srchmdl" noBottom>
-    <form action="{{route('system.setting.audit.search')}}" method="post">
+    <form x-data="{gnrt: false}" action="{{route('system.setting.audit.search')}}" method="post">
         @csrf
         <div x-data="{roles: [], now: false, name: '{{request('name') ?? ''}}', dateStart: '', dateEnd: '', time: ''}" class="space-y-2">
             <details class="overflow-hidden rounded border border-gray-300 [&_summary::-webkit-details-marker]:hidden" >
@@ -88,7 +88,7 @@
                                     x-model="roles"
                                     :name="roles.length != 0 ? 'roles[]' : '' "
                                     class="h-5 w-5 rounded checkbox checkbox-primary"
-                                    @if(in_array($key, request('roles')))
+                                    @if(in_array($key, request('roles') ?? []))
                                         x-init="roles.push('{{$value}}')"
                                     @endif
                                     value="{{$value}}"
@@ -109,7 +109,7 @@
                     <span class="text-sm font-medium"> 
                         @if (request('now') ?? false)
                             Choose Date: Today 
-                        @elseif (request('start') && request('end'))
+                        @elseif (request('start') ?? false && request('end') ?? false)
                             Choose Date: Range 
                         @else
                             Choose Date 
@@ -190,9 +190,10 @@
             </details>
         </div>
         <div class="modal-action">
-            <button class="btn btn-primary">            
-                Go
-            </button>
+            <button class="btn btn-ghost" @click="gnrt = true">Generate</button>
+            <button class="btn btn-primary">Go</button>
         </div>
+        <input type="hidden" name="generate" :value="gnrt ? 'true' : 'false' ">
+
     </form>
 </x-modal >

@@ -32,6 +32,9 @@ body {
 
   </style>
   @endpush
+    <div class="z-[100] absolute right-3 top-3">
+      <a href="/" class="btn btn-circle btn-ghost text-error">✕</a>
+    </div>
     <swiper-container class="mySwiper" pagination="true" pagination-clickable="true" space-between="30" effect="fade"
     navigation="true">
     <swiper-slide class="bg-base-100 flex flex-col items-center h-screen">

@@ -1,8 +1,6 @@
 @php
   $totalPrice = 0;
-  $arrStatus = [1 => 'Confirmed', 2 => 'Check-in', 3 =>'Check-out'];
-  $cinpy = floatval($other_info['cinpy']);
-
+  $arrStatus = ['Pending', 'Confirmed', 'Check-in'];
 @endphp
 <x-system-layout :activeSb="$activeSb">
   <x-system-content title="Add Book (Overall)">
@@ -40,16 +38,7 @@
                     </p>            
                     <p class="text-md font-medium tracking-tight text-neutral">
                       <strong>Payment Method: </strong> {{$other_info['py'] ?? ''}}
-                    </p>            
-                    <p class="text-md font-medium tracking-tight text-neutral">
-                      <strong>Status: </strong> {{$arrStatus[$other_info['st']] ?? ''}}
-                    </p>            
-                    <p class="text-md font-medium tracking-tight text-neutral">
-                      <strong>Room Assign: </strong> {{$rooms ?? 'None'}}
-                    </p>            
-                    <p class="text-md font-medium tracking-tight text-neutral">
-                      <strong>Room Type: </strong> {{$rate->name ?? 'None'}}
-                    </p>            
+                    </p>                       
                   </div>
                   <div>
                       <div class="flow-root">
@@ -60,7 +49,7 @@
                                   <thead>
                                     <tr>
                                       <th>Tour</th>
-                                      <th>Guest</th>
+                                      <th>Quantity</th>
                                       <th>Price</th>
                                       <th>Amount</th>
                                       {{-- <th></th> --}}
@@ -99,7 +88,6 @@
                                       <th>Quantity</th>
                                       <th>Price</th>
                                       <th>Amount</th>
-                                      {{-- <th></th> --}}
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -128,87 +116,28 @@
                             <h2 class="font-bold text-lg mt-10">Transaction</h2>
                             <table class="table mt-5">
                               <tbody>
-                                @if (isset($other_info['secount']))
-                                    <tr>
-                                      <th>Room Rate</th>
-                                      <td>₱ {{ number_format($rates['price'], 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                      <th>No. of days</th>
-                                      <td>{{$user_days > 0 ? $user_days . ' days' : $user_days . ' day'  }}</td>
-                                    </tr>
-                                    <tr>
-                                      <th>Total Rate</th>
-                                      <td>₱ {{number_format($rates['orig_amount'], 2)}}</td>
-                                    </tr>
-                                    <tr>
-                                      <th>Senior Guest</th>
-                                      <td>{{$other_info['secount']}}</td>
-                                    </tr>
-                                    <tr>
-                                      <th>Discount</th>
-                                      <td>20%</td>
-                                    </tr>
-                                    <tr>
-                                      <th>Total Rate with Discount</th>
-                                      <td>₱ {{number_format($rates['amount'], 2)}}</td>
-                                      @php $totalPrice += ($rates['amount']) @endphp
-                                    </tr>
-                                @else
-                                    <tr>
-                                      <th>Room Rate</th>
-                                      <td>₱ {{ number_format($rates['price'], 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                      <th>No. of days</th>
-                                      <td>{{$user_days > 0 ? $user_days . ' days' : $user_days . ' day'  }}</td>
-                                    </tr>
-                                    <tr>
-                                      <th>Total Rate</th>
-                                      <td>₱ {{number_format($rates['amount'], 2)}}</td>
-                                      @php $totalPrice += ($rates['amount']) @endphp
-                                    </tr>
+                                @if(isset($rate))
+                                  <tr>
+                                    <th>Rate</th>
+                                    <td>{{$rate->name}} ({{$rate->pax}} pax)</td>
+                                  </tr>
+                                  <tr>
+                                    <th>Days</th>
+                                    <td>{{$user_days}}</td>
+                                  </tr>
+                                  <tr>
+                                    <th>Rate Amount Per Person</th>
+                                    <td>₱ {{ number_format($ratePerson, 2) }}</td>
+                                  </tr>
+                                  <tr>
+                                    <th>Rate Total</th>
+                                    <td>₱ {{ number_format($roomTotal, 2) }}</td>
+                                    @php $totalPrice += (double)$roomTotal  @endphp
+                                  </tr>
                                 @endif
                                 <tr>
                                   <th>Total Cost</th>
                                   <td>₱ {{ number_format($totalPrice, 2) }}</td>
-                                </tr>
-                                @if($other_info['st'] == 1)
-                                <tr>
-                                  <th>Downpayment</th>
-                                  <td>{{$other_info['dwnpy'] && intval($other_info['dwnpy']) != $other_info['dwnpy'] ? '₱ ' . number_format($other_info['dwnpy'], 2) : 'None' }}</td>
-                                </tr>
-                                @elseif($other_info['st'] == 2)
-                                <tr>
-                                  <th>Check-in Paid</th>
-                                  <td>{{!($cinpy && intval($cinpy) != $cinpy) && $other_info['cinpy'] == 'full' ? '₱ '. number_format($totalPrice, 2) : '₱ '. number_format($other_info['cinpy'], 2) ?? 'None' }}</td>
-                                </tr>
-                                @endif
-                                <tr>
-                                  @php
-                                    $balance = 0;
-                                    if($other_info['st'] == 1 && $totalPrice > $other_info['dwnpy']){
-                                      $balance = abs($totalPrice - $other_info['dwnpy']);
-                                    }
-                                    if($cinpy && intval($cinpy) != $cinpy && $other_info['st'] == 2 && $totalPrice > $other_info['cinpy']){
-                                      $balance = abs($totalPrice - $other_info['cinpy']);
-                                    }
-                                  @endphp
-                                  <th>Balance</th>
-                                  <td>{{$balance > 0 ? '₱ ' . number_format($balance, 2) : 'None' }}</td>
-                                </tr>
-                                <tr>
-                                  @php
-                                    $refund = 0;
-                                    if($other_info['st'] == 1 && $totalPrice < $other_info['dwnpy']){
-                                      $refund = abs($totalPrice - $other_info['dwnpy']);
-                                    }
-                                    if($cinpy && intval($cinpy) != $cinpy && $other_info['st'] == 2 && $totalPrice < $other_info['cinpy']){
-                                      $refund = abs($totalPrice - $other_info['cinpy']);
-                                    }
-                                  @endphp
-                                  <th>Refund</th>
-                                  <td>{{$refund > 0 ? '₱'.  number_format($refund, 2) : 'None' }}</td>
                                 </tr>
                               </tbody>
                             </table>
@@ -246,8 +175,8 @@
                       <p class="">{{$other_info['ln']}}</p>
                     </div>
                     <div>
-                      <h3 class="font-bold">Age</h3>
-                      <p class="">{{$other_info['age']}}</p>
+                      <h3 class="font-bold">Birthday</h3>
+                      <p class="">{{Carbon\Carbon::createFromFormat('Y-m-d', $other_info['bday'])->format('F j, Y')}} <br>({{Carbon\Carbon::createFromFormat('Y-m-d', $other_info['bday'])->age}} years old)</p>
                     </div>
                     <div>
                       <h3 class="font-bold">Country</h3>

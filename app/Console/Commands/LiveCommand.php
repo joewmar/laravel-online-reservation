@@ -15,6 +15,8 @@ use App\Models\OnlinePayment;
 use Illuminate\Console\Command;
 use App\Notifications\UserNotif;
 use App\Jobs\SendTelegramMessage;
+use App\Models\AuditTrail;
+use App\Models\TourMenu;
 use Illuminate\Support\Facades\Mail;
 
 class LiveCommand extends Command
@@ -49,7 +51,7 @@ class LiveCommand extends Command
                 $wb->update(['operation' => true]);
             }
         }
-        foreach(Reservation::whereIn('status', [1, 2])->get() as $item){
+        foreach(Reservation::whereIn('status', [1, 2])->get() ?? []  as $item){
             // Verify the deadline of payment then auto canceled
             if(!empty($item->payment_cutoff)){
                 if(Carbon::createFromFormat('Y-m-d H:i:s', $item->payment_cutoff)->timestamp <= Carbon::now('Asia/Manila')->timestamp && !($item->downpayment() >= 1000)){
@@ -182,24 +184,35 @@ class LiveCommand extends Command
                 $this->info('Check-out on User Notifcation ');
             }
         }
-        // Automatic Delete After One Month
-        foreach(OnlinePayment::all() as $item){
-            if(Carbon::createFromFormat('Y-m-d H:i:s', $item->created_at)->addMonth(1)->timestamp <= Carbon::now('Asia/Manila')->timestamp){
+        // Automatic Delete Reservation with Transaction and Payment Info After 180 days
+        foreach(Reservation::whereIn('status', [1, 2, 3])->get() ?? [] as $item){
+                
+            if(Carbon::createFromFormat('Y-m-d H:i:s', $item->created_at)->setTimezone('Asia/Manila')->addDays(180)->timestamp <= Carbon::now('Asia/Manila')->timestamp){
+                foreach(OnlinePayment::where('reservation_id', $item->id)->get() ?? [] as $py) $py->delete();
+                
+                $item->delete();
+            }
+
+
+        }
+        // Automatic Delete Unaccept Reservation After 30 days
+        foreach(Reservation::whereIn('status', [0, 4, 5, 7, 8])->get() ?? [] as $item){
+            if(Carbon::createFromFormat('Y-m-d H:i:s', $item->created_at)->setTimezone('Asia/Manila')->addDays(30)->timestamp <= Carbon::now('Asia/Manila')->timestamp){
+                foreach(OnlinePayment::where('reservation_id', $item->id)->get() ?? [] as $py) $py->delete();
                 $item->delete();
             }
         }
-        foreach(News::all() as $new){
-            if((isset($new->from) && isset($new->to)) && Carbon::createFromFormat('Y-m-d', $new->to)->timestamp <= Carbon::now()->timestamp){
-                $new->delete();
+        // Automatic Delete Audit Trail After 1 year
+        foreach(AuditTrail::all() ?? [] as $log){
+            if(Carbon::createFromFormat('Y-m-d H:i:s', $item->created_at)->setTimezone('Asia/Manila')->timestamp <= Carbon::now('Asia/Manila')->timestamp){
+                $log->delete();
             }
         }
-        foreach(User::all() as $user){
-            $rlist = Reservation::where('user_id', $user->id);
-            if($rlist->count() >= 5){
-                $delete = $rlist->oldest('created_at')->first();
-                $delete->delete();
-            }
-        }
+        // foreach(News::all() as $new){
+        //     if((isset($new->from) && isset($new->to)) && Carbon::createFromFormat('Y-m-d', $new->to)->timestamp <= Carbon::now()->timestamp){
+        //         $new->delete();
+        //     }
+        // }
         unset($checkInToday,  $keyboard, $text, $details,  $system_user, $wb, $rooms);
         $this->info('Live Application Updated');
 

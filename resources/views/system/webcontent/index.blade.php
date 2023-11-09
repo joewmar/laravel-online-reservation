@@ -405,15 +405,15 @@
             </section>
           </template>
           <template x-if="wbtab === 'payment' ">
-            <section x-data="{type: 'Gcash'}" class="p-6">
-              <article class="my-5">
+            <section x-data="{type: 'Gcash'}" class="p-6 w-full">
+              <article class="my-5 w-full">
                 <div class="flex justify-between">
                   <div class="w-52 md:w-96">
-                    <x-select name="wala" id="walaID" placeholder="Type of Payment" xModel="type" :value="['Gcash', 'PayPal', 'Bank Transfer']" :title="['Gcash', 'Paypal', 'Bank Transfer']" noRequired />
+                    <x-select name="wala" id="walaID" placeholder="" xModel="type" :value="['Gcash', 'PayPal', 'Bank Transfer']" :title="['Gcash', 'Paypal', 'Bank Transfer']" noRequired />
                   </div>
-                  <a x-show="type === 'Gcash'" href="{{route('system.webcontent.create.payment.gcash')}}" class="btn btn-primary btn-sm md:btn-md" x-transition.1000ms>Add Gcash</a>
-                  <a x-show="type === 'PayPal'" href="{{route('system.webcontent.create.payment.paypal')}}" class="btn btn-primary btn-sm md:btn-md" x-transition.1000ms>Add PayPal</a>
-                  <a x-show="type === 'Bank Transfer'" href="{{route('system.webcontent.create.payment.bnktr')}}" class="btn btn-primary btn-sm md:btn-md" x-transition.1000ms>Add Bank Transfer</a>
+                  <a x-show="type === 'Gcash'" href="{{route('system.webcontent.create.payment.gcash')}}" class="btn btn-primary btn-sm md:btn-md">Add Gcash</a>
+                  <a x-show="type === 'PayPal'" href="{{route('system.webcontent.create.payment.paypal')}}" class="btn btn-primary btn-sm md:btn-md">Add PayPal</a>
+                  <a x-show="type === 'Bank Transfer'" href="{{route('system.webcontent.create.payment.bnktr')}}" class="btn btn-primary btn-sm md:btn-md">Add Bank Transfer</a>
                 </div>
                 <div x-show="type === 'Gcash' " x-data="{priorityGcash: ''}" class="overflow-x-auto" x-transition.1000ms>
                   <form id="remove_gcash_reference" action="{{route('system.webcontent.priority.payment.gcash')}}" method="post">

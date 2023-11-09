@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 class FeedbackController extends Controller
 {
     public function index(){
-        $feedbacks = Feedback::all();
+        $feedbacks = Feedback::latest()->paginate(10);
         return view('system.feedback.index',  ['activeSb' => 'Feedback', 'feedbacks' => $feedbacks]);
     }
     public function search(Request $request){

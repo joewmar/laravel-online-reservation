@@ -1,8 +1,8 @@
 @props(['id'=>'', 'formId'=> '', 'title'=> '', 'bottom' => false])
 @if($bottom)
-  @push('top')
+  @push('scripts')
     <input type="checkbox" id="{{$id}}" class="launch-checkbox modal-toggle" />
-    <div x-data="{loader: false}" class="modal modal-bottom sm:modal-middle launch z-[100]" id="{{$id}}">
+    <div x-data="{loader: false}" class="modal modal-bottom sm:modal-middle launch" id="{{$id}}">
       <div class="modal-box">
         <h3 class="font-bold text-lg">{{$title}}</h3>
         <div class="w-full text-center my-5">

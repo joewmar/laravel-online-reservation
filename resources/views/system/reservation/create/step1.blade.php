@@ -1,70 +1,43 @@
-@php
-    $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
-    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
-    $arrPayment = ['Walk-in', 'Other Online Booking', 'Gcash', 'Paypal'];
-    $arrStatus = [1 => 'Confirmed', 2 => 'Check-in', 3 =>'Check-out'];
-    if(auth('system')->user()->type == 2){
-        $arrPayment = ['Walk-in', 'Gcash', 'Paypal'];
-        $arrStatus = ['Check-in', 'Check-out'];
-    }
-@endphp
+
 <x-system-layout :activeSb="$activeSb">
   <x-system-content title="Add Book (Room Assign)">
     <section class="w-full px-5 md:px-16">
-        <form class="my-5" x-data="{loader: false, npax: {{$roomInfo['px'] ?? 1}}, at: '{{$roomInfo['at'] ?? ''}}'}" action="{{route('system.reservation.store.step.one')}}" method="post">
+        <form class="my-5" x-data="{loader: false, npax: {{$roomInfo['px']}}}" action="{{route('system.reservation.store.step.one', Arr::query(['st' => request('st') ?? '']))}}" method="post">
             @csrf
             <x-loader />
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
-                <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" />
-                <div class="form-control w-full">
-                    <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error('room_rate') border-error @enderror">
-                            <select name="room_rate" id="room_rate" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
-                            <option value="" disabled selected>Please select</option>
-                            @foreach ($rates as $key => $rate)
-                            @php
-                                try {
-                                    $rateID = decrypt($rate->id);
-                                } catch (Exception $e) {
-                                    $rateID = $rate->id;
-                                }
-                            @endphp
-                                @if($roomInfo['rt'] == $rateID);
-                                    <option value="{{encrypt($rate->id)}}" :selected="npax == {{$rate->occupancy}} || npax > {{$rate->occupancy}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
-                                @else
-                                    <option value="{{encrypt($rate->id)}}" :selected="npax == {{$rate->occupancy}} || npax > {{$rate->occupancy}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
-                                @endif
-                            @endforeach
-                        </select>        
-                        <span id="room_rate" class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-neutral transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                            Room Type
-                        </span>
-                    </label>
-                    <label class="label">
-                        <span class="label-text-alt">
-                            @error('room_rate')
-                                <span class="label-text-alt text-error">{{$message}}</span>
-                            @enderror
-                        </span>
-                    </label>
-                </div> 
-                <div :class="at === 'Day Tour' || at === 'Overnight' ? '' : 'col-span-1 md:col-span-2'">
-                    <x-input id="pax" name="pax" placeholder="Number of Guest" xModel="npax" />
-                </div>
-                <template x-if="at === 'Day Tour' || at === 'Overnight'">
-                    <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$roomInfo['tpx']}}" />
-                </template>
-                <div :class="at === 'Day Tour' ? 'col-span-2' : '' ">
-                    <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation-month" value="{{$roomInfo['cin'] }}"/>
-
-                </div>
-                <div x-show="!(at === 'Day Tour')">
-                    <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation-month" value="{{$roomInfo['cout']}}" />
-                </div>
-                <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$roomInfo['py']}}"/>
-                <x-select id="status" name="status" placeholder="Status" :value="array_keys($arrStatus)"  :title="array_values($arrStatus)" selected="{{$arrStatus[$roomInfo['st']] ?? ''}}"/>
-            </div>
-
-            <div x-data="{force: false, rooms: {{$roomInfo['rm'] ? '[' . implode(',', array_keys($roomInfo['rm'])) .']' : '[]'}} }" class="w-full">
+            <p class="mb-5 text-lg font-bold">Pax: <span class="font-medium">{{$roomInfo['px']}}</span></p>
+            <div class="form-control w-full">
+                <label for="room_rate" class="w-full relative flex justify-start rounded-md border border-gray-400 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary @error('room_rate') border-error @enderror">
+                        <select name="room_rate" id="room_rate" class='w-full select select-primary peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0'>
+                        <option value="" disabled selected>Please select</option>
+                        @foreach ($rates as $key => $rate)
+                        @php
+                            try {
+                                $rateID = decrypt($rate->id);
+                            } catch (Exception $e) {
+                                $rateID = $rate->id;
+                            }
+                        @endphp
+                            @if($roomInfo['rt'] == $rateID);
+                                <option value="{{encrypt($rate->id)}}" :selected="npax == {{$rate->occupancy}} || npax > {{$rate->occupancy}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
+                            @else
+                                <option value="{{encrypt($rate->id)}}" :selected="npax == {{$rate->occupancy}} || npax > {{$rate->occupancy}}">{{$rate->name}} ({{$rate->occupancy}} pax)</option>
+                            @endif
+                        @endforeach
+                    </select>        
+                    <span id="room_rate" class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-neutral transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                        Room Type
+                    </span>
+                </label>
+                <label class="label">
+                    <span class="label-text-alt">
+                        @error('room_rate')
+                            <span class="label-text-alt text-error">{{$message}}</span>
+                        @enderror
+                    </span>
+                </label>
+            </div> 
+            <div x-data="{force: false, rooms: {{!empty($roomInfo['rm'] ?? []) ? '[' . implode(',', array_keys($roomInfo['rm'])) .']' : '[]'}} }" class="w-full">
                 <label for="ckforce" class="flex items-center mb-5">
                     <input id="ckforce" type="checkbox" checked="checked" name="force" x-model="force" class="checkbox checkbox-primary" x-on:checked="force = true" x-effect="if(!force) rooms = {{!empty($roomOld) ? '[' . implode(',', array_keys($roomOld)) .']' : '[]'}}" />
                     <span class="font-bold ml-3">Force Assign</span> 
@@ -76,7 +49,7 @@
                             $roomVacant = $item->getVacantPax();
                         @endphp
                         <div :id="!force ? '' : '{{in_array($item->id, $reserved ?? []) ? 'disabledAll' : ''}}' " x-data="{reserved{{$loop->index+1}}: {{in_array($item->id, $reserved ?? []) ? 'true' : 'false'}} }">
-                            <input x-ref="RoomRef" x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); }); " type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" :checked="rooms.includes({{$item->id}})" :disabled="!force && reserved{{$loop->index+1}}"  />
+                            <input x-ref="RoomRef" x-effect="rooms = rooms.map(function (x) { return parseInt(x, 10); }); " type="checkbox" x-model="rooms" value="{{$item->id}}" id="RoomNo{{$item->room_no}}" class="peer hidden [&:checked_+_label_span]:h-full [&:checked_+_label_span_h4]:block [&:checked_+_label_span_div]:block" x-on:checked="rooms.includes({{$item->id}})" :disabled="!force && reserved{{$loop->index+1}}"  />
                             <label for="RoomNo{{$item->room_no}}">
                                 <div :class="!force ? '{{in_array($item->id, $reserved ?? []) ? 'border-red-600' : 'border-primary'}}' : 'border-primary' " class="relative w-52 overflow-hidden rounded-lg border p-4 sm:p-6 lg:p-8 cursor-pointer">
                                     <span class="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center" :class="!force ? '{{in_array($item->id, $reserved ?? []) ? 'bg-red-600 h-full' : 'bg-primary h-3'}}' : 'bg-primary h-3'">

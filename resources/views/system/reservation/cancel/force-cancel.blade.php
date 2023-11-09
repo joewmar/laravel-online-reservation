@@ -1,6 +1,6 @@
 
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="" back=true>
+    <x-system-content title="" back="{{route('system.reservation.show.cancel', encrypt($r_list->id))}}">
         {{-- User Details --}}
        <div class="px-3 md:px-20">
         <x-profile :rlist="$r_list" />

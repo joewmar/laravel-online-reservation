@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Add PayPal Reference">
+    <x-system-content title="Add PayPal Reference" back="{{route('system.webcontent.home','#payment')}}">
         <form id="add-form" action=" {{ route('system.webcontent.store.payment.paypal') }}" method="post" enctype="multipart/form-data">
             @csrf
             <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">

@@ -43,7 +43,7 @@ class ReservationController extends Controller
             }
 
             return $next($request);
-        })->except(['done', 'storeMessage']); // You can specify the specific method where this middleware should be applied.
+        })->except(['date', 'dateCheck', 'dateStore', 'done', 'storeMessage']); // You can specify the specific method where this middleware should be applied.
 
 
     }
@@ -212,43 +212,74 @@ class ReservationController extends Controller
 
     }
     // Choose Form
-    public function choose(){
+    public function choose(Request $request){
+        $noOfday = 100;
+        if($request->has('cin') && $request->has('cout')){
+            $noOfday = getNoDays(decrypt($request->query('cin')), decrypt($request->query('cout')));
+        }
+        $TourInfo = [
+            "cin" => request()->has('cin') ? decrypt(request('cin')) : old('check_in'),
+            "cout" => request()->has('cout') ?  decrypt(request('cout')) : old('check_out'),
+            "px" => request()->has('px') ? decrypt(request('px')) : old('pax'),
+            "tpx" => request()->has('tpx') ? decrypt(request('tpx')) : old('tour_pax'),
+            "otpx" => 0,
+            "at" => request()->has('at') ? decrypt(request('at')) : old('accommodation_type'),
+            "py" => request()->has('py') ? decrypt(request('py')) : old('payment_method'),
+            "tamount" => 0,
+        ];
+        $tourListCart = [];
         if(session()->has('rinfo')){
-            $dateList = decryptedArray(session('rinfo'));
-            $noOfday = getNoDays($dateList['cin'], $dateList['cout']);
-            $chooseMenu = [];
-            if(isset($dateList['tm'])){
-                foreach($dateList['tm'] as $key => $item){
-                    $chooseMenu[$key]['price'] = TourMenu::findOrFail($item)->price;
-                    $chooseMenu[$key]['title'] = TourMenu::findOrFail($item)->tourMenu->title;
-                    $chooseMenu[$key]['type'] = TourMenu::findOrFail($item)->type;
-                    $chooseMenu[$key]['pax'] = TourMenu::findOrFail($item)->pax;
-                }
+          $decrypted = decryptedArray(session('rinfo'));
+          $noOfday = getNoDays($decrypted['cin'], $decrypted['cout']);
+
+          $TourInfo = [
+            "cin" => old('check_in') ?? $decrypted['cin'],
+            "cout" => old('check_out') ?? $decrypted['cout'],
+            "px" => old('pax') ?? $decrypted['px'],
+            "tpx" => old('tour_pax') ?? (request()->has('tpx') ? decrypt(request('tpx')) : $decrypted['tpx']  ),
+            "at" => old('accommodation_type') ?? $decrypted['at'],
+            "py" =>  old('payment_method') ?? $decrypted['py'],
+            "otpx" =>  isset($decrypted['otpx']) ? $decrypted['otpx'] : $TourInfo['tpx'],
+            "ck" => request('ck') ?? '',
+            "tamount" => 0,
+
+          ];
+          if(isset($decrypted['tm'])) {
+            foreach($decrypted['tm'] as $key => $item){
+                $tour = TourMenu::withTrashed()->findOrFail($item);
+                $tourListCart[$key]['id'] = $tour->id;
+                $tourListCart[$key]['price'] = $tour->price;
+                $tourListCart[$key]['title'] = $tour->tourMenu->title;
+                $tourListCart[$key]['type'] = $tour->type;
+                $tourListCart[$key]['pax'] = $tour->pax;
+                $TourInfo['tamount'] += $tour->price * (int)$TourInfo['tpx'];
             }
-            return view('reservation.step2', [
-                'tour_lists' => TourMenuList::all(), 
-                'tour_category' => TourMenuList::distinct()->get('category'), 
-                "cin" =>  $dateList['cin'],
-                "cout" => $dateList['cout'],
-                "px" => $dateList['px'],
-                "at" => $dateList['at'],
-                "py" =>  $dateList['py'],
-                'cmenu' => $chooseMenu ,
-                "user_days" => isset($noOfday) ? $noOfday : 1,
-            ]); 
-            
+          };
+          if($decrypted['at'] === 'Room Only') $decrypted['tpx'] = $decrypted['px']; 
+          if($decrypted['at'] === 'Room Only') $tourListCart = []; 
+          if($TourInfo['tpx'] != $TourInfo['otpx']) $tourListCart = []; 
+        //   dd($TourInfo['otpx']);
+
+          if($decrypted['at'] != (request()->has('at') ? decrypt(request('at')) : '')) $tourListCart = []; 
         }
-        if(request()->has(['cin', 'cout', 'px', 'py', 'tpx','at'])){
-            return view('reservation.step2', [
-                'tour_lists' => TourMenuList::all(), 
-                'tour_category' => TourMenuList::distinct()->get('category'), 
-                'tour_menus' => TourMenu::all(), 
-                "user_days" => $noOfday ?? 1,
-            ]); 
-        }
-        if(request()->has(['cin', 'cout', 'px', 'at'])){
-            return view('reservation.step2'); 
-        }
+
+        $TourInfoEncrypted = [
+            "cin" => request()->has('cin') ? request('cin') : old('check_in'),
+            "cout" => request()->has('cout') ? request('cout') : old('check_out'),
+            "px" => request()->has('px') ? request('px') : old('pax'),
+            "tpx" => request()->has('tpx') ? request('tpx') : old('tour_pax'),
+            "at" => request()->has('at') ? request('at') : old('accommodation_type'),
+            "py" => request()->has('py') ? request('py') : old('payment_method'),
+        ];
+
+        return view('reservation.step2', [
+            'tour_lists' => TourMenuList::all(), 
+            'tour_category' => TourMenuList::distinct()->get('category'), 
+            'TourInfo' => $TourInfo ,
+            'tourListCart' => $tourListCart ,
+            'TourInfoEncrypted' => $TourInfoEncrypted ,
+            "user_days" => $noOfday,
+        ]); 
     }
     // Check Step 1 on Choose Form
     public function chooseCheck1(Request $request){
@@ -263,8 +294,16 @@ class ReservationController extends Controller
                 "px" => $validated['pax'] ?? '',
                 "py" => $validated['payment_method'] ?? '',
             ];  
+            if(session()->has('rinfo')){
+                $dcrytd = decryptedArray(session('rinfo'));
+                if($dcrytd['at'] != $validated['accommodation_type'] || $validated['accommodation_type'] == 'Room Only') unset($dcrytd['tm']);
+                session(['rinfo' => encryptedArray($dcrytd)]);
+            }
+
             if($validated['accommodation_type'] === 'Room Only'){            
                 if(!$this->replaceRInfo($reservationInfo, true)){
+                    if(session()->has('rinfo') && decrypt(session('rinfo')['at']) != $validated['accommodation_type']); unset(session('rinfo')['tm']);
+
                     $reservationInfo = encryptedArray($reservationInfo);
                     session(['rinfo' => $reservationInfo]);
                 }
@@ -369,7 +408,7 @@ class ReservationController extends Controller
         $user_menu = [];
         if(isset($uinfo['tm'])){
             foreach($uinfo['tm'] as $key => $item){
-                $tour = TourMenu::findOrFail($item);
+                $tour = TourMenu::withTrashed()->findOrFail($item);
                 $user_menu[$key]['id'] = $tour->id;
                 $user_menu[$key]['price'] = $tour->price;
                 $user_menu[$key]['amount'] = (int)$uinfo['tpx'] * $tour->price;
@@ -411,7 +450,7 @@ class ReservationController extends Controller
             $encrypted_uinfo['tm'] = encrypt($newTm);
             session()->forget('rinfo');
             session(['rinfo' => $encrypted_uinfo]);
-            return back()->with('success', TourMenu::find($id)->tourMenu->title . ' was Removed');
+            return back()->with('success', TourMenu::withTrashed()->find($id)->tourMenu->title . ' was Removed');
         }
 
     }
@@ -430,7 +469,6 @@ class ReservationController extends Controller
         $reserve_info = [
             'user_id' => $user->id,
             'pax' => $uinfo['px'] ?? '',
-            'age' => $uinfo['age'] ?? '',
             'check_in' => Carbon::createFromFormat('Y-m-d', $uinfo['cin'])->setTimezone('Asia/Manila')->format('Y-m-d') ?? '',
             'check_out' => Carbon::createFromFormat('Y-m-d', $uinfo['cout'])->setTimezone('Asia/Manila')->format('Y-m-d') ?? '',
             'accommodation_type' => $uinfo['at'] ?? '',
@@ -440,8 +478,13 @@ class ReservationController extends Controller
             foreach(decryptedArray($validated['tour']) as $key => $tour_id) {
                 $tour_menu = TourMenu::find($tour_id);
                 $tours['tm'. $tour_id] = [
-                    'title' => $tour_menu->tourMenu->title . ' ' . $tour_menu->type . '('.$tour_menu->pax.' pax)',
+                    'id' => $tour_menu->id,
+                    'title' => $tour_menu->tourMenu->title,
+                    'type' => $tour_menu->type,
+                    'pax' => $tour_menu->pax,
+                    'used' => false,
                     'price' => (double)$tour_menu->price,
+                    'created' => now('Asia/Manila')->format('YmdHis'),
                     'tpx' => $uinfo['tpx'],
                     'amount' => (double)$tour_menu->price * (int)$uinfo['tpx']
                 ];
@@ -453,17 +496,18 @@ class ReservationController extends Controller
         $reserve_info = Reservation::create($reserve_info);
 
         if($request->hasFile('valid_id')){  
+            if($user->valid_id) deleteFile($user->valid_id, 'private');
             $validated['valid_id'] = saveImageWithJPG($request, 'valid_id', 'valid_id', 'private');
             $user->update(['valid_id' => $validated['valid_id']]);
         }
         $text = 
         "New Reservation!\n" .
         "Name: ". $reserve_info->userReservation->name() ."\n" . 
-        "Age: " . $reserve_info->age ."\n" .  
+        "Age: " . $reserve_info->userReservation->age() ."\n" .  
         "Nationality: " . $reserve_info->userReservation->nationality  ."\n" . 
         "Country: " . $reserve_info->userReservation->country ."\n" . 
-        "Check-in: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_in)->format('F j, Y') ."\n" . 
-        "Check-out: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_out)->format('F j, Y') ."\n" . 
+        "Check-in: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_in)->setTimezone('Asia/Manila')->format('F j, Y') ."\n" . 
+        "Check-out: " . Carbon::createFromFormat('Y-m-d', $reserve_info->check_out)->setTimezone('Asia/Manila')->format('F j, Y') ."\n" . 
         "Type: " . $reserve_info->accommodation_type ;
         // Send Notification 
         $details = [
@@ -487,9 +531,10 @@ class ReservationController extends Controller
         $validate = $request->validate([
             'message' => 'required',
         ]);
-        $message = $reservation->getAllArray('message');
+        $message = $reservation->message;
         $message['request'] = $validate['message'];
-        $reservation->update(['message' => $message]);
+        $reservation->message = $message;
+        $reservation->save();
         return redirect()->route('home')->with('success', 'Thank you for your request');
     }
 

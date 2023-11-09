@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Edit Gcash Reference of {{$paypal[$key]['name']}}">
+    <x-system-content title="Edit Gcash Reference of {{$paypal[$key]['name']}}" back="{{route('system.webcontent.show.payment.paypal', ['key' => encrypt($key), '#payment'])}}">
         <form id="update_form" action=" {{ route('system.webcontent.update.payment.paypal', encrypt($key)) }}" method="post" enctype="multipart/form-data">
             @csrf
             @method('PUT')

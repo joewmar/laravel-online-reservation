@@ -3,6 +3,8 @@ import { Calendar } from 'fullcalendar'
 document.addEventListener('DOMContentLoaded', function() {
   var calendarEl = document.getElementById('calendar');
   var calendar = new Calendar(calendarEl, {
+        timeZone: 'Asia/Manila', // Set the timezone to Asia/Manila for Philippines
+
       themeSystem: 'sketchy',
       aspectRatio: 2,
       initialView: 'dayGridMonth',

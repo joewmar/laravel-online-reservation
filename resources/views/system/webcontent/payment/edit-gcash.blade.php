@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Edit Gcash Reference of {{$gcash[$key]['name']}}">
+    <x-system-content title="Edit Gcash Reference of {{$gcash[$key]['name']}}" back="{{route('system.webcontent.show.payment.gcash', ['key' => encrypt($key), '#payment'])}}">
         <form id="update_form" action=" {{ route('system.webcontent.update.payment.gcash', encrypt($key)) }}" method="post" enctype="multipart/form-data">
             @csrf
             @method('PUT')

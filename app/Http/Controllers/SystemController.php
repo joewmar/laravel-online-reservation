@@ -27,26 +27,12 @@ class SystemController extends Controller
         })->except(['check', 'login', 'logout', 'notifications', 'markAsRead', 'deleteOneNotif']);
 
     }
-    private function systemNotification($text, $link = null){
-        if($this->system_user->user()->type != 0){
-            $systems = System::where('type', 0)->get();
-            $keyboard = null;
-            if(isset($link)){
-                $keyboard = [
-                    [
-                        ['text' => 'View', 'url' => $link],
-                    ],
-                ];
-            }
-            foreach($systems as $system){
-                if(isset($system->telegram_chatID)) dispatch(new SendTelegramMessage(env('SAMPLE_TELEGRAM_CHAT_ID', $system->telegram_chatID), $text, $keyboard, 'bot2'));
-            }
-            Notification::send($systems, new SystemNotification(Str::limit($text, 10), $text, route('system.notifications')));
-        }
+    private function systemNotification($text){
         AuditTrail::create([
             'system_id' => $this->system_user->user()->id,
+            'role' => $this->system_user->user()->type ?? '',
             'action' => $text,
-            'module' => 'Access System',
+            'module' => 'Employee Account',
         ]);
     }
     public function index(Request $request){
@@ -102,6 +88,7 @@ class SystemController extends Controller
             }
             else{
                 $validated['telegram_chatID'] = $chat_id;
+                dispatch(new SendTelegramMessage($chat_id, "Hello there, " . $validated['last_name'] . ' ' . $validated['first_name'] . " Your username was verified", null, 'bot2'));
             }
         }
         $validated['password'] = bcrypt($validated['password']);
@@ -112,8 +99,9 @@ class SystemController extends Controller
         }
     
         $systemUser = System::create($validated);
-        dispatch(new SendTelegramMessage($systemUser->telegram_chatID, "Hello there, " . $systemUser->first_name . " Your username was verified", null, 'bot2'));
-        return redirect()->route('system.setting.accounts.accounts')->with('success', $systemUser->name() . ' was Created');
+        $message =  $systemUser->name() . ' was Created';
+        $this->systemNotification($message);
+        return redirect()->route('system.setting.accounts.home')->with('success', $message);
 
     }
     public function update(Request $request, $id){
@@ -140,21 +128,28 @@ class SystemController extends Controller
 
         if($validated['telegram_username'] != null && $validated['telegram_username'] !== $systemUser->telegram_username){
             $chat_id = getChatIdByUsername($validated['telegram_username'], 'bot1') ?? getChatIdByUsername($validated['telegram_username'], 'bot2') ;
-            if($chat_id == null) return back()->withErrors(['telegram_username' => 'Invalid Username or did not do it when typing in chat bots'])->withInput($validated);
-            else $validated['telegram_chatID'] = $chat_id;
+            if($chat_id == null) {
+                return back()->withErrors(['telegram_username' => 'Invalid Username or did not do it when typing in chat bots'])->withInput($validated);
+            }
+            else {
+                $validated['telegram_chatID'] = $chat_id;
+                dispatch(new SendTelegramMessage($chat_id, "Hello there, " . $validated['last_name'] . ' ' . $validated['first_name'] . " Your username was verified", null, 'bot2'));
+            }
+            
         }
 
         if($request->hasFile('avatar')){                          // storage/app/logos
-            if($systemUser->avatar) 
-                deleteFile($systemUser->avatar);
+            if($systemUser->avatar) deleteFile($systemUser->avatar);
             $validated['avatar'] = saveImageWithJPG($request, 'avatar', 'employee', 'private');
         }
         $updated = $systemUser->update($validated);
-        if($updated){
-            return redirect()->route('system.setting.accounts.home')->with('success', $systemUser->name() . ' was Updated');
+        if($updated) {
+            $message = $systemUser->name() . ' was Updated';
+            $this->systemNotification($message);
+            return redirect()->route('system.setting.accounts.home')->with('success', $message);
         }
-        else
-            return back()->with('error', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Something Error, Try Again');
+            
+        else return back()->with('error', $systemUser->first_name . ' ' . $systemUser->last_name . ' was Something Error, Try Again');
     }
     public function destroy(Request $request, $id) {
         if(!auth('system')->user()->type === 0) abort(401, 'Unauthorized User');
@@ -164,10 +159,12 @@ class SystemController extends Controller
         if(Hash::check($validated['passcode'], $this->system_user->user()->passcode)){
             $systemUser = System::findOrFail(decrypt($id));
             
-            foreach(AuditTrail::where('system_id', $systemUser->id)->get() ?? [] as $at) $at->update(['name' => $systemUser->name(), 'role' => $systemUser->type]);
+            foreach(AuditTrail::where('system_id', $systemUser->id)->get() ?? [] as $at) $at->update(['name' => $systemUser->name()]);
 
             $systemUser->delete();
-            return redirect()->route('system.setting.accounts.home')->with('success', $systemUser->name() . ' was Deleted');
+            $message =  $systemUser->name() . ' was Removed';
+            $this->systemNotification($message);
+            return redirect()->route('system.setting.accounts.home')->with('success', $systemUser->name() . $message);
         }
         else{
             return back()->with('error', 'Invalid Passcode');

@@ -15,7 +15,7 @@
         session(['ck' => true]);
     }
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
-    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
+    $arrAccTypeTitle = ['Room Only', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
 
 
 @endphp

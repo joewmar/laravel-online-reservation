@@ -36,7 +36,7 @@
           </div>
           </fieldset>
           <h2 class="{{request('search') ? 'hidden' : 'block'}}  mt-8 text-xl font-bold">Date: {{Carbon\Carbon::createFromFormat('Y-m-d', request('date') ?? Carbon\Carbon::now('Asia/Manila')->format('Y-m-d'))->format('F j, Y')}}</h2>
-          <h2 class="{{request('search') ? 'block' : 'hidden'}} mt-8 text-xl font-bold">Name: {{request('name') ?? 'None'}}</h2>
+          <h2 class="{{request('search') ? 'block' : 'hidden'}} mt-8 text-xl font-bold">Name: {{request('search') ?? 'None'}}</h2>
           <div class="mt-3 grid grid-flow-row md:grid-cols-3 gap-8">
           @if (request('search'))
               @foreach ($rooms ?? [] as $room)
@@ -49,14 +49,14 @@
                           <label for="room_modal{{$room->id}}" class="block rounded-xl border border-neutral-content p-8 shadow-md transition hover:border-primary">
                             <h2 class="mt-4 text-xl font-bold text-neutral">Room No. {{$room->room_no}}</h2>
                             <h5 class="text-md font-medium text-neutral">{{$room->room->name}}</h5>
-                            <h5 class="text-md font-bold text-neutral">{{$reservation->userReservation->name() ?? 'No Name'}} ({{$reservation->pax ?? 'No'}} Guest)</h5>
+                            <h5 class="text-md font-bold text-neutral">{{$reservation->userReservation->name() ?? 'No Name'}} ({{isset($room->customer[$reservation->id]) ? $room->customer[$reservation->id] : 'No'}} Guest)</h5>
                           </label>
                           <x-modal id="room_modal{{$room->id}}" title="Room No. {{$room->room_no}}: {{$reservation->userReservation->name()}} ({{$reservation->status()}})">
                                 <table class="table">
                                   <tbody>
                                     <tr>
                                       <th>Age</th>
-                                      <td>{{$reservation->age}} years old</td>
+                                      <td>{{$reservation->userReservation->age()}} years old</td>
                                     </tr>
                                     <tr>
                                       <th>Guest</th>
@@ -65,10 +65,6 @@
                                     <tr>
                                       <th>Check-in</th>
                                       <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $reservation->check_in )->format('l, F j, Y') ?? 'None'}}</td>
-                                    </tr>
-                                    <tr>
-                                      <th>Check-out</th>
-                                      <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $reservation->check_out )->format('l, F j, Y') ?? 'None'}}</td>
                                     </tr>
                                     <tr>
                                       <th>Check-out</th>

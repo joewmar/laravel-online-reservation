@@ -1,12 +1,3 @@
-Don't forget to fix bug of room type!
-Don't forget to fix bug of cart menu! (Di nag overwrite)
-Don't forget to put authentication of route (store til destroy request)!
-Don't forget to fix bug of passcode confirmation (multiple passcode)!
-Don't forget to add same spot reservation!
-Don't forget to pax when come to rooms!
-Don't forget to same account reservation authentication!
-Don't forget to make function for conflit of schedule (Room)!
-
 
 Cloning laravel project from github
 1.Run git clone <my-cool-project>
@@ -19,7 +10,4 @@ Cloning laravel project from github
 
 php artisan queue:work -- wag kalimutan gawin sa testing
 php artisan queue:retry all
-
-Sa paggamit ng all na parameter, ang Laravel ay i-retry ang lahat ng mga jobs na may status na "FAIL" sa iyong queue. Siguraduhing ang iyong queue worker ay naka-activate habang ginagawa mo ang command na ito.
-Kung gusto mo pang magkaroon ng mas malalim na kontrol sa pag-retry, maari mo ring gamitin ang php artisan queue:failed para makita ang listahan ng mga failed jobs, at pagkatapos ay gamitin ang php artisan queue:retry [id] para i-retry ang specific na job.
 

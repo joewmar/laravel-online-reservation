@@ -64,7 +64,7 @@
                         </div>
                         <div class="flex justify-start md:justify-end mt-5 space-x-1">
                             <button type="button" @click="step1 = true, step2 = false" class="btn btn-ghost btn-primary btn-sm md:btn:md">Back</button>
-                            <button type="button" @click="step2 = false, step3 = true" class="btn btn-primary btn-sm md:btn:md">Go Step 3</button>
+                            <button id="done" type="button" @click="step2 = false, step3 = true" class="btn btn-primary btn-sm md:btn:md">Go Step 3</button>
                         </div>
                         
                     </div>

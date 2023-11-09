@@ -50,6 +50,8 @@
           {{-- <x-input type="password" name="password" placeholder="Password"/> --}}
           <x-password validation />
           <x-password name="password_confirmation" id="password_confirmation" placeholder="Confirm Password" />
+          <input type="checkbox" name="acptm" class="checkbox checkbox-primary checkbox-sm" {{old('acptm') ? 'checked="checked"' : ''}}" />
+          <label class="ml-1">Agree to <a href="{{route('term-conditions')}}" class="link link-primary">Terms and Conditions</a></label>
           {{-- Confrim Password --}}
           <div class="form-control mt-6">
               <button type="submit" class="btn btn-primary w-full">Sign up</button>

@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Edit Bank Transfer Reference ({{$bankTransfer[$key]['name']}})">
+    <x-system-content title="Edit Bank Transfer Reference ({{$bankTransfer[$key]['name']}})" back="{{route('system.webcontent.show.payment.bnktr', ['key' => encrypt($key), '#payment'])}}">
         <form id="edit-form" action=" {{ route('system.webcontent.update.payment.bnktr', encrypt($key)) }}" method="post" enctype="multipart/form-data">
             @csrf
             @method('PUT')

@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="" back=true>
+    <x-system-content title="" back="{{route('system.reservation.show', encrypt($r_list->id))}}">
         {{-- User Details --}}
         {{-- <div class="w-full text-center">
             <span x-show="!document.querySelector('[x-cloak]')" class="loading loading-spinner loading-lg text-primary"></span>
@@ -48,35 +48,90 @@
         </div>
         <div class="divider"></div>
         @if(request()->has('tab') && request('tab') === 'CINP')
-            <article x-data="{pay: '{{$r_list->balance() === 0 ? 'fullpayment' : 'partial'}}', senior: {{isset($r_list->transaction['payment']['discountPerson']) ? 'true' : 'false'}} }" class="w-full flex justify-center px-20">
-                <form id="cinpform" action="{{route('system.reservation.update.cinpayment', encrypt($r_list->id))}}" method="POST" class="w-96">
+            <article x-data="checkIn" class="w-full flex justify-center px-20">
+                <form x-data="{pay: {{$r_list->checkInPayment()}}, senior: {{isset($r_list->transaction['payment']['discountPerson']) ? 'true' : 'false'}}, scount: {{$r_list->transaction['payment']['discountPerson'] ?? 0}}, st: {{$r_list->getServiceTotal()}}, dw: {{$r_list->downpayment()}}, ra: {{$r_list->getRoomAmount()}}, cintotal: {{$r_list->getTotal()}}, balance: {{$r_list->balance()}}, change: {{$r_list->refund()}}, dstd: 0}" id="cinpform" action="{{route('system.reservation.update.cinpayment', encrypt($r_list->id))}}" method="POST" class="w-96">
                     @csrf
                     @method('PUT')
                     <h2 class="text-xl md:text-2xl mb-5 font-bold">Edit Check-in Payment</h2>
-                    <div class="mb-5">
-                        <input id="discount" x-model="senior" name="hs" type="checkbox" class="checkbox checkbox-secondary" />
-                        <label for="discount" class="ml-4 font-semibold">Have Senior Citizen?</label>
-                    </div>
-                    <template x-if="senior">
-                        <div class="mt-3">
-                            <x-input type="number" name="senior_count" id="senior_count" placeholder="Count of Senior Guest" value="{{$r_list->transaction['payment']['discountPerson'] ?? 0}}" />
+                    <div class="mb-5 mt-3">
+                        <div class="mb-3">
+                            <p class="text-sm"><strong>Service Cost: </strong> <span x-text="st > 0 ? '₱ ' + st.toLocaleString('en-US', {maximumFractionDigits:2}) : 'None' "></span></p>
+                            <p class="text-sm"><strong>Rate Amount per Person: </strong> {{$r_list->getRoomAmount(false, true) > 0 ? '₱ ' . number_format($r_list->getRoomAmount(false, true), 2) : 'None'}}</p>
+                            <template x-if="senior">
+                                <div>
+                                    <p class="text-sm"><strong>Senior / PWD Guest: </strong> <span x-text="scount > 0 ? scount  : 'None' "></span></p>
+                                    <p class="text-sm"><strong>Rate Discounted per Person: </strong> <span x-text="dstd > 0 ? '₱ ' + dstd.toLocaleString('en-US', {maximumFractionDigits:2}) : 'None' "></span></p>
+                                    <p class="text-sm"><strong>Total Rate: </strong> <span x-text="ra > 0 ? '₱ ' + ra.toLocaleString('en-US', {maximumFractionDigits:2}) : 'None' "></span></p>
+                                </div>
+                            </template>
+                            <p class="text-sm"><strong>Total Cost: </strong> <span x-text="cintotal > 0 ? '₱ ' + cintotal.toLocaleString('en-US', {maximumFractionDigits:2}) : 'None' "></span></p>
+                            <p class="text-sm"><strong>Downpayment: </strong> <span x-text="dw > 0 ? '₱ ' + dw.toLocaleString('en-US', {maximumFractionDigits:2}) : 'None' "></span></p>
+                            <p class="text-sm"><strong>Balance: </strong> <span x-text="balance > 0 ? '₱ ' + balance.toLocaleString('en-US', {maximumFractionDigits:2}) : 'None' "></span></p>
                         </div>
-                    </template>
-                    <div class="py-3 space-x-2">
-                        <input type="radio" x-model="pay" id="partial" name="cnpy" class="radio radio-primary" value="partial" />
-                        <label for="partial">Partial</label>
-                        <input type="radio" x-model="pay" id="full_payment" name="cnpy" class="radio radio-primary" value="fullpayment" />
-                        <label for="full_payment">Full Payment</label>
-                        <template x-if="pay == 'partial'">
+                        <input id="discount" @change="CIN()" name="hs" x-model="senior" type="checkbox" class="checkbox checkbox-secondary checkbox-sm md:checkbox-md" />
+                        <label for="discount" class="text-sm md:text-lg ml-4 font-semibold">Have Senior / PWD ?</label>
+                        <template x-if="senior">
                             <div class="my-3">
-                                <x-input name="amount" id="amountcinp" placeholder="Amount" value="{{$r_list->checkInPayment() ?? ''}}" max="{{$r_list->balance()}}" /> 
+                                <x-input x-model="scount" type="number" name="senior_count" id="senior_count" placeholder="Count of Guest" value="{{old('senior_count')}}" input="CIN()" />
                             </div>
                         </template>
                     </div>
+                    <x-input x-model="pay" type="number" name="amount" id="amount" placeholder="Amount" input="CIN()" />
+                    <div x-show="change > 0" class="text-error" x-text="'Change: ₱ ' + change.toLocaleString('en-US', {maximumFractionDigits:2})"></div>
                     <label for="cinpymdl" class="btn btn-primary btn-block">Save</label>
                     <x-passcode-modal title="Edit Check-in Payment Confirmation" id="cinpymdl" formId="cinpform" />
                 </form>
             </article>
+            @push('scripts')
+                <script>
+                    document.addEventListener('alpine:init', () => {
+                        Alpine.data('checkIn', () => ({
+                            pay: {{$r_list->checkInPayment()}}, 
+                            senior: {{$r_list->countSenior() > 0 ? 'true' : 'false'}}, 
+                            scount: {{$r_list->countSenior() > 0 ? $r_list->countSenior() : 0}},
+                            st: {{$r_list->getServiceTotal()}},
+                            dw: {{$r_list->downpayment()}},
+                            ra: {{$r_list->getRoomAmount(false)}},
+                            rap: {{$r_list->getRoomAmount(false, true)}},
+                            cintotal: {{$r_list->getTotal()}},
+                            balance: {{$r_list->balance()}},
+                            change: {{$r_list->balance()}},
+                            discounted(amount = 0, rate = 20) {
+                                let d = 0;
+                                d = (rate / 100);
+                                d = amount * d;
+                                d = amount - d;
+                                return d;
+                            },
+                            CIN() {
+                                let dstd = this.discounted(this.rap);
+                                let rnum = 0;
+                                if(this.senior == true && this.scount != 0){
+                                    this.dstd = dstd;
+                                }
+                                for(i = 1; i <= {{$r_list->pax}}; i++){
+                                    if(i <= this.scount) rnum += parseFloat(this.dstd) ;
+                                    else rnum += this.rap;
+                                }
+                                this.ra = rnum;
+                                this.cintotal = this.st + this.ra
+                                this.balance = this.cintotal - this.dw;
+                                let orig_balance = this.balance;
+                                if(this.balance >= this.pay && !(Math.sign(this.pay) == -1)) this.balance = Math.abs(this.balance - this.pay);
+                                else this.balance = 0;
+
+                                if(this.balance > this.change) this.change = 0;
+
+
+                                if(orig_balance < this.pay) this.change = Math.abs(orig_balance - this.pay);
+                                else this.change = 0;
+
+                                
+                            },
+                        }));
+                    });
+                </script>
+            @endpush
         @else
           <article class="w-full flex justify-center px-20">
             <form id="dyform" action="{{route('system.reservation.update.downpayment', encrypt($r_list->id))}}" method="POST" class="w-96">

@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Accounts">
+    <x-system-content title="Accounts" back="{{route('system.setting.home')}}">
         <div class="mt-8" x-cloak>
             <div class="my-5 flex justify-between">
               <x-search endpoint="{{route('system.setting.accounts.search')}}" />

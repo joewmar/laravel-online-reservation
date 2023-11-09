@@ -21,7 +21,6 @@ class LandingController extends Controller
         $announcements = News::where('type', 1)->get() ?? [];
         $web_contents = WebContent::all()->first() ?? [];
         $feedbacks = Feedback::whereIn('rating', [3, 4, 5])->latest()->get() ?? [];
-        $request->session()->flash('info', 'This Website are under testing and developing');
         return view('index', ['activeNav' => 'Home', 'news' => $news, 'web_contents' => $web_contents, 'announcements' => $announcements, 'feedbacks' => $feedbacks]);
     }
     public function aboutus(){
@@ -42,6 +41,11 @@ class LandingController extends Controller
     }
     public function demo(){
         return view('landing.demo');
+    }
+    public function termConditions(){
+        $contacts = WebContent::oldest()->first()->contact['main'] ;
+        // dd($contacts);
+        return view('term-conditions', ['contacts' => $contacts]);
     }
     // public function testing(){
     //     $reservation = Reservation::all()->firstOrFail();

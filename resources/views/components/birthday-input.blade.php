@@ -24,7 +24,7 @@
         <select x-model="selectedMonth" class="border-transparent focus:border-transparent focus:ring-0 font-normal rounded-md select text-xs md:text-sm" {{$disabled ? 'disabled' : ''}}>
             <option value="" disabled selected>Month</option>
             <template x-for="(monthName, monthValue) in months" :key="monthValue">
-                <option x-bind:value="monthValue > 10 ? monthValue : 0 + monthValue " x-text="monthName" :selected="(monthValue > 10 ? monthValue : 0 + monthValue ) === selectedbdy[1]"></option>
+                <option x-bind:value="monthValue >= 10 ? monthValue : 0 + monthValue " x-text="monthName" :selected="(monthValue > 10 ? monthValue : 0 + monthValue ) === selectedbdy[1]"></option>
             </template>
         </select>
     

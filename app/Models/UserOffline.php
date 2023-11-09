@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -13,7 +14,7 @@ class UserOffline extends Model
     protected $fillable = [
         "first_name" ,
         "last_name",
-        "age",
+        "birthday",
         "country" ,
         "email" ,
         "nationality",
@@ -25,7 +26,7 @@ class UserOffline extends Model
     }
     public function age()
     {
-        return $this->attributes['age'];
+        return Carbon::parse($this->attributes['birthday'])->age;
     }
     public function name(){
         return  $this->attributes['first_name'] . ' ' . $this->attributes['last_name'];

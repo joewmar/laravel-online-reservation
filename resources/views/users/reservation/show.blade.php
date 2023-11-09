@@ -11,7 +11,7 @@
         }
     }
     $arrAccType = ['Room Only', 'Day Tour', 'Overnight'];
-    $arrAccTypeTitle = ['Room Only (Any Date)', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
+    $arrAccTypeTitle = ['Room Only', 'Day Tour (Only 1 Day)', 'Overnight (Only 2 days and above)'];
     $arrPayment = ['Gcash', 'PayPal', 'Bank Transfer'];
 
 @endphp
@@ -21,7 +21,7 @@
     <x-full-content>
         <section class="px-5 md:px-20 pt-24">
             {{-- User Details --}}
-            <a href="{{URL::previous()}}" class="btn btn-ghost btn-circle">
+            <a href="{{route('user.reservation.home')}}" class="btn btn-ghost btn-circle">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
             <div class="px-3 md:px-20">
@@ -44,86 +44,29 @@
                                     </a>
                                 </li>
                             @endif
-                            @if($r_list->status == 0 || $r_list->status >= 3)
-                                <li>
-                                    <label for="delete_rsv">
-                                        Delete Reservation
-                                    </label>
-                                </li>
-                            @endif
                             </ul>
                       </div>
                 </div>
-                <div class="w-full hidden md:flex justify-end space-x-1">
-                    <a href="{{route('user.reservation.show.online.payment', encrypt($r_list->id))}}" class="btn btn-info btn-sm">
+                <div class="w-full hidden md:flex justify-end join">
+                    <a href="{{route('user.reservation.show.online.payment', encrypt($r_list->id))}}" class="join-item btn btn-info btn-sm">
                         Online Payment
                     </a>
                     @if($r_list->status === 3)
-                        <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="btn btn-success btn-sm">
+                        <a href="{{route('reservation.receipt', encrypt($r_list->id))}}" class="join-item btn btn-success btn-sm">
                             <i class="fa-solid fa-receipt"></i>
                             Reciept
                         </a>
                     @endif
-                    @if($r_list->status == 0 || $r_list->status >= 3)
-                        <label for="delete_rsv" class="btn btn-error btn-sm">
-                            Delete Reservation
-                    </label>
-                    @endif
+                    <a href="{{route('user.reservation.edit.step1', encrypt($r_list->id))}}" class="join-item btn btn-sm {{$r_list->status > 0 ? 'btn-disabled' : ''}}">
+                        Edit
+                    </a>
                 </div>
-                @if($r_list->status == 0 || $r_list->status >= 3)
-                    <x-modal id="delete_rsv" title="If you want to delete this reservation. Enter your password for confirmation">
-                        <form action="{{route('user.reservation.destroy', encrypt($r_list->id))}}" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <x-password />
-                            <div class="modal-action">
-                                <button class="btn btn-error">Force Delete</button>
-                            </div>
-                        </form>
-                    </x-modal>
-                @endif
                 <div class="divider"></div>
                 <div class="block">
                     <article class="text-md tracking-tight text-neutral my-5 w-auto">
-                            <div class="flex gap-4 mb-5 items-center" >
-                                <h2 class="text-xl md:text-2xl font-bold">Details</h2>
-                                    <label for="edit_modal" class="btn btn-sm btn-primary" {{$r_list->status > 0 ? 'disabled' : ''}}>Change</label>
-                                @if($r_list->status > 0)
-                                    <x-modal title="Change Information" id="edit_modal">
-                                        <p>You cannot change it once your reservation has been confirmed.</p>
-                                    </x-modal>
-                                @else
-                                    <x-modal title="Change Information" id="edit_modal">
-                                        <form x-data="{at: '{{$r_list->accommodation_type}}'}" action="{{route('user.reservation.update.details', encrypt($r_list->id))}}" method="post">
-                                            @csrf
-                                            @method('PUT')
-                                            <div class="mt-4 ">
-                                              <div class="space-y-4 lg:block">
-                                                    <x-datetime-picker name="check_in" id="check_in" placeholder="Check in" class="flatpickr-reservation" value="{{$r_list->check_in}}" noRequired />
-                                                    <x-datetime-picker name="check_out" id="check_out" placeholder="Check out" class="flatpickr-reservation" value="{{$r_list->check_out }}" noRequired />
-                                                    <x-select xModel="at" name="accommodation_type" id="accommodation_type" placeholder="Accommodation Type" :value="$arrAccType" :title="$arrAccTypeTitle" selected="{{$r_list->accommodation_type}}" noRequired />
-                                                    {{-- Number of Guest --}}
-                                                    <x-input type="number" name="pax" id="pax" placeholder="Number of Guests" value="{{$r_list->pax}}" noRequired />
-                                                    <template x-if="at === 'Day Tour' || at === 'Overnight'">
-                                                        <x-tooltip title="If you want to make changes, you can do so in the tour information." color="info">
-                                                            <x-input type="number" name="tour_pax" id="tour_pax" placeholder="How many people will be going on the tour" value="{{$r_list->tour_pax?? ''}}" disabled noRequired />
-                                                        </x-tooltip>
-                                                    </template>
-                                                    {{-- Payment Method  --}}
-                                                    <x-select id="payment_method" name="payment_method" placeholder="Payment Method" :value="$arrPayment"  :title="$arrPayment" selected="{{$r_list->payment_method}}" noRequired />
-                                                    <div class="modal-action">
-                                                        <button class="btn btn-primary">Save</button>
-                                                    </div>
-                                                </div>
-                        
-                                              </div>
-                                          </form>
-                                    </x-modal>
-                                @endif
-                            </div>
-                        
+                        <h2 class="text-xl md:text-2xl mb-5 font-bold">Details</h2>
                         <div class="overflow-x-auto">
-                            <table class="table">
+                            <table class="table table-xs md:table-sm">
                               <!-- head -->
                               <tbody>
                                 <!-- row 1 -->
@@ -188,38 +131,42 @@
                         @if(!empty($menu))
                             <div class="w-auto">
                                 <div class="overflow-x-auto">
-                                    <table class="table table-zebra table-xs md:table-md">
+                                    <table class="table table-xs md:table-sm w-full">
                                     <!-- head -->
                                     <thead>
                                         <tr class="text-neutral font-bold">
-                                            <td class="flex items-center gap-4">
-                                                <h2 class="font-bold ">Tour</h2>
-                                                <a href="{{route('user.reservation.edit.tour', ['id' => encrypt($r_list->id), 'gpax='.$r_list->tour_pax])}}" class="btn btn-sm btn-ghost btn-circle btn-primary {{$r_list->status > 1 ? 'btn-disabled' : ''}}">
-                                                    <i class="fa-solid fa-pen-to-square"></i>
-                                                </a>
-                                            </td>
+                                            <td>Used</td>
+                                            <td>Tours</td>
                                             <td>Price</td>
                                             <td>Quantity</td>
                                             <td>Amount</td>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @php $amount = 0; @endphp
+                                        @php $totalTour = 0 @endphp
                                         @foreach ($menu as $key => $item)
-                                            <tr>
+                                            <tr >
+                                                <td>
+                                                    @if($item['used'])
+                                                        <i class="fa-solid fa-check text-primary"></i>
+                                                    @else
+                                                        <i class="fa-solid fa-x text-error"></i>
+                                                    @endif
+                                                </td>
                                                 <td>{{$item['title']}}</td> 
                                                 <td>₱ {{number_format($item['price'], 2)}}</td> 
                                                 <td class="text-center">{{$item['tpx']}} guest</td> 
                                                 <td>₱ {{number_format($item['amount'], 2)}}</td> 
                                             </tr>
-                                            @php $amount += $item['amount']; @endphp
-
+                                            @php $totalTour += $item['amount'] @endphp
+        
                                         @endforeach
-                                        <tr class="font-bold">
+                                        <tr class="bg-base-200">
                                             <td></td> 
                                             <td></td> 
-                                            <td class="text-right">Total</td> 
-                                            <td >₱ {{number_format($amount , 2)}}</td> 
+                                            <td></td> 
+                                            <td class="font-bold text-right">Total</td> 
+                                            <td colspan="2" class="font-bold">₱ {{number_format($totalTour, 2)}}</td> 
                                         </tr>
                                     </tbody>
                                     </table>
@@ -231,147 +178,164 @@
                 @if(!empty($other_addons))
                     <div class="divider"></div>
                     <article>
-                        <h1 class="my-1 text-xl "><strong>Additional Request: </strong></h1>
-                        <div class="my-5 w-full">
-                            <div class="w-auto">
+                        <h1 class="my-1 text-lg md:text-xl "><strong>Additional Request: </strong></h1>
+                        @if(!empty($other_addons))
+                            <div class="my-5 w-full">
                                 <div class="overflow-x-auto">
-                                    <table class="table table-zebra table-sm">
-                                    <!-- head -->
-                                    <thead>
-                                        <tr>
-                                            <th>Addons</th>
-                                            <th>Quantity</th>
-                                            <th>Price</th>
-                                            <th>Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php $totalAddons = 0 @endphp
-                                        @foreach ($other_addons as $key => $addon)
+                                    <table class="table table-xs md:table-sm">
+                                        <!-- head -->
+                                        <thead>
                                             <tr>
-                                                <td>{{$addon['title']}}</td> 
-                                                <td>{{$addon['pcs'] ?? 0}}</td> 
-                                                <td>₱ {{number_format($addon['price'], 2)}}</td> 
-                                                <td>₱ {{number_format($addon['amount'], 2)}}</td> 
-                                                @php $totalAddons += $addon['amount'] @endphp
+                                                <th>Addons</th>
+                                                <th>Pcs</th>
+                                                <th>Price</th>
+                                                <th>Amount</th>
                                             </tr>
-                                        @endforeach
-                                        <tr class="bg-base-200">
-                                            <td></td> 
-                                            <td></td> 
-                                            <td class="font-bold">Total</td> 
-                                            <td class="font-bold">₱ {{number_format($totalAddons, 2)}}</td> 
-                                        </tr>
-                                    </tbody>
+                                        </thead>
+                                        <tbody>
+                                            @php $totalAddons = 0 @endphp
+                                            @foreach ($other_addons as $key => $addon)
+                                                <tr>
+                                                    <td>{{$addon['title']}}</td> 
+                                                    <td>{{$addon['pcs'] ?? 0}} pcs</td> 
+                                                    <td>₱ {{number_format($addon['price'], 2)}}</td> 
+                                                    <td>₱ {{number_format($addon['amount'], 2)}}</td> 
+                                                </tr>
+                                                @php $totalAddons += $addon['amount'] @endphp
+        
+                                            @endforeach
+                                            <tr class="bg-base-200">
+                                                <td></td> 
+                                                <td></td> 
+                                                <td class="font-bold">Total</td> 
+                                                <td class="font-bold">₱ {{number_format($totalAddons, 2)}}</td> 
+                                            </tr>
+                                        </tbody>
                                     </table>
                                 </div>
                             </div>
-                        </div>
+                        @endif
                     </article>
                 @endif
                 <div class="divider"></div>
-                    <article class="text-md tracking-tight text-neutral my-5 w-auto">
-                        <h2 class="text-xl md:text-2xl mt-5 font-bold">Transaction</h2>
-                        <div class="overflow-x-auto">
-                            <table class="table">
-                                <thead>
-                                    <th></th>
-                                    <th></th>
-                                </thead>
-                                <tbody>
+                <article class="text-md tracking-tight text-neutral my-5 w-auto">
+                    <h2 class="text-xl md:text-2xl mt-5 font-bold">Transaction</h2>
+                    <div class="overflow-x-auto">
+                        <table class="table table-xs md:table-sm">
+                            <tbody>
+                                <tr @if($r_list->status == 3) class="line-through" @endif>
+                                    <th>Tour Cost:</th>
+                                    <td>{{$r_list->getTourTotal(false) > 0 ? '₱ ' . number_format($r_list->getTourTotal(false) ?? 0, 2) : 'None' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Tour Used Cost: </th>
+                                    <td>{{$r_list->getTourTotal(true) > 0 ? '₱ ' .  number_format($r_list->getTourTotal(true) ?? 0, 2) : 'None' }}</td>
+                                    @php $total += $r_list->getTourTotal() @endphp
+                                </tr>
+                                <tr>
+                                    <th>Addons Cost:</th>
+                                    <td>{{$r_list->getAddonTotal() > 0 ? '₱ '.  number_format($r_list->getAddonTotal() ?? 0, 2) : 'None' }}</td>
+                                    @php $total += $r_list->getAddonTotal() @endphp
+                                </tr>
+                                @if ($dscPerson !== 0)
                                     <tr>
-                                        <th>Service Cost:</th>
-                                        <td>₱ {{ number_format((double)$r_list->getServiceTotal() ?? 0, 2) }}</td>
+                                        <th>Room Rate (Orginal Price)</th>
+                                        <td>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}</td>
                                     </tr>
-                                    @if ($dscPerson !== 0)
-                                        <tr>
-                                            <th>Room Rate (Orginal Price)</th>
-                                            <td>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}</td>
-                                        </tr>
-                                        <tr class="text-md tracking-tight text-neutral">
-                                            <th >No. of days: </th>
-                                            <td>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Total of Room Rate</th>
-                                            <td>₱ {{ number_format($rate['orig_amount'] ?? 0, 2) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Senior Guest</th>
-                                            <td>₱ {{$dscPerson ?? 0}} Guest</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Discount</th>
-                                            <td>20%</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Total of Room Rate Discounted</th>
-                                            <td>₱ {{ number_format($rate['amount'], 2) }}</td>
-                                        </tr>
-                                    @endif
-                                    @if($r_list->status > 0 && $r_list->status < 4 && $dscPerson === 0)
-                                        <tr>
-                                            <th>Room Rate:</th>
-                                            <td>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th >No. of days: </th>
-                                            <td>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Total of Room Rate: </th>
-                                            <td>₱ {{ number_format($rate['amount'], 2) }}</td>
-                                        </tr>
-                                    @endif
-                                <tr>
-                                    <th>Total Cost: </th>
-                                    <td>₱ {{ number_format($r_list->getTotal(), 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Downpayment: </th>
-                                    <td>{{$r_list->downpayment() !== 0 ? '₱ ' . number_format($r_list->downpayment(), 2) : 'No Downpayment'}}</td>
-                                </tr>
-                                <tr>
-                                    <th>Payment after Check-in: </th>
-                                    <td>{{$r_list->checkInPayment() !== 0 ? '₱ ' . number_format($r_list->checkInPayment(), 2) : 'No Payment' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Payment after Check-out: </th>
-                                    <td>{{$r_list->checkOutPayment() !== 0 ? '₱ ' . number_format($r_list->checkOutPayment(), 2) : 'No Payment' }}</td>
-                                </tr>
-                                @if($r_list->checkOutPayment() === 0)
-                                    <tr class="text-md tracking-tight text-neutral my-5">
-                                        <th>Balance due: </th>
-                                        <td>{{$r_list->balance() !== 0 ? '₱ ' . number_format($r_list->balance(), 2) : 'No Balance' }}</td>
+                                    <tr class="text-md tracking-tight text-neutral">
+                                        <th >No. of days: </th>
+                                        <td>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Rate Amount per Person: </th>
+                                        <td>₱ {{ number_format($rate['person'], 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Rate Amount (Orginal):</th>
+                                        <td>₱ {{ number_format($rate['orig_amount'], 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Senior / PWD Guest</th>
+                                        <td>{{$dscPerson ?? 0}} Guest</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Discount</th>
+                                        <td>20%</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Room Rate Discounted</th>
+                                        <td>₱ {{ number_format($rate['discounted'] , 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total of Room Rate with Discounted</th>
+                                        <td>₱ {{ number_format($rate['amount'], 2) }}</td>
                                     </tr>
                                 @endif
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
+                                @if($r_list->status > 0 && $r_list->status <= 3 && $dscPerson === 0)
+                                    <tr>
+                                        <th>Room Rate:</th>
+                                        <td>{{$rate['name'] ?? ''}} -  ₱ {{ number_format((double)$rate['price'] ?? 0, 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th >No. of days: </th>
+                                        <td>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Rate Amount per Person: </th>
+                                        <td>₱ {{ number_format($rate['person'], 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Rate Amount: </th>
+                                        <td>₱ {{ number_format($rate['amount'], 2) }}</td>
+                                    </tr>
+                                @endif
+                                @php $total += $r_list->getRoomAmount() @endphp
+                            <tr>
+                                <th>Total Cost: </th>
+                                <td>{{$total > 0 ? '₱ ' . number_format($total, 2) : 'None' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Downpayment: </th>
+                                <td class="flex items-center gap-4">
+                                    {{$r_list->downpayment() !== 0 ? '₱ ' . number_format($r_list->downpayment(), 2) : 'None'}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Payment after Check-in: </th>
+                                <td class="flex items-center gap-4">
+                                    {{$r_list->checkInPayment() !== 0 ? '₱ ' . number_format($r_list->checkInPayment(), 2) : 'None' }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Payment after Check-out: </th>
+                                <td>{{$r_list->checkOutPayment() != 0 ? '₱ ' . number_format($r_list->checkOutPayment(), 2) : 'None' }}</td>
+                            </tr>
+                            <tr >
+                                <th>Balance due: </th>
+                                <td>{{$r_list->balance() !== 0 ? '₱ ' . number_format($r_list->balance(), 2) : 'None' }}</td>
+                            </tr>
+                            <tr >
+                                <th>Refund: </th>
+                                <td>{{$r_list->refund() !== 0 && !(isset($r_list->transaction['payment']['refunded']) && $r_list->transaction['payment']['refunded'] == true) ? '₱ ' . number_format($r_list->refund(), 2) : 'No Refund' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
                 
                 <div class="divider"></div>
                 <div x-data="{show: false}" class=" w-full">
                     <div class="flex items-start space-x-2">
                         <h2 class="text-xl md:text-2xl mb-5 font-bold">Valid ID</h2> 
-                        <div class="join">
-                            <button @click="show = !show" type="button" x-text="show ? 'Hide' : 'Show' " class="btn btn-sm join-item"></button>
-                            <label for="edit_id_modal" class="btn btn-primary btn-sm join-item" {{$r_list->status > 0 ? 'disabled' : ''}}>Change</label> 
-                        </div>
-                        <x-modal id="edit_id_modal" title="Change Valid ID" loader>
-                            <form action="{{route('profile.update.validid', encrypt($r_list->userreservation->id))}}" method="POST" enctype="multipart/form-data" >
-                                @csrf
-                                @method('PUT')
-                                <x-drag-drop name="valid_id" id="valid_id" />
-                                <div class="modal-action">
-                                    <button type="submit" class="btn btn-primary" @click="loader = true">Save</button>
-                                </div>
-                            </form>
-                        </x-modal>
+                        <button @click="show = !show" type="button" x-text="show ? 'Hide' : 'Show' " class="btn btn-primary btn-sm"></button>
                     </div>
                     <template x-if="show">
                         <div class="w-full rounded flex justify-center">
-                            <img src="{{route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]])}}" alt="Valid ID of {{$r_list->userReservation->name()}}">
+                            @if($r_list->userReservation->valid_id)
+                                <img src="{{route('private.image', ['folder' => explode('/', $r_list->userReservation->valid_id)[0], 'filename' => explode('/', $r_list->userReservation->valid_id)[1]])}}" alt="Valid ID of {{$r_list->userReservation->name()}}">
+                            @else
+                                <h2 class="text-xl font-bold ">No Valid ID Send</h2>
+                            @endif
                         </div>
                     </template>
                 </div>
@@ -463,6 +427,23 @@
                         </x-modal> 
                     @endif
                 </div>
+                @if($r_list->status == 0 || $r_list->status >= 3)
+                    <div class="flex justify-end mb-5">
+                        <label for="delete_rsv" class="btn btn-error btn-sm">
+                            Delete Reservation
+                        </label>
+                    </div>
+                    <x-modal id="delete_rsv" title="If you want to delete this reservation. Enter your password for confirmation">
+                        <form action="{{route('user.reservation.destroy', encrypt($r_list->id))}}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <x-password />
+                            <div class="modal-action">
+                                <button class="btn btn-error">Force Delete</button>
+                            </div>
+                        </form>
+                    </x-modal>
+                @endif
             </div>
         </section>
     </x-full-content>

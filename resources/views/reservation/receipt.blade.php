@@ -27,7 +27,7 @@
 	border: 0;
 	box-sizing: content-box;
 	color: inherit;
-	font-family: inherit;
+	font-family: DejaVu Sans, Arial, Helvetica, sans-serif;
 	font-size: inherit;
 	font-style: inherit;
 	font-weight: inherit;
@@ -198,7 +198,7 @@ tr:hover .cut { opacity: 1; }
 				</tr>
 				<tr>
 					<th><span >Date</span></th>
-					<td><span >{{ \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $r_list->updated_at)->format('F j, Y') ?? 'None'}}</span></td>
+					<td><span >{{ \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', ($r_list->transaction['receipt'] ?? $r_list->updated_at))->format('F j, Y') ?? 'None'}}</span></td>
 				</tr>	
 			</table>
 			<address>
@@ -214,6 +214,9 @@ tr:hover .cut { opacity: 1; }
 				<h5>Check-out: <span>{{\Carbon\Carbon::createFromFormat('Y-m-d', $r_list->check_out)->format('l F j, Y') ?? 'None'}}</span></h5>
 				<h5>Service Type: <span>{{$r_list->accommodation_type ?? 'None'}}</span></h5>
 				<h5>Payment Method: <span>{{$r_list->payment_method ?? 'None'}}</span></h5>
+				@if($r_list->countSenior() > 0)
+					<h5>Senior / PWD: {{$r_list->countSenior() > 0}}</h5>
+				@endif
 			</div>
 			@if (!empty($rooms))			
 				<table class="inventory">
@@ -238,14 +241,18 @@ tr:hover .cut { opacity: 1; }
 						<tr>
 							<th><span >Room Type</span></th>
 							<th><span >No. of days</span></th>
-							<th><span >Rate</span></th>
 							<th><span >Amount</span></th>
+							@if ($r_list->countSenior() > 0)
+								<th><span >Discounted</span></th>
+							@endif
 						</tr>
 					</thead>
 					<tbody>
-						<td><span>{{$rate['name']}}</span></td> 
+						<td><span>{{$rate['name']}} &#x20B1; {{ number_format($rate['price'], 2)}}</span></td> 
 						<td><span>{{$r_list->getNoDays() > 1 ? $r_list->getNoDays() . ' days' : $r_list->getNoDays() . ' day'}}</span></td> 
-						<td><span data-prefix>&#x20B1; </span><span>{{ number_format($rate['price'], 2)}}</span></td>
+						@if ($r_list->countSenior() > 0)
+							<td><span data-prefix>&#x20B1; </span><span>{{ number_format($rate['orig_amount'], 2)}}</span></td>
+						@endif
 						<td><span data-prefix>&#x20B1; </span><span>{{ number_format($rate['amount'], 2)}}</span></td>
 					</tbody>
 				</table>
@@ -300,18 +307,25 @@ tr:hover .cut { opacity: 1; }
 					<th><span >{{$r_list->status < 3 ? 'Total' : 'Amount Paid'}}</span></th>
 					<td><span data-prefix>&#x20B1; </span><span>{{number_format($r_list->getTotal(), 2)}}</span></td>
 				</tr>
-				<tr>
-					<th><span >Downpayment</span></th>
-					<td><span data-prefix>&#x20B1; </span><span>{{number_format($r_list->downpayment() ?? 0, 2)}}</span></td>
-				</tr>
-				<tr>
-					<th><span >Check-in Paid</span></th>
-					<td><span data-prefix>&#x20B1; </span><span>{{number_format($r_list->checkInPayment() ?? 0, 2)}}</span></td>
-				</tr>
-				<tr>
-					<th><span >Check-out Paid</span></th>
-					<td><span data-prefix>&#x20B1; </span><span>{{number_format($r_list->checkOutPayment() ?? 0, 2)}}</span></td>
-				</tr>
+				@if($r_list->downpayment() > 0)
+
+					<tr>
+						<th><span >Downpayment</span></th>
+						<td><span data-prefix>&#x20B1; </span><span>{{number_format($r_list->downpayment() ?? 0, 2)}}</span></td>
+					</tr>
+				@endif
+				@if($r_list->checkInPayment() > 0)
+					<tr>
+						<th><span >Check-in Paid</span></th>
+						<td><span data-prefix>&#x20B1; </span><span>{{number_format($r_list->checkInPayment() ?? 0, 2)}}</span></td>
+					</tr>
+				@endif
+				@if($r_list->checkOutPayment() > 0)
+					<tr>
+						<th><span >Check-out Paid</span></th>
+						<td><span data-prefix>&#x20B1; </span><span>{{number_format($r_list->checkOutPayment() ?? 0, 2)}}</span></td>
+					</tr>
+				@endif
 			</table>
 		</article>
 	</body>

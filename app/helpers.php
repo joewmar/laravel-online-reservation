@@ -40,7 +40,7 @@ function getNoDays($dt1, $dt2)
     $date1 = Carbon::parse($dt1); // Convert $date1 to Carbon object
     $date2 = Carbon::parse($dt2); // Convert $date2 to Carbon object
     if($date1->timestamp === $date2->timestamp) return 1;
-    else return (int)$date1->diffInDays($date2); // Calculate the number of days between the two dates
+    else return (int)$date1->diffInDays($date2) + 1 ; // Calculate the number of days between the two dates
 }
 function encryptedArray($array)
 {
@@ -86,41 +86,40 @@ function getChatIdByGroup()
     }
     return null;
 }
-function checkAvailRooms(int $pax, $check_in, $check_out)
+function checkAvailRooms(int $pax, $check_in, $check_out, $id = null)
 {
     $isFull = false;
     $rooms = Room::all();
-    $vacantAll = 0;
-    if(Room::checkAllAvailable()){
-        foreach($rooms as $value){
-            $vacantAll += $value->getVacantPax($check_in, $check_out);
-        }
-        $isFull = !($vacantAll >= $pax);
+    $count_paxes = 0;
+    $countMaxPaxes = 0;
 
-    }
-    else{
-        $r_lists = Reservation::where(function ($query) use ($check_in, $check_out) {
-            $query->whereBetween('check_in', [$check_in, $check_out])
-                  ->orWhereBetween('check_out', [$check_in, $check_out])
-                  ->orWhere(function ($query) use ($check_in, $check_out) {
-                      $query->where('check_in', '<=', $check_in)
-                            ->where('check_out', '>=', $check_out);
-                  });
-        })->whereBetween('status', [1, 2])->pluck('id');
+    $r_lists = Reservation::where(function ($query) use ($check_in, $check_out) {
+        $query->whereBetween('check_in', [$check_in, $check_out])
+                ->orWhereBetween('check_out', [$check_in, $check_out])
+                ->orWhere(function ($query) use ($check_in, $check_out) {
+                    $query->where('check_in', '<=', $check_in)
+                        ->where('check_out', '>=', $check_out);
+                });
+    })->whereBetween('status', [1, 2]);
+    if(isset($id)) $r_lists = $r_lists->whereNot('id', $id)->pluck('id');
+    else $r_lists = $r_lists->pluck('id');
 
-        $count_paxes = 0;
+    $rooms = Room::all();
+     foreach($rooms as $room) {
+        $customer = $room->customer;
         foreach($r_lists as $r_list){
-            $rooms = Room::whereRaw("JSON_KEYS(customer) LIKE ?", ['%"' . $r_list . '"%'])->get();
-            // dd($rooms);
-            foreach($rooms as $room) {
+            if(array_key_exists($r_list, $customer ?? [])){
                 $count_paxes += $room->customer[$r_list] ?? 0;
-                if($count_paxes > $room->room->max_occupancy) $isFull = true;
-                else $isFull = false;
             }
         }
-        
+
+        $countMaxPaxes += $room->room->max_occupancy;
+
     }
-    // dd($r_lists);
+    if($count_paxes > $countMaxPaxes) $isFull = true;
+    else $isFull = false;
+    
+    // dd($isFull);
     return $isFull;
 
 }

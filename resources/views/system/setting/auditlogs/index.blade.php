@@ -26,8 +26,8 @@
               @forelse ($activities as $item)
                 <tr class="hover">
                   <td>{{$item->id ?? 'None'}}</td>
-                  <td>{{$item->employee->name() ?? 'None'}}</td>
-                  <td>{{$item->employee->role() ?? 'None'}}</td>
+                  <td>{{(isset($item->name) ? $item->name : $item->employee->name() ) ?? 'None'}}</td>
+                  <td>{{$item->role()}}</td>
                   <td>{{$item->action ?? 'None'}}</td>
                   <td>{{$item->module ?? 'None'}}</td>
                   <td>{{\Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $item->created_at)->format('F j, Y g:ia') ?? 'None'}}</td>
@@ -41,7 +41,9 @@
               </tbody>
             </table>
           </div>
-          {{$activities->links()}}
+          <div class="mt-3">
+            {{$activities->links()}}
+          </div>
       </div>
     </x-system-content>
 

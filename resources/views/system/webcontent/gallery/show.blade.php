@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="{{preg_replace('/(\D)(\d)/', '$1 $2', Str::title(str_replace('_', ' ', $key)))}}">
+    <x-system-content title="{{preg_replace('/(\D)(\d)/', '$1 $2', Str::title(str_replace('_', ' ', $key)))}}" back="{{route('system.webcontent.home', '#gallery')}}">
         <section class="p-6 flex justify-center">
             <div class="w-96">
                 <form action="{{route('system.webcontent.image.gallery.update', encrypt($key))}}" method="post" enctype="multipart/form-data">

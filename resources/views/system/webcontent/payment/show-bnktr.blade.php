@@ -1,5 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
-    <x-system-content title="Bank Transfer of {{$bankTransfer[$key]['name']}}">
+    <x-system-content title="Bank Transfer of {{$bankTransfer[$key]['name']}}" back="{{route('system.webcontent.home','#payment')}}">
       <div class="mt-8 w-full flex flex-col md:flex-row justify-evenly space-y-10 items-center">
         <div class="w-full md:w-96">
           <article class="prose">

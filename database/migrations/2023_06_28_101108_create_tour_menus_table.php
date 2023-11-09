@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('type');
             $table->decimal('price', 8, 2);
             $table->integer('pax');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

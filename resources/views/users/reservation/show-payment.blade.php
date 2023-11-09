@@ -55,7 +55,7 @@
                                                 <span class="text-sm md:text-xl font-bold">Partial Approve</span>
                                             </div>
                                         @endif
-                                        <p class="text-neutral font-bold text-lg md:text-xl">{{$item->payment_method}} Receipts at {{Carbon\Carbon::createFromFormat('Y-m-d h:i:s', $item->created_at)->format('M j, Y')}}</p>
+                                        <p class="text-neutral font-bold text-lg md:text-xl">{{$item->payment_method}} Receipts at {{Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $item->created_at)->format('M j, Y')}}</p>
                                         <div class="mt-5">
                                             <p class="text-neutral text-sm md:text-xl"><strong>Payer Name: </strong>{{$item->payment_name}}</p>
                                             <p class="text-neutral text-sm md:text-xl"><strong>Reference No.: </strong>{{$item->reference_no}}</p>

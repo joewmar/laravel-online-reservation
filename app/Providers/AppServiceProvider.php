@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\System;
 use App\Jobs\SendTelegramMessage;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
@@ -26,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+        Paginator::useTailwind();
         $arrNavItems =[
             "Home" => '/', 
             "About Us" => '/aboutus', 

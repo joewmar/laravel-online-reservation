@@ -1,8 +1,5 @@
 <x-system-layout :activeSb="$activeSb">
     <x-system-content title="Feedback">
-        @if (count($feedbacks) != 0)
-            <x-search endpoint="{{route('system.feedback.search')}}" />
-        @endif
         <div class="grid grid-flow-row grid-row-4 gap-4 my-5">
             @forelse ($feedbacks as $item)
                 <x-feedback-card id="{{$item->reservation_id}}" name="{{$item->feedback->userReservation->name()}}" rating="{{$item->rating}}" comment="{{$item->message}}" />
@@ -14,5 +11,6 @@
                 </article>
             @endforelse
         </div>
+        {{ $feedbacks->links() }}
     </x-system-content>
 </x-system-layout>

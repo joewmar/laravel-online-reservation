@@ -9,7 +9,9 @@ import.meta.glob([
 
 import Alpine from 'alpinejs';
 window.Alpine = Alpine;
+
 Alpine.start();
+ 
 
 // Scroll to the element with the provided ID
 document.getElementById("disabledAll").disabled = true;

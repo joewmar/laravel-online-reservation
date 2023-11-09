@@ -33,6 +33,7 @@ use App\Models\AuditTrail;
 use App\Notifications\SystemNotification;
 use App\Notifications\UserNotif;
 use Exception;
+use Illuminate\Auth\Events\Validated;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
@@ -47,6 +48,19 @@ class SystemReservationController extends Controller
             return $next($request);
 
         })->except(['updateCheckin', 'updateCheckout', 'show', 'index', 'search', 'event']);
+    }   
+    private function countTour(Reservation $rlist){
+        $trans = $rlist->transaction;
+        $c = 0;
+        foreach($trans as $key => $item){
+            if (strpos($key, 'tm') !== false ) {
+                $c++;
+            }
+            if (strpos($key, 'TA') !== false ) {
+                $c++;
+            }
+        }
+        return $c;
     }
     private function employeeLogNotif($action, $link = null){
         $user = auth()->guard('system')->user();
@@ -72,6 +86,7 @@ class SystemReservationController extends Controller
         }
         AuditTrail::create([
             'system_id' => $user->id,
+            'role' => $user->type ?? '',
             'action' => $action,
             'module' => 'Reservation',
         ]);
@@ -196,7 +211,7 @@ class SystemReservationController extends Controller
     }
     public function event(){
         if(!Auth::guard('system')->check()) abort(404);
-        $reservations = Reservation::whereIn('status', [0, 1, 2, 3])->orWhereIn('status', [7, 8])->get();
+        $reservations = Reservation::all();
         $arrEvent = [];
         foreach($reservations as $reservation){
             $color = '';
@@ -226,7 +241,6 @@ class SystemReservationController extends Controller
         $rooms = [];
         $tour_menu = [];
         $other_addons = [];
-        $tour_addons = [];
         $rate = [];
         if($reservation->roomid){
             foreach($reservation->roomid as $item) {
@@ -246,10 +260,20 @@ class SystemReservationController extends Controller
         $count = 0;
         foreach($reservation->transaction ?? [] as $key => $item){
             if (strpos($key, 'tm') !== false && $reservation->accommodation_type != 'Room Only') {
-                $tour_menu[$count]['title'] = $item['title'];
-                $tour_menu[$count]['tpx'] = $item['tpx'];
+                $tour_menu[$count]['title'] = $item['title'] . ' '.$item['type'] . ' ('.$item['pax'].' pax)';
                 $tour_menu[$count]['price'] = $item['price'];
+                $tour_menu[$count]['tpx'] = $item['tpx'];
+                $tour_menu[$count]['used'] = $item['used'];
                 $tour_menu[$count]['amount'] = $item['amount'];
+                $tour_menu[$count]['key'] = $key;
+                
+                // 'id' => $tour_menu->id,
+                // 'title' => $tour_menu->tourMenu->title,
+                // 'type' => $tour_menu->type,
+                // 'pax' => $tour_menu->pax,
+                // 'price' => (double)$tour_menu->price,
+                // 'created' => now('Asia/Manila')->format('YmdHis'),
+                // 'tpx' => $uinfo['tpx'],
             }
 
             // Rate
@@ -257,51 +281,37 @@ class SystemReservationController extends Controller
                 // dd($item['amount']);
                 $rate['name'] = $item['title'];;
                 $rate['price'] = $item['price'];
+                $rate['person'] = $item['person'];
                 $rate['amount'] = $item['amount'];
+                $rate['discounted'] = $item['discounted'] ?? 0;
                 if(isset($item['orig_amount'])){
                     $rate['orig_amount'] = $item['orig_amount'];
                 }
             }
             if (strpos($key, 'OA') !== false) {
-                if(is_array($item)){
-                    foreach($item as $key => $value){
-                        $other_addons[$count.'-'.$key]['title'] = $value['title'];
-                        $other_addons[$count.'-'.$key]['pcs'] = $value['pcs'];
-                        $other_addons[$count.'-'.$key]['price'] = $value['price'];
-                        $other_addons[$count.'-'.$key]['amount'] = $value['amount'];
-                    }
+                foreach($item as $key => $value){
+                    $other_addons[$count]['title'] = $value['title'];
+                    $other_addons[$count]['pcs'] = $value['pcs'];
+                    $other_addons[$count]['price'] = $value['price'];
+                    $other_addons[$count]['amount'] = $value['amount'];
                 }
-                else{
-                    $other_addons[$count]['title'] = $item['title'];
-                    $other_addons[$count]['pcs'] = $item['pcs'];
-                    $other_addons[$count]['price'] = $item['price'];
-                    $other_addons[$count]['amount'] = $item['amount'];
-                }
-
-                
             }
             if (strpos($key, 'TA') !== false) {
-                if(is_array($item)){
-                    foreach($item as $key => $value){
-                        $tour_addons[$count.'-'.$key]['title'] = $value['title'];
-                        $tour_addons[$count.'-'.$key]['tpx'] = $value['tpx'];
-                        $tour_addons[$count.'-'.$key]['price'] = $value['price'];
-                        $tour_addons[$count.'-'.$key]['amount'] = $value['amount'];
-                    }
+                foreach($item as $created => $value){
+                    $tour_menu[$count]['title'] = $value['title'] . ' '.$value['type'] . ' ('.$value['pax'].' pax)';
+                    $tour_menu[$count]['tpx'] = $value['tpx'];
+                    $tour_menu[$count]['price'] = $value['price'];
+                    $tour_menu[$count]['used'] = $value['used'];
+                    $tour_menu[$count]['key'] = $key . '(_)' . $created;
+                    // dd($item);
+                    $tour_menu[$count]['amount'] = $value['amount'];
                 }
-                else{
-                    $tour_addons[$count]['title'] = $item['title'];
-                    $tour_addons[$count]['tpx'] = $item['tpx'];
-                    $tour_addons[$count]['price'] = $item['price'];
-                    $tour_addons[$count]['amount'] = $item['amount'];  
-                }
-
             }
-
             $count++;
         }
+
         unset($count);
-        return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict, 'rooms' => implode(',', $rooms), 'rate' => $rate, 'other_addons' => $other_addons, 'tour_addons' => $tour_addons]);
+        return view('system.reservation.show',  ['activeSb' => 'Reservation', 'r_list' => $reservation, 'menu' => $tour_menu, 'conflict' => $conflict, 'rooms' => implode(',', $rooms), 'rate' => $rate, 'other_addons' => $other_addons]);
     }
     public function showCancel($id){
         $id = decrypt($id);
@@ -357,12 +367,11 @@ class SystemReservationController extends Controller
             foreach($rooms as $room) $room->removeCustomer($reservation->id) ;
         }
         $reservation->status = 5;
-        $updated = $reservation->save();
-        $message = $reservation->message;
+        $reservation->save();
+        $reservation->message;
+        $reservation->save();
 
         if(isset($message['cancel'])) unset($message['cancel']);
-
-        if($updated){
             $this->employeeLogNotif('Approve Cancel Request Reservation of ' . $reservation->userReservation->name());
             $details = [
                 'name' => $reservation->userReservation->name(),
@@ -371,7 +380,7 @@ class SystemReservationController extends Controller
             ];
             if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab' => 'cancel'])) ,$details['body'], $details, 'reservation.mail')));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Cancel Request of '.$reservation->userReservation->name().' was approved');
-        }
+        
     }
     public function updateDisaproveCancel(Request $request, $id){
         $id = decrypt($id);
@@ -386,16 +395,16 @@ class SystemReservationController extends Controller
         $reservation->status = $message['cancel']['prev_status'];
         $reservation->save();
         if(isset($message['cancel'])) unset($message['cancel']);
-        $updated = $reservation->update(['message' => $message]);
-        if($updated){
-            $details = [
-                'name' => $reservation->userReservation->name(),
-                'title' => 'Reservation Cancel',
-                'body' => 'Sorry, Your Cancel Request are now disapproved due to ' . $validator['reason'] . '. If you want concern. Please contact the owner'
-            ];
-            if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home'),$details['body'], $details, 'reservation.mail')));
-            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Reschedule Request of '.$reservation->userReservation->name().'was successful disapproved');
-        }
+        $reservation->message = $message;
+        $reservation->save();
+        $details = [
+            'name' => $reservation->userReservation->name(),
+            'title' => 'Reservation Cancel',
+            'body' => 'Sorry, Your Cancel Request are now disapproved due to ' . $validator['reason'] . '. If you want concern. Please contact the owner'
+        ];
+        if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home'),$details['body'], $details, 'reservation.mail')));
+        return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Reschedule Request of '.$reservation->userReservation->name().'was successful disapproved');
+        
     
     }
     public function forceCancel($id){
@@ -407,12 +416,54 @@ class SystemReservationController extends Controller
     }
     public function forceReschedule(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
-        if(!($request->has(['check_in', 'check_out']))) return back();
         if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
-        $validated = $request->validate([
-            'check_in' => ['required', 'date'],
-            'check_out' => ['required', 'date'],
+        if($reservation->accommodation_type == 'Day Tour') $request['check_out'] = $request['check_in'];
+        
+        if($reservation->accommodation_type == 'Day Tour'){
+            $validated = Validator::make($request->all(), [
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_out'], 'after:'.Carbon::now()->addDays(1)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'date_equals:'.$request['check_in']],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Choose date with 2 to 3 days',
+                'required' => 'Need fill up first (:attribute)',
+                'date_equals' => 'Choose only one day (Day Tour)',
+            ]);
+        }
+        elseif($reservation->accommodation_type == 'Overnight'){
+            $validated = Validator::make($request->all(), [
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(1)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::createFromFormat('Y-m-d', $request['check_in'])->addDays(2)],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Select date with 2 to 3 days',
+                'required' => 'Need fill up first (:attribute)',
+                'check_out.after_or_equal' => 'Select within 2 or 3 days above (Overnight)',
+            ]);
+        }
+        elseif($reservation->accommodation_type == 'Room Only'){
+            $validated = Validator::make($request->all(), [
+                'check_in' => ['required', 'date', 'date_format:Y-m-d', 'after:'.Carbon::now()->addDays(1)],
+                'check_out' => ['required', 'date', 'date_format:Y-m-d', 'after:'.$request['check_in']],
+            ], [
+                'check_in.unique' => 'Sorry, this date is not available',
+                'check_in.after' => 'Choose date with 2 to 3 days',
+                'required' => 'Need fill up first (:attribute)',
+                'after' => 'The :attribute was already chose from (Check-in)',
+    
+            ]);
+        }
+        if ($validated->fails()) return back()->with('error', $validated->errors()->all())->withInput($request->all());
+        $validated = $validated->validate();
+
+        $noDays = getNoDays($validated['check_in'], $validated['check_out']);
+
+        $tourValidator = Validator::make(['days' => $noDays],[
+            'days' => 'gte:'.$this->countTour($reservation),
+        ], [
+            'days.gte' => 'Select dates that match the number of your chosen tour menu ('.$this->countTour($reservation).' tours).'
         ]);
+        if ($tourValidator->fails()) return back()->with('error', $tourValidator->errors()->all())->withInput($request->all());
         $roomReserved = [];
         $rooms = Room::all();
         $r_lists = Reservation::where(function ($query) use ($validated) {
@@ -468,8 +519,8 @@ class SystemReservationController extends Controller
         if($updated){
             $details = [
                 'name' => $reservation->userReservation->name(),
-                'title' => 'Reservation Disapprove',
-                'body' => 'Your Reservation are Forced Cancel from '.$system_user->name().' due of ' . $validated['disaprove']. 'Sorry for waiting. Please try again to make reservation in another dates',
+                'title' => 'Reservation Cancellation',
+                'body' => 'Your Reservation are Forced Cancel from '.$system_user->name().' due of ' . $validated['message']. '. Sorry for waiting. Please try again to make reservation in another dates',
             ];
             if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home', Arr::query(['tab'=> 'canceled'])) ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
             unset($details, $text);
@@ -521,7 +572,7 @@ class SystemReservationController extends Controller
             $details = [
                 'name' => $reservation->userReservation->name(),
                 'title' => 'Force Reservation Reschedule',
-                'body' => 'Your Force to reschedule from' . Carbon::createFromFormat('Y-m-d', $validator['ncin'])->format('F j, Y') . ' to ' . Carbon::createFromFormat('Y-m-d', $validator['ncout'])->format('F j, Y') . ' by ' . $system_user->name() . ' due ' . $validator['message'],
+                'body' => 'Your Force to reschedule from' . Carbon::createFromFormat('Y-m-d', $validator['ncin'])->setTimezone('UTC')->format('F j, Y') . ' to ' . Carbon::createFromFormat('Y-m-d', $validator['ncout'])->setTimezone('UTC')->format('F j, Y') . ' (UTC) by ' . $system_user->name() . ' due ' . $validator['message'],
             ];
             if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home') ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
             return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Force Reschedule Request of '.$reservation->userReservation->name().' was approved');
@@ -553,30 +604,23 @@ class SystemReservationController extends Controller
         }
         $message = $reservation->message;
 
-        $updated = $reservation->update([
-            'check_in' => $message['reschedule']['check_in'],
-            'check_out' => $message['reschedule']['check_out'],
-            'roomid' => array_keys($roomCustomer),
-            'status' => 1,
-        ]);
-
-        if($updated){
-            if(isset($message['reschedule']['message'])) unset($message['reschedule']['message']);
-            $message['reschedule']['prev_status'] = 4; // For User Resevation List
-            // $message['open_at'] = Carbon::now()->addDay()->format('Y-m-d H:i:s');
-            
-            $reservation->update([
-                'message' => $message,
-                'roomid' => array_keys($roomCustomer),
-            ]);
-            $details = [
-                'name' => $reservation->userReservation->name(),
-                'title' => 'Reservation Reschedule',
-                'body' => 'Your Request are now approved. '
-            ];
-            if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home') ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
-            return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Reschedule Request of '.$reservation->userReservation->name().' was approved');
-        }
+        $reservation->check_in = $message['reschedule']['check_in'];
+        $reservation->check_out = $message['reschedule']['check_out'];
+        $reservation->roomid = array_keys($roomCustomer);
+        $reservation->status = 1;
+        $reservation->save();
+        unset($message['reschedule']);
+        $reservation->message = $message;
+        $reservation->roomid = array_keys($roomCustomer);
+        $reservation->save();
+        $details = [
+            'name' => $reservation->userReservation->name(),
+            'title' => 'Reservation Reschedule',
+            'body' => 'Your Request are now approved. '
+        ];
+        if(isset($reservation->user_id)) $reservation->userReservation->notify((new UserNotif(route('user.reservation.home') ,$details['body'], $details, 'reservation.mail'))->onQueue(null));
+        return redirect()->route('system.reservation.show', encrypt($reservation->id))->with('success', 'Reschedule Request of '.$reservation->userReservation->name().' was approved');
+        
     }
 
 }
