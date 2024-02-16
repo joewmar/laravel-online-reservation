@@ -55,7 +55,8 @@ class LiveCommand extends Command
             // Verify the deadline of payment then auto canceled
             if(!empty($item->payment_cutoff)){
                 if(Carbon::createFromFormat('Y-m-d H:i:s', $item->payment_cutoff)->timestamp <= Carbon::now('Asia/Manila')->timestamp && !($item->downpayment() >= 1000)){
-                    $item->update(['status' => 5]);
+                    $item->status = 5;
+                    $item->save();
                     $details = [
                         'name' => $item->userReservation->name(),
                         'title' => 'Reservation was Canceled',
@@ -89,7 +90,8 @@ class LiveCommand extends Command
 
             // Verify the the not present on guesthouse then auto canceled
             if(Carbon::createFromFormat('Y-m-d', $item->check_in)->addDays(2)->timestamp <= Carbon::createFromFormat('Y-m-d g:ia', $checkInToday)->timestamp){
-                $item->update(['status' => 5]);
+                $item->status = 5;
+                $item->save();
                 $details = [
                     'name' => $item->userReservation->name(),
                     'title' => 'Reservation was Canceled',

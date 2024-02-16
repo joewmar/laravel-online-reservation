@@ -316,11 +316,12 @@ class SystemReservationController extends Controller
     public function showCancel($id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
-        if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
+        if($reservation->status == 3) abort(404);
         return view('system.reservation.show-cancel',  ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
     public function showReschedule($id){
         $reservation = Reservation::findOrFail(decrypt($id));
+        if($reservation->status == 3) abort(404);
         $rooms = Room::all();
 
         $availed = Reservation::where(function ($query) use ($reservation) {
@@ -352,9 +353,8 @@ class SystemReservationController extends Controller
     public function updateCancel(Request $request, $id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
-        if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
+        if($reservation->status == 3) abort(404);
 
-        if(!$reservation->status >= 5) abort(404);
         $validator = Validator::make($request->all('passcode'), [
             'passcode' => ['required', 'digits:4', 'numeric'],
         ]);
@@ -385,7 +385,7 @@ class SystemReservationController extends Controller
     public function updateDisaproveCancel(Request $request, $id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
-        if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
+        if($reservation->status == 3) abort(404);
         $validator = Validator::make($request->all('reason'), [
             'reason' => ['required'],
         ]);
@@ -410,13 +410,13 @@ class SystemReservationController extends Controller
     public function forceCancel($id){
         $id = decrypt($id);
         $reservation = Reservation::findOrFail($id);
-        if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
+        if($reservation->status == 3) abort(404);
 
         return view('system.reservation.cancel.force-cancel',  ['activeSb' => 'Reservation', 'r_list' => $reservation]);
     }
     public function forceReschedule(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
-        if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
+        if($reservation->status == 3) abort(404);
         if($reservation->accommodation_type == 'Day Tour') $request['check_out'] = $request['check_in'];
         
         if($reservation->accommodation_type == 'Day Tour'){
@@ -493,7 +493,7 @@ class SystemReservationController extends Controller
     }
     public function updateForceCancel(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($id));
-        if($reservation->status >= 2 && $reservation->status <= 3) abort(404);
+        if($reservation->status == 3) abort(404);
         $system_user = $this->system_user->user();
         if($request['reason'] === 'Other'){
             $validated = $request->validate([
@@ -533,6 +533,7 @@ class SystemReservationController extends Controller
     }
     public function updateForceReschedule(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($request->id));
+        if($reservation->status == 3) abort(404);
         $validator = Validator::make($request->all(),  [
             'passcode' => ['required', 'digits:4', 'numeric'],
             'message' => ['required', 'string'],
@@ -581,7 +582,7 @@ class SystemReservationController extends Controller
     }
     public function updateReschedule(Request $request, $id){
         $reservation = Reservation::findOrFail(decrypt($request->id));
-        if($reservation->status >= 2 && $reservation->status <= 3 || $reservation->status == 0) abort(404);
+        if($reservation->status == 3) abort(404);
         $system_user = $this->system_user->user();
 
         $admins = System::all()->where('type', 0);

@@ -12,12 +12,13 @@ use Illuminate\Support\Facades\Hash;
 class NewsController extends Controller
 {
     private $system_user;
+
     public function __construct()
     {
         $this->system_user = auth('system');
         $this->middleware(function ($request, $next){
-            if(!($this->system_user->user()->type === 0)) abort(404);
-            return $next($request);
+            if($this->system_user->user()->type == 0 || in_array("News",$this->system_user->user()->modules)) return $next($request);
+            else abort(404);
         });
     }
     private function employeeLog($action){
@@ -104,6 +105,7 @@ class NewsController extends Controller
             'mimes' => 'The image must be of type: jpeg, png, jpg',
             'max' => 'The image size must not exceed 5 MB',
         ]);
+        // dd($validated);
         if(!Hash::check($validated['passcode'], $this->system_user->user()->passcode)) return back()->with('error', 'Invalid Passcode')->withInput($validated);
         if($request->hasFile('image')){  
             if($new->image) deleteFile($new->image);
@@ -116,7 +118,7 @@ class NewsController extends Controller
         }
         if($validated['deadline'] === 'limit'){
             $updated = $new->update([
-                'image' => $validated['image'] ?? null,
+                'image' => $validated['image'] ?? $new->image,
                 'title' => $validated['title'],
                 'description' => $validated['description'],
                 'from' => $validated['date_from'],
@@ -125,7 +127,7 @@ class NewsController extends Controller
         }
         else{
             $updated = $new->update([
-                'image' => $validated['image'] ?? null,
+                'image' => $validated['image'] ?? $new->image,
                 'title' => $validated['title'],
                 'description' => $validated['description'],
                 'from' => null,

@@ -38,54 +38,51 @@
             ],
         ];
    }
-   elseif(auth('system')->user()->type === 1){
-        $arrSideBarItems = 
-            [
-                "Home" => [
-                    "icon" => "fa-solid fa-gauge",
-                    "link" => route('system.home')
-                ],
-                "Reservation" => [
-                    "icon" => "fa-sharp fa-solid fa-book",
-                    "link" => route('system.reservation.home'),
-                ],
-                "Rooms" => [
-                    "icon" => "fa-solid fa-hotel",
-                    "link" => route('system.rooms.home'),
-                ],
-                "Analytics" => [
-                    "icon" => "fa-solid fa-chart-simple",
-                    "link" => route('system.analytics.home'),
-                ],
-
-                "Feedback" => [
-                    "icon" => "fa-solid fa-comments",
-                    "link" => route('system.feedback.home'),
-                ],
-
-            ];
-    }
    else{
-        $arrSideBarItems = 
-            [
+        $arrSideBarItems = [
             "Home" => [
                 "icon" => "fa-solid fa-gauge",
                 "link" => route('system.home')
-            ],
-            "Reservation" => [
+            ]
+        ];
+        if(in_array("Reservation", auth('system')->user()->modules)){
+            $arrSideBarItems['Reservation'] = [
                 "icon" => "fa-sharp fa-solid fa-book",
                 "link" => route('system.reservation.home'),
-            ],
-            "Rooms" => [
+            ];
+        }
+        if(in_array("Tour Menu", auth('system')->user()->modules)){
+            $arrSideBarItems["Tour Menu"] = [
+                "icon" => "fa-solid fa-route",
+                "link" => route('system.menu.home'),
+            ];
+        }
+        if(in_array("Rooms", auth('system')->user()->modules)){
+            $arrSideBarItems['Rooms'] = [
                 "icon" => "fa-solid fa-hotel",
                 "link" => route('system.rooms.home'),
-            ],
-            "Analytics" => [
+            ];
+        }
+        if(in_array("Analytics", auth('system')->user()->modules)){
+            $arrSideBarItems['Analytics'] = [
                 "icon" => "fa-solid fa-chart-simple",
                 "link" => route('system.analytics.home'),
-            ],
-        ];
-   }
+            ];
+        }
+        if(in_array("Feedback", auth('system')->user()->modules)){
+            $arrSideBarItems['Feedback'] = [
+                "icon" => "fa-solid fa-comments",
+                "link" => route('system.feedback.home'),
+            ];
+        }
+        if(in_array("Website Content", auth('system')->user()->modules)){
+            $arrSideBarItems["Website Content"] = [
+                "icon" => "fa-solid fa-earth-americas",
+                "link" => route('system.webcontent.home'),
+            ];
+        }
+    }
+
 @endphp
 <div id="sidebar" :class="!open ? 'w-56 md:w-[5rem]' : 'w-56'" class="sidebar z-[100] hidden md:block h-full overflow-hidden bg-base-100 menu" x-cloak>
     <div class="flex h-screen flex-col justify-evenly pt-2 pb-6 w-56 p-0">

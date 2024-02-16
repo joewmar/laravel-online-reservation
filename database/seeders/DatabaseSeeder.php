@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\TourMenu;
 use App\Models\Reservation;
 use App\Models\UserOffline;
 use Illuminate\Support\Str;
@@ -544,31 +545,7 @@ class DatabaseSeeder extends Seeder
         //     'transaction' => ['tm2' => ['title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike Double Rider (2 pax)', 'price' => 2100.00, 'amount' => 2100.00 * 4]],
         // ]);
 
-        \App\Models\Reservation::factory()->create([
-            'user_id' => 1,
-            // 'roomid' => 1,
-            // 'roomrateid' => 1,
-            'pax' => 4,
-            'tour_pax' => 4,
-            'accommodation_type' => 'Overnight',
-            'payment_method' => 'Bank Transfer',
-            'check_in' => Carbon::now('Asia/Manila')->addDays(16)->toDateTimeString(),
-            'check_out' => Carbon::now('Asia/Manila')->addDays(18)->toDateTimeString(),
-            'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
-            'transaction' => [
-                'tm2' => [
-                    'title' => 'ATV Lahar Short Trail without Pinatubo Crater Hike', 
-                    'price' => 3500.00 , 
-                    'tpx' => 4, 
-                    'amount' => 3500.00 * 4, 
-                    'id' => 2,
-                    'type' => 'Double Rider',
-                    'pax' => 2,
-                    'used' => false,
-                    'created' => now('Asia/Manila')->format('YmdHis')
-                    ]
-                ],
-        ]);
+
 
         \App\Models\System::factory()->create([
             'first_name' => 'Alvin',
@@ -578,6 +555,7 @@ class DatabaseSeeder extends Seeder
             'username'=> 'AlvinAdminBognot',
             'password' => Hash::make('987654321'),
             'type' => '0',
+            'access' => json_encode([]),
             'passcode' => Hash::make('2255'),
             'telegram_username' => 'joewmar',
             'telegram_chatID' => '5870248478'
@@ -590,22 +568,38 @@ class DatabaseSeeder extends Seeder
             'email'=> 'angelitabognot@email.com',
             'username'=> 'angelitaBognotadmin',
             'password' => Hash::make('147258369'),
-            'type' => '1',
+            'type' => '0',
+            'access' => json_encode([]),
             'passcode' => Hash::make('5566'),
             'telegram_username' => 'joewmar',
             'telegram_chatID' => '5870248478'
         ]);
         \App\Models\System::factory()->create([
-            'first_name' => 'Raul',
-            'last_name' => 'David',
+            'first_name' => 'Vince',
+            'last_name' => 'Guttierez',
             'contact' => '09987456321',
-            'email'=> 'raulDavid@email.com',
-            'username'=> 'raulDavidManager',
+            'email'=> 'VinceFront@email.com',
+            'username'=> 'VinceAbadFront',
+            'access' => json_encode([]),
             'password' => Hash::make('123789456'),
+            'type' => '1',
+            'passcode' => Hash::make('1234'),
+            'telegram_username' => 'nikkowww',
+            'telegram_chatID' => '2059032903'
+        ]);
+
+        \App\Models\System::factory()->create([
+            'first_name' => 'Mark Nikko',
+            'last_name' => 'Tabelisma',
+            'contact' => '09987456321',
+            'email'=> 'tabnikko@email.com',
+            'username'=> 'MarkFrontNikko',
+            'password' => Hash::make('123456789'),
+            'access' => json_encode([]),
             'type' => '2',
             'passcode' => Hash::make('1234'),
-            'telegram_username' => 'joewmar',
-            'telegram_chatID' => '5870248478'
+            'telegram_username' => 'nikkowww',
+            'telegram_chatID' => '2059032903'
         ]);
         // \App\Models\System::factory(10)->create();
 
@@ -889,6 +883,31 @@ class DatabaseSeeder extends Seeder
                     ]
                 ]
             ]
+        ]);
+        \App\Models\Reservation::factory()->create([
+            'user_id' => 1,
+            // 'roomid' => 1,
+            // 'roomrateid' => 1,
+            'pax' => 4,
+            'tour_pax' => 4,
+            'accommodation_type' => 'Overnight',
+            'payment_method' => 'Bank Transfer',
+            'check_in' => Carbon::now('Asia/Manila')->addDays(16)->toDateTimeString(),
+            'check_out' => Carbon::now('Asia/Manila')->addDays(18)->toDateTimeString(),
+            'status' => 0,  /* 0 => pending, 1 => confirmed, 2 => check-in, 3 => check-out */
+            'transaction' => [
+                'tm2' => [
+                    'title' => TourMenu::find(2)->tourMenu->title, 
+                    'price' => TourMenu::find(2)->price , 
+                    'tpx' => 4, 
+                    'amount' => TourMenu::find(2)->price * 4, 
+                    'id' => TourMenu::find(2)->id,
+                    'type' => TourMenu::find(2)->type,
+                    'pax' => TourMenu::find(2)->pax,
+                    'used' => false,
+                    'created' => now('Asia/Manila')->format('YmdHis')
+                    ]
+                ],
         ]);
 
     }

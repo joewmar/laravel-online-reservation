@@ -61,7 +61,13 @@
                                             <div class="flex items-center space-x-3">
                                                 <div class="avatar">
                                                     <div class="mask mask-squircle w-12 h-12">
-                                                        <img src="{{$list->userReservation->avatar !== null ? asset('storage/'.$list->userReservation->avatar) : asset('images/avatars/no-avatar.png')}}" alt="{{$list->userReservation->name() ?? ''}} Photo" />
+                                                        @if(isset($list->userReservation) && filter_var($list->userReservation->avatar ?? '', FILTER_VALIDATE_URL))
+                                                            <img src="{{$list->userReservation->avatar}}" alt="" class="object-cover object-center w-full h-full rounded">
+                                                        @elseif(isset($list->userReservation) && $list->userReservation->avatar ?? false)
+                                                            <img src="{{asset('storage/'. $list->userReservation->avatar)}}" alt="" class="object-cover object-center w-full h-full rounded">
+                                                        @else
+                                                            <img src="{{asset('images/avatars/no-avatar.png')}}" alt="" class="object-cover object-center w-full h-full rounded">
+                                                        @endif
                                                     </div>
                                                 </div>
                                             </div>

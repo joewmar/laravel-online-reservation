@@ -265,7 +265,7 @@ Route::prefix('system')->name('system.')->middleware(['session.delete'])->group(
                 Route::put('/{id}/show/extend/update', 'updateExtend')->name('extend.update');
 
                 Route::put('/{id}/{key}/used/update', 'updateUsed')->name('update.used');
-                Route::put('/{id}/{key}/{created}/used/update', 'updateUsed2')->name('update.used.two');
+                Route::put('/{id}/{key}/{created}/used/update', 'updateUsed2')->name('update.used.twop');
 
 
             });
@@ -280,7 +280,7 @@ Route::prefix('system')->name('system.')->middleware(['session.delete'])->group(
             Route::post('/', 'search')->name('search');
         });
 
-        Route::prefix('menu')->name('menu.')->middleware('can:admin')->controller(TourMenuController::class)->group(function (){
+        Route::prefix('menu')->name('menu.')->controller(TourMenuController::class)->group(function (){
             Route::get('/', 'index')->name('home');
 
             Route::prefix('addons')->name('addons.')->group(function (){
@@ -308,7 +308,7 @@ Route::prefix('system')->name('system.')->middleware(['session.delete'])->group(
             Route::delete('/{id}/price/{priceid}', 'destroyPrice')->name('destroy.price');
         });
 
-        Route::prefix('news')->name('news.')->controller(NewsController::class)->middleware('can:admin')->group(function (){
+        Route::prefix('news')->name('news.')->controller(NewsController::class)->group(function (){
             Route::get('/', 'index')->name('home');
             Route::get('/create', 'create')->name('create');
             Route::post('/create', 'store')->name('store');
@@ -335,7 +335,7 @@ Route::prefix('system')->name('system.')->middleware(['session.delete'])->group(
             Route::get('/', 'index')->name('home');
             Route::get('/search', 'search')->name('search');
         });
-        Route::prefix('webcontent')->name('webcontent.')->controller(WebContentController::class)->middleware('can:admin')->group(function (){
+        Route::prefix('webcontent')->name('webcontent.')->controller(WebContentController::class)->group(function (){
             Route::get('/', 'index')->name('home');
 
             Route::post('/image/hero', 'storeHero')->name('image.hero');
@@ -432,6 +432,7 @@ Route::prefix('system')->name('system.')->middleware(['session.delete'])->group(
     
                 Route::get('/{id}', 'show')->name('show');
                 Route::get('/{id}/edit', 'edit')->name('edit');
+                Route::get('/{id}/access-control', 'accessControl')->name('access.control');
                 Route::put('/{id}/update', 'update')->name('update');
                 Route::delete('/{id}/delete', 'destroy')->name('destroy');
             });

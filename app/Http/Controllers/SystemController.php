@@ -47,6 +47,11 @@ class SystemController extends Controller
         return view ('system.setting.accounts.show',  ['activeSb' => 'Accounts', 'employee' => $employee]);
 
     }
+    public function accessControl($id){
+        $employee = System::findOrFail(decrypt($id));
+        return view ('system.setting.accounts.access-control',  ['activeSb' => 'Accounts', 'employee' => $employee]);
+
+    }
     public function edit($id){
         $employee = System::findOrFail(decrypt($id));
         return view ('system.setting.accounts.edit',  ['activeSb' => 'Accounts', 'employee' => $employee]);
@@ -67,6 +72,7 @@ class SystemController extends Controller
         return response()->json($names);
     }
     public function store(Request $request){
+        // dd($request->all());
         $validated = $request->validate([
                 'type' => ['required'],
                 'avatar' =>  ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5024'],
@@ -74,6 +80,7 @@ class SystemController extends Controller
                 'last_name' => ['required'],
                 'contact' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
                 'email' => ['required', 'email', Rule::unique('systems', 'email')],
+                'modules' => Rule::when($request['type'] == 0, ['nullable'],['required', 'array']),
                 'username' => ['required', Rule::unique('systems', 'username')],
                 'password' => ['required', 'min:6'],
                 'passcode' => ['required', 'numeric', 'digits:4'],
@@ -91,6 +98,7 @@ class SystemController extends Controller
                 dispatch(new SendTelegramMessage($chat_id, "Hello there, " . $validated['last_name'] . ' ' . $validated['first_name'] . " Your username was verified", null, 'bot2'));
             }
         }
+        if($validated['type'] == 0) $validated['modules'] = [];
         $validated['password'] = bcrypt($validated['password']);
         $validated['passcode'] = bcrypt($validated['passcode']);
 
@@ -105,6 +113,7 @@ class SystemController extends Controller
 
     }
     public function update(Request $request, $id){
+        // dd($request->all());
         $systemUser = System::findOrFail(decrypt($id));
         $validated = $request->validate([
             'type' => ['required'],
@@ -115,11 +124,13 @@ class SystemController extends Controller
             'email' => ['required', 'email', Rule::when($request['email'] !== $systemUser->email, [Rule::unique('systems', 'email')])],
             'username' => ['required', Rule::when($request['username'] !== $systemUser->username, [Rule::unique('systems', 'username')])],
             'password' => ['nullable', 'min:6'],
+            'modules' => Rule::when($request['type'] == 0, ['nullable'],['required', 'array']),
             'passcode' => ['nullable', 'numeric', 'digits:4'],
             'telegram_username' => ['nullable', Rule::when($request['telegram_username'] !== $systemUser->telegram_username, [Rule::unique('systems', 'telegram_username')])],
         ], [
             'required' => 'Required to fill up this form'
         ]);
+        if($validated['type'] == 0) $validated['modules'] = [];
         if($validated['password'] == null) $validated['password'] = $systemUser->password;
         else $validated['password'] = bcrypt($validated['password']);
 
@@ -175,7 +186,7 @@ class SystemController extends Controller
         // Validate Inputs
         $validated = $request->validate([
             'username' => ['required'],
-            'password' => ['required', 'min:5'],
+            'password' => ['required'],
         ]);
 
         // guard('your_guard_created') Attempt to log the user in (If user credentials are correct)

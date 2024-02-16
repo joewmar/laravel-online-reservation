@@ -483,7 +483,7 @@ class CreateReservationController extends Controller
         if(!session()->has('nwrinfo')) return redirect()->route('system.reservation.create');
         $decrypted = decryptedArray($request->session()->get('nwrinfo'));
         // dd($decrypted);
-        $pathValidID = $decrypted['vid'];
+        // $pathValidID = $decrypted['vid'] ?? null;
         if(isset($decrypted['vid'])){
             $imageData = Storage::get('private/'.$decrypted['vid']);
             $newPath = 'valid_id/'.Str::random(4). now()->format('YmdHis') .'.jpg';
@@ -498,8 +498,8 @@ class CreateReservationController extends Controller
             "nationality" => $decrypted['ntnlt'],
             "email" => $decrypted['eml'],
             "contact" => $decrypted['ctct'],
+            "valid_id" => $decrypted['vid'] ?? null,
         ];
-        if(isset($decrypted['vid'])) $ui["valid_id"] = $decrypted['vid'];
 
         if(isset($decrypted['uid'])){
             $created = UserOffline::find($decrypted['uid']) ?? [];
@@ -521,6 +521,7 @@ class CreateReservationController extends Controller
                         'type' => $tour_menu->type,
                         'pax' => $tour_menu->pax,
                         'used' => false,
+                        'created' => now('Asia/Manila')->format('YmdHis'),
                         'amount' => (double)$tour_menu->price * (int)$decrypted['tpx'],
                     ];
                     $totalAll += (double)$tour_menu->price * (int)$decrypted['tpx'];

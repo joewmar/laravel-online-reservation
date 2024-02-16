@@ -10,6 +10,16 @@ use Symfony\Contracts\Service\Attribute\Required;
 
 class AnalyticsController extends Controller
 {
+    private $system_user;
+
+    public function __construct()
+    {
+        $this->system_user = auth('system');
+        $this->middleware(function ($request, $next){
+            if($this->system_user->user()->type == 0 || in_array("Analytics",$this->system_user->user()->modules)) return $next($request);
+            else abort(404);
+        });
+    }
     public function index(Request $request)
     {
         $currentDate = Carbon::today()->toDateString();

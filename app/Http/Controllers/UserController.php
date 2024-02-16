@@ -255,7 +255,7 @@ class UserController extends Controller
         ]);
 
         // Attempt to log the user in (If user credentials are correct)
-        if(Auth::guard('web')->attempt($validated, $request['remember'] ?? 0)){
+        if(Auth::guard('web')->attempt($validated, (isset($request['remember']) ? true : false) )){
             $request->session()->regenerate(); //Regenerate Session ID
             if(Carbon::createFromFormat('Y-m-d', auth('web')->user()->birthday)->age === Carbon::now()->age) return redirect()->intended(route('home'))->with('success', 'Welcome back and Happy Birthday! ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);
             else return redirect()->intended(route('home'))->with('success', 'Welcome back ' . auth('web')->user()->first_name . ' ' . auth()->user()->last_name);

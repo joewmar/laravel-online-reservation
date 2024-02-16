@@ -13,6 +13,16 @@ use Illuminate\Support\Facades\Hash;
 
 class TourMenuController extends Controller
 {
+    private $system_user;
+
+    public function __construct()
+    {
+        $this->system_user = auth('system');
+        $this->middleware(function ($request, $next){
+            if($this->system_user->user()->type == 0 || in_array("Tour Menu",$this->system_user->user()->modules)) return $next($request);
+            else abort(404);
+        });
+    }
     private function employeeLogNotif($action){
         $user = auth()->guard('system')->user();
         AuditTrail::create([

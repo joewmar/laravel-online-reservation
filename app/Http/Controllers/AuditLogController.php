@@ -56,8 +56,8 @@ class AuditLogController extends Controller
             $firstDate = $sortedDates->first();
             $lastDate = $sortedDates->last();
             $dateRange = [
-                'start_date' => $firstDate->format('F j, Y'),
-                'end_date' => $lastDate->format('F j, Y'),
+                'start_date' => $firstDate->format('F j, Y') ?? '',
+                'end_date' => $lastDate->format('F j, Y') ?? '',
             ];
         }
         return view('system.setting.auditlogs.index',  ['activeSb' => 'Activity Log', 'activities' => $activities->paginate(10), 'roles' => [0 => 'Admin', 1 => 'Manager', 2 => 'Front Desk']]);

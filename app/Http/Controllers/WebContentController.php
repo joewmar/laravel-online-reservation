@@ -20,8 +20,8 @@ class WebContentController extends Controller
     {
         $this->system_user = auth('system');
         $this->middleware(function ($request, $next){
-            if(!($this->system_user->user()->type === 0)) abort(404);
-            return $next($request);
+            if($this->system_user->user()->type == 0 || in_array("Website Content",$this->system_user->user()->modules)) return $next($request);
+            else abort(404);
         });
     }
     private function employeeLogNotif($action){

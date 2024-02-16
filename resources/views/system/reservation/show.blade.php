@@ -88,7 +88,7 @@
                         </a>
                     @endif
 
-                    <label for="edit_modal" class="join-item btn btn-sm" {{$r_list->status === 3 ? 'disabled' : ''}}>
+                    <label for="edit_modal" class="join-item btn btn-sm" {{$r_list->status <= 3 && $r_list->status >= 0 ? '' : 'disabled'}}>
                         Edit
                     </label>
                 </div>
@@ -161,12 +161,12 @@
                       <h2 class="card-title">Information</h2>
                     </div>
                 </a>
-                <a href="{{route('system.reservation.edit.rooms', encrypt($r_list->id))}}" class="card border hover:bg-primary hover:text-primary-content">
+                <a href="{{!($r_list->status <= 2 && $r_list->status) >= 0  ? '#' : route('system.reservation.edit.tour', encrypt($r_list->id))}}" class="card border hover:bg-primary hover:text-primary-content {{$r_list->status <= 2 && $r_list->status >= 0  ? '' : 'opacity-70'}}">
                     <div class="card-body justify-center items-center">
                       <h2 class="card-title">Room</h2>
                     </div>
                 </a>
-                <a href="{{route('system.reservation.edit.tour', encrypt($r_list->id))}}" class="card border hover:bg-primary hover:text-primary-content">
+                <a href="{{!($r_list->status <= 2 && $r_list->status >= 0)  ? '#' : route('system.reservation.edit.tour', encrypt($r_list->id))}}" class="card border hover:bg-primary hover:text-primary-content {{$r_list->status <= 2 && $r_list->status >= 0  ? '' : 'opacity-70'}}">
                     <div class="card-body justify-center items-center">
                       <h2 class="card-title">Services</h2>
                     </div>
@@ -620,8 +620,8 @@
                             <i class="fa-solid fa-ellipsis"></i>
                         </label>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                            <li><a href="{{$r_list->status === 2 || $r_list->status === 3 || $r_list->status === 5 || $r_list->status === 6 ? '#' : route('system.reservation.show.cancel', encrypt($r_list->id))}}" class="text-error">Cancel</a></li>
-                            <li><a href="{{$r_list->status === 2 || $r_list->status === 3 || $r_list->status === 4 || $r_list->status == 6  || $r_list->status !== 7  ? '#' : route('system.reservation.show.reschedule', encrypt($r_list->id))}}" class="text-accent-content" >Reschedule</a></li>
+                            <li><a href="{{$r_list->status === 3 ? '#' : route('system.reservation.show.cancel', encrypt($r_list->id))}}" class="text-error">Cancel</a></li>
+                            <li><a href="{{$r_list->status === 3 ? '#' : route('system.reservation.show.reschedule', encrypt($r_list->id))}}" class="text-accent-content" >Reschedule</a></li>
                         </ul>
                     </div>
                 @endif

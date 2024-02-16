@@ -9,7 +9,86 @@ use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Storage;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
-
+function accessLists(){
+    $arrAccessList = array(
+        "reservation" => [
+            "module",
+            "confirm",
+            "check_in",
+            "check_out",
+            "cancel",
+            "reschedule",
+            "edit",
+            "create",
+        ],
+        "rooms" => [
+        "module",
+            "create_list",
+            "show_list",
+            "edit_list",
+            "delete_list",
+            "create_rate",
+            "edit_rate",
+            "delete_rate",
+        ],
+        "tour_menu" => [
+            "module",
+            "create_menu",
+            "edit_menu",
+            "delete_menu",
+            "create_price",
+            "edit_price",
+            "delete_price",
+        ],
+        "tour_menu" => [
+            "module",
+            "create_menu",
+            "edit_menu",
+            "delete_menu",
+            "create_price",
+            "edit_price",
+            "delete_price",
+        ],
+        "news" => [
+            "module",
+            "create_news",
+            "edit_news",
+            "delete_news",
+            "create_announcement",
+            "edit_announcement",
+            "delete_announcement",
+        ],
+        "feedback" => [
+            "module",
+        ],
+        "web_content" => [
+            "module",
+            "create_hero",
+            "edit_hero",
+            "delete_hero",
+            "create_gallery",
+            "edit_gallery",
+            "delete_gallery",
+            "create_contact",
+            "edit_contact",
+            "delete_contact",
+            "create_payment",
+            "edit_payment",
+            "delete_payment",
+            "reservation_operation",
+        ],
+        "log" => [
+            "module",
+        ],
+        "account" => [
+            "module",
+            "create",
+            "edit",
+            "delete",
+        ],
+    );
+    return $arrAccessList;
+}
 function deleteFile($filename, $option = 'public')
 {
     $isExist = false;

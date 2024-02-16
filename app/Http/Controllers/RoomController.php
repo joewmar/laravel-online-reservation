@@ -9,6 +9,16 @@ use Illuminate\Support\Carbon;
 
 class RoomController extends Controller
 {
+    private $system_user;
+
+    public function __construct()
+    {
+        $this->system_user = auth('system');
+        $this->middleware(function ($request, $next){
+            if($this->system_user->user()->type == 0 || in_array("Rooms",$this->system_user->user()->modules)) return $next($request);
+            else abort(404);
+        });
+    }
     private function searchAvailability (string $dates, $reservation = false){
         $rooms = Room::all();
         $roomReserved = [];

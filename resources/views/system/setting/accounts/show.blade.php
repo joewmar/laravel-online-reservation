@@ -22,6 +22,9 @@
                   <h3 class="text-lg"><strong>Email Address: </strong>{{$employee->email ?? 'None'}}</h3>
                   <h3 class="text-lg"><strong>Username: </strong>{{$employee->username ?? 'None'}}</h3>
                   <h3 class="text-lg"><strong>Telegram Username: </strong>{{$employee->telegram_username ?? 'None'}}</h3>
+                  <div class="mt-5">
+                    <a class="link link-primary" href="{{route('system.setting.accounts.access.control', encrypt($employee->id))}}">Access Control</a>
+                  </div>
                 </div>
                   <br>
                   <div class="mt-4 flex justify-end gap-5">

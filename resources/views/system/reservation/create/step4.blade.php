@@ -1,14 +1,13 @@
 @php
   $totalPrice = 0;
-  $arrStatus = ['Pending', 'Confirmed', 'Check-in'];
   $uinfo = [
     "first_name" => $user->first_name ?? '',
     "last_name" =>  $user->last_name ?? '',
     "birthday" => $user->birthday ?? '',
-    "country"  => $user->country ?? '',
     "email"  => $user->email ?? '',
     "nationality" => $user->nationality ?? '',
     "contact" => $user->contact ?? '',
+    "country" => $user->country ?? '',
     'valid_id' => $user->valid_id ?? '',
     'senior_count' => 0,
     'downpayment' => 0,
@@ -20,13 +19,12 @@
       $uinfo["first_name"] = isset($ss['fn']) ? $ss['fn'] : $uinfo["first_name"];
       $uinfo["last_name"] =  isset($ss['ln']) ? $ss['ln'] : $uinfo["last_name"];
       $uinfo["birthday"] = isset($ss['bday']) ? $ss['bday'] : $uinfo["birthday"];
-      $uinfo["country"]  = isset($ss['ctct']) ? $ss['ctct'] : $uinfo["country"];
+      $uinfo["contact"]  = isset($ss['ctct']) ? $ss['ctct'] : $uinfo["contact"];
+      $uinfo["country"]  = isset($ss['ctry']) ? $ss['ctry'] : $uinfo["country"];
       $uinfo["email"]  = isset($ss['eml']) ? $ss['eml'] : $uinfo["email"];
       $uinfo["nationality"] = isset($ss['ntnlt']) ? $ss['ntnlt'] : $uinfo["nationality"];
-      $uinfo["contact"] = isset($ss['ctry']) ? $ss['ctry'] : $uinfo["contact"];
       $uinfo['valid_id'] = isset($ss['vid']) ? $ss['vid'] : $uinfo["valid_id"];  
   
-    
     if(isset($ss['secount'])) $uinfo['senior_count'] = $ss['secount'];
     if(isset($ss['dwnpy'])) $uinfo['downpayment'] = $ss['dwnpy'];
     if(isset($ss['cinpy'])) $uinfo['cinamount'] = $ss['cinpy'];
@@ -103,7 +101,7 @@
               <x-input type="tel" name="contact" id="contact" placeholder="Contact Number" value="{{$uinfo['contact']}}" noRequired />
               <input type="hidden" name="uid" value="{{encrypt($user->id)}}">
             </div>
-            <div class="flex flex-col-reverse md:flex-col w-full md:w-96 p-5" x-data="{pay: {{$uinfo['cinamount']}}, senior: {{$uinfo['senior_count'] > 0 ? 'true' : 'false'}}, scount: {{$uinfo['senior_count']}}, dstd: 0, st: {{$serviceTotal}}, ra: {{$roomTotal}}, total: {{(double)$roomTotal + (double)$serviceTotal}}, balance: {{(double)$serviceTotal + (double)$roomTotal}}, change: 0}">
+            <div class="flex flex-col-reverse md:flex-col w-full md:w-96 p-5">
               <div class="flex justify-center">
                 <x-drag-drop title="Validation ID" id="valid_id" name="valid_id" fileValue="{{!empty($uinfo['valid_id']) ? route('private.image', ['folder' => explode('/', $uinfo['valid_id'])[0], 'filename' => explode('/',$uinfo['valid_id'])[1]]) : ''}}" />
               </div>

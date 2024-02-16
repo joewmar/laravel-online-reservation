@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('username')->unique();
             $table->string('password');
             $table->tinyInteger('type')->default(0);
+            $table->json('access')->nullable();
             $table->string('passcode');
             $table->string('telegram_username')->nullable();
             $table->string('telegram_chatID')->nullable();;
